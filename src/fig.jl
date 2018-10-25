@@ -2,11 +2,12 @@ export fig
 
 function fig(t)
     s=0
+
     if indexin(false,times.t.<=t)[1]==nothing
         index=length(times.t)
-        else index=indexin(false,times.t.<=t)
+        else index=indexin(false,times.t.<=t)[1]-1
     end
-    
+    t=times.t[index]
     p1 = plot(title="temps t=$t, ϵ=$epsilon")
     
     for modele in range(1,size(Us)[end])
@@ -25,7 +26,7 @@ function fig(t)
         (hhat,uhat)=(Us[modele][:,1,index],Us[modele][:,2,index])
         (h,u)=(real(ifft((Gamma.^s).*hhat)),real(ifft(uhat)))
 
-        p2 = plot!(fftshift(freq.k),log10.(1e-18.+abs.(fftshift(hhat))))
+        p2 = plot!(fftshift(mesh.k),log10.(1e-18.+abs.(fftshift(hhat))))
         
     end
     p=plot(p1,p2,layout=(2,1),label=Labels)
@@ -34,15 +35,15 @@ function fig(t)
 end
 
 
-function fig(t, times, Gamma, freq, Modeles::Dict, epsilon, mesh)
+function fig(t, times, Gamma, Modeles::Dict, epsilon, mesh)
         
     Labels = keys(Modeles)
     s = 0
     if indexin(false,times.t.<=t)[1]==nothing
         index=length(times.t)
-    else 
-        index=indexin(false,times.t.<=t)
+        else index=indexin(false,times.t.<=t)[1]-1
     end
+    t=times.t[index]
     
     p = plot(layout=(2,1))
     
@@ -50,7 +51,7 @@ function fig(t, times, Gamma, freq, Modeles::Dict, epsilon, mesh)
         (hhat,uhat)=Modeles[label][index]
         (h,u)=(real(ifft((Gamma.^s).*hhat)),real(ifft(uhat)))
         plot!(p[1,1], mesh.x,h; label=string(label))
-        plot!(p[2,1], fftshift(freq.k),log10.(1e-18.+abs.(fftshift(hhat))); label=string(label))  
+        plot!(p[2,1], fftshift(mesh.k),log10.(1e-18.+abs.(fftshift(hhat))); label=string(label))  
     end
     
     display(p)
@@ -62,9 +63,9 @@ function fig(t, times::Times, models, mesh::Mesh)
     s = 0
     if indexin(false,times.t.<=t)[1]==nothing
         index=length(times.t)
-    else 
-        index=indexin(false,times.t.<=t)
+        else index=indexin(false,times.t.<=t)[1]-1
     end
+    t=times.t[index]
     
     p = plot(layout=(2,1))
     
@@ -72,7 +73,7 @@ function fig(t, times::Times, models, mesh::Mesh)
         (hhat,uhat)=model.data[index]
         (h,u)=(real(ifft((model.Gamma.^s).*hhat)),real(ifft(uhat)))
         plot!(p[1,1], mesh.x,h; label=model.label)
-        plot!(p[2,1], fftshift(model.freq.k),log10.(1e-18.+abs.(fftshift(hhat))); 
+        plot!(p[2,1], fftshift(model.mesh.k),log10.(1e-18.+abs.(fftshift(hhat))); 
             label=model.label)  
     end
     
