@@ -1,4 +1,4 @@
-name = "FModels"
+name = "DeepWaterModels"
 uuid = "56bd5bc8-d889-11e8-33a6-bb3ace1bc7c7"
 authors = ["Vincent Duchene <vincent.duchene@univ-rennes1.fr>", "Pierre Navaro <pierre.navaro@math.cnrs.fr>"]
 version = "0.1.0"
