@@ -1,3 +1,5 @@
+export Mesh
+
 struct Mesh
     
     nx   :: Int

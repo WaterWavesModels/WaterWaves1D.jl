@@ -1,3 +1,5 @@
+export Times
+
 struct Times
     nt   :: Int
     tfin :: Float64

@@ -1,3 +1,5 @@
+export RK4
+
 abstract type TimeSolver end
 
 mutable struct RK4 <: TimeSolver

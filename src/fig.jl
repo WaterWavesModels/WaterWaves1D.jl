@@ -1,3 +1,5 @@
+export fig
+
 function fig(t)
     s=0
     if indexin(false,times.t.<=t)[1]==nothing

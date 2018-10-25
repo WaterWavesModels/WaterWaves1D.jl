@@ -1,3 +1,6 @@
+export Freq
+
+
 struct Freq
     nk   :: Int
     kmin :: Float64
