@@ -1,11 +1,10 @@
-# FModels.jl
-First Julia package
+# DeepWaterModels.jl
 
 
 ## Installation
 
 ~~~
 using Pkg
-Pkg.clone("https://github.com/DeepWaterModels/FModels.jl")
-using FModels
+Pkg.clone("https://github.com/DeepWaterModels/DeepWaterModels.jl")
+using DeepWaterModels
 ~~~
