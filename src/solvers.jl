@@ -3,6 +3,7 @@ export TimeSolver
 abstract type TimeSolver end
 
 export RK4
+export step!
 
 mutable struct RK4 <: TimeSolver
     
