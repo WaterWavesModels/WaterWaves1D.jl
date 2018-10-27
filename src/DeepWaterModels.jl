@@ -1,4 +1,4 @@
-module FModels
+module DeepWaterModels
 
 using Plots
 using LinearAlgebra
