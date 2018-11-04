@@ -1,1 +1,5 @@
-using FModels
+using DeepWaterModels
+
+using Test
+
+@test true
