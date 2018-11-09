@@ -8,9 +8,9 @@ makedocs(modules=[DeepWaterModels],
          doctest = false,
          format = :html,
          sitename = "DeepWaterModels.jl",
-         pages = ["Functions" => "index.md"])
+         pages = ["Documentation" => "index.md"])
 
 deploydocs(
     deps   = Deps.pip("mkdocs", "python-markdown-math"),
-    repo   = "github.com/WaterWaveModels/DeepWaterModels.jl.git",
+    repo   = "github.com/WaterWavesModels/DeepWaterModels.jl.git",
  )
