@@ -41,7 +41,8 @@ function fig(t, times, Gamma, Modeles::Dict, epsilon, mesh)
     s = 0
     if indexin(false,times.t.<=t)[1]==nothing
         index=length(times.t)
-        else index=indexin(false,times.t.<=t)[1]-1
+    else 
+        index=indexin(false,times.t.<=t)[1]-1
     end
     t=times.t[index]
     
@@ -58,20 +59,21 @@ function fig(t, times, Gamma, Modeles::Dict, epsilon, mesh)
 end
 
 
-function fig(t, times::Times, models::Vector{AbstractModel}, mesh::Mesh)
+function fig(t, times::Times, models, mesh::Mesh)
         
     s = 0
-    if indexin(false,times.t.<=t)[1]==nothing
-        index=length(times.t)
-        else index=indexin(false,times.t.<=t)[1]-1
-    end
-    t=times.t[index]
+    index = length(times.t)
+    t = times.t[index]
     
     p = plot(layout=(2,1))
+
+    hr = zeros(Float64, mesh.N)
+    ur = zeros(Float64, mesh.N)
     
     for model in models
-        (hhat,uhat)=model.data[index]
-        (hr,ur)=(real(ifft((model.Gamma.^s).*hhat)),real(ifft(uhat)))
+        (hhat,uhat) = model.data[index]
+        hr .= real(ifft((model.Gamma.^s).*hhat))
+        ur .= real(ifft(uhat))
         plot!(p[1,1], mesh.x,hr; label=model.label)
         plot!(p[2,1], fftshift(model.mesh.k),log10.(1e-18.+abs.(fftshift(hhat))); 
             label=model.label)  
@@ -81,3 +83,33 @@ function fig(t, times::Times, models::Vector{AbstractModel}, mesh::Mesh)
 
 end
 
+function plot_model(times::Times, model::AbstractModel, mesh::Mesh)
+        
+    s = 0
+    index = length(times.t)
+    t = times.t[index]
+    
+    p = plot(layout=(2,1))
+    
+    (hhat,uhat) = model.data[index]
+    (hr,ur)     = (real(ifft((model.Gamma.^s).*hhat)),real(ifft(uhat)))
+    plot!(p[1,1], mesh.x,hr; label=model.label)
+    plot!(p[2,1], fftshift(model.mesh.k),log10.(1e-18.+abs.(fftshift(hhat))); label=model.label)  
+    
+    p
+
+end
+
+function plot_model!(p, times::Times, model::AbstractModel, mesh::Mesh)
+        
+    println(p, typeof(p))
+    s = 0
+    index = length(times.t)
+    t = times.t[index]
+    
+    (hhat,uhat) = model.data[index]
+    (hr,ur)     = (real(ifft((model.Gamma.^s).*hhat)),real(ifft(uhat)))
+    plot!(p[1,1], mesh.x,hr; label=model.label)
+    plot!(p[2,1], fftshift(model.mesh.k),log10.(1e-18.+abs.(fftshift(hhat))); label=model.label)  
+    
+end
