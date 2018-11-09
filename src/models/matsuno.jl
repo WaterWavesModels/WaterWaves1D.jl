@@ -69,7 +69,7 @@ function (m::Matsuno)(h::Vector{Complex{Float64}},
 
     mul!(m.Int1, m.Px, m.unew)     
 
-    m.Int1  .*= m.epsilon*m.Pi
+    m.Int1  .*= m.epsilon * m.Pi
     m.Int2   .= m.Dx .* h
     m.Int1  .-= m.Int2
 

@@ -65,7 +65,7 @@ function fig(t, times::Times, models, mesh::Mesh)
     index = length(times.t)
     t = times.t[index]
     
-    p = plot(layout=(2,1))
+    p = plot(layout=(2,1), title = "Deep Water Models")
 
     hr = zeros(Float64, mesh.N)
     ur = zeros(Float64, mesh.N)
@@ -75,10 +75,9 @@ function fig(t, times::Times, models, mesh::Mesh)
         hr .= real(ifft((model.Gamma.^s).*hhat))
         ur .= real(ifft(uhat))
         plot!(p[1,1], mesh.x,hr; label=model.label)
-        plot!(p[2,1], fftshift(model.mesh.k),log10.(1e-18.+abs.(fftshift(hhat))); 
-            label=model.label)  
+        plot!(p[2,1], fftshift(model.mesh.k),log10.(1e-18.+abs.(fftshift(hhat))); label=model.label)  
     end
-    
+
     p
 
 end
@@ -102,7 +101,6 @@ end
 
 function plot_model!(p, times::Times, model::AbstractModel, mesh::Mesh)
         
-    println(p, typeof(p))
     s = 0
     index = length(times.t)
     t = times.t[index]

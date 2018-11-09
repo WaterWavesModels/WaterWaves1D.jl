@@ -4,6 +4,7 @@ using Plots
 using LinearAlgebra
 using FFTW
 
+include("parameters.jl")
 include("times.jl")
 include("mesh.jl")
 
