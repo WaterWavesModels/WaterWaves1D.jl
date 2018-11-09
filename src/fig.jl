@@ -71,8 +71,8 @@ function fig(t, times::Times, models::Vector{AbstractModel}, mesh::Mesh)
     
     for model in models
         (hhat,uhat)=model.data[index]
-        (h,u)=(real(ifft((model.Gamma.^s).*hhat)),real(ifft(uhat)))
-        plot!(p[1,1], mesh.x,h; label=model.label)
+        (hr,ur)=(real(ifft((model.Gamma.^s).*hhat)),real(ifft(uhat)))
+        plot!(p[1,1], mesh.x,hr; label=model.label)
         plot!(p[2,1], fftshift(model.mesh.k),log10.(1e-18.+abs.(fftshift(hhat))); 
             label=model.label)  
     end
