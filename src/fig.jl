@@ -31,7 +31,7 @@ function fig(t)
     end
     p=plot(p1,p2,layout=(2,1),label=Labels)
 
-    display(p)
+    p
 end
 
 
@@ -54,7 +54,7 @@ function fig(t, times, Gamma, Modeles::Dict, epsilon, mesh)
         plot!(p[2,1], fftshift(mesh.k),log10.(1e-18.+abs.(fftshift(hhat))); label=string(label))  
     end
     
-    display(p)
+    p
 end
 
 
@@ -77,6 +77,7 @@ function fig(t, times::Times, models, mesh::Mesh)
             label=model.label)  
     end
     
-    display(p)
+    p
+
 end
 

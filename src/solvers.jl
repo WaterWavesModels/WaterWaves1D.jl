@@ -26,7 +26,7 @@ mutable struct RK4 <: TimeSolver
 end
 
 function step!(s  :: RK4,
-               f  :: Function,
+               f  :: AbstractModel,
                h  :: Vector{Complex{Float64}},
                u  :: Vector{Complex{Float64}},
                dt :: Float64)
