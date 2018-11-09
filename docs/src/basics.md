@@ -1,43 +1,22 @@
 # Code basics
 
-## Trois types abstraits
+## Abstract types
 
-peuvent être définis : 
-- un solveur (RK4,Euler, etc), 
-- un modèle (Cheng, Matsuno, etc), 
-- une donnée initiale (Bosse, onde solitaire, etc)
+  - `TimeSolver` (`RK4`, `Euler`, etc), 
+  - `AbstractModel` (`Cheng`, `Matsuno`, etc), 
+  - `InitialData` (`Bump`, `SolitaryWave`, etc)
 
-Ces trois types peuvent être construits à partir de la donnée simple de paramètres, stockés dans Parameters
+Instances are created from `Parameters` type.
 
-```julia
-abstract type TimeSolver end
-abstract type Model end
-abstract type InitialData end
-
-struct Parameters  # Faire plutôt un dictionnaire ?
-	epsilon :: Float64
-	N       :: Int64
-	L       :: Float64
-	T       :: Float64
-	dt      :: Float64
-end
+```@docs
+Parameters
 ```
 
 Une structure `Problem`  représente un problème donné que l'on va résoudre.
 Les données seront stockées dans data, qui est vide initialement.
 
-```julia
-struct Problem
-	model :: Model
-	initial :: InitialData
-	param :: Parameters
-	solver:: TimeSolver
-	data  :: Vector{Tuple{Vector{Complex{Float64}},Vector{Complex{Float64}}}}  # Attention, j'ai mis les datas dans pb plutôt que dans Model
-	function Problem(model::Model,initial::InitialData,param::Parameters,solver::TimeSolver)
-		data=[] #Il doit y avoir un autre moyen de faire cela...
-		new(model,initial,param,solver,data)
-	end
-end
+```@docs
+Problem
 ```
 
 # Donnee initiale
