@@ -1,4 +1,3 @@
-using DeepWaterModels
 using Test
 using FFTW
 using LinearAlgebra
@@ -53,7 +52,5 @@ for model in models
     solve!(model, h, u, times, solver )
 
 end
-
-#fig(5, times, models, mesh)
 
 @test true
