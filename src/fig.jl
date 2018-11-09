@@ -58,7 +58,7 @@ function fig(t, times, Gamma, Modeles::Dict, epsilon, mesh)
 end
 
 
-function fig(t, times::Times, models, mesh::Mesh)
+function fig(t, times::Times, models::Vector{AbstractModel}, mesh::Mesh)
         
     s = 0
     if indexin(false,times.t.<=t)[1]==nothing

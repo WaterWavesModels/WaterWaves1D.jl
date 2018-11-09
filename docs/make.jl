@@ -8,7 +8,8 @@ makedocs(modules=[DeepWaterModels],
          doctest = false,
          format = :html,
          sitename = "DeepWaterModels.jl",
-         pages = ["Documentation" => "index.md"])
+         pages = ["Documentation" => "index.md",
+                  "Code basics" => "basics.md"])
 
 deploydocs(
     deps   = Deps.pip("mkdocs", "python-markdown-math"),
