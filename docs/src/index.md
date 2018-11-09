@@ -1,6 +1,6 @@
 # DeepWaterModels.jl Documentation
 
 ```@autodocs
-Modules = [DeepWaterModels.jl]
+Modules = [DeepWaterModels]
 Order   = [:type, :function]
 ```
