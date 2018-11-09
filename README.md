@@ -8,7 +8,6 @@
 ## Installation
 
 ~~~
-using Pkg
-Pkg.clone("https://github.com/DeepWaterModels/DeepWaterModels.jl")
+(v1.0) pkg> add https://github.com/WaterWavesModels/DeepWaterModels.jl
 using DeepWaterModels
 ~~~
