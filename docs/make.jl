@@ -13,6 +13,4 @@ makedocs(modules=[DeepWaterModels],
 deploydocs(
     deps   = Deps.pip("mkdocs", "python-markdown-math"),
     repo   = "github.com/WaterWaveModels/DeepWaterModels.jl.git",
-    julia  = "1.0",
-    osname = "osx"
  )
