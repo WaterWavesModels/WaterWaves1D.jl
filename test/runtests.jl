@@ -25,6 +25,22 @@ matsuno = Matsuno(mesh, epsilon)
 
 abstract type Model end
 
+@testset "Parameters" begin
+
+    param = Parameters( ϵ  = 1/2, 
+                        N  = 2^12,
+                        L  = 10,
+                        T  = 5,
+                        dt = 0.001)
+    
+    @test param.ϵ  == 0.5
+    @test param.N  == 4096
+    @test param.L  == 10
+    @test param.T  == 5
+    @test param.dt == 0.001
+
+end
+
 abstract type InitialData end
 
 struct Bump <: InitialData  
@@ -44,16 +60,17 @@ end
 
 struct Problem
 
-    model   :: Model
+    model   :: AbstractModel
     initial :: InitialData
     param   :: Parameters
     solver  :: TimeSolver
-    data    :: Vector{Tuple{Vector{Complex{Float64}},Vector{Complex{Float64}}}}
+    data    :: Vector{Tuple{Vector{Complex{Float64}},
+			    Vector{Complex{Float64}}}}
 
-    function Problem(model   :: Model,
-         	    initial :: InitialData,
-         	    param   :: Parameters,
-         	    solver  :: TimeSolver)
+    function Problem(model   :: AbstractModel,
+         	     initial :: InitialData,
+         	     param   :: Parameters,
+         	     solver  :: TimeSolver)
 
          data = [] 
 
@@ -62,29 +79,35 @@ struct Problem
     end
 end
 
-@testset "Parameters" begin
-
-    params = Parameters( ϵ  = 1/2, 
-                         N  = 2^12,
-                         L  = 10,
-                         T  = 5,
-                         dt = 0.001)
-    
-    @test params.ϵ  == 0.5
-    @test params.N  == 4096
-    @test params.L  == 10
-    @test params.T  == 5
-    @test params.dt == 0.001
-
-end
-
 @testset "Initial data" begin
+
+    param = Parameters( ϵ  = 1/2, 
+                        N  = 2^12,
+                        L  = 10,
+                        T  = 5,
+                        dt = 0.001)
+
+    bump = Bump( param )
+    @test true
 
 end
 
 @testset "Problem" begin
 
-    problem = Problem( cheng, initial, params, solver )
+    param = Parameters( ϵ  = 1/2, 
+                        N  = 2^12,
+                        L  = 10,
+                        T  = 5,
+                        dt = 0.001)
+
+    bump    = Bump( param )
+    mesh    = Mesh(-param.L, param.L, param.N)
+    cheng   = Cheng(mesh, param.ϵ)
+    times   = Times(param.dt, param.T)
+    solver  = RK4( param.N )
+    problem = Problem( cheng, bump, param, solver )
+
+    @test true
 
 end
 
@@ -107,17 +130,24 @@ function solve!(model::AbstractModel, h, u, times::Times, solver::TimeSolver)
             
 end
 
+h .= exp.(-mesh.x.^2)
+u .= 0.0
 
-for model in [cheng, matsuno]
-        
-    h .= exp.(-mesh.x.^2)
-    u .= 0.0
+h .= cheng.Pi .* fft(h)
+u .= cheng.Pi .* fft(u)
 
-    h .= model.Pi .* fft(h)
-    u .= model.Pi .* fft(u)
-    
-    solve!(model, h, u, times, solver )
+solve!(cheng, h, u, times, solver )
 
-end
+@test !any(isnan,h)
+@test !any(isnan,u)
 
-@test true
+h .= exp.(-mesh.x.^2)
+u .= 0.0
+
+h .= matsuno.Pi .* fft(h)
+u .= matsuno.Pi .* fft(u)
+
+solve!(matsuno, h, u, times, solver )
+
+@test !any(isnan,h)
+@test !any(isnan,u)
