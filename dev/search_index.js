@@ -33,11 +33,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "basics/#Trois-types-abstraits-1",
+    "location": "basics/#Abstract-types-1",
     "page": "Code basics",
-    "title": "Trois types abstraits",
+    "title": "Abstract types",
     "category": "section",
-    "text": "peuvent être définis : un solveur (RK4,Euler, etc), \nun modèle (Cheng, Matsuno, etc), \nune donnée initiale (Bosse, onde solitaire, etc)Ces trois types peuvent être construits à partir de la donnée simple de paramètres, stockés dans Parametersabstract type TimeSolver end\nabstract type Model end\nabstract type InitialData end\n\nstruct Parameters  # Faire plutôt un dictionnaire ?\n	epsilon :: Float64\n	N       :: Int64\n	L       :: Float64\n	T       :: Float64\n	dt      :: Float64\nendUne structure Problem  représente un problème donné que l\'on va résoudre. Les données seront stockées dans data, qui est vide initialement.struct Problem\n	model :: Model\n	initial :: InitialData\n	param :: Parameters\n	solver:: TimeSolver\n	data  :: Vector{Tuple{Vector{Complex{Float64}},Vector{Complex{Float64}}}}  # Attention, j\'ai mis les datas dans pb plutôt que dans Model\n	function Problem(model::Model,initial::InitialData,param::Parameters,solver::TimeSolver)\n		data=[] #Il doit y avoir un autre moyen de faire cela...\n		new(model,initial,param,solver,data)\n	end\nend"
+    "text": "TimeSolver (RK4, Euler, etc), \nAbstractModel (Cheng, Matsuno, etc), \nInitialData (Bump, SolitaryWave, etc)Instances are created from Parameters type.ParametersUne structure Problem  représente un problème donné que l\'on va résoudre. Les données seront stockées dans data, qui est vide initialement.Problem"
 },
 
 {
