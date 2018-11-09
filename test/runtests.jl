@@ -1,12 +1,10 @@
+using DeepWaterModels
 using Test
 using FFTW
 using LinearAlgebra
 using ProgressMeter
 using BenchmarkTools
-using Plots
 using DeepWaterModels
-
-pyplot()
 
 function solve!(model::AbstractModel, h, u, times::Times, solver::TimeSolver)
                 
@@ -56,8 +54,6 @@ for model in models
 
 end
 
-fig(5, times, models, mesh)
-
-savefig("test.png")
+#fig(5, times, models, mesh)
 
 @test true
