@@ -111,3 +111,4 @@ function plot_model!(p, times::Times, model::AbstractModel, mesh::Mesh)
     plot!(p[2,1], fftshift(model.mesh.k),log10.(1e-18.+abs.(fftshift(hhat))); label=model.label)  
     
 end
+

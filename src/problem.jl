@@ -21,10 +21,18 @@ struct Problem
     end
 end
 
+export solve!
+
 function solve!(problem :: Problem, times :: Times) 
 
-    h = problem.initial.h
-    u = problem.initial.h
+    N  = problem.model.mesh.N
+    h  = zeros(ComplexF64, N)
+    u  = zeros(ComplexF64, N)
+
+    problem.initial(h, u)
+
+    h .= problem.model.Pi .* fft(h)
+    u .= problem.model.Pi .* fft(u)
                 
     prog = Progress(times.Nt,1) 
     
@@ -43,3 +51,4 @@ function solve!(problem :: Problem, times :: Times)
     end
             
 end
+

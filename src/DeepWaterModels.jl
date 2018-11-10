@@ -3,6 +3,7 @@ module DeepWaterModels
 using Plots
 using LinearAlgebra
 using FFTW
+using ProgressMeter
 
 export AbstractModel
 abstract type AbstractModel end

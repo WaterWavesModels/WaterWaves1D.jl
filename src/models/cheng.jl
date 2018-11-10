@@ -4,7 +4,8 @@ mutable struct Cheng <: AbstractModel
 
     mesh    :: Mesh
     label   :: String
-    data    :: Vector{Tuple{Vector{Complex{Float64}},Vector{Complex{Float64}}}}
+    data    :: Vector{Tuple{Vector{Complex{Float64}},
+			    Vector{Complex{Float64}}}}
     Gamma   :: Array{Float64,1}
     Dx      :: Array{Complex{Float64},1}
     H       :: Array{Complex{Float64},1}
@@ -51,14 +52,14 @@ function (m::Cheng)(h::Vector{Complex{Float64}},
     m.Int1  .= u
     m.Int1 .*= m.Gamma
     ldiv!(m.unew, m.Px , m.Int1)
-    m.unew  .^= 2
+    m.unew .^= 2
     mul!(m.Int1, m.Px , m.unew)
     m.Int1 .*= m.H
     
     m.Int2  .= h
     m.Int2 .*= m.Dx
     ldiv!(m.unew, m.Px , m.Int2)
-    m.unew  .*= m.hnew
+    m.unew .*= m.hnew
     mul!(m.Int2, m.Px , m.unew)
     
     m.Int3  .= h
@@ -79,7 +80,6 @@ function (m::Cheng)(h::Vector{Complex{Float64}},
     u  .= h
     u .*= m.H
     u .+= m.Int1
-    
     h .= m.hnew
     
 end

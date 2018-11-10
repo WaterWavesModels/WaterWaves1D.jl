@@ -1,9 +1,6 @@
 using Test
-using FFTW
-using LinearAlgebra
-using ProgressMeter
-using BenchmarkTools
 using DeepWaterModels
+using FFTW
 
 param = Parameters( ϵ  = 1/2, 
                     N  = 2^12,
@@ -11,16 +8,6 @@ param = Parameters( ϵ  = 1/2,
                     T  = 5,
                     dt = 0.001)
 
-times   = Times(param.dt, param.T)
-solver  = RK4( param.N )
-mesh    = Mesh(-param.L, param.L, param.N)
-cheng   = Cheng(mesh, param.ϵ)
-matsuno = Matsuno(mesh, param.ϵ)
-bump    = Bump( param )
-problem = Problem( cheng, bump, param, solver )
-
-h  = bump.h
-u  = bump.u
 
 @testset "Parameters" begin
 
@@ -32,30 +19,25 @@ u  = bump.u
 
 end
 
-@testset "Initial data" begin
+bump     = Bump( param )
+solver   = RK4( param.N )
+cheng    = Cheng( bump.mesh, param.ϵ)
+problem1 = Problem( cheng, bump, param, solver )
 
-    @test length(h) == param.N
-    @test length(u) == param.N
+times    = Times(param.dt, param.T)
 
+solve!( problem1, times )
+
+@testset "Test problem with Cheng model" begin
+    @test !any(isnan,problem1.data[end][1])
+    @test !any(isnan,problem1.data[end][2])
 end
 
-@testset "Problem" begin
+matsuno  = Matsuno(bump.mesh, param.ϵ)
+problem2 = Problem(matsuno, bump, param, solver )
+solve!( problem2, times )
 
-    @test true
-
+@testset "Test problem with Matsuno model" begin
+    @test !any(isnan,problem2.data[end][1])
+    @test !any(isnan,problem2.data[end][2])
 end
-
-h .= cheng.Pi .* fft(h)
-u .= cheng.Pi .* fft(u)
-
-@test !any(isnan,h)
-@test !any(isnan,u)
-
-h .= bump.h
-u .= bump.u
-
-h .= matsuno.Pi .* fft(h)
-u .= matsuno.Pi .* fft(u)
-
-@test !any(isnan,h)
-@test !any(isnan,u)

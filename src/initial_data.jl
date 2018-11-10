@@ -4,15 +4,21 @@ export Bump
 
 struct Bump <: InitialData  
 
-    h :: Array{Complex{Float64},1}
-    u :: Array{Complex{Float64},1}
+    mesh :: Mesh
 
     function Bump(p :: Parameters) 
 
     	mesh  = Mesh(-p.L, p.L, p.N)
-    	h = exp.(-(mesh.x).^2)
-    	u = zeros(Complex{Float64}, mesh.N)
-    	new(h,u)
+    	new( mesh )
 
     end
 end
+
+
+function(b::Bump)(h, u)
+
+    h .= exp.(-(b.mesh.x).^2)
+    u .= zeros(Complex{Float64}, b.mesh.N)
+
+end
+
