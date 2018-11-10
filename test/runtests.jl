@@ -19,23 +19,22 @@ param = Parameters( ϵ  = 1/2,
 
 end
 
-bump     = Bump( param )
-solver   = RK4( param.N )
-cheng    = Cheng( bump.mesh, param.ϵ)
+bump     = Bump(param)
+solver   = RK4(param)
+cheng    = Cheng(param)
 problem1 = Problem( cheng, bump, param, solver )
 
-times    = Times(param.dt, param.T)
-
-solve!( problem1, times )
+solve!(problem1)
 
 @testset "Test problem with Cheng model" begin
     @test !any(isnan,problem1.data[end][1])
     @test !any(isnan,problem1.data[end][2])
 end
 
-matsuno  = Matsuno(bump.mesh, param.ϵ)
+matsuno  = Matsuno(param)
 problem2 = Problem(matsuno, bump, param, solver )
-solve!( problem2, times )
+
+solve!( problem2 )
 
 @testset "Test problem with Matsuno model" begin
     @test !any(isnan,problem2.data[end][1])

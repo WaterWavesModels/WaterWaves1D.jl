@@ -12,6 +12,7 @@ function fig_problem!( p, problem::Problem )
     plot!(p[1,1], problem.model.mesh.x, hr; 
 		  title="physical space",
 	          label=problem.model.label)
+
     plot!(p[2,1], fftshift(problem.model.mesh.k),
                   log10.(1e-18.+abs.(fftshift(hhat))); 
 		  title="frequency",
@@ -25,23 +26,24 @@ param = Parameters( ϵ  = 1/2,
                     T  = 5,
                     dt = 0.001)
 
-bump     = Bump( param )
-solver   = RK4( param.N )
+bump     = Bump(param)
+solver   = RK4(param)
 
-times    = Times(param.dt, param.T)
+cheng    = Cheng(param)
+problem1 = Problem(cheng, bump, param, solver)
 
-cheng    = Cheng( bump.mesh, param.ϵ)
-problem1 = Problem( cheng, bump, param, solver )
+matsuno  = Matsuno(param)
+problem2 = Problem(matsuno, bump, param, solver)
 
-matsuno  = Matsuno(bump.mesh, param.ϵ)
-problem2 = Problem(matsuno, bump, param, solver )
-
-solve!( problem1, times )
-solve!( problem2, times )
+problems = [ problem1, problem2 ]
 
 p = plot(layout=(2,1))
 
-fig_problem!( p, problem1 )
-fig_problem!( p, problem2 )
+for problem in problems
+
+   solve!( problem )
+   fig_problem!( p, problem )
+
+end
 
 display(p)

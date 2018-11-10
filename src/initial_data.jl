@@ -2,6 +2,17 @@ abstract type InitialData end
 
 export Bump
 
+"""
+    Bump(param)
+
+```math
+h = exp(-x^2)
+```
+
+```math
+u = 0
+```
+"""
 struct Bump <: InitialData  
 
     mesh :: Mesh

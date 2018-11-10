@@ -5,6 +5,12 @@ abstract type TimeSolver end
 export RK4
 export step!
 
+"""
+    RK4(params)
+
+Runge-Kutta fourth order solver.
+
+"""
 mutable struct RK4 <: TimeSolver
     
     hhat :: Vector{Complex{Float64}}
@@ -12,7 +18,9 @@ mutable struct RK4 <: TimeSolver
     dh   :: Vector{Complex{Float64}}
     du   :: Vector{Complex{Float64}}
     
-    function RK4( n )
+    function RK4( param::Parameters )
+
+	n = param.N
         
         hhat = zeros(Complex{Float64}, n)
         uhat = zeros(Complex{Float64}, n)

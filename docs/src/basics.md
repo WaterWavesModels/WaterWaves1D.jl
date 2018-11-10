@@ -19,64 +19,23 @@ Les données seront stockées dans data, qui est vide initialement.
 Problem
 ```
 
-# Donnee initiale
+# Initial data
 
-```julia
-mutable struct Bump <: InitialData  
-
-    # est-ce utile que ce soit mutable ?
-    # il faudrait forcer que toutes les InitialData (et pas seulement Bump) donnent h et u vecteurs réels
-
-    h   :: Array{Float64,1}
-    u   :: Array{Float64,1}
-
-    function Bump(p :: Parameters) # Une donnée initiale est construite à partir de son nom et de la donnée de Parameters
-    	mesh  = Mesh(-p.L, p.L, p.N)
-    	h = exp.(-(mesh.x).^2)
-    	u  = zeros(Complex{Float64}, mesh.N)
-    	new(h,u)
-    end
-end
+```@docs
+Bump
 ```
 
-## Modele
+## Deep water models
 
-```julia
-mutable struct Matsuno <: Model  
-
-    # Données qui seront utilisées dans les fonctions init, build, fwave! (et fig pour label)
-    label   :: String
-    h       :: Array{Complex{Float64},1}
-    u	      :: Array{Complex{Float64},1}
-    Gamma   :: Array{Float64,1}
-    Dx      :: Array{Complex{Float64},1}
-    H       :: Array{Complex{Float64},1}
-    Pi      :: BitArray{1}
-    Px      :: FFTW.cFFTWPlan{Complex{Float64},-1,false,1}
-    epsilon :: Float64
-    hnew    :: Array{Complex{Float64},1}
-    unew    :: Array{Complex{Float64},1}
-    Int1    :: Array{Complex{Float64},1}
-    Int2    :: Array{Complex{Float64},1}
-    Int3    :: Array{Complex{Float64},1}
-
-    function Matsuno(par::Parameters) # Un modèle est construit à partir de son nom et de la donnée de Parameters
-        label = "Matsuno"
-        mesh = Mesh(-par.L, par.L, par.N)
-        Gamma = abs.(mesh.k)
-        epsilon= par.epsilon
-        Dx    =  1im * mesh.k            # Differentiation
-        H     = -1im * sign.(mesh.k)     # Hilbert transform
-        Pi    = Gamma .< mesh.kmax * 2/3 # Dealiasing low-pass filter
-        h0 = zeros(Complex{Float64}, par.N)
-        Px  = plan_fft(h0; flags = FFTW.MEASURE)
-        h, u, hnew, unew ,Int1, Int2, Int3 = similar(h0), similar(h0), similar(h0), similar(h0), similar(h0), similar(h0), similar(h0)
-        new(label, h, u, Gamma, Dx, H, Pi, Px, epsilon, hnew, unew, Int1, Int2, Int3)
-    end
-end
+```@docs
+Chen
 ```
 
-## Fonctions
+```@docs
+Matsuno
+```
+
+## Functions
 
 `init` et `build` pour le modèle Matsuno (c'est le même pour Cheng)
 
@@ -96,29 +55,11 @@ function build(m :: Matsuno, h :: Array{Complex{Float64},1}, u :: Array{Complex{
 end
 
 
-function solve!(p::Problem)
-
-    model = p.model( p.param )    # définit en particulier init et fwave! utilisés ci-dessous
-  	(h,u) = init(model,p.initial) # La fonction init, définie pour chaque modèle ransforme la donnée initiale
-  	solver = p.solver( p.param.N )
-
-  	times = Times(p.param.dt, p.param.T)
-  	prog = Progress(times.Nt,1) # progress bar
-
-    push!(p.data,(h,u))
-
-    for l in range(1,times.Nt-1)
-
-        step!( solver, model, fwave!, h, u, p.param.dt)   # la fonction step ne change pas par rapport aux versions précédentes
-        push!( p.data, (h,u))   
-
-        next!(prog)
-    end
-
-end
+```@docs
+solve!(::Problem)
 ```
 
-## Document principal (ce que voit l'utilisateur)
+## Main program
 
 ```julia
 epsilon = 1/2

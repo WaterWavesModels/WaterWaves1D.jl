@@ -20,8 +20,10 @@ mutable struct Cheng <: AbstractModel
     
     Px      :: FFTW.FFTWPlan
         
-    function Cheng(mesh::Mesh, epsilon::Float64)
+    function Cheng( param::Parameters)
 
+	epsilon = param.ϵ
+	mesh  = Mesh(-param.L, param.L, param.N)
         label = "Cheng et al."
         data  = []
         Gamma = abs.(mesh.k)

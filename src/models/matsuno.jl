@@ -19,7 +19,10 @@ mutable struct Matsuno <: AbstractModel
     
     Px      :: FFTW.FFTWPlan
 
-    function Matsuno(mesh::Mesh, epsilon::Float64)
+    function Matsuno(param::Parameters)
+
+	epsilon = param.ϵ
+	mesh  = Mesh(-param.L, param.L, param.N)
 
         label = "Matsuno"
         data  = []

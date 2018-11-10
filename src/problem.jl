@@ -1,11 +1,21 @@
 export Problem
 
+"""
+    Problem( model, initial, param, solver)
+
+- model   : Cheng or Matsuno
+- initial : Bump
+- param   : Mesh, Frequency, epsilon
+- solver  : RK4
+
+"""
 struct Problem
 
     model   :: AbstractModel
     initial :: InitialData
     param   :: Parameters
     solver  :: TimeSolver
+    times   :: Times
     data    :: Vector{Tuple{Vector{Complex{Float64}},
 			    Vector{Complex{Float64}}}}
 
@@ -14,16 +24,17 @@ struct Problem
          	     param   :: Parameters,
          	     solver  :: TimeSolver)
 
-         data = [] 
+         times = Times(param.dt, param.T)
+         data  = [] 
 
-         new(model,initial,param,solver,data)
+         new(model,initial,param,solver,times,data)
 
     end
 end
 
 export solve!
 
-function solve!(problem :: Problem, times :: Times) 
+function solve!(problem :: Problem) 
 
     N  = problem.model.mesh.N
     h  = zeros(ComplexF64, N)
@@ -34,13 +45,13 @@ function solve!(problem :: Problem, times :: Times)
     h .= problem.model.Pi .* fft(h)
     u .= problem.model.Pi .* fft(u)
                 
-    prog = Progress(times.Nt,1) 
+    prog = Progress(problem.times.Nt,1) 
     
     push!(problem.data,(h,u))
 
-    for l in range(1,times.Nt-1)
+    for l in range(1,problem.times.Nt-1)
         
-        dt = times.t[l+1]-times.t[l]
+        dt = problem.times.t[l+1]-problem.times.t[l]
         
         step!(problem.solver, problem.model, h, u, dt)
     
