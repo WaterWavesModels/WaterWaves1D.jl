@@ -4,18 +4,17 @@ using Plots
 using LinearAlgebra
 using FFTW
 
-include("parameters.jl")
-include("times.jl")
-include("mesh.jl")
-
 export AbstractModel
-
 abstract type AbstractModel end
 
+include("times.jl")
+include("mesh.jl")
+include("solvers.jl")
+include("parameters.jl")
+include("initial_data.jl")
 include("models/cheng.jl")
 include("models/matsuno.jl")
-
-include("solvers.jl")
+include("problem.jl")
 include("fig.jl")
 
 end 
