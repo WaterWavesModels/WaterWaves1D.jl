@@ -7,17 +7,13 @@ using Literate
 
 # generate example
 
-EXAMPLE     = joinpath(@__DIR__, "..",  "examples/two_problems.jl")
 DOC_OUTPUT  = joinpath(@__DIR__, "src", "examples")
 NB_OUTPUT   = joinpath(@__DIR__, "src", "notebooks")
-Literate.markdown(EXAMPLE, DOC_OUTPUT)
-Literate.notebook(EXAMPLE, NB_OUTPUT, execute=false)
 
-EXAMPLE     = joinpath(@__DIR__, "..",  "examples/animation.jl")
-DOC_OUTPUT  = joinpath(@__DIR__, "src", "examples")
-NB_OUTPUT   = joinpath(@__DIR__, "src", "notebooks")
-Literate.markdown(EXAMPLE, DOC_OUTPUT)
-Literate.notebook(EXAMPLE, NB_OUTPUT, execute=false)
+Literate.markdown(joinpath(@__DIR__, "..",  "examples/two_problems.jl"), DOC_OUTPUT)
+Literate.notebook(joinpath(@__DIR__, "..",  "examples/two_problems.jl"), NB_OUTPUT, execute=false)
+Literate.markdown(joinpath(@__DIR__, "..",  "examples/animation.jl"), DOC_OUTPUT)
+Literate.notebook(joinpath(@__DIR__, "..",  "examples/animation.jl"), NB_OUTPUT, execute=false)
 
 makedocs(modules=[DeepWaterModels],
          doctest = false,
