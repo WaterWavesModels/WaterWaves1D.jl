@@ -8,10 +8,10 @@ using ProgressMeter
 export AbstractModel
 abstract type AbstractModel end
 
+include("parameters.jl")
 include("times.jl")
 include("mesh.jl")
 include("solvers.jl")
-include("parameters.jl")
 include("initial_data.jl")
 include("models/cheng.jl")
 include("models/matsuno.jl")

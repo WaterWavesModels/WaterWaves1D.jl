@@ -1,6 +1,15 @@
+# # Two deep water problems
+#
+#md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two-problems.ipynb)
+#
 using DeepWaterModels
 using FFTW
 using Plots
+
+#----
+#
+#
+#md # Plot results function
 
 function fig_problem!( p, problem::Problem )
 
@@ -20,6 +29,7 @@ function fig_problem!( p, problem::Problem )
     
 end
 
+#----
 param = Parameters( ϵ  = 1/2, 
                     N  = 2^12,
                     L  = 10,
@@ -35,9 +45,12 @@ problem1 = Problem(cheng, bump, param, solver)
 matsuno  = Matsuno(param)
 problem2 = Problem(matsuno, bump, param, solver)
 
-problems = [ problem1, problem2 ]
+
+#----
 
 p = plot(layout=(2,1))
+
+problems = [ problem1, problem2 ]
 
 for problem in problems
 
@@ -46,4 +59,7 @@ for problem in problems
 
 end
 
-display(p)
+savefig("two-problems.png"); nothing # hide
+
+#----
+#md # ![](two-problems.png)
