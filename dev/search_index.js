@@ -9,22 +9,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#DeepWaterModels.Cheng",
-    "page": "Documentation",
-    "title": "DeepWaterModels.Cheng",
-    "category": "type",
-    "text": "Cheng( params )\n\n\n\n\n\n"
-},
-
-{
-    "location": "#DeepWaterModels.RK4",
-    "page": "Documentation",
-    "title": "DeepWaterModels.RK4",
-    "category": "type",
-    "text": "RK4(params)\n\nRunge-Kutta fourth order solver.\n\n\n\n\n\n"
-},
-
-{
     "location": "#DeepWaterModels.build-Tuple{Cheng,Array{Complex{Float64},1},Array{Complex{Float64},1}}",
     "page": "Documentation",
     "title": "DeepWaterModels.build",
@@ -121,6 +105,14 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "basics/#DeepWaterModels.Cheng",
+    "page": "Code basics",
+    "title": "DeepWaterModels.Cheng",
+    "category": "type",
+    "text": "Cheng( params )\n\n\n\n\n\n"
+},
+
+{
     "location": "basics/#DeepWaterModels.Matsuno",
     "page": "Code basics",
     "title": "DeepWaterModels.Matsuno",
@@ -133,7 +125,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Code basics",
     "title": "Deep water models",
     "category": "section",
-    "text": "ChenMatsunosolve!(::Problem)"
+    "text": "ChengMatsunosolve!(::Problem)"
 },
 
 {
@@ -141,15 +133,23 @@ var documenterSearchIndex = {"docs": [
     "page": "Code basics",
     "title": "Main program",
     "category": "section",
-    "text": "epsilon = 1/2\nN       = 2^12\nL       = 10\nT       = 5\ndt      = 0.001\n\nparam = Parameters(epsilon,N,L,T,dt)\n\nproblems = [Problem(Cheng,Bump,param,RK4),Problem(Matsuno,Bump,param,RK4)]Cheng est le modèle utilisé. Il prend en valeur Bump, param et définit 3 fonction:init qui construit une donnée initiale à partir de Bump : Uinit=init(Bump,param)\nFwave utilisée pour résoudre dt U= Fwave(U) (avec donnée initiale Uinit)\nbuild qui reconstruit la donnée finale (c\'est l\'application inverse de init). Ufin=final(U,param)Bump est la donnée initiale, on pourrait stocker des exemples pertinents dans un dossier à part (comme pour les modèles et les solvers)param doit être défini par l\'utilisateur : c\'est grâce à lui que l\'on reconstruit mesh, time, etc. dans les différentes fonctions.Il pourrait changer entre deux simulation  :simuls = [(Cheng,Bump,param1,RK4),(Cheng,Bump,param2,RK4)]"
+    "text": "epsilon = 1/2\nN       = 2^12\nL       = 10\nT       = 5\ndt      = 0.001\n\nparam = Parameters(epsilon,N,L,T,dt)\n\nproblems = [Problem(Cheng,Bump,param,RK4),Problem(Matsuno,Bump,param,RK4)]Cheng est le modèle utilisé. Il prend en valeur Bump, param et définit 3 fonction:init qui construit une donnée initiale à partir de Bump : Uinit=init(Bump,param)\nFwave utilisée pour résoudre dt U= Fwave(U) (avec donnée initiale Uinit)\nbuild qui reconstruit la donnée finale (c\'est l\'application inverse de init). Ufin=final(U,param)init(::Cheng)\ninit(::Matsuno)build(::Cheng)\nbuild(::Matsuno)simuls = [(Cheng,Bump,param1,RK4),(Cheng,Bump,param2,RK4)]"
 },
 
 {
-    "location": "basics/#Le-solver-RK4-1",
+    "location": "basics/#DeepWaterModels.RK4",
     "page": "Code basics",
-    "title": "Le solver RK4",
+    "title": "DeepWaterModels.RK4",
+    "category": "type",
+    "text": "RK4(params)\n\nRunge-Kutta fourth order solver.\n\n\n\n\n\n"
+},
+
+{
+    "location": "basics/#RK4-solver-1",
+    "page": "Code basics",
+    "title": "RK4 solver",
     "category": "section",
-    "text": "ne change pas par rapport aux versions précédentes. Il n\'a besoin que de param.N en argument (on pourrait par souci de cohérence lui donner carrément param en argument)for p in problems\n    solve!(p)\nendLe résultat de la simulation est stocké dans p.data pour chaque élément de problems. Il faut ensuite faire un fig pour plotter les solutions (c\'est là que la fonction build des modèles sera utile)"
+    "text": "RK4for p in problems\n    solve!(p)\nend"
 },
 
 {
