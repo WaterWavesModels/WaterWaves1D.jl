@@ -6,3 +6,5 @@ notebooks/.ipynb_checkpoints/
 Manifest.toml
 *.swp
 docs/build/
+docs/src/examples/
+docs/src/notebooks/

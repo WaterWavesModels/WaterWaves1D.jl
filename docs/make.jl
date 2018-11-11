@@ -7,7 +7,7 @@ using Literate
 
 # generate example
 
-EXAMPLE     = joinpath(@__DIR__, "..",  "two-problems.jl"))
+EXAMPLE     = joinpath(@__DIR__, "..",  "examples/two_problems.jl")
 DOC_OUTPUT  = joinpath(@__DIR__, "src", "examples")
 NB_OUTPUT   = joinpath(@__DIR__, "src", "notebooks")
 
@@ -20,7 +20,7 @@ makedocs(modules=[DeepWaterModels],
          sitename = "DeepWaterModels.jl",
          pages = ["Documentation" => "index.md",
                   "Code basics" => "basics.md",
-                  "Example" => "two-problems.md"])
+                  "Example" => "examples/two_problems.md"])
 
 deploydocs(
     deps   = Deps.pip("mkdocs", "python-markdown-math"),

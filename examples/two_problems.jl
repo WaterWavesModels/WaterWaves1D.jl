@@ -43,7 +43,7 @@ cheng    = Cheng(param)
 problem1 = Problem(cheng, bump, param, solver)
 
 matsuno  = Matsuno(param)
-problem2 = Problem(matsuno, bump, param, solver)
+problem2 = Problem(matsuno, bump, param, solver);
 
 
 #----

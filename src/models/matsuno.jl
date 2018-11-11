@@ -1,5 +1,9 @@
 export Matsuno
 
+"""
+    Matsuno(params)
+
+"""
 mutable struct Matsuno <: AbstractModel
     
     mesh    :: Mesh
@@ -97,5 +101,25 @@ function (m::Matsuno)(h::Vector{Complex{Float64}},
     m.unew  .*= m.epsilon/2 * m.Pi 
     m.Int1  .-= m.unew
     u        .= m.Int1
+
+end
+
+"""
+    init( matsuno, data)
+"""
+function init(m::Matsuno, data::InitialData)
+
+    (m.Pi .* fft(data.h), m.Pi .* fft(data.u))
+
+end
+
+"""
+    build( matsuno, h, u)
+"""
+function build(m::Matsuno, 
+	       h::Array{Complex{Float64},1}, 
+               u::Array{Complex{Float64},1})
+
+    InitialData(real(ifft(h)),real(ifft(u)))
 
 end

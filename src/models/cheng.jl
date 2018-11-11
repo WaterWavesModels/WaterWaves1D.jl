@@ -1,5 +1,9 @@
 export Cheng
 
+"""
+    Cheng( params )
+
+"""
 mutable struct Cheng <: AbstractModel
 
     mesh    :: Mesh
@@ -84,4 +88,26 @@ function (m::Cheng)(h::Vector{Complex{Float64}},
     u .+= m.Int1
     h .= m.hnew
     
+end
+
+"""
+    init(cheng, data)
+
+"""
+function init(m::Cheng, data::InitialData)
+
+    (m.Pi .* fft(data.h), m.Pi .* fft(data.u))
+
+end
+
+"""
+    build(cheng, h, u)
+
+"""
+function build(m::Cheng, 
+	       h::Array{Complex{Float64},1}, 
+               u::Array{Complex{Float64},1})
+
+    InitialData(real(ifft(h)),real(ifft(u)))
+
 end
