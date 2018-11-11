@@ -28,7 +28,7 @@ Bump
 ## Deep water models
 
 ```@docs
-Chen
+Cheng
 ```
 
 ```@docs
@@ -58,24 +58,28 @@ Cheng est le modèle utilisé. Il prend en valeur Bump, param et définit 3 fonc
   2. `Fwave` utilisée pour résoudre dt U= Fwave(U) (avec donnée initiale Uinit)
   3. `build` qui reconstruit la donnée finale (c'est l'application inverse de init). Ufin=final(U,param)
 
-Bump est la donnée initiale, on pourrait stocker des exemples pertinents dans un dossier à part (comme pour les modèles et les solvers)
+```@docs
+init(::Cheng)
+init(::Matsuno)
+```
 
-param doit être défini par l'utilisateur : c'est grâce à lui que l'on reconstruit mesh, time, etc. dans les différentes fonctions.
-
-Il pourrait changer entre deux simulation  :
+```@docs
+build(::Cheng)
+build(::Matsuno)
+```
 
 ```julia
 simuls = [(Cheng,Bump,param1,RK4),(Cheng,Bump,param2,RK4)]
 ```
 
-## Le solver RK4
+## RK4 solver
 
-ne change pas par rapport aux versions précédentes. Il n'a besoin que de param.N en argument (on pourrait par souci de cohérence lui donner carrément param en argument)
+```@docs
+RK4
+```
 
 ```julia
 for p in problems
     solve!(p)
 end
 ```  
-
-Le résultat de la simulation est stocké dans p.data pour chaque élément de problems. Il faut ensuite faire un fig pour plotter les solutions (c'est là que la fonction build des modèles sera utile)
