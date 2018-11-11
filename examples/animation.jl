@@ -15,7 +15,7 @@ pyplot()
 param = Parameters( ϵ  = 1/2, 
                     N  = 2^12,
                     L  = 10,
-                    T  = 10.0,
+                    T  = 5.0,
                     dt = 0.001)
 
 bump    = Bump(param)
@@ -62,7 +62,7 @@ function create_animation( bump, solver, cheng, times )
     
         next!(prog)
     
-    end when mod(l, 100) == 0
+    end when mod(l, 200) == 0
     
     gif(anim, "cheng.gif", fps=15); nothing 
 
