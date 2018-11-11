@@ -22,7 +22,8 @@ makedocs(modules=[DeepWaterModels],
          pages = ["Documentation" => "index.md",
                   "Code basics"   => "basics.md",
                   "Animation"     => "examples/animation.md",
-                  "Example"       => "examples/two_problems.md"])
+                  "Example"       => "examples/two_problems.md",
+                  "Contents"      => "contents.md"])
 
 deploydocs(
     deps   = Deps.pip("mkdocs", "python-markdown-math"),
