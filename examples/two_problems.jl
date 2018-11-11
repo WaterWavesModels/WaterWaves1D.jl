@@ -1,6 +1,6 @@
 # # Two deep water problems
 #
-#md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two-problems.ipynb)
+#md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two_problems.ipynb)
 #
 using DeepWaterModels
 using FFTW
@@ -59,7 +59,7 @@ for problem in problems
 
 end
 
-savefig("two-problems.png"); nothing # hide
+savefig("two_problems.png"); nothing # hide
 
 #----
-#md # ![](two-problems.png)
+#md # ![](two_problems.png)
