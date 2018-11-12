@@ -68,7 +68,7 @@ function create_animation( bump, solver, cheng, times )
 
 end
 
-@time create_animation( bump, solver, cheng, times )
+# @time create_animation( bump, solver, cheng, times )
 
 #----
 #md # ![](cheng.gif)
