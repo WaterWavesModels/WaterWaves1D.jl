@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Animation · DeepWaterModels.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="../../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>DeepWaterModels.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../">Documentation</a></li><li><a class="toctext" href="../../basics/">Code basics</a></li><li class="current"><a class="toctext" href>Animation</a><ul class="internal"></ul></li><li><a class="toctext" href="../two_problems/">Example</a></li><li><a class="toctext" href="../../contents/">Contents</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Animation</a></li></ul><a class="edit-page" href="https://github.com/WaterWavesModels/DeepWaterModels.jl/blob/master/examples/animation.jl"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Animation</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Animation-1" href="#Animation-1">Animation</a></h1><p>deep water problem solved with Cheng model animation</p><p><a href="https://nbviewer.jupyter.org/github/WaterWavesModels/DeepWaterModels.jl/blob/gh-pages/latest/notebooks/animation.ipynb"><code>notebook</code></a></p><div><pre><code class="language-julia">using DeepWaterModels
+using FFTW
+using Plots
+using ProgressMeter
+pyplot()</code></pre><pre><code class="language-none">[ Info: Installing matplotlib via the Conda matplotlib package...
+[ Info: Running `conda install -q -y matplotlib` in root environment
+Solving environment: ...working... done
+
+## Package Plan ##
+
+  environment location: /Users/travis/.julia/conda/3
+
+  added / updated specs:
+    - matplotlib
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    tornado-5.1.1              |   py37h1de35cc_0         661 KB
+    cycler-0.10.0              |           py37_0          14 KB
+    freetype-2.9.1             |       hb4e5f40_0         864 KB
+    matplotlib-3.0.1           |   py37h54f8f79_0         6.5 MB
+    kiwisolver-1.0.1           |   py37h0a44026_0          56 KB
+    pyparsing-2.3.0            |           py37_0         101 KB
+    libpng-1.6.35              |       ha441bb4_0         318 KB
+    python-dateutil-2.7.5      |           py37_0         275 KB
+    pytz-2018.7                |           py37_0         244 KB
+    ------------------------------------------------------------
+                                           Total:         9.0 MB
+
+The following NEW packages will be INSTALLED:
+
+    cycler:          0.10.0-py37_0
+    freetype:        2.9.1-hb4e5f40_0
+    kiwisolver:      1.0.1-py37h0a44026_0
+    libpng:          1.6.35-ha441bb4_0
+    matplotlib:      3.0.1-py37h54f8f79_0
+    pyparsing:       2.3.0-py37_0
+    python-dateutil: 2.7.5-py37_0
+    pytz:            2018.7-py37_0
+    tornado:         5.1.1-py37h1de35cc_0
+
+Preparing transaction: ...working... done
+Verifying transaction: ...working... done
+Executing transaction: ...working... done
+Unable to revert mtime: /Library/Fonts
+Plots.PyPlotBackend()</code></pre></div><div><pre><code class="language-julia">param = Parameters( ϵ  = 1/2,
+                    N  = 2^12,
+                    L  = 10,
+                    T  = 5.0,
+                    dt = 0.001)
+
+bump    = Bump(param)
+solver  = RK4(param)
+cheng   = Cheng(param)
+times   = Times(param.dt, param.T)</code></pre><pre><code class="language-none">Times(5001, 5.0, 0.001, [0.0, 0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009  …  4.991, 4.992, 4.993, 4.994, 4.995, 4.996, 4.997, 4.998, 4.999, 5.0])</code></pre></div><div><pre><code class="language-julia">function create_animation( bump, solver, cheng, times )
+
+    N  = cheng.mesh.N
+    h  = zeros(ComplexF64, N)
+    u  = zeros(ComplexF64, N)
+
+    bump(h, u)
+
+    h .= cheng.Pi .* fft(h)
+    u .= cheng.Pi .* fft(u)
+
+    prog = Progress(times.Nt,1)
+
+    hr = real(similar(h))
+
+    anim = @animate for l in range(1,times.Nt-1)
+
+        dt = times.t[l+1]-times.t[l]
+
+        step!(solver, cheng, h, u, dt)
+
+        p = plot(layout=(2,1))
+
+        hr = real(ifft(h))
+
+        plot!(p[1,1], cheng.mesh.x, hr;
+	          ylims=(-0.6,1),
+        	  title=&quot;physical space&quot;,
+              label=cheng.label)
+
+        plot!(p[2,1], fftshift(cheng.mesh.k),
+              log10.(1e-18.+abs.(fftshift(h)));
+        	  title=&quot;frequency&quot;,
+          label=cheng.label)
+
+        next!(prog)
+
+    end when mod(l, 200) == 0
+
+    gif(anim, &quot;cheng.gif&quot;, fps=15); nothing
+
+end</code></pre><pre><code class="language-none">create_animation (generic function with 1 method)</code></pre></div><p>@time create_animation( bump, solver, cheng, times )</p><p><img src="cheng.gif" alt/></p><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p><footer><hr/><a class="previous" href="../../basics/"><span class="direction">Previous</span><span class="title">Code basics</span></a><a class="next" href="../two_problems/"><span class="direction">Next</span><span class="title">Example</span></a></footer></article></body></html>

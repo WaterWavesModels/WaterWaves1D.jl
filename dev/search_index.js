@@ -153,6 +153,22 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "examples/animation/#",
+    "page": "Animation",
+    "title": "Animation",
+    "category": "page",
+    "text": "EditURL = \"https://github.com/WaterWavesModels/DeepWaterModels.jl/blob/master/examples/animation.jl\""
+},
+
+{
+    "location": "examples/animation/#Animation-1",
+    "page": "Animation",
+    "title": "Animation",
+    "category": "section",
+    "text": "deep water problem solved with Cheng model animationnotebookusing DeepWaterModels\nusing FFTW\nusing Plots\nusing ProgressMeter\npyplot()param = Parameters( ϵ  = 1/2,\n                    N  = 2^12,\n                    L  = 10,\n                    T  = 5.0,\n                    dt = 0.001)\n\nbump    = Bump(param)\nsolver  = RK4(param)\ncheng   = Cheng(param)\ntimes   = Times(param.dt, param.T)function create_animation( bump, solver, cheng, times )\n\n    N  = cheng.mesh.N\n    h  = zeros(ComplexF64, N)\n    u  = zeros(ComplexF64, N)\n\n    bump(h, u)\n\n    h .= cheng.Pi .* fft(h)\n    u .= cheng.Pi .* fft(u)\n\n    prog = Progress(times.Nt,1)\n\n    hr = real(similar(h))\n\n    anim = @animate for l in range(1,times.Nt-1)\n\n        dt = times.t[l+1]-times.t[l]\n\n        step!(solver, cheng, h, u, dt)\n\n        p = plot(layout=(2,1))\n\n        hr = real(ifft(h))\n\n        plot!(p[1,1], cheng.mesh.x, hr;\n	          ylims=(-0.6,1),\n        	  title=\"physical space\",\n              label=cheng.label)\n\n        plot!(p[2,1], fftshift(cheng.mesh.k),\n              log10.(1e-18.+abs.(fftshift(h)));\n        	  title=\"frequency\",\n          label=cheng.label)\n\n        next!(prog)\n\n    end when mod(l, 200) == 0\n\n    gif(anim, \"cheng.gif\", fps=15); nothing\n\nend@time create_animation( bump, solver, cheng, times )(Image: )This page was generated using Literate.jl."
+},
+
+{
     "location": "examples/two_problems/#",
     "page": "Example",
     "title": "Example",
@@ -165,7 +181,31 @@ var documenterSearchIndex = {"docs": [
     "page": "Example",
     "title": "Two deep water problems",
     "category": "section",
-    "text": "notebookusing DeepWaterModels\nusing FFTW\nusing PlotsPlot results functionfunction fig_problem!( p, problem::Problem )\n\n    s = 0\n    (hhat,uhat) = problem.data[end]\n    (hr,ur)     = (real(ifft((problem.model.Gamma.^s).*hhat)),\n		   real(ifft(uhat)))\n\n    plot!(p[1,1], problem.model.mesh.x, hr;\n		  title=\"physical space\",\n	          label=problem.model.label)\n\n    plot!(p[2,1], fftshift(problem.model.mesh.k),\n                  log10.(1e-18.+abs.(fftshift(hhat)));\n		  title=\"frequency\",\n    	          label=problem.model.label)\n\nendparam = Parameters( ϵ  = 1/2,\n                    N  = 2^12,\n                    L  = 10,\n                    T  = 5,\n                    dt = 0.001)\n\nbump     = Bump(param)\nsolver   = RK4(param)\n\ncheng    = Cheng(param)\nproblem1 = Problem(cheng, bump, param, solver)\n\nmatsuno  = Matsuno(param)\nproblem2 = Problem(matsuno, bump, param, solver);p = plot(layout=(2,1))\n\nproblems = [ problem1, problem2 ]\n\nfor problem in problems\n\n   solve!( problem )\n   fig_problem!( p, problem )\n\nend\n\nsavefig(\"two-problems.png\"); nothing # hide(Image: )This page was generated using Literate.jl."
+    "text": "notebookusing DeepWaterModels\nusing FFTW\nusing PlotsPlot results functionfunction fig_problem!( p, problem::Problem )\n\n    s = 0\n    (hhat,uhat) = problem.data[end]\n    (hr,ur)     = (real(ifft((problem.model.Gamma.^s).*hhat)),\n		   real(ifft(uhat)))\n\n    plot!(p[1,1], problem.model.mesh.x, hr;\n		  title=\"physical space\",\n	          label=problem.model.label)\n\n    plot!(p[2,1], fftshift(problem.model.mesh.k),\n                  log10.(1e-18.+abs.(fftshift(hhat)));\n		  title=\"frequency\",\n    	          label=problem.model.label)\n\nendparam = Parameters( ϵ  = 1/2,\n                    N  = 2^12,\n                    L  = 10,\n                    T  = 5,\n                    dt = 0.001)\n\nbump     = Bump(param)\nsolver   = RK4(param)\n\ncheng    = Cheng(param)\nproblem1 = Problem(cheng, bump, param, solver)\n\nmatsuno  = Matsuno(param)\nproblem2 = Problem(matsuno, bump, param, solver);p = plot(layout=(2,1))\n\nproblems = [ problem1, problem2 ]\n\nfor problem in problems\n\n   solve!( problem )\n   fig_problem!( p, problem )\n\nend\n\nsavefig(\"two_problems.png\"); nothing # hide(Image: )This page was generated using Literate.jl."
+},
+
+{
+    "location": "contents/#",
+    "page": "Contents",
+    "title": "Contents",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "contents/#Contents-1",
+    "page": "Contents",
+    "title": "Contents",
+    "category": "section",
+    "text": ""
+},
+
+{
+    "location": "contents/#Index-1",
+    "page": "Contents",
+    "title": "Index",
+    "category": "section",
+    "text": ""
 },
 
 ]}
