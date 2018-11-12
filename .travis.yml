@@ -5,8 +5,7 @@ julia: 1.0
 
 before_install:
   - brew update
-  - brew install gcc@8
-  - brew install ffmpeg
+  - brew install gcc@8 ffmpeg imagemagick cairo
 
 notifications:
   email: false

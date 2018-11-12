@@ -11,3 +11,5 @@
 (v1.0) pkg> add https://github.com/WaterWavesModels/DeepWaterModels.jl.git
 using DeepWaterModels
 ~~~
+
+![](cheng.gif)
