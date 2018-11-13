@@ -8,7 +8,6 @@ using DeepWaterModels
 using FFTW
 using Plots
 using ProgressMeter
-pyplot()
 
 #----
 
