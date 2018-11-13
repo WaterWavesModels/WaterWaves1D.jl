@@ -2,52 +2,7 @@
 <html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Animation · DeepWaterModels.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="../../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>DeepWaterModels.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../">Documentation</a></li><li><a class="toctext" href="../../basics/">Code basics</a></li><li class="current"><a class="toctext" href>Animation</a><ul class="internal"></ul></li><li><a class="toctext" href="../two_problems/">Example</a></li><li><a class="toctext" href="../../contents/">Contents</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Animation</a></li></ul><a class="edit-page" href="https://github.com/WaterWavesModels/DeepWaterModels.jl/blob/master/examples/animation.jl"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Animation</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Animation-1" href="#Animation-1">Animation</a></h1><p>deep water problem solved with Cheng model animation</p><p><a href="https://nbviewer.jupyter.org/github/WaterWavesModels/DeepWaterModels.jl/blob/gh-pages/latest/notebooks/animation.ipynb"><code>notebook</code></a></p><div><pre><code class="language-julia">using DeepWaterModels
 using FFTW
 using Plots
-using ProgressMeter
-pyplot()</code></pre><pre><code class="language-none">[ Info: Installing matplotlib via the Conda matplotlib package...
-[ Info: Running `conda install -q -y matplotlib` in root environment
-Solving environment: ...working... done
-
-## Package Plan ##
-
-  environment location: /Users/travis/.julia/conda/3
-
-  added / updated specs:
-    - matplotlib
-
-
-The following packages will be downloaded:
-
-    package                    |            build
-    ---------------------------|-----------------
-    tornado-5.1.1              |   py37h1de35cc_0         661 KB
-    cycler-0.10.0              |           py37_0          14 KB
-    freetype-2.9.1             |       hb4e5f40_0         864 KB
-    matplotlib-3.0.1           |   py37h54f8f79_0         6.5 MB
-    kiwisolver-1.0.1           |   py37h0a44026_0          56 KB
-    pyparsing-2.3.0            |           py37_0         101 KB
-    libpng-1.6.35              |       ha441bb4_0         318 KB
-    python-dateutil-2.7.5      |           py37_0         275 KB
-    pytz-2018.7                |           py37_0         244 KB
-    ------------------------------------------------------------
-                                           Total:         9.0 MB
-
-The following NEW packages will be INSTALLED:
-
-    cycler:          0.10.0-py37_0
-    freetype:        2.9.1-hb4e5f40_0
-    kiwisolver:      1.0.1-py37h0a44026_0
-    libpng:          1.6.35-ha441bb4_0
-    matplotlib:      3.0.1-py37h54f8f79_0
-    pyparsing:       2.3.0-py37_0
-    python-dateutil: 2.7.5-py37_0
-    pytz:            2018.7-py37_0
-    tornado:         5.1.1-py37h1de35cc_0
-
-Preparing transaction: ...working... done
-Verifying transaction: ...working... done
-Executing transaction: ...working... done
-Unable to revert mtime: /Library/Fonts
-Plots.PyPlotBackend()</code></pre></div><div><pre><code class="language-julia">param = Parameters( ϵ  = 1/2,
+using ProgressMeter</code></pre></div><div><pre><code class="language-julia">param = Parameters( ϵ  = 1/2,
                     N  = 2^12,
                     L  = 10,
                     T  = 5.0,
