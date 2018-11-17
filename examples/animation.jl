@@ -17,7 +17,7 @@ param = Parameters( ϵ  = 1/2,
                     T  = 5.0,
                     dt = 0.001)
 
-bump    = Bump(param)
+bump    = Bump(param,1)
 solver  = RK4(param)
 cheng   = CGBSW(param)
 times   = Times(param.dt, param.T)
@@ -26,14 +26,9 @@ times   = Times(param.dt, param.T)
 
 function create_animation( bump, solver, cheng, times )
 
-    N  = cheng.mesh.N
-    h  = zeros(ComplexF64, N)
-    u  = zeros(ComplexF64, N)
 
-    bump(h, u)
-
-    h .= cheng.Pi .* fft(h)
-    u .= cheng.Pi .* fft(u)
+    h = cheng.Pi .* fft(bump.h)
+    u = cheng.Pi .* fft(bump.u)
 
     prog = Progress(times.Nt,1)
 
@@ -63,7 +58,7 @@ function create_animation( bump, solver, cheng, times )
 
     end when mod(l, 200) == 0
 
-    gif(anim, "cheng.gif", fps=15); nothing
+    gif(anim, "anim.gif", fps=15); nothing
 
 end
 

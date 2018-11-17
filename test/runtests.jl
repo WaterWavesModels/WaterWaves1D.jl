@@ -19,7 +19,7 @@ param = Parameters( ϵ  = 1/2,
 
 end
 
-bump     = Bump(param)
+bump     = Bump(param,1)
 solver   = RK4(param)
 cheng    = CGBSW(param)
 problem1 = Problem( cheng, bump, param, solver )

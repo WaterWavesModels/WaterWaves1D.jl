@@ -36,14 +36,9 @@ export solve!
 
 function solve!(problem :: Problem)
 
-    N  = problem.model.mesh.N
-    h  = zeros(ComplexF64, N)
-    u  = zeros(ComplexF64, N)
 
-    problem.initial(h, u)
-
-    h .= problem.model.Pi .* fft(h)
-    u .= problem.model.Pi .* fft(u)
+    h = problem.model.Pi .* fft(problem.initial.h)
+    u = problem.model.Pi .* fft(problem.initial.u)
 
     prog = Progress(problem.times.Nt,1)
 
