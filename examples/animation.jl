@@ -17,18 +17,18 @@ param = Parameters( ϵ  = 1/2,
                     T  = 5.0,
                     dt = 0.001)
 
-bump    = Bump(param,1)
+init    = BellCurve(param,2.5)
 solver  = RK4(param)
 cheng   = CGBSW(param)
 times   = Times(param.dt, param.T)
 
 #----
 
-function create_animation( bump, solver, cheng, times )
+function create_animation( init, solver, cheng, times )
 
 
-    h = cheng.Pi .* fft(bump.h)
-    u = cheng.Pi .* fft(bump.u)
+    h = cheng.Pi .* fft(init.h)
+    u = cheng.Pi .* fft(init.u)
 
     prog = Progress(times.Nt,1)
 
@@ -62,7 +62,7 @@ function create_animation( bump, solver, cheng, times )
 
 end
 
-# @time create_animation( bump, solver, cheng, times )
+# @time create_animation( init, solver, cheng, times )
 
 #----
 #md # ![](cheng.gif)

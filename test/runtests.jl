@@ -19,10 +19,10 @@ param = Parameters( ϵ  = 1/2,
 
 end
 
-bump     = Bump(param,1)
+init     = BellCurve(param,1)
 solver   = RK4(param)
 cheng    = CGBSW(param)
-problem1 = Problem( cheng, bump, param, solver )
+problem1 = Problem( cheng, init, param, solver )
 
 solve!(problem1)
 
@@ -32,7 +32,7 @@ solve!(problem1)
 end
 
 matsuno  = Matsuno(param)
-problem2 = Problem(matsuno, bump, param, solver )
+problem2 = Problem(matsuno, init, param, solver )
 
 solve!( problem2 )
 

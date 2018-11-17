@@ -1,7 +1,7 @@
-export Bump
+export BellCurve
 
 """
-    Bump(param,theta)
+    BellCurve(param,theta)
 
 ```math
 h = 2^(-|x|^theta)
@@ -11,12 +11,12 @@ h = 2^(-|x|^theta)
 u = 0
 ```
 """
-struct Bump <: InitialData
+struct BellCurve <: InitialData
 
     h :: Vector{Float64}
     u :: Vector{Float64}
 
-    function Bump(p :: Parameters,theta :: Real)
+    function BellCurve(p :: Parameters,theta :: Real)
 
     	mesh  = Mesh(-p.L, p.L, p.N)
         h = exp.(-((abs.(mesh.x)).^theta)*log(2))
@@ -25,7 +25,7 @@ struct Bump <: InitialData
 
     end
 
-    function Bump(p :: Parameters)
+    function BellCurve(p :: Parameters)
 
     	mesh  = Mesh(-p.L, p.L, p.N)
         h = exp.(-(mesh.x).^2)

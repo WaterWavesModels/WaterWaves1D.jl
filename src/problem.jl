@@ -4,7 +4,7 @@ export Problem
     Problem( model, initial, param, solver)
 
 - model   : CGBSW or Matsuno
-- initial : Bump
+- initial : BellCurve
 - param   : Mesh, Frequency, epsilon
 - solver  : RK4
 
