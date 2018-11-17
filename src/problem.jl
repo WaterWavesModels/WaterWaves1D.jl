@@ -37,8 +37,8 @@ export solve!
 function solve!(problem :: Problem)
 
 
-    h = problem.model.Pi .* fft(problem.initial.h)
-    u = problem.model.Pi .* fft(problem.initial.u)
+    h = init(problem.model,problem.initial)[1]
+    u = init(problem.model,problem.initial)[2]
 
     prog = Progress(problem.times.Nt,1)
 
@@ -49,8 +49,10 @@ function solve!(problem :: Problem)
         dt = problem.times.t[l+1]-problem.times.t[l]
 
         step!(problem.solver, problem.model, h, u, dt)
+		# TO DO : faire que (h,u) soit sol, dans un AbstractType Solution, dont le type puisse changer de modele en modele
 
         push!(problem.data,(h,u))
+		# TO DO : raffiner times de facon a ne stocker qu'un certain nombre parmi les temps calculés.
 
         next!(prog)
 

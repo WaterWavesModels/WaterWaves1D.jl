@@ -39,8 +39,8 @@ param = Parameters( ϵ  = 1/2,
 init     = BellCurve(param)
 solver   = RK4(param)
 
-cheng    = CGBSW(param)
-problem1 = Problem(cheng, init, param, solver)
+model    = CGBSW(param)
+problem1 = Problem(model, init, param, solver)
 
 matsuno  = Matsuno(param)
 problem2 = Problem(matsuno, init, param, solver);

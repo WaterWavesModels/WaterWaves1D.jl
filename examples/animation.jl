@@ -17,18 +17,20 @@ param = Parameters( ϵ  = 1/2,
                     T  = 5.0,
                     dt = 0.001)
 
-init    = BellCurve(param,2.5)
+initial = BellCurve(param,2.5)
 solver  = RK4(param)
-cheng   = CGBSW(param)
-times   = Times(param.dt, param.T)
+model   = CGBSW(param)
+problem = Problem( model, initial, param, solver )
 
 #----
 
-function create_animation( init, solver, cheng, times )
+function create_animation( p::Problem )
 
+	times   = Times(p.param.dt, p.param.T)
+	mesh  = Mesh(-p.param.L, p.param.L, p.param.N)
 
-    h = cheng.Pi .* fft(init.h)
-    u = cheng.Pi .* fft(init.u)
+	h = init(p.model,p.initial)[1]
+    u = init(p.model,p.initial)[2]
 
     prog = Progress(times.Nt,1)
 
@@ -38,21 +40,21 @@ function create_animation( init, solver, cheng, times )
 
         dt = times.t[l+1]-times.t[l]
 
-        step!(solver, cheng, h, u, dt)
+        step!(p.solver, p.model, h, u, dt)
 
-        p = plot(layout=(2,1))
+        pl = plot(layout=(2,1))
 
         hr = real(ifft(h))
 
-        plot!(p[1,1], cheng.mesh.x, hr;
+        plot!(pl[1,1], mesh.x, hr;
 	          ylims=(-0.6,1),
         	  title="physical space",
-              label=cheng.label)
+              label=p.model.label)
 
-        plot!(p[2,1], fftshift(cheng.mesh.k),
+        plot!(pl[2,1], fftshift(mesh.k),
               log10.(1e-18.+abs.(fftshift(h)));
         	  title="frequency",
-          label=cheng.label)
+          label=p.model.label)
 
         next!(prog)
 
@@ -62,7 +64,7 @@ function create_animation( init, solver, cheng, times )
 
 end
 
-# @time create_animation( init, solver, cheng, times )
+# @time create_animation( problem )
 
 #----
 #md # ![](cheng.gif)
