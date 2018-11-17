@@ -101,7 +101,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Code basics",
     "title": "DeepWaterModels.Bump",
     "category": "type",
-    "text": "Bump(param)\n\nh = exp(-x^2)\n\nu = 0\n\n\n\n\n\n"
+    "text": "Bump(param,theta)\n\nh = 2^(-x^theta)\n\nu = 0\n\n\n\n\n\n"
 },
 
 {
@@ -165,7 +165,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Animation",
     "title": "Animation",
     "category": "section",
-    "text": "#mddeep water problem solved with Cheng model animationnotebookusing DeepWaterModels\nusing FFTW\nusing Plots\nusing ProgressMeterparam = Parameters( ϵ  = 1/2,\n                    N  = 2^12,\n                    L  = 10,\n                    T  = 5.0,\n                    dt = 0.001)\n\nbump    = Bump(param)\nsolver  = RK4(param)\ncheng   = CGBSW(param)\ntimes   = Times(param.dt, param.T)function create_animation( bump, solver, cheng, times )\n\n    N  = cheng.mesh.N\n    h  = zeros(ComplexF64, N)\n    u  = zeros(ComplexF64, N)\n\n    bump(h, u)\n\n    h .= cheng.Pi .* fft(h)\n    u .= cheng.Pi .* fft(u)\n\n    prog = Progress(times.Nt,1)\n\n    hr = real(similar(h))\n\n    anim = @animate for l in range(1,times.Nt-1)\n\n        dt = times.t[l+1]-times.t[l]\n\n        step!(solver, cheng, h, u, dt)\n\n        p = plot(layout=(2,1))\n\n        hr = real(ifft(h))\n\n        plot!(p[1,1], cheng.mesh.x, hr;\n	          ylims=(-0.6,1),\n        	  title=\"physical space\",\n              label=cheng.label)\n\n        plot!(p[2,1], fftshift(cheng.mesh.k),\n              log10.(1e-18.+abs.(fftshift(h)));\n        	  title=\"frequency\",\n          label=cheng.label)\n\n        next!(prog)\n\n    end when mod(l, 200) == 0\n\n    gif(anim, \"cheng.gif\", fps=15); nothing\n\nend@time create_animation( bump, solver, cheng, times )(Image: )This page was generated using Literate.jl."
+    "text": "#mddeep water problem solved with Cheng model animationnotebookusing DeepWaterModels\nusing FFTW\nusing Plots\nusing ProgressMeterparam = Parameters( ϵ  = 1/2,\n                    N  = 2^12,\n                    L  = 10,\n                    T  = 5.0,\n                    dt = 0.001)\n\nbump    = Bump(param,1)\nsolver  = RK4(param)\ncheng   = CGBSW(param)\ntimes   = Times(param.dt, param.T)function create_animation( bump, solver, cheng, times )\n\n\n    h = cheng.Pi .* fft(bump.h)\n    u = cheng.Pi .* fft(bump.u)\n\n    prog = Progress(times.Nt,1)\n\n    hr = real(similar(h))\n\n    anim = @animate for l in range(1,times.Nt-1)\n\n        dt = times.t[l+1]-times.t[l]\n\n        step!(solver, cheng, h, u, dt)\n\n        p = plot(layout=(2,1))\n\n        hr = real(ifft(h))\n\n        plot!(p[1,1], cheng.mesh.x, hr;\n	          ylims=(-0.6,1),\n        	  title=\"physical space\",\n              label=cheng.label)\n\n        plot!(p[2,1], fftshift(cheng.mesh.k),\n              log10.(1e-18.+abs.(fftshift(h)));\n        	  title=\"frequency\",\n          label=cheng.label)\n\n        next!(prog)\n\n    end when mod(l, 200) == 0\n\n    gif(anim, \"anim.gif\", fps=15); nothing\n\nend@time create_animation( bump, solver, cheng, times )(Image: )This page was generated using Literate.jl."
 },
 
 {

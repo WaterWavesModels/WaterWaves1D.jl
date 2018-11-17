@@ -8,19 +8,14 @@ using ProgressMeter</code></pre></div><div><pre><code class="language-julia">par
                     T  = 5.0,
                     dt = 0.001)
 
-bump    = Bump(param)
+bump    = Bump(param,1)
 solver  = RK4(param)
 cheng   = CGBSW(param)
 times   = Times(param.dt, param.T)</code></pre><pre><code class="language-none">Times(5001, 5.0, 0.001, [0.0, 0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.007, 0.008, 0.009  …  4.991, 4.992, 4.993, 4.994, 4.995, 4.996, 4.997, 4.998, 4.999, 5.0])</code></pre></div><div><pre><code class="language-julia">function create_animation( bump, solver, cheng, times )
 
-    N  = cheng.mesh.N
-    h  = zeros(ComplexF64, N)
-    u  = zeros(ComplexF64, N)
 
-    bump(h, u)
-
-    h .= cheng.Pi .* fft(h)
-    u .= cheng.Pi .* fft(u)
+    h = cheng.Pi .* fft(bump.h)
+    u = cheng.Pi .* fft(bump.u)
 
     prog = Progress(times.Nt,1)
 
@@ -50,6 +45,6 @@ times   = Times(param.dt, param.T)</code></pre><pre><code class="language-none">
 
     end when mod(l, 200) == 0
 
-    gif(anim, &quot;cheng.gif&quot;, fps=15); nothing
+    gif(anim, &quot;anim.gif&quot;, fps=15); nothing
 
 end</code></pre><pre><code class="language-none">create_animation (generic function with 1 method)</code></pre></div><p>@time create_animation( bump, solver, cheng, times )</p><p><img src="cheng.gif" alt/></p><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p><footer><hr/><a class="previous" href="../../basics/"><span class="direction">Previous</span><span class="title">Code basics</span></a><a class="next" href="../two_problems/"><span class="direction">Next</span><span class="title">Example</span></a></footer></article></body></html>
