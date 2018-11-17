@@ -25,35 +25,35 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#DeepWaterModels.build-Tuple{CGBSW,Array{Complex{Float64},1},Array{Complex{Float64},1}}",
+    "location": "#DeepWaterModels.construct-Tuple{CGBSW,InitialData}",
     "page": "Documentation",
-    "title": "DeepWaterModels.build",
+    "title": "DeepWaterModels.construct",
     "category": "method",
-    "text": "build(CGBSW, h, u)\n\n\n\n\n\n"
+    "text": "construct(CGBSW, data)\n\n\n\n\n\n"
 },
 
 {
-    "location": "#DeepWaterModels.build-Tuple{Matsuno,Array{Complex{Float64},1},Array{Complex{Float64},1}}",
+    "location": "#DeepWaterModels.construct-Tuple{Matsuno,InitialData}",
     "page": "Documentation",
-    "title": "DeepWaterModels.build",
+    "title": "DeepWaterModels.construct",
     "category": "method",
-    "text": "build( matsuno, h, u)\n\n\n\n\n\n"
+    "text": "construct( matsuno, data)\n\n\n\n\n\n"
 },
 
 {
-    "location": "#DeepWaterModels.init-Tuple{CGBSW,InitialData}",
+    "location": "#DeepWaterModels.reconstruct-Tuple{CGBSW,Array{Complex{Float64},1},Array{Complex{Float64},1}}",
     "page": "Documentation",
-    "title": "DeepWaterModels.init",
+    "title": "DeepWaterModels.reconstruct",
     "category": "method",
-    "text": "init(CGBSW, data)\n\n\n\n\n\n"
+    "text": "reconstruct(CGBSW, h, u)\n\n\n\n\n\n"
 },
 
 {
-    "location": "#DeepWaterModels.init-Tuple{Matsuno,InitialData}",
+    "location": "#DeepWaterModels.reconstruct-Tuple{Matsuno,Array{Complex{Float64},1},Array{Complex{Float64},1}}",
     "page": "Documentation",
-    "title": "DeepWaterModels.init",
+    "title": "DeepWaterModels.reconstruct",
     "category": "method",
-    "text": "init( matsuno, data)\n\n\n\n\n\n"
+    "text": "reconstruct( matsuno, h, u)\n\n\n\n\n\n"
 },
 
 {
@@ -165,7 +165,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Animation",
     "title": "Animation",
     "category": "section",
-    "text": "#mddeep water problem solved with Cheng model animationnotebookusing DeepWaterModels\nusing FFTW\nusing Plots\nusing ProgressMeterparam = Parameters( ϵ  = 1/2,\n                    N  = 2^12,\n                    L  = 10,\n                    T  = 5.0,\n                    dt = 0.001)\n\ninitial = BellCurve(param,2.5)\nsolver  = RK4(param)\nmodel   = CGBSW(param)\nproblem = Problem( model, initial, param, solver )function create_animation( p::Problem )\n\n	times   = Times(p.param.dt, p.param.T)\n	mesh  = Mesh(-p.param.L, p.param.L, p.param.N)\n\n	h = init(p.model,p.initial)[1]\n    u = init(p.model,p.initial)[2]\n\n    prog = Progress(times.Nt,1)\n\n    hr = real(similar(h))\n\n    anim = @animate for l in range(1,times.Nt-1)\n\n        dt = times.t[l+1]-times.t[l]\n\n        step!(p.solver, p.model, h, u, dt)\n\n        pl = plot(layout=(2,1))\n\n        hr = real(ifft(h))\n\n        plot!(pl[1,1], mesh.x, hr;\n	          ylims=(-0.6,1),\n        	  title=\"physical space\",\n              label=p.model.label)\n\n        plot!(pl[2,1], fftshift(mesh.k),\n              log10.(1e-18.+abs.(fftshift(h)));\n        	  title=\"frequency\",\n          label=p.model.label)\n\n        next!(prog)\n\n    end when mod(l, 200) == 0\n\n    gif(anim, \"anim.gif\", fps=15); nothing\n\nend@time create_animation( problem )(Image: )This page was generated using Literate.jl."
+    "text": "#mddeep water problem solved with Cheng model animationnotebookusing DeepWaterModels\nusing FFTW\nusing Plots\nusing ProgressMeterparam = Parameters( ϵ  = 1/2,\n                    N  = 2^12,\n                    L  = 10,\n                    T  = 5.0,\n                    dt = 0.001)\n\ninitial = BellCurve(param,2.5)\nsolver  = RK4(param)\nmodel   = CGBSW(param)\nproblem = Problem( model, initial, param, solver )function create_animation( p::Problem )\n\n	h = construct(p.model,p.initial)[1]\n    u = construct(p.model,p.initial)[2]\n\n    prog = Progress(p.times.Nt,1)\n\n    hr = real(similar(h))\n\n    anim = @animate for l in range(1,p.times.Nt-1)\n\n        dt = p.times.t[l+1]-p.times.t[l]\n\n        step!(p.solver, p.model, h, u, dt)\n\n        pl = plot(layout=(2,1))\n\n        hr = real(ifft(h))\n\n        plot!(pl[1,1], p.mesh.x, hr;\n	          ylims=(-0.6,1),\n        	  title=\"physical space\",\n              label=p.model.label)\n\n        plot!(pl[2,1], fftshift(p.mesh.k),\n              log10.(1e-18.+abs.(fftshift(h)));\n        	  title=\"frequency\",\n          label=p.model.label)\n\n        next!(prog)\n\n    end when mod(l, 200) == 0\n\n    gif(anim, \"anim.gif\", fps=15); nothing\n\nend@time create_animation( problem )(Image: )This page was generated using Literate.jl."
 },
 
 {
