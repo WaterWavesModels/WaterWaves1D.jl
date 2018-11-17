@@ -16,6 +16,7 @@ struct Problem
     param   :: Parameters
     solver  :: TimeSolver
     times   :: Times
+	mesh    :: Mesh
     data    :: Vector{Tuple{Vector{Complex{Float64}},
 			    Vector{Complex{Float64}}}}
 
@@ -25,9 +26,10 @@ struct Problem
          	     solver  :: TimeSolver)
 
          times = Times(param.dt, param.T)
+		 mesh  = Mesh(-param.L, param.L, param.N)
          data  = []
 
-         new(model,initial,param,solver,times,data)
+         new(model,initial,param,solver,times,mesh,data)
 
     end
 end
@@ -37,8 +39,8 @@ export solve!
 function solve!(problem :: Problem)
 
 
-    h = init(problem.model,problem.initial)[1]
-    u = init(problem.model,problem.initial)[2]
+    h = construct(problem.model,problem.initial)[1]
+    u = construct(problem.model,problem.initial)[2]
 
     prog = Progress(problem.times.Nt,1)
 

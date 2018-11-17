@@ -1,4 +1,4 @@
-export CGBSW
+export CGBSW,construct,reconstruct
 
 """
     CGBSW( params )
@@ -91,20 +91,20 @@ function (m::CGBSW)(h::Vector{Complex{Float64}},
 end
 
 """
-    init(CGBSW, data)
+    construct(CGBSW, data)
 
 """
-function init(m::CGBSW, data::InitialData)
+function construct(m::CGBSW, data::InitialData)
 
     (m.Pi .* fft(data.h), m.Pi .* fft(data.u))
 
 end
 
 """
-    build(CGBSW, h, u)
+    reconstruct(CGBSW, h, u)
 
 """
-function build(m::CGBSW,
+function reconstruct(m::CGBSW,
 	       h::Array{Complex{Float64},1},
                u::Array{Complex{Float64},1})
 
