@@ -1,19 +1,6 @@
 module DeepWaterModels
 
-using Plots
-using LinearAlgebra
-using FFTW
-using ProgressMeter
-
-export AbstractModel
-export TimeSolver
-export InitialData
-
-abstract type AbstractModel end
-abstract type TimeSolver end
-abstract type InitialData end
-
-
+include("types.jl")
 include("parameters.jl")
 include("times.jl")
 include("mesh.jl")

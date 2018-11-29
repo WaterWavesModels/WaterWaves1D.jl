@@ -1,3 +1,5 @@
+using ProgressMeter
+
 export Problem
 
 """
