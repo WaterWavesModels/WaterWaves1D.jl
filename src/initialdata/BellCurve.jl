@@ -4,7 +4,7 @@ export BellCurve
     BellCurve(param,theta)
 
 ```math
-h = 2^(-|x|^theta)
+h = 2^{(-|x|^\\theta)}
 ```
 
 ```math
