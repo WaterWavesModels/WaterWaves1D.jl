@@ -2,9 +2,12 @@
 #
 #md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two_problems.ipynb)
 #
-using DeepWaterModels
+#using DeepWaterModels
+include("../src/includeall.jl")
 using FFTW
 using Plots
+gr()
+#pyplot()
 
 #----
 #
@@ -53,13 +56,13 @@ p = plot(layout=(2,1))
 problems = [ problem1, problem2 ]
 
 for problem in problems
-
-   solve!( problem )
-   fig_problem!( p, problem )
+	print("\nNow solving the model ",problem.model.label,"\n")
+   	solve!( problem )
+   	fig_problem!( p, problem )
 
 end
 
-savefig("two_problems.png"); nothing # hide
-
+#savefig("two_problems.png"); nothing # hide
+display(p)
 #----
 #md # ![](two_problems.png)
