@@ -9,7 +9,7 @@ before_install:
   - brew install gcc@8 ffmpeg imagemagick cairo
 
 notifications:
-  email: false
+  email: true
 
 after_success:
   - julia -e 'using Pkg; cd(Pkg.dir("DeepWaterModels")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
