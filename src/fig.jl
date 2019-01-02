@@ -1,5 +1,3 @@
-using Plots
-
 export fig
 
 function create_animation( p::Problem )
