@@ -1,5 +1,3 @@
-using FFTW, LinearAlgebra
-
 export Matsuno,construct,reconstruct
 
 """

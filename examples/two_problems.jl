@@ -4,8 +4,6 @@
 #
 #using DeepWaterModels
 include("../src/dependencies.jl")
-gr()
-#pyplot()
 
 #----
 param = ( ϵ  = 1/2,
@@ -32,7 +30,7 @@ problems = [ problem1, problem2 ]
 
 for problem in problems
 	print("\nNow solving the model ",problem.model.label,"\n")
-   	solve!( problem )
+   	@time solve!( problem )
    	fig_problem!( p, problem )
 
 end

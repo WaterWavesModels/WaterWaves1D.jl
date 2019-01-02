@@ -1,4 +1,4 @@
-export fig
+export create_animation,fig_problem!
 
 function create_animation( p::Problem )
 
