@@ -63,7 +63,7 @@ function solve!(problem :: Problem)
 
     for l in range(1,problem.times.Nt-1)
 
-        dt = problem.times.t[l+1]-problem.times.t[l]
+        dt = problem.times.dt
 
         step!(problem.solver, problem.model, h, u, dt)
 		# TO DO : faire que (h,u) soit sol, dans un AbstractType Solution, dont le type puisse changer de modele en modele

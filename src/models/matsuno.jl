@@ -119,9 +119,8 @@ end
     reconstruct( matsuno, h, u)
 """
 function reconstruct(m::Matsuno,
-	       h::Array{Complex{Float64},1},
-               u::Array{Complex{Float64},1})
+	       data::Any)
 
-    InitialData(real(ifft(h)),real(ifft(u)))
+    real(ifft(data[1])),real(ifft(data[2]))
 
 end

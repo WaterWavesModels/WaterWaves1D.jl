@@ -21,6 +21,11 @@ model   = CGBSW(param)
 problem = Problem( model, initial, param )
 
 #----
+print("\nNow solving the model ",problem.model.label,"\n")
+solve!( problem )
+#----
+
+print("\nNow generating the animation\n")
 create_animation( problem )
 
 #----

@@ -4,22 +4,13 @@ export fig
 
 function create_animation( p::Problem )
 
-    h = construct(p.model,p.initial)[1]
-    u = construct(p.model,p.initial)[2]
-
     prog = Progress(p.times.Nt,1)
-
-    hr = real(similar(h))
 
     anim = @animate for l in range(1,p.times.Nt-1)
 
-        dt = p.times.t[l+1]-p.times.t[l]
-
-        step!(p.solver, p.model, h, u, dt)
-
         pl = plot(layout=(2,1))
 
-        hr = real(ifft(h))
+		(hr,ur) = reconstruct(p.model,p.data[l])
 
         plot!(pl[1,1], p.mesh.x, hr;
               ylims=(-0.6,1),
@@ -27,7 +18,7 @@ function create_animation( p::Problem )
               label=p.model.label)
 
         plot!(pl[2,1], fftshift(p.mesh.k),
-              log10.(1e-18.+abs.(fftshift(h)));
+              log10.(1e-18.+abs.(fftshift(fft(hr))));
               title="frequency",
               label=p.model.label)
 
