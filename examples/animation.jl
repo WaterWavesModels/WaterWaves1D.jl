@@ -22,11 +22,11 @@ problem = Problem( model, initial, param )
 
 #----
 print("\nNow solving the model ",problem.model.label,"\n")
-solve!( problem )
+@time solve!( problem )
 #----
 
 print("\nNow generating the animation\n")
-create_animation( problem )
+@time create_animation( problem )
 
 #----
 #md # ![](anim.gif)

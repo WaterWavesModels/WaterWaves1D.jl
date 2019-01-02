@@ -68,7 +68,7 @@ function solve!(problem :: Problem)
         step!(problem.solver, problem.model, h, u, dt)
 		# TO DO : faire que (h,u) soit sol, dans un AbstractType Solution, dont le type puisse changer de modele en modele
 
-        push!(problem.data,(h,u))
+        push!(problem.data,(copy(h),copy(u)))
 		# TO DO : raffiner times de facon a ne stocker qu'un certain nombre parmi les temps calculés.
 
         next!(prog)
