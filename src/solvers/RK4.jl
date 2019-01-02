@@ -14,7 +14,7 @@ mutable struct RK4 <: TimeSolver
     dh   :: Vector{Complex{Float64}}
     du   :: Vector{Complex{Float64}}
 
-    function RK4( param::Parameters )
+    function RK4( param::NamedTuple )
 
 	n = param.N
 

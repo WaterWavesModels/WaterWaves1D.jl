@@ -1,17 +1,16 @@
 using Test
 using DeepWaterModels
-using FFTW
 
-param = Parameters( ϵ  = 1/2,
-                    N  = 2^10,
-                    L  = 10,
-                    T  = 5,
-                    dt = 0.01)
+param = ( ϵ  = 1/2,
+            N  = 2^10,
+            L  = 10,
+            T  = 5,
+            dt = 0.01)
 
 
 @testset "Parameters" begin
 
-    @test param.ϵ  == 0.5
+    @test param.arg.ϵ  == 0.5
     @test param.N  == 1024
     @test param.L  == 10
     @test param.T  == 5

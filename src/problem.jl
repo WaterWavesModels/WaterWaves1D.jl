@@ -7,15 +7,15 @@ export Problem
 
 - model   : CGBSW or Matsuno
 - initial : BellCurve
-- param   : Mesh, Frequency, epsilon
-- solver  : RK4
+- param   : must contain N, L, T, dt for Mesh and Times, may contain additional data for Models (ϵ)
+- solver  : RK4 (optional)
 
 """
 struct Problem
 
     model   :: AbstractModel
     initial :: InitialData
-    param   :: Parameters
+    param   :: NamedTuple
     solver  :: TimeSolver
     times   :: Times
 	mesh    :: Mesh
@@ -24,7 +24,7 @@ struct Problem
 
     function Problem(model   :: AbstractModel,
          	     initial :: InitialData,
-         	     param   :: Parameters,
+         	     param   :: NamedTuple,
          	     solver  :: TimeSolver)
 
          times = Times(param.dt, param.T)
@@ -34,12 +34,25 @@ struct Problem
          new(model,initial,param,solver,times,mesh,data)
 
     end
+
+	function Problem(model   :: AbstractModel,
+         	     initial :: InitialData,
+         	     param   :: NamedTuple)
+
+         times = Times(param.dt, param.T)
+		 mesh  = Mesh(-param.L, param.L, param.N)
+         data  = []
+		 solver= RK4(param)
+
+         new(model,initial,param,solver,times,mesh,data)
+
+    end
 end
 
 export solve!
 
 function solve!(problem :: Problem)
-
+	@show problem.param
 
     h = construct(problem.model,problem.initial)[1]
     u = construct(problem.model,problem.initial)[2]

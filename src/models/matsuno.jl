@@ -1,3 +1,5 @@
+using FFTW, LinearAlgebra
+
 export Matsuno,construct,reconstruct
 
 """
@@ -9,43 +11,43 @@ mutable struct Matsuno <: AbstractModel
     mesh    :: Mesh
     label   :: String
     data    :: Vector{Tuple{Vector{Complex{Float64}},Vector{Complex{Float64}}}}
-    Gamma   :: Array{Float64,1}
+    Γ   	:: Array{Float64,1}
     Dx      :: Array{Complex{Float64},1}
     H       :: Array{Complex{Float64},1}
-    Pi      :: BitArray{1}
-    epsilon :: Float64
+    Π⅔      :: BitArray{1}
+    ϵ 		:: Float64
     hnew    :: Vector{Complex{Float64}}
     unew    :: Vector{Complex{Float64}}
 
-    Int1    :: Vector{Complex{Float64}}
-    Int2    :: Vector{Complex{Float64}}
-    Int3    :: Vector{Complex{Float64}}
+    I₁    :: Vector{Complex{Float64}}
+    I₂    :: Vector{Complex{Float64}}
+    I₃    :: Vector{Complex{Float64}}
 
     Px      :: FFTW.FFTWPlan
 
-    function Matsuno(param::Parameters)
+    function Matsuno(param::NamedTuple)
 
-	epsilon = param.ϵ
+	ϵ = param.ϵ
 	mesh  = Mesh(-param.L, param.L, param.N)
 
         label = "Matsuno"
         data  = []
-        Gamma = abs.(mesh.k)
+        Γ = abs.(mesh.k)
         Dx    =  1im * mesh.k            # Differentiation
         H     = -1im * sign.(mesh.k)     # Hilbert transform
-        Pi    = Gamma .< mesh.kmax * 2/3 # Dealiasing low-pass filter
+        Π⅔    = Γ .< mesh.kmax * 2/3 # Dealiasing low-pass filter
 
         hnew = zeros(Complex{Float64}, mesh.N)
         unew = zeros(Complex{Float64}, mesh.N)
 
-        Int1 = zeros(Complex{Float64}, mesh.N)
-        Int2 = zeros(Complex{Float64}, mesh.N)
-        Int3 = zeros(Complex{Float64}, mesh.N)
+        I₁ = zeros(Complex{Float64}, mesh.N)
+        I₂ = zeros(Complex{Float64}, mesh.N)
+        I₃ = zeros(Complex{Float64}, mesh.N)
 
         Px  = plan_fft(hnew; flags = FFTW.MEASURE)
 
-        new(mesh, label, data, Gamma, Dx, H, Pi, epsilon,
-            hnew, unew, Int1, Int2, Int3, Px)
+        new(mesh, label, data, Γ, Dx, H, Π⅔, ϵ,
+            hnew, unew, I₁, I₂, I₃, Px)
     end
 end
 
@@ -55,14 +57,14 @@ function (m::Matsuno)(h::Vector{Complex{Float64}},
 
    # hnew .= real(ifft(h))
    # unew .= real(ifft(u))
-   # Int3 .= fft(real(ifft(Dx.*h)).*real(ifft(Gamma.*h)))
-   # Int1 .= H.*u-epsilon*Pi.*(H.*fft(hnew.*real(ifft(Gamma.*u))).+Dx.*fft(hnew.*unew))
-   # Int2 .= -(Dx.*h)-epsilon/2*Pi.*(Dx.*fft(unew.^2))+epsilon*Pi.*Int3
+   # I₃ .= fft(real(ifft(Dx.*h)).*real(ifft(Γ.*h)))
+   # I₁ .= H.*u-ϵ*Π⅔.*(H.*fft(hnew.*real(ifft(Γ.*u))).+Dx.*fft(hnew.*unew))
+   # I₂ .= -(Dx.*h)-ϵ/2*Π⅔.*(Dx.*fft(unew.^2))+ϵ*Π⅔.*I₃
    #
-   # h .= Int1
-   # u .= Int2
+   # h .= I₁
+   # u .= I₂
 
-    m.hnew   .= m.Gamma
+    m.hnew   .= m.Γ
     m.hnew  .*= h
 
     ldiv!(m.unew, m.Px, m.hnew )
@@ -70,37 +72,37 @@ function (m::Matsuno)(h::Vector{Complex{Float64}},
     m.hnew   .= m.Dx
     m.hnew  .*= h
 
-    ldiv!(m.Int1, m.Px, m.hnew)
+    ldiv!(m.I₁, m.Px, m.hnew)
 
-    m.unew  .*= m.Int1
+    m.unew  .*= m.I₁
 
-    mul!(m.Int1, m.Px, m.unew)
+    mul!(m.I₁, m.Px, m.unew)
 
-    m.Int1  .*= m.epsilon * m.Pi
-    m.Int2   .= m.Dx .* h
-    m.Int1  .-= m.Int2
+    m.I₁  .*= m.ϵ * m.Π⅔
+    m.I₂   .= m.Dx .* h
+    m.I₁  .-= m.I₂
 
     ldiv!(m.hnew, m.Px, h)
     ldiv!(m.unew, m.Px, u)
 
-    m.Int2   .= m.hnew .* m.unew
-    mul!(m.Int3, m.Px, m.Int2)
-    m.Int3  .*= m.Dx
+    m.I₂   .= m.hnew .* m.unew
+    mul!(m.I₃, m.Px, m.I₂)
+    m.I₃  .*= m.Dx
     h        .= m.H .* u
-    u       .*= m.Gamma
-    ldiv!(m.Int2, m.Px, u)
-    m.Int2  .*= m.hnew
-    mul!(u, m.Px, m.Int2)
+    u       .*= m.Γ
+    ldiv!(m.I₂, m.Px, u)
+    m.I₂  .*= m.hnew
+    mul!(u, m.Px, m.I₂)
     u       .*= m.H
-    m.Int3  .+= u
-    m.Int3  .*= m.epsilon * m.Pi
-    h       .-= m.Int3
-    m.Int3   .= m.unew.^2
-    mul!(m.unew, m.Px, m.Int3)
+    m.I₃  .+= u
+    m.I₃  .*= m.ϵ * m.Π⅔
+    h       .-= m.I₃
+    m.I₃   .= m.unew.^2
+    mul!(m.unew, m.Px, m.I₃)
     m.unew  .*= m.Dx
-    m.unew  .*= m.epsilon/2 * m.Pi
-    m.Int1  .-= m.unew
-    u        .= m.Int1
+    m.unew  .*= m.ϵ/2 * m.Π⅔
+    m.I₁  .-= m.unew
+    u        .= m.I₁
 
 end
 
@@ -109,7 +111,7 @@ end
 """
 function construct(m::Matsuno, data::InitialData)
 
-    (m.Pi .* fft(data.h), m.Pi .* fft(data.u))
+    (m.Π⅔ .* fft(data.h), m.Π⅔ .* fft(data.u))
 
 end
 

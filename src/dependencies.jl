@@ -1,5 +1,5 @@
 include("types.jl")
-include("parameters.jl")
+#include("parameters.jl")
 include("times.jl")
 include("mesh.jl")
 include("solvers/RK4.jl")
