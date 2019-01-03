@@ -16,7 +16,7 @@ param = ( ϵ  = 1/2,
           dt = 0.001)
 
 initial = BellCurve(param,2.5)
-#solver  = RK4(param)
+#solver  = RK4(param,2)
 model   = CGBSW(param)
 problem = Problem( model, initial, param )
 

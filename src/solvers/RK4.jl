@@ -9,56 +9,42 @@ Runge-Kutta fourth order solver.
 """
 mutable struct RK4 <: TimeSolver
 
-    hhat :: Vector{Complex{Float64}}
-    uhat :: Vector{Complex{Float64}}
-    dh   :: Vector{Complex{Float64}}
-    du   :: Vector{Complex{Float64}}
+    Uhat :: Array{Complex{Float64},2}
+    dU 	 :: Array{Complex{Float64},2}
 
-    function RK4( param::NamedTuple )
+    function RK4( param::NamedTuple, k::Int )
 
-	n = param.N
+		n = param.N
 
-        hhat = zeros(Complex{Float64}, n)
-        uhat = zeros(Complex{Float64}, n)
-        du   = zeros(Complex{Float64}, n)
-        dh   = zeros(Complex{Float64}, n)
+        Uhat = zeros(Complex{Float64}, (n,k))
+		dU 	 = zeros(Complex{Float64}, (n,k))
 
-        new( hhat, uhat, du, dh)
+        new( Uhat, dU)
 
     end
 
 end
 
 function step!(s  :: RK4,
-               f  :: AbstractModel,
-               h  :: Vector{Complex{Float64}},
-               u  :: Vector{Complex{Float64}},
+               f! :: AbstractModel,
+               U  :: Array{Complex{Float64},2},
                dt :: Float64)
 
-    s.hhat .= h
-    s.uhat .= u
-    f( s.hhat, s.uhat)
-    s.dh .= s.hhat
-    s.du .= s.uhat
+    s.Uhat .= U
+    f!( s.Uhat )
+    s.dU .= s.Uhat
 
-    s.hhat .= h .+ dt/2*s.hhat
-    s.uhat .= u .+ dt/2*s.uhat
-    f( s.hhat, s.uhat)
-    s.dh .+= 2 * s.hhat
-    s.du .+= 2 * s.uhat
+    s.Uhat .= U .+ dt/2*s.Uhat
+    f!( s.Uhat )
+    s.dU .+= 2 * s.Uhat
 
-    s.hhat .= h .+ dt/2*s.hhat
-    s.uhat .= u .+ dt/2*s.uhat
-    f( s.hhat, s.uhat)
-    s.dh .+= 2 * s.hhat
-    s.du .+= 2 * s.uhat
+    s.Uhat .= U .+ dt/2*s.Uhat
+	f!( s.Uhat )
+    s.dU .+= 2 * s.Uhat
 
-    s.hhat .= h .+ dt*s.hhat
-    s.uhat .= u .+ dt*s.uhat
-    f( s.hhat, s.uhat)
-    s.dh .+= s.hhat
-    s.du .+= s.uhat
+    s.Uhat .= U .+ dt*s.Uhat
+	f!( s.Uhat )
+    s.dU .+= s.Uhat
 
-    h .+= dt/6 * s.dh
-    u .+= dt/6 * s.du
+    U .+= dt/6 * s.dU
 end

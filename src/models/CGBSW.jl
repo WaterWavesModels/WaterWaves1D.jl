@@ -1,4 +1,4 @@
-export CGBSW,construct,reconstruct
+export CGBSW,mapto,mapfro
 
 """
     CGBSW( params )
@@ -8,8 +8,6 @@ mutable struct CGBSW <: AbstractModel
 
     mesh    :: Mesh
     label   :: String
-    data    :: Vector{Tuple{Vector{Complex{Float64}},
-			    Vector{Complex{Float64}}}}
     Γ   	:: Array{Float64,1}
     Dx      :: Array{Complex{Float64},1}
     H       :: Array{Complex{Float64},1}
@@ -26,10 +24,9 @@ mutable struct CGBSW <: AbstractModel
 
     function CGBSW( param::NamedTuple)
 
-	ϵ = param.ϵ
-	mesh  = Mesh(-param.L, param.L, param.N)
+		ϵ = param.ϵ
+		mesh  = Mesh(-param.L, param.L, param.N)
         label = "Cheng et al."
-        data  = []
         Γ = abs.(mesh.k)
         Dx    =  1im * mesh.k            # Differentiation
         H     = -1im * sign.(mesh.k)     # Hilbert transform
@@ -44,38 +41,37 @@ mutable struct CGBSW <: AbstractModel
 
         Px  = plan_fft(hnew; flags = FFTW.MEASURE)
 
-        new(mesh, label, data, Γ, Dx, H, Π⅔, ϵ,
+        new(mesh, label, Γ, Dx, H, Π⅔, ϵ,
             hnew, unew, I₁, I₂, I₃, Px)
 
     end
 end
 
-function (m::CGBSW)(h::Vector{Complex{Float64}},
-                    u::Vector{Complex{Float64}})
+function (m::CGBSW)(U::Array{Complex{Float64},2})
 
-    ldiv!(m.hnew, m.Px , h)
+    ldiv!(m.hnew, m.Px , U[:,1])
 
-    m.I₁  .= u
+    m.I₁  .= U[:,2]
     m.I₁ .*= m.Γ
     ldiv!(m.unew, m.Px , m.I₁)
     m.unew .^= 2
     mul!(m.I₁, m.Px , m.unew)
     m.I₁ .*= m.H
 
-    m.I₂  .= h
+    m.I₂  .= U[:,1]
     m.I₂ .*= m.Dx
     ldiv!(m.unew, m.Px , m.I₂)
     m.unew .*= m.hnew
     mul!(m.I₂, m.Px , m.unew)
 
-    m.I₃  .= h
+    m.I₃  .= U[:,1]
     m.I₃ .*= m.Γ
     ldiv!(m.unew, m.Px, m.I₃)
     m.unew .*= m.hnew
     mul!(m.I₃ , m.Px , m.unew)
     m.I₃ .*= m.H
 
-    m.hnew  .= -u
+    m.hnew  .= -U[:,2]
     m.hnew .*= m.Dx
 
     m.I₁ .-= m.I₂
@@ -83,29 +79,29 @@ function (m::CGBSW)(h::Vector{Complex{Float64}},
     m.I₁ .*= m.Π⅔
     m.I₁ .*= m.ϵ
 
-    u  .= h
-    u .*= m.H
-    u .+= m.I₁
-    h .= m.hnew
+    U[:,2]  .= U[:,1]
+    U[:,2] .*= m.H
+    U[:,2] .+= m.I₁
+    U[:,1] .= m.hnew
 
 end
 
 """
-    construct(CGBSW, data)
+    mapto(CGBSW, data)
 
 """
-function construct(m::CGBSW, data::InitialData)
+function mapto(m::CGBSW, data::InitialData)
 
-    (m.Π⅔ .* fft(data.h), m.Π⅔ .* fft(data.u))
+    [m.Π⅔ .* fft(data.h) m.Π⅔ .* fft(data.u)]
 
 end
 
 """
-    reconstruct(CGBSW, h, u)
+    mapfro(CGBSW, data)
 
 """
-function reconstruct(m::CGBSW,
-	       data::Any)
+function mapfro(m::CGBSW,
+	       data::Array{Complex{Float64},2})
 
-		   real(ifft(data[1])),real(ifft(data[2]))
+		   real(ifft(data[:,1])),real(ifft(data[:,2]))
 end

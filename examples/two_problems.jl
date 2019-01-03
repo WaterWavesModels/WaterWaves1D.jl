@@ -13,10 +13,10 @@ param = ( ϵ  = 1/2,
             dt = 0.001)
 
 init     = BellCurve(param)
-solver   = RK4(param)
+solver   = RK4(param,2)
 
 model1    = CGBSW(param)
-problem1 = Problem(model1, init, param, solver)
+problem1 = Problem(model1, init, param, solver);
 
 model2  = Matsuno(param)
 problem2 = Problem(model2, init, param, solver);
