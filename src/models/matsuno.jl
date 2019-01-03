@@ -6,8 +6,8 @@ export Matsuno,mapto,mapfro
 """
 mutable struct Matsuno <: AbstractModel
 
-    mesh    :: Mesh
     label   :: String
+	datasize:: Int
     Γ   	:: Array{Float64,1}
     Dx      :: Array{Complex{Float64},1}
     H       :: Array{Complex{Float64},1}
@@ -24,9 +24,10 @@ mutable struct Matsuno <: AbstractModel
 
     function Matsuno(param::NamedTuple)
 
+		label = "Matsuno"
+		datasize = 2
 		ϵ = param.ϵ
 		mesh  = Mesh(-param.L, param.L, param.N)
-        label = "Matsuno"
         Γ = abs.(mesh.k)
         Dx    =  1im * mesh.k            # Differentiation
         H     = -1im * sign.(mesh.k)     # Hilbert transform
@@ -42,7 +43,7 @@ mutable struct Matsuno <: AbstractModel
 
         Px  = plan_fft(hnew; flags = FFTW.MEASURE)
 
-        new(mesh, label, Γ, Dx, H, Π⅔, ϵ,
+        new(label, datasize, Γ, Dx, H, Π⅔, ϵ,
             hnew, unew, I₀, I₁, I₂, I₃, Px)
     end
 end
@@ -116,7 +117,7 @@ end
 
 """
 function mapfro(m::Matsuno,
-	       data::Array{Complex{Float64},2})
+	       datum::Array{Complex{Float64},2})
 
-		   real(ifft(data[:,1])),real(ifft(data[:,2]))
+		   real(ifft(datum[:,1])),real(ifft(datum[:,2]))
 end

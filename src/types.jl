@@ -13,8 +13,18 @@ export Problem
 abstract type AbstractModel end
 abstract type TimeSolver end
 abstract type InitialData end
-abstract type Data end
 
+mutable struct Data
+	U :: Array{Array{Complex{Float64},2}}
+	datasize :: Int
+	datalength:: Int
+
+	function Data( v )
+		(datalength , datasize ) = size(v)
+		U = [v]
+		new(U, datasize, datalength)
+	end
+end
 
 
 struct Times
@@ -72,7 +82,7 @@ struct Problem
     solver  :: TimeSolver
     times   :: Times
 	mesh    :: Mesh
-    data    :: Array{Array{Complex{Float64},2}}
+    data    :: Data
 
     function Problem(model   :: AbstractModel,
          	     initial :: InitialData,
@@ -81,7 +91,7 @@ struct Problem
 
          times = Times(param.dt, param.T)
 		 mesh  = Mesh(-param.L, param.L, param.N)
-         data  = [mapto(model,initial)]
+         data  = Data(mapto(model,initial))
 
          new(model,initial,param,solver,times,mesh,data)
 
@@ -93,8 +103,8 @@ struct Problem
 
          times = Times(param.dt, param.T)
 		 mesh  = Mesh(-param.L, param.L, param.N)
-         data  = [mapto(model,initial)]
-		 solver= RK4(param,2)
+         data  = Data(mapto(model,initial))
+		 solver= RK4(param,model)
 
          new(model,initial,param,solver,times,mesh,data)
 

@@ -8,7 +8,7 @@ function create_animation( p::Problem )
 
         pl = plot(layout=(2,1))
 
-		(hr,ur) = mapfro(p.model,p.data[l])
+		(hr,ur) = mapfro(p.model,p.data.U[l])
 
         plot!(pl[1,1], p.mesh.x, hr;
               ylims=(-0.6,1),
@@ -34,13 +34,13 @@ end
 #md # Plot results function
 function fig_problem!( plt, p::Problem )
 
-    (hr,ur) = mapfro(p.model,p.data[end])
+    (hr,ur) = mapfro(p.model,p.data.U[end])
 
-    plot!(plt[1,1], p.model.mesh.x, hr;
+    plot!(plt[1,1], p.mesh.x, hr;
 		  title="physical space",
 	          label=p.model.label)
 
-    plot!(plt[2,1], fftshift(p.model.mesh.k),
+    plot!(plt[2,1], fftshift(p.mesh.k),
                   log10.(1e-18.+abs.(fftshift(fft(hr))));
 		  title="frequency",
     	          label=p.model.label)

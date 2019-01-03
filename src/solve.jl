@@ -3,7 +3,7 @@ export solve!
 function solve!(problem :: Problem)
 	@show problem.param
 
-    U = copy(problem.data[end])
+    U = copy(problem.data.U[end])
 
     prog = Progress(problem.times.Nt,1)
 
@@ -14,7 +14,7 @@ function solve!(problem :: Problem)
         step!(problem.solver, problem.model, U, dt)
 		# TO DO : faire que (h,u) soit sol, dans un AbstractType Solution, dont le type puisse changer de modele en modele
 
-        push!(problem.data,copy(U))
+        push!(problem.data.U,copy(U))
 		# TO DO : raffiner times de facon a ne stocker qu'un certain nombre parmi les temps calculés.
 
         next!(prog)

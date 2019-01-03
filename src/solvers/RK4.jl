@@ -12,7 +12,29 @@ mutable struct RK4 <: TimeSolver
     Uhat :: Array{Complex{Float64},2}
     dU 	 :: Array{Complex{Float64},2}
 
-    function RK4( param::NamedTuple, k::Int )
+    function RK4( param::NamedTuple, model::AbstractModel )
+
+		n = param.N
+
+        Uhat = zeros(Complex{Float64}, (n,model.datasize))
+		dU 	 = zeros(Complex{Float64}, (n,model.datasize))
+
+        new( Uhat, dU)
+
+    end
+
+	function RK4( param::NamedTuple )
+
+		n = param.N
+
+        Uhat = zeros(Complex{Float64}, (n,2))
+		dU 	 = zeros(Complex{Float64}, (n,2))
+
+        new( Uhat, dU)
+
+	end
+
+	function RK4( param::NamedTuple, k::Int )
 
 		n = param.N
 
@@ -21,7 +43,7 @@ mutable struct RK4 <: TimeSolver
 
         new( Uhat, dU)
 
-    end
+	end
 
 end
 
