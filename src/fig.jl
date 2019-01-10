@@ -67,6 +67,21 @@ function fig_problem!( plt, p::Problem, t::Real )
 
 end
 
+function norm_problem!( plt, p::Problem, s::Real )
+	N=[];
+	Λ = sqrt.((p.mesh.k.^2).+1);
+ 	for index in range(1,stop=p.times.Nt)
+    	(hr,ur) = mapfro(p.model,p.data.U[index])
+		push!(N,norm(ifft(Λ.^s.*fft(hr))))
+	end
+
+    plot!(plt, p.times.t, N;
+		  title=string("norm H^s avec s=",s),
+	          label=p.model.label)
+
+end
+
+
 #
 # function fig(t)
 #     s=0
