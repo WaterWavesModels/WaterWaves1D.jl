@@ -51,15 +51,6 @@ end
 
 function (m::Matsuno)(U::Array{Complex{Float64},2})
 
-   # hnew .= real(ifft(h))
-   # unew .= real(ifft(u))
-   # I₃ .= fft(real(ifft(Dx.*h)).*real(ifft(Γ.*h)))
-   # I₁ .= H.*u-ϵ*Π⅔.*(H.*fft(hnew.*real(ifft(Γ.*u))).+Dx.*fft(hnew.*unew))
-   # I₂ .= -(Dx.*h)-ϵ/2*Π⅔.*(Dx.*fft(unew.^2))+ϵ*Π⅔.*I₃
-   #
-   # h .= I₁
-   # u .= I₂
-
     m.hnew   .= m.Γ
     m.hnew  .*= U[:,1]
 

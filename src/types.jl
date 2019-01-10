@@ -62,6 +62,19 @@ struct Mesh
         k = [range(0, length=N ÷ 2, step = dk) ; range(kmin, length=N ÷ 2, step = dk) ]
         new( N, xmin, xmax, dx, x, kmin, kmax, dk, k)
     end
+
+	function Mesh(param   :: NamedTuple)
+		xmin = -param.L
+		xmax = param.L
+		N = param.N
+        dx = (xmax-xmin)/N
+        x = range(xmin, stop=xmax, length=N+1)[1:end-1]
+        dk = 2π/(N*dx)
+        kmin = -N/2*dk
+        kmax = (N/2-1)*dk
+        k = [range(0, length=N ÷ 2, step = dk) ; range(kmin, length=N ÷ 2, step = dk) ]
+        new( N, xmin, xmax, dx, x, kmin, kmax, dk, k)
+    end
 end
 
 

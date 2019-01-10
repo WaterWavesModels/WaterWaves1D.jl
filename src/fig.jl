@@ -47,6 +47,26 @@ function fig_problem!( plt, p::Problem )
 
 end
 
+function fig_problem!( plt, p::Problem, t::Real )
+
+	t=max(t,0)
+	t=min(t,p.times.tfin)
+	index=1+round(Int,(t/p.times.tfin)*(p.times.Nt-1))
+
+
+    (hr,ur) = mapfro(p.model,p.data.U[index])
+
+    plot!(plt[1,1], p.mesh.x, hr;
+		  title=string("physical space at t=",p.times.t[index]),
+	          label=p.model.label)
+
+    plot!(plt[2,1], fftshift(p.mesh.k),
+                  log10.(1e-18.+abs.(fftshift(fft(hr))));
+		  title="frequency",
+    	          label=p.model.label)
+
+end
+
 #
 # function fig(t)
 #     s=0
