@@ -1,7 +1,4 @@
-# # Two deep water problems
-#
-#md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two_problems.ipynb)
-#
+# # Comparison of Matsuno deep water problems
 #using DeepWaterModels
 include("../src/dependencies.jl")
 

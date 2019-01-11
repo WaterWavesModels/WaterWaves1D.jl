@@ -12,8 +12,12 @@ struct HighFreq <: InitialData
     function HighFreq(p :: NamedTuple, s :: Real, k :: Int)
 
     	mesh  = Mesh(-p.L, p.L, p.N)
-        h = exp.(-((abs.(mesh.x)).^2)*log(2)).*(cos.(mesh.x).+(1/(2*pi*k)^s)*cos.(2*pi*k*mesh.x))
-        u = zeros(Float64, mesh.N)
+        h = cos.(mesh.x)
+        for j in range(20,stop=k,step=20)
+            h.+=(1/(2*pi*j)^s)*cos.(2*pi*j*mesh.x)
+        end
+        h .*= exp.(-((abs.(mesh.x)).^2)*log(2))
+        u = mesh.x.*h
     	new( h,u )
 
     end

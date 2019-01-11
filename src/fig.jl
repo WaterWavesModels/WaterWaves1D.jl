@@ -70,12 +70,15 @@ end
 function norm_problem!( plt, p::Problem, s::Real )
 	N=[];
 	Λ = sqrt.((p.mesh.k.^2).+1);
- 	for index in range(1,stop=p.times.Nt)
+	prog = Progress(div(p.times.Nt,10),1)
+	ind = range(1,stop=p.times.Nt,step=10)
+ 	for index in ind
     	(hr,ur) = mapfro(p.model,p.data.U[index])
 		push!(N,norm(ifft(Λ.^s.*fft(hr))))
+		next!(prog)
 	end
 
-    plot!(plt, p.times.t, N;
+    plot!(plt, p.times.t[ind], N;
 		  title=string("norm H^s avec s=",s),
 	          label=p.model.label)
 

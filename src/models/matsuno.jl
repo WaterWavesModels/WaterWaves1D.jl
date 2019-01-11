@@ -66,8 +66,7 @@ function (m::Matsuno)(U::Array{Complex{Float64},2})
     mul!(m.I₁, m.Px, m.unew)
 
     m.I₁  .*= m.ϵ * m.Π⅔
-    m.I₂   .= m.Dx .* U[:,1]
-    m.I₁  .-= m.I₂
+    m.I₁  .-= m.hnew
 
     ldiv!(m.hnew, m.Px, U[:,1])
     ldiv!(m.unew, m.Px, U[:,2])

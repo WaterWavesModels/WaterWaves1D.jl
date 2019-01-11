@@ -49,7 +49,7 @@ function (m::Matsuno_naive)(U::Array{Complex{Float64},2})
    m.unew .= ifft(U[:,2])
    m.I₃ .= fft(ifft((m.∂ₓ).*U[:,1]).*ifft((m.Γ).*U[:,1]))
    m.I₁ .= m.H.*U[:,2].-m.ϵ*m.Π⅔.*(m.H.*fft(m.hnew.*ifft(m.Γ.*U[:,2])).+m.∂ₓ.*fft(m.hnew.*m.unew))
-   m.I₂ .= -(m.∂ₓ.*U[:,1])-m.ϵ/2*m.Π⅔.*(m.∂ₓ.*fft(m.unew.^2))+m.ϵ*m.Π⅔.*m.I₃
+   m.I₂ .= -(m.∂ₓ.*U[:,1])+m.ϵ*m.Π⅔.*(m.I₃-m.∂ₓ.*fft(m.unew.^2)/2)
    #
    U[:,1] .= m.I₁
    U[:,2] .= m.I₂
