@@ -3,15 +3,16 @@
 include("../src/dependencies.jl")
 
 #----
-param = ( ϵ  = 1,
-        	N  = 2^14,
+param = ( ϵ  = 1/4,
+        	N  = 2^15,
             L  = 10,
             T  = 5,
-            dt = 0.001)
+            dt = 0.001,
+			nr = 100)
 
-init1 = HighFreq(param,2,20);
-init2 = HighFreq(param,2,100);
-init3 = HighFreq(param,2,200);
+init1 = HighFreq(param,2,300);
+init2 = HighFreq(param,2,400);
+init3 = HighFreq(param,2,500);
 
 model0    = Matsuno_mod_naive(param);
 model1    = Matsuno_naive(param);
@@ -35,7 +36,7 @@ problems0X = [ problem01, problem02, problem03 ];
 problems1X = [ problem11, problem12, problem13 ];
 problems2X = [ problem21, problem22, problem23 ];
 
-problems = vcat(problems0X,problems1X,problems2X);
+problems = vcat(problemsX1,problemsX2,problemsX3);
 
 #----
 
@@ -76,5 +77,14 @@ for problem in problems
 	fig_problem!( p5, problem,5 )
 end
 
-using JLD
-@save "HighFreq.jld"
+
+save_problems(problemsX1,"HighFreq4")
+save_problems(problemsX2,"HighFreq5")
+save_problems(problemsX3,"HighFreq6")
+
+save_problems([problem01],"HighFreq04")
+save_problems([problem02],"HighFreq05")
+save_problems([problem03],"HighFreq06")
+save_problems([problem11],"HighFreq14")
+save_problems([problem12],"HighFreq15")
+save_problems([problem13],"HighFreq16")

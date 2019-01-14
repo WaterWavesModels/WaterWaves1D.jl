@@ -29,15 +29,26 @@ end
 
 struct Times
     Nt   :: Int
+	Nr   :: Int
     tfin :: Float64
     dt   :: Float64
     t    :: Vector{Float64}
+	tr   :: Vector{Float64}
 
-    function Times( dt, tfin)
+	function Times( dt, tfin)
         t = range(0, stop=tfin, step = dt)
         Nt = length(t)
-        new( Nt, tfin, dt, t)
+		Nr = 1
+		tr = t
+        new( Nt, Nr, tfin, dt, t, tr)
     end
+
+	function Times( dt, tfin, Nr)
+		t = range(0, stop=tfin, step = dt)
+		Nt = length(t)
+		tr = t[range(1, stop=Nt, step = Nr)]
+		new( Nt, Nr, tfin, dt, t, tr)
+	end
 end
 
 
@@ -101,12 +112,15 @@ struct Problem
          	     initial :: InitialData,
          	     param   :: NamedTuple,
          	     solver  :: TimeSolver)
+			if in(:Nr,keys(param))
+				times = Times(param.dt, param.T, param.Nr)
+			else
+				times = Times(param.dt, param.T)
+			end
+		 	mesh  = Mesh(-param.L, param.L, param.N)
+         	data  = Data(mapto(model,initial))
 
-         times = Times(param.dt, param.T)
-		 mesh  = Mesh(-param.L, param.L, param.N)
-         data  = Data(mapto(model,initial))
-
-         new(model,initial,param,solver,times,mesh,data)
+         	new(model,initial,param,solver,times,mesh,data)
 
     end
 
@@ -114,12 +128,65 @@ struct Problem
          	     initial :: InitialData,
          	     param   :: NamedTuple)
 
-         times = Times(param.dt, param.T)
-		 mesh  = Mesh(-param.L, param.L, param.N)
-         data  = Data(mapto(model,initial))
-		 solver= RK4(param,model)
+			if in(:Nr,keys(param))
+		 			times = Times(param.dt, param.T, param.Nr)
+		 	else
+		 			times = Times(param.dt, param.T)
+		 	end
+			mesh  = Mesh(-param.L, param.L, param.N)
+         	data  = Data(mapto(model,initial))
+		 	solver= RK4(param,model)
 
-         new(model,initial,param,solver,times,mesh,data)
+         	new(model,initial,param,solver,times,mesh,data)
 
     end
+
+
+end
+
+struct ProblemSave
+
+    model   :: AbstractModel
+    initial :: InitialData
+    #param   :: NamedTuple
+    solver  :: TimeSolver
+    times   :: Times
+	mesh    :: Mesh
+    data    :: Data
+
+    function ProblemSave(p   :: Problem)
+
+		model = p.model
+		initial = p.initial
+		solver = p.solver
+        times = p.times
+		mesh  = p.mesh
+        data  = p.data
+
+         new(model,initial,solver,times,mesh,data)
+
+    end
+
+end
+
+struct Problem
+
+    model   :: AbstractModel
+    initial :: InitialData
+    param   :: NamedTuple
+    solver  :: TimeSolver
+    times   :: Times
+	mesh    :: Mesh
+    data    :: Data
+	function Problem(p   :: ProblemSave,param   :: NamedTuple)
+
+		model = p.model
+		initial = p.initial
+		solver = p.solver
+		times = p.times
+		mesh  = p.mesh
+		data  = p.data
+
+	 	new(model,initial,param,solver,times,mesh,data)
+	end
 end
