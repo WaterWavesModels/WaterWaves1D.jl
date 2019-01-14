@@ -2,9 +2,9 @@ export create_animation,fig_problem!
 
 function create_animation( p::Problem )
 
-    prog = Progress(p.times.Nt,1)
+    prog = Progress(p.times.Nr,1)
 
-    anim = @animate for l in range(1,p.times.Nt-1)
+    anim = @animate for l in range(1,p.times.Nr-1)
 
         pl = plot(layout=(2,1))
 
@@ -51,13 +51,13 @@ function fig_problem!( plt, p::Problem, t::Real )
 
 	t=max(t,0)
 	t=min(t,p.times.tfin)
-	index=1+round(Int,(t/p.times.tfin)*(p.times.Nt-1))
+	index=1+round(Int,(t/p.times.tfin)*(p.times.Nr-1))
 
 
     (hr,ur) = mapfro(p.model,p.data.U[index])
 
     plot!(plt[1,1], p.mesh.x, hr;
-		  title=string("physical space at t=",p.times.t[index]),
+		  title=string("physical space at t=",p.times.tr[index]),
 	          label=p.model.label)
 
     plot!(plt[2,1], fftshift(p.mesh.k),
@@ -70,15 +70,14 @@ end
 function norm_problem!( plt, p::Problem, s::Real )
 	N=[];
 	Λ = sqrt.((p.mesh.k.^2).+1);
-	prog = Progress(div(p.times.Nt,10),1)
-	ind = range(1,stop=p.times.Nt,step=10)
- 	for index in ind
+	prog = Progress(div(p.times.Nr,10),1)
+ 	for index in range(1,stop=p.times.Nr)
     	(hr,ur) = mapfro(p.model,p.data.U[index])
 		push!(N,norm(ifft(Λ.^s.*fft(hr))))
 		next!(prog)
 	end
 
-    plot!(plt, p.times.t[ind], N;
+    plot!(plt, p.times.tr, N;
 		  title=string("norm H^s avec s=",s),
 	          label=p.model.label)
 

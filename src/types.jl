@@ -30,6 +30,7 @@ end
 struct Times
     Nt   :: Int
 	Nr   :: Int
+	nr	 :: Int
     tfin :: Float64
     dt   :: Float64
     t    :: Vector{Float64}
@@ -38,16 +39,18 @@ struct Times
 	function Times( dt, tfin)
         t = range(0, stop=tfin, step = dt)
         Nt = length(t)
-		Nr = 1
+		Nr = Nt
+		nr = 1
 		tr = t
-        new( Nt, Nr, tfin, dt, t, tr)
+        new( Nt, Nr, nr, tfin, dt, t, tr)
     end
 
-	function Times( dt, tfin, Nr)
+	function Times( dt, tfin, nr)
 		t = range(0, stop=tfin, step = dt)
 		Nt = length(t)
-		tr = t[range(1, stop=Nt, step = Nr)]
-		new( Nt, Nr, tfin, dt, t, tr)
+		tr = t[range(1, stop=Nt, step = nr)]
+		Nr = length(tr)
+		new( Nt, Nr, nr, tfin, dt, t, tr)
 	end
 end
 
@@ -112,8 +115,8 @@ struct Problem
          	     initial :: InitialData,
          	     param   :: NamedTuple,
          	     solver  :: TimeSolver)
-			if in(:Nr,keys(param))
-				times = Times(param.dt, param.T, param.Nr)
+			if in(:nr,keys(param))
+				times = Times(param.dt, param.T, param.nr)
 			else
 				times = Times(param.dt, param.T)
 			end
@@ -128,8 +131,8 @@ struct Problem
          	     initial :: InitialData,
          	     param   :: NamedTuple)
 
-			if in(:Nr,keys(param))
-		 			times = Times(param.dt, param.T, param.Nr)
+			if in(:nr,keys(param))
+		 			times = Times(param.dt, param.T, param.nr)
 		 	else
 		 			times = Times(param.dt, param.T)
 		 	end
@@ -148,7 +151,7 @@ struct ProblemSave
 
     model   :: AbstractModel
     initial :: InitialData
-    #param   :: NamedTuple
+    param   :: Dict{Symbol,Any}
     solver  :: TimeSolver
     times   :: Times
 	mesh    :: Mesh
@@ -158,12 +161,13 @@ struct ProblemSave
 
 		model = p.model
 		initial = p.initial
+		param = Dict(pairs(p.param))
 		solver = p.solver
         times = p.times
 		mesh  = p.mesh
         data  = p.data
 
-         new(model,initial,solver,times,mesh,data)
+         new(model,initial,param,solver,times,mesh,data)
 
     end
 
@@ -178,6 +182,23 @@ struct Problem
     times   :: Times
 	mesh    :: Mesh
     data    :: Data
+	function Problem(p   :: ProblemSave)
+
+		dictkeys(d::Dict) = (collect(keys(d))...,)
+		dictvalues(d::Dict) = (collect(values(d))...,)
+		namedtuple(d::Dict{Symbol,T}) where {T} =
+           NamedTuple{dictkeys(d)}(dictvalues(d))
+		model = p.model
+		initial = p.initial
+		param = namedtuple(p.param)
+		solver = p.solver
+		times = p.times
+		mesh  = p.mesh
+		data  = p.data
+
+	 	new(model,initial,param,solver,times,mesh,data)
+	end
+
 	function Problem(p   :: ProblemSave,param   :: NamedTuple)
 
 		model = p.model

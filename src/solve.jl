@@ -5,21 +5,25 @@ function solve!(problem :: Problem)
 
     U = copy(problem.data.U[end])
 
+	dt = problem.times.dt
+
     prog = Progress(problem.times.Nt,1)
 
-    for l in range(1,problem.times.Nt-1)
+	J = range(problem.times.nr ,stop = problem.times.Nt-1, step = problem.times.nr)
+	L = range(1 ,problem.times.nr)
+	for j in J
+    	for l in L
 
-        dt = problem.times.dt
+        	step!(problem.solver, problem.model, U, dt)
 
-        step!(problem.solver, problem.model, U, dt)
-		# TO DO : faire que (h,u) soit sol, dans un AbstractType Solution, dont le type puisse changer de modele en modele
+			next!(prog)
+
+		end
 
         push!(problem.data.U,copy(U))
-		# TO DO : raffiner times de facon a ne stocker qu'un certain nombre parmi les temps calculés.
 
-        next!(prog)
 
-    end
+	end
 
 	print("\n")
 
