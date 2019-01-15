@@ -2,7 +2,7 @@ using JLD
 
 ## Ne gere pas les param ("NamedTuple"). D'où la traduction en dictionnaire, et vice-versa.
 ## Pour une raison etrange, ne peut pas enregistrer Px (plan_ifft)
-function save_problem(problems::Array{Problem,1},name::String)
+function save_problem(problems::Array{Any,1},name::String)
       problemsave=[]
       for i in range(1,size(problems)[1])
       	push!(problemsave,ProblemSave(problems[i]))
