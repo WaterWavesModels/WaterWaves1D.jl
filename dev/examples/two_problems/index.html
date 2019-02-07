@@ -1,51 +1,37 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Example · DeepWaterModels.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="../../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>DeepWaterModels.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../">Documentation</a></li><li><a class="toctext" href="../../basics/">Code basics</a></li><li><a class="toctext" href="../animation/">Animation</a></li><li class="current"><a class="toctext" href>Example</a><ul class="internal"></ul></li><li><a class="toctext" href="../../contents/">Contents</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Example</a></li></ul><a class="edit-page" href="https://github.com/WaterWavesModels/DeepWaterModels.jl/blob/master/examples/two_problems.jl"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Example</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Two-deep-water-problems-1" href="#Two-deep-water-problems-1">Two deep water problems</a></h1><p><a href="https://nbviewer.jupyter.org/github/WaterWavesModels/DeepWaterModels.jl/blob/gh-pages/latest/notebooks/two_problems.ipynb"><code>notebook</code></a></p><div><pre><code class="language-julia">#using DeepWaterModels
-include(&quot;../src/includeall.jl&quot;)
-using FFTW
-using Plots
-gr()
-#pyplot()</code></pre></div><p>Plot results function</p><div><pre><code class="language-julia">function fig_problem!( p, problem::Problem )
-
-    s = 0
-    (hhat,uhat) = problem.data[end]
-    (hr,ur)     = (real(ifft((problem.model.Gamma.^s).*hhat)),
-		   real(ifft(uhat)))
-
-    plot!(p[1,1], problem.model.mesh.x, hr;
-		  title=&quot;physical space&quot;,
-	          label=problem.model.label)
-
-    plot!(p[2,1], fftshift(problem.model.mesh.k),
-                  log10.(1e-18.+abs.(fftshift(hhat)));
-		  title=&quot;frequency&quot;,
-    	          label=problem.model.label)
-
-end</code></pre><pre><code class="language-none">fig_problem! (generic function with 1 method)</code></pre></div><div><pre><code class="language-julia">param = Parameters( ϵ  = 1/2,
-                    N  = 2^12,
-                    L  = 10,
-                    T  = 5,
-                    dt = 0.001)
+include(&quot;../src/dependencies.jl&quot;)</code></pre><pre><code class="language-none">norm_problem! (generic function with 1 method)</code></pre></div><div><pre><code class="language-julia">param = ( ϵ  = 1/2,
+        	N  = 2^12,
+            L  = 10,
+            T  = 5,
+            dt = 0.001)
 
 init     = BellCurve(param)
-solver   = RK4(param)
 
-model    = CGBSW(param)
-problem1 = Problem(model, init, param, solver)
+model1    = CGBSW(param)
+solver1   = RK4(param,model1)
+problem1 = Problem(model1, init, param, solver1);
 
-matsuno  = Matsuno(param)
-problem2 = Problem(matsuno, init, param, solver);</code></pre></div><div><pre><code class="language-julia">p = plot(layout=(2,1))
+model2  = Matsuno(param)
+solver2   = RK4(param,model2)
+problem2 = Problem(model2, init, param, solver2);</code></pre></div><div><pre><code class="language-julia">p = plot(layout=(2,1))
 
 problems = [ problem1, problem2 ]
 
 for problem in problems
 	print(&quot;\nNow solving the model &quot;,problem.model.label,&quot;\n&quot;)
-   	solve!( problem )
+   	@time solve!( problem )
    	fig_problem!( p, problem )
 
 end
 
 display(p)</code></pre><pre><code class="language-none">
 Now solving the model Cheng et al.
-Progress:   0%|                                         |  ETA: 3:57:17[KProgress:   9%|████                                     |  ETA: 0:00:41[KProgress:  18%|███████                                  |  ETA: 0:00:24[KProgress:  26%|██████████                               |  ETA: 0:00:18[KProgress:  34%|██████████████                           |  ETA: 0:00:14[KProgress:  42%|█████████████████                        |  ETA: 0:00:11[KProgress:  51%|█████████████████████                    |  ETA: 0:00:09[KProgress:  59%|████████████████████████                 |  ETA: 0:00:07[KProgress:  68%|████████████████████████████             |  ETA: 0:00:05[KProgress:  76%|███████████████████████████████          |  ETA: 0:00:04[KProgress:  85%|███████████████████████████████████      |  ETA: 0:00:02[KProgress:  93%|██████████████████████████████████████   |  ETA: 0:00:01[K
+problem.param = (ϵ = 0.5, N = 4096, L = 10, T = 5, dt = 0.001)
+Progress:   0%|                                         |  ETA: 4:21:35[KProgress:   7%|██▊                                      |  ETA: 0:01:06[KProgress:  12%|████▊                                    |  ETA: 0:00:43[KProgress:  18%|███████▎                                 |  ETA: 0:00:31[KProgress:  23%|█████████▍                               |  ETA: 0:00:26[KProgress:  28%|███████████▌                             |  ETA: 0:00:22[KProgress:  33%|█████████████▋                           |  ETA: 0:00:19[KProgress:  39%|████████████████                         |  ETA: 0:00:17[KProgress:  44%|██████████████████▏                      |  ETA: 0:00:15[KProgress:  50%|████████████████████▎                    |  ETA: 0:00:13[KProgress:  55%|██████████████████████▍                  |  ETA: 0:00:11[KProgress:  60%|████████████████████████▊                |  ETA: 0:00:10[KProgress:  65%|██████████████████████████▉              |  ETA: 0:00:08[KProgress:  71%|█████████████████████████████            |  ETA: 0:00:07[KProgress:  76%|███████████████████████████████▏         |  ETA: 0:00:06[KProgress:  82%|█████████████████████████████████▋       |  ETA: 0:00:04[KProgress:  87%|███████████████████████████████████▋     |  ETA: 0:00:03[KProgress:  92%|█████████████████████████████████████▊   |  ETA: 0:00:02[KProgress:  98%|████████████████████████████████████████ |  ETA: 0:00:01[K
+ 22.564350 seconds (5.99 M allocations: 15.543 GiB, 19.66% gc time)
+
 Now solving the model Matsuno
-Progress:   0%|                                         |  ETA: 2:16:22[KProgress:   7%|███                                      |  ETA: 0:00:33[KProgress:  15%|██████                                   |  ETA: 0:00:21[KProgress:  22%|█████████                                |  ETA: 0:00:16[KProgress:  29%|████████████                             |  ETA: 0:00:14[KProgress:  36%|███████████████                          |  ETA: 0:00:12[KProgress:  43%|██████████████████                       |  ETA: 0:00:10[KProgress:  51%|█████████████████████                    |  ETA: 0:00:08[KProgress:  58%|████████████████████████                 |  ETA: 0:00:07[KProgress:  66%|███████████████████████████              |  ETA: 0:00:05[KProgress:  73%|██████████████████████████████           |  ETA: 0:00:04[KProgress:  81%|█████████████████████████████████        |  ETA: 0:00:03[KProgress:  87%|████████████████████████████████████     |  ETA: 0:00:02[KProgress:  94%|██████████████████████████████████████   |  ETA: 0:00:01[K</code></pre></div><p><img src="two_problems.png" alt/></p><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p><footer><hr/><a class="previous" href="../animation/"><span class="direction">Previous</span><span class="title">Animation</span></a><a class="next" href="../../contents/"><span class="direction">Next</span><span class="title">Contents</span></a></footer></article></body></html>
+problem.param = (ϵ = 0.5, N = 4096, L = 10, T = 5, dt = 0.001)
+Progress:   0%|                                         |  ETA: 1:49:01[KProgress:   5%|█▉                                       |  ETA: 0:00:47[KProgress:  10%|████▏                                    |  ETA: 0:00:30[KProgress:  15%|██████                                   |  ETA: 0:00:25[KProgress:  19%|███████▉                                 |  ETA: 0:00:22[KProgress:  25%|██████████▏                              |  ETA: 0:00:19[KProgress:  29%|████████████                             |  ETA: 0:00:18[KProgress:  34%|█████████████▉                           |  ETA: 0:00:16[KProgress:  39%|███████████████▉                         |  ETA: 0:00:15[KProgress:  43%|█████████████████▊                       |  ETA: 0:00:14[KProgress:  48%|███████████████████▋                     |  ETA: 0:00:12[KProgress:  53%|█████████████████████▊                   |  ETA: 0:00:11[KProgress:  58%|███████████████████████▋                 |  ETA: 0:00:10[KProgress:  62%|█████████████████████████▌               |  ETA: 0:00:09[KProgress:  67%|███████████████████████████▋             |  ETA: 0:00:07[KProgress:  72%|█████████████████████████████▌           |  ETA: 0:00:06[KProgress:  76%|███████████████████████████████▎         |  ETA: 0:00:05[KProgress:  81%|█████████████████████████████████▍       |  ETA: 0:00:04[KProgress:  86%|███████████████████████████████████▏     |  ETA: 0:00:03[KProgress:  90%|█████████████████████████████████████    |  ETA: 0:00:02[KProgress:  95%|███████████████████████████████████████▏ |  ETA: 0:00:01[KProgress: 100%|█████████████████████████████████████████|  ETA: 0:00:00[K
+ 22.391962 seconds (2.35 M allocations: 14.752 GiB, 20.07% gc time)</code></pre></div><p><img src="two_problems.png" alt/></p><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p><footer><hr/><a class="previous" href="../animation/"><span class="direction">Previous</span><span class="title">Animation</span></a><a class="next" href="../../contents/"><span class="direction">Next</span><span class="title">Contents</span></a></footer></article></body></html>

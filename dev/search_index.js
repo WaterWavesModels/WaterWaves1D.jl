@@ -25,35 +25,131 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#DeepWaterModels.construct-Tuple{CGBSW,InitialData}",
+    "location": "#DeepWaterModels.CGBSW_naive",
     "page": "Documentation",
-    "title": "DeepWaterModels.construct",
-    "category": "method",
-    "text": "construct(CGBSW, data)\n\n\n\n\n\n"
+    "title": "DeepWaterModels.CGBSW_naive",
+    "category": "type",
+    "text": "CGBSW_naive( params )\n\n\n\n\n\n"
 },
 
 {
-    "location": "#DeepWaterModels.construct-Tuple{Matsuno,InitialData}",
+    "location": "#DeepWaterModels.HighFreq",
     "page": "Documentation",
-    "title": "DeepWaterModels.construct",
-    "category": "method",
-    "text": "construct( matsuno, data)\n\n\n\n\n\n"
+    "title": "DeepWaterModels.HighFreq",
+    "category": "type",
+    "text": "HighFreq(param,s,k)\n\n\n\n\n\n"
 },
 
 {
-    "location": "#DeepWaterModels.reconstruct-Tuple{CGBSW,Array{Complex{Float64},1},Array{Complex{Float64},1}}",
+    "location": "#DeepWaterModels.Matsuno_mod_naive",
     "page": "Documentation",
-    "title": "DeepWaterModels.reconstruct",
-    "category": "method",
-    "text": "reconstruct(CGBSW, h, u)\n\n\n\n\n\n"
+    "title": "DeepWaterModels.Matsuno_mod_naive",
+    "category": "type",
+    "text": "Modified Matsuno models with a naive step function\nMatsuno_mod_naive(params)\n\n\n\n\n\n"
 },
 
 {
-    "location": "#DeepWaterModels.reconstruct-Tuple{Matsuno,Array{Complex{Float64},1},Array{Complex{Float64},1}}",
+    "location": "#DeepWaterModels.Matsuno_naive",
     "page": "Documentation",
-    "title": "DeepWaterModels.reconstruct",
+    "title": "DeepWaterModels.Matsuno_naive",
+    "category": "type",
+    "text": "Matsuno(params)\n\n\n\n\n\n"
+},
+
+{
+    "location": "#DeepWaterModels.Random",
+    "page": "Documentation",
+    "title": "DeepWaterModels.Random",
+    "category": "type",
+    "text": "Random(param,s,k)\n\n\n\n\n\n"
+},
+
+{
+    "location": "#DeepWaterModels.mapfro-Tuple{CGBSW,Array{Complex{Float64},2}}",
+    "page": "Documentation",
+    "title": "DeepWaterModels.mapfro",
     "category": "method",
-    "text": "reconstruct( matsuno, h, u)\n\n\n\n\n\n"
+    "text": "mapfro(CGBSW, data)\n\n\n\n\n\n"
+},
+
+{
+    "location": "#DeepWaterModels.mapfro-Tuple{CGBSW_naive,Array{Complex{Float64},2}}",
+    "page": "Documentation",
+    "title": "DeepWaterModels.mapfro",
+    "category": "method",
+    "text": "mapfro(CGBSW_naive, data)\n\n\n\n\n\n"
+},
+
+{
+    "location": "#DeepWaterModels.mapfro-Tuple{Matsuno,Array{Complex{Float64},2}}",
+    "page": "Documentation",
+    "title": "DeepWaterModels.mapfro",
+    "category": "method",
+    "text": "mapfro(Matsuno, data)\n\n\n\n\n\n"
+},
+
+{
+    "location": "#DeepWaterModels.mapfro-Tuple{Matsuno_mod_naive,Array{Complex{Float64},2}}",
+    "page": "Documentation",
+    "title": "DeepWaterModels.mapfro",
+    "category": "method",
+    "text": "mapfro(Matsuno, data)\n\n\n\n\n\n"
+},
+
+{
+    "location": "#DeepWaterModels.mapfro-Tuple{Matsuno_naive,Array{Complex{Float64},2}}",
+    "page": "Documentation",
+    "title": "DeepWaterModels.mapfro",
+    "category": "method",
+    "text": "mapfro(Matsuno, data)\n\n\n\n\n\n"
+},
+
+{
+    "location": "#DeepWaterModels.mapto-Tuple{CGBSW,InitialData}",
+    "page": "Documentation",
+    "title": "DeepWaterModels.mapto",
+    "category": "method",
+    "text": "mapto(CGBSW, data)\n\n\n\n\n\n"
+},
+
+{
+    "location": "#DeepWaterModels.mapto-Tuple{CGBSW_naive,InitialData}",
+    "page": "Documentation",
+    "title": "DeepWaterModels.mapto",
+    "category": "method",
+    "text": "mapto(CGBSW_naive, data)\n\n\n\n\n\n"
+},
+
+{
+    "location": "#DeepWaterModels.mapto-Tuple{Matsuno,InitialData}",
+    "page": "Documentation",
+    "title": "DeepWaterModels.mapto",
+    "category": "method",
+    "text": "mapto(Matsuno, data)\n\n\n\n\n\n"
+},
+
+{
+    "location": "#DeepWaterModels.mapto-Tuple{Matsuno_mod_naive,InitialData}",
+    "page": "Documentation",
+    "title": "DeepWaterModels.mapto",
+    "category": "method",
+    "text": "mapto(Matsuno, data)\n\n\n\n\n\n"
+},
+
+{
+    "location": "#DeepWaterModels.mapto-Tuple{Matsuno_naive,InitialData}",
+    "page": "Documentation",
+    "title": "DeepWaterModels.mapto",
+    "category": "method",
+    "text": "mapto(Matsuno, data)\n\n\n\n\n\n"
+},
+
+{
+    "location": "#DeepWaterModels.load_problem-Tuple{String,NamedTuple}",
+    "page": "Documentation",
+    "title": "DeepWaterModels.load_problem",
+    "category": "method",
+    "text": "load_problems(name::String,param::NamedTuple)\nExample of use\nproblems=load_problems(\"foo\",param) #\"foo.jld\" must have bee generated with save_problems\n\n\n\n\n\n"
 },
 
 {
@@ -81,19 +177,11 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "basics/#DeepWaterModels.Parameters",
-    "page": "Code basics",
-    "title": "DeepWaterModels.Parameters",
-    "category": "type",
-    "text": "Parameters( ϵ  = 1/2,                 N  = 2^12,                L  = 10,                T  = 5,                dt = 0.001)\n\n\n\n\n\n"
-},
-
-{
     "location": "basics/#DeepWaterModels.Problem",
     "page": "Code basics",
     "title": "DeepWaterModels.Problem",
     "category": "type",
-    "text": "Problem( model, initial, param, solver)\n\nmodel   : CGBSW or Matsuno\ninitial : BellCurve\nparam   : Mesh, Frequency, epsilon\nsolver  : RK4\n\n\n\n\n\n"
+    "text": "Problem( model, initial, param, solver)\n\nmodel   : CGBSW or Matsuno\ninitial : BellCurve\nparam   : must contain N, L, T, dt for Mesh and Times, may contain additional data for Models (ϵ)\nsolver  : RK4 (optional)\n\n\n\n\n\n"
 },
 
 {
@@ -165,7 +253,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Animation",
     "title": "Animation",
     "category": "section",
-    "text": "deep water problem solved with Cheng model animationnotebook#using DeepWaterModels\ninclude(\"../src/includeall.jl\")\nusing FFTW\nusing Plots\nusing ProgressMeterparam = Parameters( ϵ  = 1/2,\n                    N  = 2^12,\n                    L  = 10,\n                    T  = 5.0,\n                    dt = 0.001)\n\ninitial = BellCurve(param,2.5)\nsolver  = RK4(param)\nmodel   = CGBSW(param)\nproblem = Problem( model, initial, param, solver )function create_animation( p::Problem )\n\n    h = construct(p.model,p.initial)[1]\n    u = construct(p.model,p.initial)[2]\n\n    prog = Progress(p.times.Nt,1)\n\n    hr = real(similar(h))\n\n    anim = @animate for l in range(1,p.times.Nt-1)\n\n        dt = p.times.t[l+1]-p.times.t[l]\n\n        step!(p.solver, p.model, h, u, dt)\n\n        pl = plot(layout=(2,1))\n\n        hr = real(ifft(h))\n\n        plot!(pl[1,1], p.mesh.x, hr;\n              ylims=(-0.6,1),\n              title=\"physical space\",\n              label=p.model.label)\n\n        plot!(pl[2,1], fftshift(p.mesh.k),\n              log10.(1e-18.+abs.(fftshift(h)));\n              title=\"frequency\",\n              label=p.model.label)\n\n        next!(prog)\n\n    end when mod(l, 200) == 0\n\n    gif(anim, \"anim.gif\", fps=15); nothing\n\nend\n\ncreate_animation( problem )(Image: )This page was generated using Literate.jl."
+    "text": "deep water problem solved with Cheng model animationnotebook#using DeepWaterModels\ninclude(\"../src/dependencies.jl\")param = ( ϵ  = 1/2,\n          N  = 2^12,\n          L  = 10,\n          T  = 5.0,\n          dt = 0.001)\n\ninitial = BellCurve(param,2.5)\nsolver  = RK4(param)\nmodel   = Matsuno(param)\nproblem = Problem( model, initial, param )print(\"\\nNow solving the model \",problem.model.label,\"\\n\")\n@time solve!( problem )print(\"\\nNow generating the animation\\n\")\n@time create_animation( problem )(Image: )This page was generated using Literate.jl."
 },
 
 {
@@ -181,7 +269,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Example",
     "title": "Two deep water problems",
     "category": "section",
-    "text": "notebook#using DeepWaterModels\ninclude(\"../src/includeall.jl\")\nusing FFTW\nusing Plots\ngr()\n#pyplot()Plot results functionfunction fig_problem!( p, problem::Problem )\n\n    s = 0\n    (hhat,uhat) = problem.data[end]\n    (hr,ur)     = (real(ifft((problem.model.Gamma.^s).*hhat)),\n		   real(ifft(uhat)))\n\n    plot!(p[1,1], problem.model.mesh.x, hr;\n		  title=\"physical space\",\n	          label=problem.model.label)\n\n    plot!(p[2,1], fftshift(problem.model.mesh.k),\n                  log10.(1e-18.+abs.(fftshift(hhat)));\n		  title=\"frequency\",\n    	          label=problem.model.label)\n\nendparam = Parameters( ϵ  = 1/2,\n                    N  = 2^12,\n                    L  = 10,\n                    T  = 5,\n                    dt = 0.001)\n\ninit     = BellCurve(param)\nsolver   = RK4(param)\n\nmodel    = CGBSW(param)\nproblem1 = Problem(model, init, param, solver)\n\nmatsuno  = Matsuno(param)\nproblem2 = Problem(matsuno, init, param, solver);p = plot(layout=(2,1))\n\nproblems = [ problem1, problem2 ]\n\nfor problem in problems\n	print(\"\\nNow solving the model \",problem.model.label,\"\\n\")\n   	solve!( problem )\n   	fig_problem!( p, problem )\n\nend\n\n#savefig(\"two_problems.png\"); nothing # hide\ndisplay(p)(Image: )This page was generated using Literate.jl."
+    "text": "notebook#using DeepWaterModels\ninclude(\"../src/dependencies.jl\")param = ( ϵ  = 1/2,\n        	N  = 2^12,\n            L  = 10,\n            T  = 5,\n            dt = 0.001)\n\ninit     = BellCurve(param)\n\nmodel1    = CGBSW(param)\nsolver1   = RK4(param,model1)\nproblem1 = Problem(model1, init, param, solver1);\n\nmodel2  = Matsuno(param)\nsolver2   = RK4(param,model2)\nproblem2 = Problem(model2, init, param, solver2);p = plot(layout=(2,1))\n\nproblems = [ problem1, problem2 ]\n\nfor problem in problems\n	print(\"\\nNow solving the model \",problem.model.label,\"\\n\")\n   	@time solve!( problem )\n   	fig_problem!( p, problem )\n\nend\n\n#savefig(\"two_problems.png\"); nothing # hide\ndisplay(p)(Image: )This page was generated using Literate.jl."
 },
 
 {
