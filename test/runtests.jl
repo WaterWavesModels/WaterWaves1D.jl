@@ -26,8 +26,8 @@ problem1 = Problem( cheng, init, param, solver )
 solve!(problem1)
 
 @testset "Test problem with Cheng et al. model" begin
-    @test !any(isnan,problem1.data[end][1])
-    @test !any(isnan,problem1.data[end][2])
+    @test !any(isnan,problem1.data.U[end][1])
+    @test !any(isnan,problem1.data.U[end][2])
 end
 
 matsuno  = Matsuno(param)
@@ -36,6 +36,6 @@ problem2 = Problem(matsuno, init, param, solver )
 solve!( problem2 )
 
 @testset "Test problem with Matsuno model" begin
-    @test !any(isnan,problem2.data[end][1])
-    @test !any(isnan,problem2.data[end][2])
+    @test !any(isnan,problem2.data.U[end][1])
+    @test !any(isnan,problem2.data.U[end][2])
 end

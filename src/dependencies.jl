@@ -1,10 +1,11 @@
 using ProgressMeter
 using FFTW, LinearAlgebra
 ENV["PLOTS_USE_ATOM_PLOTPANE"] = "false"
+# Note that javascript-based libraries (for example: PlotlyJS) cannot be shown in the PlotPane due to issues within Atom's internals.
 using Plots
-#gr()
+gr()
 #pyplot()
-plotly()
+#plotlyjs()
 
 include("types.jl")
 include("solvers/RK4.jl")
