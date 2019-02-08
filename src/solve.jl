@@ -1,30 +1,33 @@
 export solve!
 
 function solve!(problem :: Problem)
-	@show problem.param
 
-    U = copy(problem.data.U[end])
+    @show problem.param
 
-	dt = problem.times.dt
+    U = similar(problem.solver.Uhat)
+    U .= problem.data.U[end]
+
+    dt = problem.times.dt
 
     prog = Progress(problem.times.Nt,1)
 
-	J = range(problem.times.nr ,stop = problem.times.Nt-1, step = problem.times.nr)
-	L = range(1 ,problem.times.nr)
-	for j in J
-    	for l in L
+    J = range(problem.times.nr ,stop = problem.times.Nt-1, step = problem.times.nr)
+    L = 1:problem.times.nr
 
-        	step!(problem.solver, problem.model, U, dt)
+    for j in J
+        for l in L
 
-			next!(prog)
+            step!(problem.solver, problem.model, U, dt)
 
-		end
+            next!(prog)
+
+        end
 
         push!(problem.data.U,copy(U))
 
 
-	end
+    end
 
-	print("\n")
+    print("\n")
 
 end
