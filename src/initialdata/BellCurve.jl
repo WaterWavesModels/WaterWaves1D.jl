@@ -19,7 +19,8 @@ struct BellCurve <: InitialData
     function BellCurve(p :: NamedTuple,theta :: Real)
 
     	mesh  = Mesh(-p.L, p.L, p.N)
-        h = exp.(-((abs.(mesh.x)).^theta)*log(2))
+        h = zeros(Float64, mesh.N)
+        h .= exp.(.-((abs.(mesh.x)).^theta).*log(2))
         u = zeros(Float64, mesh.N)
     	new( h,u )
 
@@ -28,7 +29,8 @@ struct BellCurve <: InitialData
     function BellCurve(p :: NamedTuple)
 
     	mesh  = Mesh(-p.L, p.L, p.N)
-        h = exp.(-(mesh.x).^2)
+        h = zeros(Float64, mesh.N)
+        h .= exp.(.-(mesh.x).^2)
         u = zeros(Float64, mesh.N)
     	new( h,u )
 
