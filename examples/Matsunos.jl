@@ -4,20 +4,20 @@ include("../src/dependencies.jl")
 
 #----
 param = ( ϵ  = 1/2,
-        	N  = 2^12,
-            L  = 10,
-            T  = 5,
-            dt = 0.001)
+          N  = 2^12,
+          L  = 10,
+          T  = 5,
+          dt = 0.001)
 
 init     = BellCurve(param,2.5)
 
-model0    = Matsuno_mod_naive(param)
+model0   = Matsuno_mod_naive(param)
 problem0 = Problem(model0, init, param);
 
-model1    = Matsuno_naive(param)
+model1   = Matsuno_naive(param)
 problem1 = Problem(model1, init, param);
 
-model2  = Matsuno(param)
+model2   = Matsuno(param)
 problem2 = Problem(model2, init, param);
 
 problems = [ problem0, problem1, problem2 ]
