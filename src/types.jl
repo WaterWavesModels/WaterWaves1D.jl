@@ -30,7 +30,7 @@ end
 struct Times
     Nt   :: Int
     Nr   :: Int
-    nr     :: Int
+    nr   :: Int
     tfin :: Float64
     dt   :: Float64
     t    :: Vector{Float64}
