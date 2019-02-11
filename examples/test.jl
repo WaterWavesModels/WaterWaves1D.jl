@@ -223,63 +223,65 @@ end
 function (m::Matsuno)(U::Array{Complex{Float64},2})
 
 
-    for i in eachindex(m.hnew)
-        m.hnew[i] = m.Γ[i] * U[i,1]
+    @simd for i in eachindex(m.hnew)
+        @inbounds m.hnew[i] = m.Γ[i] * U[i,1]
     end
 
     ldiv!(m.unew, m.Px, m.hnew )
 
-    for i in eachindex(m.hnew)
-        m.hnew[i] = m.Dx[i] * U[i,1]
+    @simd for i in eachindex(m.hnew)
+        @inbounds m.hnew[i] = m.Dx[i] * U[i,1]
     end
 
     ldiv!(m.I₁, m.Px, m.hnew)
 
-    m.unew  .*= m.I₁
+    @simd for i in eachindex(m.unew)
+        @inbounds m.unew[i] *= m.I₁[i]
+    end
 
     mul!(m.I₁, m.Px, m.unew)
 
-    m.I₁  .*= m.ϵ .* m.Π⅔
-    m.I₁  .-= m.hnew
+    @simd for i in eachindex(m.hnew)
+        @inbounds m.I₁[i] *= m.ϵ[i] * m.Π⅔[i]
+        @inbounds m.I₁[i] -= m.hnew[i]
+    end
 
     ldiv!(m.hnew, m.Px, view(U,:,1))
     ldiv!(m.unew, m.Px, view(U,:,2))
 
-    m.I₂    .= m.hnew .* m.unew
+    @simd for i in eachindex(m.hnew)
+        @inbounds m.I₂[i] = m.hnew[i] * m.unew[i]
+    end
 
     mul!(m.I₃, m.Px, m.I₂)
 
     m.I₃    .*= m.Dx
 
-    for i in eachindex(m.H)
-        U[i,1]  = m.H[i] * U[i,2]
-        m.I₀[i] = m.Γ[i] * U[i,2]
+    @simd for i in eachindex(m.H)
+        @inbounds U[i,1]  = m.H[i] * U[i,2]
+        @inbounds m.I₀[i] = m.Γ[i] * U[i,2]
     end
 
     ldiv!(m.I₂, m.Px, m.I₀)
 
-    m.I₂    .*= m.hnew
+    @simd for i in eachindex(m.hnew)
+        @inbounds m.I₂[i] *= m.hnew[i]
+    end
 
     mul!(m.hnew, m.Px, m.I₂)
 
-    m.hnew  .*= m.H
-    m.I₃    .+= m.hnew
-    m.I₃    .*= m.ϵ .* m.Π⅔
-    
-    for i in eachindex(m.I₃)
-        U[i,1] -= m.I₃[i]
+    @simd for i in eachindex(m.hnew)
+        m.hnew[i] *= m.H[i]
+        m.I₃[i]   += m.hnew[i]
+        m.I₃[i]   *= m.ϵ * m.Π⅔[i]
+        U[i,1]    -= m.I₃[i]
+        m.I₃[i]    = m.unew[i]^2
     end 
-
-    m.I₃    .=  m.unew.^2
 
     mul!(m.unew, m.Px, m.I₃)
 
-    m.unew  .*= m.Dx
-    m.unew  .*= m.ϵ/2 .* m.Π⅔
-    m.I₁    .-= m.unew
-
-    for i in eachindex(m.I₁)
-        U[i,2] =  m.I₁[i]
+    @simd for i in eachindex(m.unew)
+        U[i,2]  =  m.I₁[i] - m.unew[i] * m.Dx[i] * m.ϵ/2 * m.Π⅔[i]
     end 
 
 end
@@ -317,34 +319,31 @@ function solve!(problem :: Problem)
 
     prog = Progress(problem.times.Nt,1)
 
-    J = range(problem.times.nr ,stop = problem.times.Nt-1, step = problem.times.nr)
-    L = 1:problem.times.nr
+    nr = problem.times.nr
+
+    J = nr:nr:problem.times.Nt-1
+    L = 1:nr
 
     for j in J
         for l in L
-
             step!(problem.solver, problem.model, U, dt)
-
             next!(prog)
-
         end
-
-        push!(problem.data.U,copy(U))
-
-
+        push!(problem.data.U,U)
     end
 
     print("\n")
 
 end
 
+using LinearAlgebra, JLD
 
 function main()
 
     param = ( ϵ  = 1/2,
               N  = 2^12,
-              L  = 10,
-              T  = 5,
+              L  = 10.,
+              T  = 5.,
               dt = 0.001 )
     
     init    = BellCurve(param,2.5)
@@ -352,6 +351,15 @@ function main()
     problem = Problem(model, init, param);
     
     solve!( problem )
+
+
+    #Uref =  problem.data.U[end]
+
+    #save("reference.jld", "Uref", Uref)
+
+    Uref = load("reference.jld", "Uref")
+
+    println(norm(Uref .- problem.data.U[end]))
 
    # (hr,ur) = mapfro(problem.model,problem.data.U[end])
 
