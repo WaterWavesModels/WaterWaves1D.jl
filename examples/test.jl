@@ -59,6 +59,7 @@ struct Mesh
 end
 
 struct Times
+
     Nt   :: Int
     Nr   :: Int
     nr   :: Int
@@ -67,8 +68,8 @@ struct Times
     t    :: Vector{Float64}
     tr   :: Vector{Float64}
 
-    function Times( dt, tfin)
-        t = range(0, stop=tfin, step = dt)
+    function Times( dt , tfin)
+        t  = 0:dt:tfin
         Nt = length(t)
         Nr = Nt
         nr = 1
@@ -137,31 +138,30 @@ function step!(s  :: RK4,
 
     f!( s.Uhat )
 
-    s.dU .= s.Uhat
-
     @simd for i in eachindex(U)
-        s.Uhat[i] = U[i] + dt/2 * s.Uhat[i]
+        @inbounds s.dU[i]   = s.Uhat[i]
+        @inbounds s.Uhat[i] = U[i] + dt/2 * s.Uhat[i]
     end
 
     f!( s.Uhat )
 
     @simd for i in eachindex(U)
-        s.dU[i]   += 2 * s.Uhat[i]
-        s.Uhat[i]  = U[i] + dt/2 * s.Uhat[i]
+        @inbounds s.dU[i]   += 2 * s.Uhat[i]
+        @inbounds s.Uhat[i]  = U[i] + dt/2 * s.Uhat[i]
     end
 
     f!( s.Uhat )
 
     @simd for i in eachindex(U)
-        s.dU[i]   += 2 * s.Uhat[i]
-        s.Uhat[i]  = U[i] + dt * s.Uhat[i]
+        @inbounds s.dU[i]   += 2 * s.Uhat[i]
+        @inbounds s.Uhat[i]  = U[i] + dt * s.Uhat[i]
     end
 
     f!( s.Uhat )
 
     @simd for i in eachindex(U)
-        s.dU[i] += s.Uhat[i]
-        U[i]    += dt/6 * s.dU[i]
+        @inbounds s.dU[i] += s.Uhat[i]
+        @inbounds U[i]    += dt/6 * s.dU[i]
     end
 
 end
@@ -324,17 +324,14 @@ function solve!(problem :: Problem)
 
     dt = problem.times.dt
 
-    prog = Progress(problem.times.Nt,1)
-
     nr = problem.times.nr
 
     J = nr:nr:problem.times.Nt-1
     L = 1:nr
 
-    for j in J
+    @showprogress 1 for j in J
         for l in L
             step!(problem.solver, problem.model, U, dt)
-            next!(prog)
         end
         push!(problem.data.U,U)
     end
@@ -358,7 +355,6 @@ function main()
     problem = Problem(model, init, param);
     
     solve!( problem )
-
 
     #Uref =  problem.data.U[end]
 
