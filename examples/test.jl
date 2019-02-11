@@ -242,8 +242,7 @@ function (m::Matsuno)(U::Array{Complex{Float64},2})
     mul!(m.I₁, m.Px, m.unew)
 
     @simd for i in eachindex(m.hnew)
-        @inbounds m.I₁[i] *= m.ϵ[i] * m.Π⅔[i]
-        @inbounds m.I₁[i] -= m.hnew[i]
+        @inbounds m.I₁[i] = m.I₁[i] * m.ϵ[i] * m.Π⅔[i] - m.hnew[i]
     end
 
     ldiv!(m.hnew, m.Px, view(U,:,1))
@@ -254,8 +253,6 @@ function (m::Matsuno)(U::Array{Complex{Float64},2})
     end
 
     mul!(m.I₃, m.Px, m.I₂)
-
-    m.I₃    .*= m.Dx
 
     @simd for i in eachindex(m.H)
         @inbounds U[i,1]  = m.H[i] * U[i,2]
@@ -270,12 +267,9 @@ function (m::Matsuno)(U::Array{Complex{Float64},2})
 
     mul!(m.hnew, m.Px, m.I₂)
 
-    @simd for i in eachindex(m.hnew)
-        m.hnew[i] *= m.H[i]
-        m.I₃[i]   += m.hnew[i]
-        m.I₃[i]   *= m.ϵ * m.Π⅔[i]
-        U[i,1]    -= m.I₃[i]
-        m.I₃[i]    = m.unew[i]^2
+    @simd for i in eachindex(m.unew)
+        U[i,1] -= (m.I₃[i] * m.Dx[i] + m.hnew[i] * m.H[i]) * m.ϵ * m.Π⅔[i]
+        m.I₃[i]  = m.unew[i]^2
     end 
 
     mul!(m.unew, m.Px, m.I₃)
