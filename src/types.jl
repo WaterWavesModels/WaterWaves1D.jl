@@ -100,7 +100,7 @@ end
 - solver  : RK4 (optional)
 
 """
-struct Problem
+mutable struct Problem
 
     model   :: AbstractModel
     initial :: InitialData
