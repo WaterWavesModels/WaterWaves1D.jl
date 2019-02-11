@@ -14,7 +14,8 @@ mutable struct Data
 
     function Data( v )
         (datalength , datasize ) = size(v)
-        U = [v]
+        U = Array{ComplexF64,2}[]
+        push!(U, v)
         new(U, datasize, datalength)
     end
 end
@@ -132,24 +133,36 @@ function step!(s  :: RK4,
                U  :: Array{Complex{Float64},2},
                dt :: Float64)
 
-    
     s.Uhat .= U
+
     f!( s.Uhat )
+
     s.dU .= s.Uhat
 
-    s.Uhat .= U .+ dt/2 .* s.Uhat
-    f!( s.Uhat )
-    s.dU .+= 2 .* s.Uhat
+    @simd for i in eachindex(U)
+        s.Uhat[i] = U[i] + dt/2 * s.Uhat[i]
+    end
 
-    s.Uhat .= U .+ dt/2 .* s.Uhat
     f!( s.Uhat )
-    s.dU .+= 2 .* s.Uhat
 
-    s.Uhat .= U .+ dt .* s.Uhat
+    @simd for i in eachindex(U)
+        s.dU[i]   += 2 * s.Uhat[i]
+        s.Uhat[i]  = U[i] + dt/2 * s.Uhat[i]
+    end
+
     f!( s.Uhat )
-    s.dU .+= s.Uhat
 
-    U .+= dt/6 .* s.dU
+    @simd for i in eachindex(U)
+        s.dU[i]   += 2 * s.Uhat[i]
+        s.Uhat[i]  = U[i] + dt * s.Uhat[i]
+    end
+
+    f!( s.Uhat )
+
+    @simd for i in eachindex(U)
+        s.dU[i] += s.Uhat[i]
+        U[i]    += dt/6 * s.dU[i]
+    end
 
 end
 
@@ -268,14 +281,14 @@ function (m::Matsuno)(U::Array{Complex{Float64},2})
     mul!(m.hnew, m.Px, m.I₂)
 
     @simd for i in eachindex(m.unew)
-        U[i,1] -= (m.I₃[i] * m.Dx[i] + m.hnew[i] * m.H[i]) * m.ϵ * m.Π⅔[i]
-        m.I₃[i]  = m.unew[i]^2
+        @inbounds U[i,1] -= (m.I₃[i] * m.Dx[i] + m.hnew[i] * m.H[i]) * m.ϵ * m.Π⅔[i]
+        @inbounds m.I₃[i]  = m.unew[i]^2
     end 
 
     mul!(m.unew, m.Px, m.I₃)
 
     @simd for i in eachindex(m.unew)
-        U[i,2]  =  m.I₁[i] - m.unew[i] * m.Dx[i] * m.ϵ/2 * m.Π⅔[i]
+        @inbounds U[i,2]  =  m.I₁[i] - m.unew[i] * m.Dx[i] * m.ϵ/2 * m.Π⅔[i]
     end 
 
 end
