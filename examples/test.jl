@@ -57,8 +57,6 @@ struct Mesh
     end
 end
 
-
-
 struct Times
     Nt   :: Int
     Nr   :: Int
@@ -340,6 +338,7 @@ function solve!(problem :: Problem)
 
 end
 
+
 function main()
 
     param = ( ϵ  = 1/2,
@@ -353,6 +352,19 @@ function main()
     problem = Problem(model, init, param);
     
     solve!( problem )
+
+   # (hr,ur) = mapfro(problem.model,problem.data.U[end])
+
+   # p = plot(layout=(2,1))
+   # 
+   # plot!(p[1,1], problem.mesh.x, hr;
+   #     	  title="physical space",
+   #               label=problem.model.label)
+
+   # plot!(p[2,1], fftshift(problem.mesh.k),
+   #               log10.(1e-18.+abs.(fftshift(fft(hr))));
+   #     	  title="frequency",
+   # 	          label=problem.model.label)
 
 end
 
