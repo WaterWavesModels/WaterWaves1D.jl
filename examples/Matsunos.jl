@@ -20,6 +20,12 @@ problem1 = Problem(model1, init, param);
 model2   = Matsuno(param)
 problem2 = Problem(model2, init, param);
 
+using DelimitedFiles
+
+open("reference.dat", "w") do io
+    writedlm(io, problem1.data.U[end])
+end
+
 problems = [ problem0, problem1, problem2 ]
 
 
