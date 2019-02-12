@@ -1,6 +1,7 @@
 using ProgressMeter
 using FFTW, LinearAlgebra
 using Plots
+using JLD
 gr()
 
 abstract type AbstractModel end
@@ -313,6 +314,33 @@ function mapfro(m::Matsuno, datum::Array{Complex{Float64},2})
 
 end
 
+function create_animation( p::Problem )
+
+    prog = Progress(p.times.Nr,1)
+
+    anim = @animate for (l,U) in enumerate(p.data.U)
+
+        pl = plot(layout=(2,1))
+
+		(hr,ur) = mapfro(p.model,U)
+
+        plot!(pl[1,1], p.mesh.x, hr;
+              ylims=(-0.6,1),
+              title="physical space",
+              label=p.model.label)
+
+        plot!(pl[2,1], fftshift(p.mesh.k),
+              log10.(1e-18.+abs.(fftshift(fft(hr))));
+              title="frequency",
+              label=p.model.label)
+
+        next!(prog)
+
+    end when mod(l, 100) == 0
+
+    gif(anim, "anim.gif", fps=15); nothing
+
+end
 
 function solve!(problem :: Problem)
 
@@ -333,14 +361,13 @@ function solve!(problem :: Problem)
         for l in L
             step!(problem.solver, problem.model, U, dt)
         end
-        push!(problem.data.U,U)
+        push!(problem.data.U,copy(U))
     end
 
     print("\n")
 
 end
 
-using LinearAlgebra, JLD
 
 function main()
 
@@ -354,9 +381,9 @@ function main()
     model   = Matsuno(param)
     problem = Problem(model, init, param);
     
-    solve!( problem )
+    @time solve!( problem )
 
-    #Uref =  problem.data.U[end]
+    Uref =  problem.data.U[end]
 
     #save("reference.jld", "Uref", Uref)
 
@@ -364,19 +391,8 @@ function main()
 
     println(norm(Uref .- problem.data.U[end]))
 
-   # (hr,ur) = mapfro(problem.model,problem.data.U[end])
-
-   # p = plot(layout=(2,1))
-   # 
-   # plot!(p[1,1], problem.mesh.x, hr;
-   #     	  title="physical space",
-   #               label=problem.model.label)
-
-   # plot!(p[2,1], fftshift(problem.mesh.k),
-   #               log10.(1e-18.+abs.(fftshift(fft(hr))));
-   #     	  title="frequency",
-   # 	          label=problem.model.label)
+    create_animation( problem )
 
 end
 
-@time main()
+main()
