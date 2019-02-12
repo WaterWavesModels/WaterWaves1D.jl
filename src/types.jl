@@ -3,12 +3,9 @@ export TimeSolver
 export InitialData
 export Data
 
-
 export Times
 export Mesh
 export Problem
-
-
 
 abstract type AbstractModel end
 abstract type TimeSolver end
@@ -57,7 +54,7 @@ end
 
 struct Mesh
 
-    N    :: Int
+    N    :: Int64
     xmin :: Float64
     xmax :: Float64
     dx   :: Float64
@@ -67,27 +64,29 @@ struct Mesh
     dk   :: Float64
     k    :: Vector{Float64}
 
-    function Mesh( xmin, xmax, N)
-        dx = (xmax-xmin)/N
-        x = range(xmin, stop=xmax, length=N+1)[1:end-1]
-        dk = 2π/(N*dx)
+    function Mesh( xmin :: Float64, xmax :: Float64, N :: Int64)
+
+        dx   = (xmax-xmin)/N
+        x    = zeros(Float64, N)
+        x   .= range(xmin, stop=xmax, length=N+1)[1:end-1] 
+        dk   = 2π/(N*dx)
         kmin = -N/2*dk
         kmax = (N/2-1)*dk
-        k = [range(0, length=N ÷ 2, step = dk) ; range(kmin, length=N ÷ 2, step = dk) ]
+        k    = zeros(Float64, N)
+        k   .= dk .* vcat(0:N÷2-1, -N÷2:-1)
+
         new( N, xmin, xmax, dx, x, kmin, kmax, dk, k)
+
     end
 
-    function Mesh(param   :: NamedTuple)
-        xmin = -param.L
-        xmax = param.L
-        N = param.N
-        dx = (xmax-xmin)/N
-        x = range(xmin, stop=xmax, length=N+1)[1:end-1]
-        dk = 2π/(N*dx)
-        kmin = -N/2*dk
-        kmax = (N/2-1)*dk
-        k = [range(0, length=N ÷ 2, step = dk) ; range(kmin, length=N ÷ 2, step = dk) ]
-        new( N, xmin, xmax, dx, x, kmin, kmax, dk, k)
+    function Mesh(param :: NamedTuple)
+
+        xmin = - Float64(param.L)
+        xmax =   Float64(param.L)
+        N    =   param.N
+        
+        Mesh( xmin, xmax, N)
+
     end
 end
 
@@ -101,7 +100,7 @@ end
 - solver  : RK4 (optional)
 
 """
-struct Problem
+mutable struct Problem
 
     model   :: AbstractModel
     initial :: InitialData
@@ -115,30 +114,32 @@ struct Problem
                      initial :: InitialData,
                      param   :: NamedTuple,
                      solver  :: TimeSolver)
+
         if in(:nr,keys(param))
             times = Times(param.dt, param.T, param.nr)
         else
             times = Times(param.dt, param.T)
         end
-        mesh  = Mesh(-param.L, param.L, param.N)
+
+        mesh  = Mesh(param)
         data  = Data(mapto(model,initial))
 
         new(model,initial,param,solver,times,mesh,data)
 
     end
 
-    function Problem(model   :: AbstractModel,
-                 initial :: InitialData,
-                 param   :: NamedTuple)
+    function Problem( model   :: AbstractModel,
+                      initial :: InitialData,
+                      param   :: NamedTuple)
 
         if in(:nr,keys(param))
             times = Times(param.dt, param.T, param.nr)
         else
             times = Times(param.dt, param.T)
         end
-        mesh  = Mesh(-param.L, param.L, param.N)
-        data  = Data(mapto(model,initial))
-        solver= RK4(param,model)
+        mesh   = Mesh(param)
+        data   = Data(mapto(model,initial))
+        solver = RK4(param,model)
 
         new(model,initial,param,solver,times,mesh,data)
 
