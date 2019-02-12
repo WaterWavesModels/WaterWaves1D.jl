@@ -1,13 +1,11 @@
 export solve!
 
-
 function solve!(problem :: Problem)
 
     @show problem.param
 
-    U  = similar(problem.solver.Uhat)
+    U = similar(problem.solver.Uhat)
     U .= problem.data.U[end]
-    step!(problem.solver, problem.model, U, 0.0)
 
     dt = problem.times.dt
 
@@ -25,7 +23,7 @@ function solve!(problem :: Problem)
 
         end
 
-        push!(problem.data.U,U)
+        push!(problem.data.U,copy(U))
 
 
     end
