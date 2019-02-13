@@ -39,3 +39,13 @@ solve!( problem2 )
     @test !any(isnan,problem2.data.U[end][1])
     @test !any(isnan,problem2.data.U[end][2])
 end
+
+
+dump = convert(ProblemSave, problem1 )
+
+problem = convert(Problem, dump )
+
+save(problem1, "problem1")
+save([problem1,problem2], "problems")
+
+problems = load("problems")

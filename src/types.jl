@@ -145,7 +145,22 @@ mutable struct Problem
 
     end
 
+    function Problem( model   :: AbstractModel,
+                      initial :: InitialData,
+                      param   :: NamedTuple,
+                      solver  :: TimeSolver,
+                      times   :: Times,
+                      mesh    :: Mesh,
+                      data    :: Data)
+
+        new(model,initial,param,solver,times,mesh,data)
+
+    end
+
+
 end
+
+export ProblemSave
 
 struct ProblemSave
 
@@ -157,60 +172,35 @@ struct ProblemSave
     mesh    :: Mesh
     data    :: Data
 
-    function ProblemSave(p   :: Problem)
+end
 
-        model   = p.model
-        initial = p.initial
-        param   = Dict(pairs(p.param))
-        solver  = p.solver
-        times   = p.times
-        mesh    = p.mesh
-        data    = p.data
+import Base.convert
 
-        new(model,initial,param,solver,times,mesh,data)
+function convert(::Type{ProblemSave}, p :: Problem )
 
-    end
+    model   = p.model
+    initial = p.initial
+    param   = Dict(pairs(p.param))
+    solver  = p.solver
+    times   = p.times
+    mesh    = p.mesh
+    data    = p.data
+
+    ProblemSave(model,initial,param,solver,times,mesh,data)
 
 end
 
-struct Problem
 
-    model   :: AbstractModel
-    initial :: InitialData
-    param   :: NamedTuple
-    solver  :: TimeSolver
-    times   :: Times
-    mesh    :: Mesh
-    data    :: Data
+function convert(::Type{Problem}, p :: ProblemSave)
 
-    function Problem(p :: ProblemSave)
+    model   = p.model
+    initial = p.initial
+    param   = (;p.param...)
+    solver  = p.solver
+    times   = p.times
+    mesh    = p.mesh
+    data    = p.data
 
-        dictkeys(d::Dict) = (collect(keys(d))...,)
-        dictvalues(d::Dict) = (collect(values(d))...,)
-        namedtuple(d::Dict{Symbol,T}) where {T} =
-        NamedTuple{dictkeys(d)}(dictvalues(d))
-        model   = p.model
-        initial = p.initial
-        param   = namedtuple(p.param)
-        solver  = p.solver
-        times   = p.times
-        mesh    = p.mesh
-        data    = p.data
-
-        new(model,initial,param,solver,times,mesh,data)
-
-    end
-
-    function Problem(p :: ProblemSave, param :: NamedTuple)
-
-        model   = p.model
-        initial = p.initial
-        solver  = p.solver
-        times   = p.times
-        mesh    = p.mesh
-        data    = p.data
-
-        new(model,initial,param,solver,times,mesh,data)
-    end
+    Problem(model,initial,param,solver,times,mesh,data)
 
 end

@@ -1,18 +1,22 @@
-using JLD
+import JLD
+
+export save, load
 
 ## Ne gere pas les param ("NamedTuple"). D'où la traduction en dictionnaire, et vice-versa.
 ## Pour une raison etrange, ne peut pas enregistrer Px (plan_ifft)
-function save_problem(problems::Array{Any,1},name::String)
-      problemsave=[]
-      for i in range(1,size(problems)[1])
-      	push!(problemsave,ProblemSave(problems[i]))
-      end
+function save(problems :: Vector{Problem}, name::String)
 
-      save(string(name,".jld"),"problemsave",problemsave)
+    problemsave = ProblemSave[]
+    for p in problems
+        push!(problemsave,convert(ProblemSave,p))
+    end
+
+    JLD.save(string(name,".jld"),"problemsave",problemsave)
+
 end
 
-function save_problem(problem::Problem,name::String)
-      save(string(name,".jld"),"problemsave",ProblemSave(problem))
+function save(problem::Problem,name::String)
+    JLD.save(string(name,".jld"),"problemsave",convert(ProblemSave,problem))
 end
 
 """
@@ -21,28 +25,14 @@ end
     problems=load_problems("foo",param) #"foo.jld" must have bee generated with save_problems
 
 """
-function load_problem(name::String,param::NamedTuple)
-      d=load(string(name,".jld"))
-      if typeof(d["problemsave"]) == Array{Any,1}
-            problems=[]
-            for i in range(1,size(d["problemsave"])[1])
-            	push!(problems,Problem(d["problemsave"][i],param))
-            end
-      elseif typeof(d["problemsave"]) == ProblemSave
-            problems = Problem(d["problemsave"],param)
-      end
-      problems
-end
+function load(name::String)
 
-function load_problem(name::String)
-      d=load(string(name,".jld"))
-      if typeof(d["problemsave"]) == Array{Any,1}
-            problems=[]
-            for i in range(1,size(d["problemsave"])[1])
-            	push!(problems,Problem(d["problemsave"][i]))
-            end
-      elseif typeof(d["problemsave"]) == ProblemSave
-            problems = Problem(d["problemsave"])
+      problems = Problem[]
+
+      for p in JLD.load(string(name,".jld"))
+          push!(convert(Problem,p), problems)
       end
+
       problems
+
 end

@@ -2,11 +2,10 @@ using ProgressMeter
 using FFTW, LinearAlgebra
 using Plots
 using JLD
-gr()
 
 abstract type AbstractModel end
-abstract type TimeSolver end
-abstract type InitialData end
+abstract type TimeSolver    end
+abstract type InitialData   end
 
 mutable struct Data
     U :: Array{Array{Complex{Float64},2}}
