@@ -23,8 +23,8 @@ mutable struct Data
     end
 end
 
-
 struct Times
+
     Nt   :: Int
     Nr   :: Int
     nr   :: Int
@@ -145,62 +145,5 @@ mutable struct Problem
 
     end
 
-    function Problem( model   :: AbstractModel,
-                      initial :: InitialData,
-                      param   :: NamedTuple,
-                      solver  :: TimeSolver,
-                      times   :: Times,
-                      mesh    :: Mesh,
-                      data    :: Data)
-
-        new(model,initial,param,solver,times,mesh,data)
-
-    end
-
-
 end
 
-export ProblemSave
-
-struct ProblemSave
-
-    model   :: AbstractModel
-    initial :: InitialData
-    param   :: Dict{Symbol,Any}
-    solver  :: TimeSolver
-    times   :: Times
-    mesh    :: Mesh
-    data    :: Data
-
-end
-
-import Base.convert
-
-function convert(::Type{ProblemSave}, p :: Problem )
-
-    model   = p.model
-    initial = p.initial
-    param   = Dict(pairs(p.param))
-    solver  = p.solver
-    times   = p.times
-    mesh    = p.mesh
-    data    = p.data
-
-    ProblemSave(model,initial,param,solver,times,mesh,data)
-
-end
-
-
-function convert(::Type{Problem}, p :: ProblemSave)
-
-    model   = p.model
-    initial = p.initial
-    param   = (;p.param...)
-    solver  = p.solver
-    times   = p.times
-    mesh    = p.mesh
-    data    = p.data
-
-    Problem(model,initial,param,solver,times,mesh,data)
-
-end
