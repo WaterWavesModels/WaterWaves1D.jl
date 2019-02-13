@@ -1,38 +1,54 @@
 import JLD
 
-export save, load
+export ProblemLight, ProblemSave, save, load
 
-## Ne gere pas les param ("NamedTuple"). D'où la traduction en dictionnaire, et vice-versa.
-## Pour une raison etrange, ne peut pas enregistrer Px (plan_ifft)
-function save(problems :: Vector{Problem}, name::String)
+struct ProblemLight
 
-    problemsave = ProblemSave[]
-    for p in problems
-        push!(problemsave,convert(ProblemSave,p))
-    end
-
-    JLD.save(string(name,".jld"),"problemsave",problemsave)
+    model   :: String
+    param   :: NamedTuple
 
 end
 
-function save(problem::Problem,name::String)
-    JLD.save(string(name,".jld"),"problemsave",convert(ProblemSave,problem))
+struct ProblemSave
+
+    model   :: String
+    param   :: Dict
+
 end
 
-"""
-    load_problems(name::String,param::NamedTuple)
-    Example of use
-    problems=load_problems("foo",param) #"foo.jld" must have bee generated with save_problems
+import Base.convert
 
-"""
+function convert(::Type{ProblemSave}, p :: ProblemLight )
+
+    model   = String(Symbol(typeof(p.model)))
+    param   = Dict(pairs(p.param))
+
+    ProblemSave(model,param)
+
+end
+
+function convert(::Type{ProblemLight}, p :: ProblemSave)
+
+    model   = p.model
+    param   = (;p.param...)
+
+    ProblemLight(model,param)
+
+end
+
+import JLD.save
+
+function save(p::ProblemLight,name::String)
+
+    filename = string(name,".jld")
+    JLD.save(filename, name, convert(ProblemSave,p))
+
+end
+
+import JLD.load
+
 function load(name::String)
 
-      problems = Problem[]
-
-      for p in JLD.load(string(name,".jld"))
-          push!(convert(Problem,p), problems)
-      end
-
-      problems
+    convert(ProblemLight, JLD.load(string(name,".jld"), name ))
 
 end
