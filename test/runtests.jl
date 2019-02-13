@@ -1,5 +1,6 @@
 using Test
 using DeepWaterModels
+using JLD
 
 param = ( ϵ  = 1/2,
           N  = 2^10,
@@ -7,6 +8,14 @@ param = ( ϵ  = 1/2,
           T  = 5,
           dt = 0.01)
 
+p1 = ProblemLight("Matsuno", param)
+d  = convert(ProblemSave, p1 )
+p2 = convert(ProblemLight, d )
+
+save(p1, "p1")
+p3 = load("p1")
+
+println(p3)
 
 @testset "Parameters" begin
 
@@ -41,11 +50,3 @@ solve!( problem2 )
 end
 
 
-dump = convert(ProblemSave, problem1 )
-
-problem = convert(Problem, dump )
-
-save(problem1, "problem1")
-save([problem1,problem2], "problems")
-
-problems = load("problems")
