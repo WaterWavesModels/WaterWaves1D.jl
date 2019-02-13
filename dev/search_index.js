@@ -145,14 +145,6 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "#DeepWaterModels.load_problem-Tuple{String,NamedTuple}",
-    "page": "Documentation",
-    "title": "DeepWaterModels.load_problem",
-    "category": "method",
-    "text": "load_problems(name::String,param::NamedTuple)\nExample of use\nproblems=load_problems(\"foo\",param) #\"foo.jld\" must have bee generated with save_problems\n\n\n\n\n\n"
-},
-
-{
     "location": "#DeepWaterModels.jl-Documentation-1",
     "page": "Documentation",
     "title": "DeepWaterModels.jl Documentation",
