@@ -7,19 +7,6 @@ abstract type AbstractModel end
 abstract type TimeSolver    end
 abstract type InitialData   end
 
-mutable struct Data
-    U :: Array{Array{Complex{Float64},2}}
-    datasize :: Int
-    datalength:: Int
-
-    function Data( v )
-        (datalength , datasize ) = size(v)
-        U = Array{ComplexF64,2}[]
-        push!(U, v)
-        new(U, datasize, datalength)
-    end
-end
-
 struct Mesh
 
     N    :: Int64
@@ -88,7 +75,7 @@ mutable struct Problem
     solver  :: TimeSolver
     times   :: Times
     mesh    :: Mesh
-    data    :: Data
+    data    :: Vector{AbstractArray}
 
     function Problem( model   :: AbstractModel,
                       initial :: InitialData,
@@ -96,8 +83,9 @@ mutable struct Problem
 
         times  = Times(param.dt, param.T)
         mesh   = Mesh(param)
-        data   = Data(mapto(model,initial))
         solver = RK4(param,model)
+        data   = Array{ComplexF64,model.datasize}[]
+        push!(data, mapto(model,initial))
 
         new(model,initial,param,solver,times,mesh,data)
 
@@ -113,15 +101,15 @@ Runge-Kutta fourth order solver.
 """
 mutable struct RK4 <: TimeSolver
 
-    Uhat :: Array{Complex{Float64},2}
-    dU   :: Array{Complex{Float64},2}
+    Uhat :: Array{ComplexF64,2}
+    dU   :: Array{ComplexF64,2}
 
     function RK4( param::NamedTuple, model::AbstractModel )
 
         n = param.N
 
-        Uhat = zeros(Complex{Float64}, (n,model.datasize))
-        dU   = zeros(Complex{Float64}, (n,model.datasize))
+        Uhat = zeros(ComplexF64, (n,model.datasize))
+        dU   = zeros(ComplexF64, (n,model.datasize))
 
         new( Uhat, dU)
 
@@ -131,37 +119,37 @@ end
 
 function step!(s  :: RK4,
                f! :: AbstractModel,
-               U  :: Array{Complex{Float64},2},
+               U  :: Array{ComplexF64,2},
                dt :: Float64)
 
     s.Uhat .= U
 
     f!( s.Uhat )
 
-    @simd for i in eachindex(U)
-        @inbounds s.dU[i]   = s.Uhat[i]
-        @inbounds s.Uhat[i] = U[i] + dt/2 * s.Uhat[i]
+    @inbounds for i in eachindex(U)
+        s.dU[i]   = s.Uhat[i]
+        s.Uhat[i] = U[i] + dt/2 * s.Uhat[i]
     end
 
     f!( s.Uhat )
 
-    @simd for i in eachindex(U)
-        @inbounds s.dU[i]   += 2 * s.Uhat[i]
-        @inbounds s.Uhat[i]  = U[i] + dt/2 * s.Uhat[i]
+    @inbounds for i in eachindex(U)
+        s.dU[i]   += 2 * s.Uhat[i]
+        s.Uhat[i]  = U[i] + dt/2 * s.Uhat[i]
     end
 
     f!( s.Uhat )
 
-    @simd for i in eachindex(U)
-        @inbounds s.dU[i]   += 2 * s.Uhat[i]
-        @inbounds s.Uhat[i]  = U[i] + dt * s.Uhat[i]
+    @inbounds for i in eachindex(U)
+        s.dU[i]   += 2 * s.Uhat[i]
+        s.Uhat[i]  = U[i] + dt * s.Uhat[i]
     end
 
     f!( s.Uhat )
 
-    @simd for i in eachindex(U)
-        @inbounds s.dU[i] += s.Uhat[i]
-        @inbounds U[i]    += dt/6 * s.dU[i]
+    @inbounds for i in eachindex(U)
+        s.dU[i] += s.Uhat[i]
+        U[i]    += dt/6 * s.dU[i]
     end
 
 end
@@ -193,16 +181,16 @@ mutable struct Matsuno <: AbstractModel
     label    :: String
     datasize :: Int
     Γ        :: Array{Float64,1}
-    Dx       :: Array{Complex{Float64},1}
-    H        :: Array{Complex{Float64},1}
+    Dx       :: Array{ComplexF64,1}
+    H        :: Array{ComplexF64,1}
     Π⅔       :: BitArray{1}
     ϵ        :: Float64
-    hnew     :: Vector{Complex{Float64}}
-    unew     :: Vector{Complex{Float64}}
-    I₀       :: Vector{Complex{Float64}}
-    I₁       :: Vector{Complex{Float64}}
-    I₂       :: Vector{Complex{Float64}}
-    I₃       :: Vector{Complex{Float64}}
+    hnew     :: Vector{ComplexF64}
+    unew     :: Vector{ComplexF64}
+    I₀       :: Vector{ComplexF64}
+    I₁       :: Vector{ComplexF64}
+    I₂       :: Vector{ComplexF64}
+    I₃       :: Vector{ComplexF64}
 
     Px       :: FFTW.FFTWPlan
 
@@ -217,13 +205,13 @@ mutable struct Matsuno <: AbstractModel
         H        = -1im * sign.(mesh.k) # Hilbert transform
         Π⅔       = Γ .< mesh.kmax * 2/3 # Dealiasing low-pass filter
 
-        hnew = zeros(Complex{Float64}, mesh.N)
-        unew = zeros(Complex{Float64}, mesh.N)
+        hnew = zeros(ComplexF64, mesh.N)
+        unew = zeros(ComplexF64, mesh.N)
 
-        I₀ = zeros(Complex{Float64}, mesh.N)
-        I₁ = zeros(Complex{Float64}, mesh.N)
-        I₂ = zeros(Complex{Float64}, mesh.N)
-        I₃ = zeros(Complex{Float64}, mesh.N)
+        I₀ = zeros(ComplexF64, mesh.N)
+        I₁ = zeros(ComplexF64, mesh.N)
+        I₂ = zeros(ComplexF64, mesh.N)
+        I₃ = zeros(ComplexF64, mesh.N)
 
         Px  = plan_fft(hnew; flags = FFTW.MEASURE)
 
@@ -233,62 +221,62 @@ mutable struct Matsuno <: AbstractModel
 end
 
 
-function (m::Matsuno)(U::Array{Complex{Float64},2})
+function (m::Matsuno)(U::Array{ComplexF64,2})
 
 
-    @simd for i in eachindex(m.hnew)
-        @inbounds m.hnew[i] = m.Γ[i] * U[i,1]
+    @inbounds for i in eachindex(m.hnew)
+        m.hnew[i] = m.Γ[i] * U[i,1]
     end
 
     ldiv!(m.unew, m.Px, m.hnew )
 
-    @simd for i in eachindex(m.hnew)
-        @inbounds m.hnew[i] = m.Dx[i] * U[i,1]
+    @inbounds for i in eachindex(m.hnew)
+        m.hnew[i] = m.Dx[i] * U[i,1]
     end
 
     ldiv!(m.I₁, m.Px, m.hnew)
 
-    @simd for i in eachindex(m.unew)
-        @inbounds m.unew[i] *= m.I₁[i]
+    @inbounds for i in eachindex(m.unew)
+        m.unew[i] *= m.I₁[i]
     end
 
     mul!(m.I₁, m.Px, m.unew)
 
-    @simd for i in eachindex(m.hnew)
-        @inbounds m.I₁[i] = m.I₁[i] * m.ϵ[i] * m.Π⅔[i] - m.hnew[i]
+    @inbounds for i in eachindex(m.hnew)
+        m.I₁[i] = m.I₁[i] * m.ϵ[i] * m.Π⅔[i] - m.hnew[i]
     end
 
     ldiv!(m.hnew, m.Px, view(U,:,1))
     ldiv!(m.unew, m.Px, view(U,:,2))
 
-    @simd for i in eachindex(m.hnew)
-        @inbounds m.I₂[i] = m.hnew[i] * m.unew[i]
+    @inbounds for i in eachindex(m.hnew)
+        m.I₂[i] = m.hnew[i] * m.unew[i]
     end
 
     mul!(m.I₃, m.Px, m.I₂)
 
-    @simd for i in eachindex(m.H)
-        @inbounds U[i,1]  = m.H[i] * U[i,2]
-        @inbounds m.I₀[i] = m.Γ[i] * U[i,2]
+    @inbounds for i in eachindex(m.H)
+        U[i,1]  = m.H[i] * U[i,2]
+        m.I₀[i] = m.Γ[i] * U[i,2]
     end
 
     ldiv!(m.I₂, m.Px, m.I₀)
 
-    @simd for i in eachindex(m.hnew)
-        @inbounds m.I₂[i] *= m.hnew[i]
+    @inbounds for i in eachindex(m.hnew)
+        m.I₂[i] *= m.hnew[i]
     end
 
     mul!(m.hnew, m.Px, m.I₂)
 
-    @simd for i in eachindex(m.unew)
-        @inbounds U[i,1] -= (m.I₃[i] * m.Dx[i] + m.hnew[i] * m.H[i]) * m.ϵ * m.Π⅔[i]
-        @inbounds m.I₃[i]  = m.unew[i]^2
+    @inbounds for i in eachindex(m.unew)
+        U[i,1] -= (m.I₃[i] * m.Dx[i] + m.hnew[i] * m.H[i]) * m.ϵ * m.Π⅔[i]
+        m.I₃[i]  = m.unew[i]^2
     end 
 
     mul!(m.unew, m.Px, m.I₃)
 
-    @simd for i in eachindex(m.unew)
-        @inbounds U[i,2]  =  m.I₁[i] - m.unew[i] * m.Dx[i] * m.ϵ/2 * m.Π⅔[i]
+    @inbounds for i in eachindex(m.unew)
+        U[i,2]  =  m.I₁[i] - m.unew[i] * m.Dx[i] * m.ϵ/2 * m.Π⅔[i]
     end 
 
 end
@@ -307,7 +295,7 @@ end
     mapfro(Matsuno, data)
 
 """
-function mapfro(m::Matsuno, datum::Array{Complex{Float64},2})
+function mapfro(m::Matsuno, datum::Array{ComplexF64,2})
 
     real(ifft(view(datum,:,1))),real(ifft(view(datum,:,2)))
 
@@ -317,11 +305,11 @@ function create_animation( p::Problem )
 
     prog = Progress(p.times.Nr,1)
 
-    anim = @animate for (l,U) in enumerate(p.data.U)
+    anim = @animate for (l,U) in enumerate(p.data)
 
         pl = plot(layout=(2,1))
 
-		(hr,ur) = mapfro(p.model,U)
+        (hr,ur) = mapfro(p.model,U)
 
         plot!(pl[1,1], p.mesh.x, hr;
               ylims=(-0.6,1),
@@ -346,7 +334,7 @@ function solve!(problem :: Problem)
     @show problem.param
 
     U  = similar(problem.solver.Uhat)
-    U .= problem.data.U[end]
+    U .= problem.data[end]
     step!(problem.solver, problem.model, U, 0.0)
 
     dt = problem.times.dt
@@ -360,7 +348,7 @@ function solve!(problem :: Problem)
         for l in L
             step!(problem.solver, problem.model, U, dt)
         end
-        push!(problem.data.U,copy(U))
+        push!(problem.data,copy(U))
     end
 
     print("\n")
@@ -382,15 +370,15 @@ function main()
     
     @time solve!( problem )
 
-    Uref =  problem.data.U[end]
+    Uref =  problem.data[end]
 
     #save("reference.jld", "Uref", Uref)
 
     Uref = load("reference.jld", "Uref")
 
-    println(norm(Uref .- problem.data.U[end]))
+    println(norm(Uref .- problem.data[end]))
 
-    create_animation( problem )
+    #create_animation( problem )
 
 end
 
