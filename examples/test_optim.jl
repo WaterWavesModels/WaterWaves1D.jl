@@ -19,8 +19,12 @@ struct Mesh
     dk   :: Float64
     k    :: Vector{Float64}
 
-    function Mesh( xmin :: Float64, xmax :: Float64, N :: Int64)
+    function Mesh(param :: NamedTuple)
 
+        xmin = - Float64(param.L)
+        xmax =   Float64(param.L)
+        N    =   param.N
+        
         dx   = (xmax-xmin)/N
         x    = zeros(Float64, N)
         x   .= range(xmin, stop=xmax, length=N+1)[1:end-1] 
@@ -34,15 +38,6 @@ struct Mesh
 
     end
 
-    function Mesh(param :: NamedTuple)
-
-        xmin = - Float64(param.L)
-        xmax =   Float64(param.L)
-        N    =   param.N
-        
-        Mesh( xmin, xmax, N)
-
-    end
 end
 
 struct Times
@@ -67,32 +62,6 @@ struct Times
 end
 
 
-mutable struct Problem
-
-    model   :: AbstractModel
-    initial :: InitialData
-    param   :: NamedTuple
-    solver  :: TimeSolver
-    times   :: Times
-    mesh    :: Mesh
-    data    :: Vector{AbstractArray}
-
-    function Problem( model   :: AbstractModel,
-                      initial :: InitialData,
-                      param   :: NamedTuple)
-
-        times  = Times(param.dt, param.T)
-        mesh   = Mesh(param)
-        solver = RK4(param,model)
-        data   = Array{ComplexF64,model.datasize}[]
-        push!(data, mapto(model,initial))
-
-        new(model,initial,param,solver,times,mesh,data)
-
-    end
-
-end
-
 """
     RK4(params)
 
@@ -108,8 +77,8 @@ mutable struct RK4 <: TimeSolver
 
         n = param.N
 
-        Uhat = zeros(ComplexF64, (n,model.datasize))
-        dU   = zeros(ComplexF64, (n,model.datasize))
+        Uhat = zeros(ComplexF64, (n,2))
+        dU   = zeros(ComplexF64, (n,2))
 
         new( Uhat, dU)
 
@@ -122,7 +91,10 @@ function step!(s  :: RK4,
                U  :: Array{ComplexF64,2},
                dt :: Float64)
 
-    s.Uhat .= U
+    
+    @inbounds for i in eachindex(U)
+        s.Uhat[i] = U[i]
+    end
 
     f!( s.Uhat )
 
@@ -156,15 +128,15 @@ end
 
 struct BellCurve <: InitialData
 
-    h :: Vector{Float64}
-    u :: Vector{Float64}
+    h :: Vector{ComplexF64}
+    u :: Vector{ComplexF64}
 
     function BellCurve(p :: NamedTuple,theta :: Real)
 
         mesh  = Mesh(p)
-        h     = zeros(Float64, mesh.N)
+        h     = zeros(ComplexF64, mesh.N)
         h    .= exp.(.-((abs.(mesh.x)).^theta).*log(2))
-        u     = zeros(Float64, mesh.N)
+        u     = zeros(ComplexF64, mesh.N)
 
         new( h, u )
 
@@ -281,45 +253,31 @@ function (m::Matsuno)(U::Array{ComplexF64,2})
 
 end
 
-"""
-    mapto(Matsuno, data)
 
-"""
-function mapto(m::Matsuno, data::InitialData)
 
-    [m.Π⅔ .* fft(data.h) m.Π⅔ .* fft(data.u)]
+function create_animation( mesh, times, data )
 
-end
+    prog = Progress(times.Nr,1)
 
-"""
-    mapfro(Matsuno, data)
+    hr = zeros(Float64,mesh.N)
+    ur = zeros(Float64,mesh.N)
 
-"""
-function mapfro(m::Matsuno, datum::Array{ComplexF64,2})
-
-    real(ifft(view(datum,:,1))),real(ifft(view(datum,:,2)))
-
-end
-
-function create_animation( p::Problem )
-
-    prog = Progress(p.times.Nr,1)
-
-    anim = @animate for (l,U) in enumerate(p.data)
+    anim = @animate for l in 1:size(data)[end]
 
         pl = plot(layout=(2,1))
 
-        (hr,ur) = mapfro(p.model,U)
+        hr .= real(ifft(view(data,:,1,l)))
+        ur .= real(ifft(view(data,:,2,l)))
 
-        plot!(pl[1,1], p.mesh.x, hr;
+        plot!(pl[1,1], mesh.x, hr;
               ylims=(-0.6,1),
               title="physical space",
               label=p.model.label)
 
-        plot!(pl[2,1], fftshift(p.mesh.k),
+        plot!(pl[2,1], fftshift(mesh.k),
               log10.(1e-18.+abs.(fftshift(fft(hr))));
               title="frequency",
-              label=p.model.label)
+              label=model.label)
 
         next!(prog)
 
@@ -329,31 +287,6 @@ function create_animation( p::Problem )
 
 end
 
-function solve!(problem :: Problem)
-
-    @show problem.param
-
-    U  = similar(problem.solver.Uhat)
-    U .= problem.data[end]
-    step!(problem.solver, problem.model, U, 0.0)
-
-    dt = problem.times.dt
-
-    nr = problem.times.nr
-
-    J = nr:nr:problem.times.Nt-1
-    L = 1:nr
-
-    @showprogress 1 for j in J
-        for l in L
-            step!(problem.solver, problem.model, U, dt)
-        end
-        push!(problem.data,copy(U))
-    end
-
-    print("\n")
-
-end
 
 
 function main()
@@ -364,22 +297,43 @@ function main()
               T  = 5.,
               dt = 0.001 )
     
+    mesh    = Mesh(param)
+    times   = Times(param.dt, param.T)
     init    = BellCurve(param,2.5)
     model   = Matsuno(param)
-    problem = Problem(model, init, param);
+    solver  = RK4(param,model)
     
-    @time solve!( problem )
+    U       = zeros(ComplexF64,(mesh.N,2))
+    U[:,1] .= model.Π⅔ .* fft(init.h) 
+    U[:,2] .= model.Π⅔ .* fft(init.u)
 
-    Uref =  problem.data[end]
+    dt = times.dt
+    nr = times.nr
 
+    J = 1:times.Nt÷nr
+    L = 1:nr
+    data = zeros(ComplexF64,(mesh.N,2,length(J)))
+
+    @showprogress 1 for j in J
+        for l in L
+            step!(solver, model, U, dt)
+        end
+        data[:,:,j] = U
+    end
+
+    print("\n")
+
+    data
+
+    #Uref =  problem.data[end]
     #save("reference.jld", "Uref", Uref)
 
-    Uref = load("reference.jld", "Uref")
+    #Uref = load("reference.jld", "Uref")
 
-    println(norm(Uref .- problem.data[end]))
+    #println(norm(Uref .- data[end]))
 
-    #create_animation( problem )
+    # @time create_animation( problem, data )
 
 end
 
-main()
+@time main()
