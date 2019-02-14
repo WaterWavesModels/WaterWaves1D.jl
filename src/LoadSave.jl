@@ -1,44 +1,57 @@
-import JLD
+using JLD
 
-export ProblemLight, ProblemSave, save, load
-
-struct ProblemLight
-
-    model   :: String
-    param   :: NamedTuple
-
-end
+export ProblemSave, save, load
 
 struct ProblemSave
 
     model   :: String
+    initial :: String
     param   :: Dict
+    solver  :: String
 
 end
 
 import Base.convert
 
-function convert(::Type{ProblemSave}, p :: ProblemLight )
+function convert(::Type{ProblemSave}, p :: Problem )
 
     model   = String(Symbol(typeof(p.model)))
+    initial = String(Symbol(typeof(p.initial)))
     param   = Dict(pairs(p.param))
+    solver  = String(Symbol(typeof(p.solver)))
 
-    ProblemSave(model,param)
+    ProblemSave(model,initial,param, solver)
 
 end
 
-function convert(::Type{ProblemLight}, p :: ProblemSave)
+function convert(::Type{Problem}, p :: ProblemSave)
 
-    model   = p.model
-    param   = (;p.param...)
+    @show param = (;p.param...)
+    @show p.model
+    @show p.initial
+    @show p.solver
 
-    ProblemLight(model,param)
+    if p.model == "CGBSW"
+        model = CGBSW(param)
+    elseif p.model == "Matsuno"
+        model = Matsuno(param)
+    end
+
+    if p.initial == "BellCurve"
+        initial = BellCurve(param, 1)
+    end
+
+    if p.solver == "RK4"
+        solver = RK4(param)
+    end
+
+    Problem(model, initial, param, solver)
 
 end
 
 import JLD.save
 
-function save(p::ProblemLight,name::String)
+function save(p::Problem,name::String)
 
     filename = string(name,".jld")
     JLD.save(filename, name, convert(ProblemSave,p))
@@ -49,6 +62,6 @@ import JLD.load
 
 function load(name::String)
 
-    convert(ProblemLight, JLD.load(string(name,".jld"), name ))
+    convert(Problem, JLD.load(string(name,".jld"), name ))
 
 end
