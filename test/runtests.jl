@@ -8,14 +8,23 @@ param = ( ϵ  = 1/2,
           T  = 5,
           dt = 0.01)
 
-p1 = ProblemLight("Matsuno", param)
-d  = convert(ProblemSave, p1 )
-p2 = convert(ProblemLight, d )
+init     = BellCurve(param,1)
+solver   = RK4(param)
+cheng    = CGBSW(param)
+problem1 = Problem( cheng, init, param, solver )
 
-save(p1, "p1")
-p3 = load("p1")
+@testset "LoadSave" begin
 
-println(p3)
+    dump  = convert(ProblemSave, problem1 )
+    p2    = convert(Problem, dump )
+    
+    save(problem1, "problem1")
+
+    pload = load("problem1")
+    
+    @test true
+
+end
 
 @testset "Parameters" begin
 
@@ -27,10 +36,6 @@ println(p3)
 
 end
 
-init     = BellCurve(param,1)
-solver   = RK4(param)
-cheng    = CGBSW(param)
-problem1 = Problem( cheng, init, param, solver )
 
 solve!(problem1)
 
