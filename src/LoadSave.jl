@@ -4,10 +4,10 @@ export ProblemSave, save, load
 
 struct ProblemSave
 
-    model   :: String
-    initial :: String
+    model   :: Symbol
+    initial :: Symbol
     param   :: Dict
-    solver  :: String
+    solver  :: Symbol
 
 end
 
@@ -15,10 +15,10 @@ import Base.convert
 
 function convert(::Type{ProblemSave}, p :: Problem )
 
-    model   = String(Symbol(typeof(p.model)))
-    initial = String(Symbol(typeof(p.initial)))
+    model   = Symbol(typeof(p.model))
+    initial = Symbol(typeof(p.initial))
     param   = Dict(pairs(p.param))
-    solver  = String(Symbol(typeof(p.solver)))
+    solver  = Symbol(typeof(p.solver))
 
     ProblemSave(model,initial,param, solver)
 
@@ -31,17 +31,17 @@ function convert(::Type{Problem}, p :: ProblemSave)
     @show p.initial
     @show p.solver
 
-    if p.model == "CGBSW"
+    if p.model == :CGBSW
         model = CGBSW(param)
-    elseif p.model == "Matsuno"
+    elseif p.model == :Matsuno
         model = Matsuno(param)
     end
 
-    if p.initial == "BellCurve"
+    if p.initial == :BellCurve
         initial = BellCurve(param, 1)
     end
 
-    if p.solver == "RK4"
+    if p.solver == :RK4
         solver = RK4(param)
     end
 
