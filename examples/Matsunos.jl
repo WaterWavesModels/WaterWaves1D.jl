@@ -4,7 +4,7 @@ include("../src/dependencies.jl")
 
 #----
 param = ( ϵ  = 1/2,
-          N  = 2^12,
+          N  = 2^10,
           L  = 10,
           T  = 5,
           dt = 0.001,

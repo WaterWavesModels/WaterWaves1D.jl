@@ -8,6 +8,8 @@ struct ProblemSave
     initial :: Symbol
     param   :: Dict
     solver  :: Symbol
+    data    :: Data
+
 
 end
 
@@ -19,8 +21,10 @@ function convert(::Type{ProblemSave}, p :: Problem )
     initial = Symbol(typeof(p.initial))
     param   = Dict(pairs(p.param))
     solver  = Symbol(typeof(p.solver))
+    data    = p.data
 
-    ProblemSave(model,initial,param, solver)
+
+    ProblemSave(model,initial,param,solver,data)
 
 end
 
@@ -30,22 +34,36 @@ function convert(::Type{Problem}, p :: ProblemSave)
     @show p.model
     @show p.initial
     @show p.solver
+    @show p.data.datasize,p.data.datalength
 
     if p.model == :CGBSW
         model = CGBSW(param)
+    elseif p.model == :CGBSW_naive
+        model = CGBSW_naive(param)
     elseif p.model == :Matsuno
         model = Matsuno(param)
+    elseif p.model == :Matsuno_naive
+        model = Matsuno_naive(param)
+    elseif p.model == :Matsuno_mod_naive
+        model = Matsuno_mod_naive(param)
     end
 
     if p.initial == :BellCurve
-        initial = BellCurve(param, 1)
+        initial = BellCurve(param)
+    elseif p.initial == :HighFreq
+        initial = HighFreq(param)
+    elseif p.initial == :Random
+        initial = Random(param)
     end
 
     if p.solver == :RK4
         solver = RK4(param)
     end
 
-    Problem(model, initial, param, solver)
+    pb = Problem(model, initial, param, solver)
+    pb.data = p.data
+
+    return pb
 
 end
 
