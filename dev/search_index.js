@@ -13,7 +13,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Documentation",
     "title": "DeepWaterModels.BellCurve",
     "category": "type",
-    "text": "BellCurve(param,theta)\n\nh = 2^(-x^theta)\n\nu = 0\n\n\n\n\n\n"
+    "text": "BellCurve(param)\nparam should contain a value theta\n\nh = 2^(-x^theta)\n\nu = 0\n\n\n\n\n\n"
 },
 
 {
@@ -37,7 +37,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Documentation",
     "title": "DeepWaterModels.HighFreq",
     "category": "type",
-    "text": "HighFreq(param,s,k)\n\n\n\n\n\n"
+    "text": "HighFreq(param)\nparam should contain s (regularity index) and freq (frequencies)\n\n\n\n\n\n"
 },
 
 {
@@ -61,7 +61,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Documentation",
     "title": "DeepWaterModels.Random",
     "category": "type",
-    "text": "Random(param,s,k)\n\n\n\n\n\n"
+    "text": "Random(param,s,k)\nparam should contain s (regularity index)\n\n\n\n\n\n"
 },
 
 {
@@ -245,7 +245,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Animation",
     "title": "Animation",
     "category": "section",
-    "text": "deep water problem solved with Cheng model animationnotebook#using DeepWaterModels\ninclude(\"../src/dependencies.jl\")param = ( ϵ  = 1/2,\n          N  = 2^12,\n          L  = 10,\n          T  = 5.0,\n          dt = 0.001)\n\ninitial = BellCurve(param,2.5)\nsolver  = RK4(param)\nmodel   = Matsuno(param)\nproblem = Problem( model, initial, param )print(\"\\nNow solving the model \",problem.model.label,\"\\n\")\n@time solve!( problem )print(\"\\nNow generating the animation\\n\")\n@time create_animation( problem )(Image: )This page was generated using Literate.jl."
+    "text": "deep water problem solved with Cheng model animationnotebook#using DeepWaterModels\ninclude(\"../src/dependencies.jl\")param = ( ϵ  = 1/2,\n          N  = 2^12,\n          L  = 10,\n          T  = 5.0,\n          dt = 0.001,\n          theta = 2.5)\n\ninitial = BellCurve(param)\nsolver  = RK4(param)\nmodel   = Matsuno(param)\nproblem = Problem( model, initial, param )print(\"\\nNow solving the model \",problem.model.label,\"\\n\")\n@time solve!( problem )print(\"\\nNow generating the animation\\n\")\n@time create_animation( problem )(Image: )This page was generated using Literate.jl."
 },
 
 {
@@ -261,7 +261,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Example",
     "title": "Two deep water problems",
     "category": "section",
-    "text": "notebook#using DeepWaterModels\ninclude(\"../src/dependencies.jl\")param = ( ϵ  = 1/2,\n        	N  = 2^12,\n            L  = 10,\n            T  = 5,\n            dt = 0.001)\n\ninit     = BellCurve(param)\n\nmodel1    = CGBSW(param)\nsolver1   = RK4(param,model1)\nproblem1 = Problem(model1, init, param, solver1);\n\nmodel2  = Matsuno(param)\nsolver2   = RK4(param,model2)\nproblem2 = Problem(model2, init, param, solver2);p = plot(layout=(2,1))\n\nproblems = [ problem1, problem2 ]\n\nfor problem in problems\n	print(\"\\nNow solving the model \",problem.model.label,\"\\n\")\n   	@time solve!( problem )\n   	fig_problem!( p, problem )\n\nend\n\n#savefig(\"two_problems.png\"); nothing # hide\ndisplay(p)(Image: )This page was generated using Literate.jl."
+    "text": "notebook#using DeepWaterModels\ninclude(\"../src/dependencies.jl\")param = ( ϵ  = 1/2,\n        	N  = 2^12,\n            L  = 10,\n            T  = 5,\n            dt = 0.001,\n			theta = 2)\n\ninit     = BellCurve(param)\n\nmodel1    = CGBSW(param)\nsolver1   = RK4(param,model1)\nproblem1 = Problem(model1, init, param, solver1);\n\nmodel2  = Matsuno(param)\nsolver2   = RK4(param,model2)\nproblem2 = Problem(model2, init, param, solver2);p = plot(layout=(2,1))\n\nproblems = [ problem1, problem2 ]\n\nfor problem in problems\n	print(\"\\nNow solving the model \",problem.model.label,\"\\n\")\n   	@time solve!( problem )\n   	fig_problem!( p, problem )\n\nend\n\n#savefig(\"two_problems.png\"); nothing # hide\ndisplay(p)(Image: )This page was generated using Literate.jl."
 },
 
 {
