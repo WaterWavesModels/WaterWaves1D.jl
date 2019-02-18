@@ -2,6 +2,8 @@ export Random
 
 """
     Random(param,s,k)
+    param should contain s (regularity index)
+
 
 """
 struct Random <: InitialData
@@ -9,15 +11,15 @@ struct Random <: InitialData
     h :: Vector{Float64}
     u :: Vector{Float64}
 
-    function Random(p :: NamedTuple, s :: Int)
+    function Random(p :: NamedTuple)
 
-        mesh  = Mesh(-p.L, p.L, p.N)
+        mesh  = Mesh(p)
 
 
         h=rand(Float64,size(mesh.x))
         u=rand(Float64,size(mesh.x))
 
-        for i in 1:s
+        for i in 1:p.s
             h=cumsum(h.-sum(h)/length(h))
             u=cumsum(u.-sum(u)/length(u))
         end

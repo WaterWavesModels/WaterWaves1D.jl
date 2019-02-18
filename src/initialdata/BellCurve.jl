@@ -1,7 +1,8 @@
 export BellCurve
 
 """
-    BellCurve(param,theta)
+    BellCurve(param)
+    param should contain a value theta
 
 ```math
 h = 2^{(-|x|^\\theta)}
@@ -16,22 +17,11 @@ struct BellCurve <: InitialData
     h :: Vector{Float64}
     u :: Vector{Float64}
 
-    function BellCurve(p :: NamedTuple,theta :: Real)
-
-        mesh  = Mesh(p)
-        h     = zeros(Float64, mesh.N)
-        h    .= exp.(.-((abs.(mesh.x)).^theta).*log(2))
-        u     = zeros(Float64, mesh.N)
-
-        new( h, u )
-
-    end
-
     function BellCurve(p :: NamedTuple)
 
         mesh  = Mesh(p)
         h     = zeros(Float64, mesh.N)
-        h    .= exp.(.-(mesh.x).^2)
+        h    .= exp.(.-((abs.(mesh.x)).^p.theta).*log(2))
         u     = zeros(Float64, mesh.N)
 
         new( h, u )

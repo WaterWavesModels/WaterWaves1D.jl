@@ -10,7 +10,8 @@ param = ( ϵ  = 1/2,
         	N  = 2^12,
             L  = 10,
             T  = 5,
-            dt = 0.001)
+            dt = 0.001,
+			theta = 2)
 
 init     = BellCurve(param)
 

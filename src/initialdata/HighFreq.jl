@@ -1,7 +1,8 @@
 export HighFreq
 
 """
-    HighFreq(param,s,k)
+    HighFreq(param)
+    param should contain s (regularity index) and freq (frequencies)
 
 """
 struct HighFreq <: InitialData
@@ -9,14 +10,18 @@ struct HighFreq <: InitialData
     h :: Vector{Float64}
     u :: Vector{Float64}
 
-    function HighFreq(p :: NamedTuple, s :: Real, ks :: Any)
+    function HighFreq(p :: NamedTuple)
 
-    	mesh  = Mesh(-p.L, p.L, p.N)
-        h = cos.(mesh.x).*0
-        for j in ks
-            h.+=(1/(2*pi*j)^s)*cos.(2*pi*j*mesh.x)
+    	mesh  = Mesh(p)
+        h = zeros(size(mesh.x))
+        for j in p.freq
+            if j==0
+                h.+= cos.(mesh.x)
+            else
+                h.+=(1/(2*pi*j)^(p.s))*cos.(2*pi*j*mesh.x)
+            end
         end
-        h .*= -exp.(-((abs.(mesh.x)).^2)*log(2))
+        h .*= exp.(-((abs.(mesh.x)).^2)*log(2))
         u = mesh.x.*h
     	new( h,u )
 

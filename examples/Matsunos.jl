@@ -7,9 +7,10 @@ param = ( ϵ  = 1/2,
           N  = 2^12,
           L  = 10,
           T  = 5,
-          dt = 0.001)
+          dt = 0.001,
+		  theta = 2.5)
 
-init     = BellCurve(param,2.5)
+init     = BellCurve(param)
 
 model0   = Matsuno_mod_naive(param)
 problem0 = Problem(model0, init, param);

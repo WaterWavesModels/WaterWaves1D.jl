@@ -13,9 +13,10 @@ param = ( ϵ  = 1/2,
           N  = 2^12,
           L  = 10,
           T  = 5.0,
-          dt = 0.001)
+          dt = 0.001,
+          theta = 2.5)
 
-initial = BellCurve(param,2.5)
+initial = BellCurve(param)
 solver  = RK4(param)
 model   = Matsuno(param)
 problem = Problem( model, initial, param )

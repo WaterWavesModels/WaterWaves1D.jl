@@ -25,7 +25,7 @@ mutable struct Matsuno_mod_naive <: AbstractModel
 		label = "modified Matsuno"
 		datasize = 2
 		ϵ 	= param.ϵ
-		mesh = Mesh(-param.L, param.L, param.N)
+		mesh = Mesh(param)
         Γ 	= abs.(mesh.k)
     	∂ₓ	=  1im * mesh.k            # Differentiation
         H 	= -1im * sign.(mesh.k)     # Hilbert transform
