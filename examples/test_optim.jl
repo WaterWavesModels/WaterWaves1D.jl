@@ -215,7 +215,7 @@ function (m::Matsuno)(U::Array{ComplexF64,2})
     mul!(m.I₁, m.Px, m.unew)
 
     @inbounds for i in eachindex(m.hnew)
-        m.I₁[i] = m.I₁[i] * m.ϵ[i] * m.Π⅔[i] - m.hnew[i]
+        m.I₁[i] = m.I₁[i] * m.ϵ * m.Π⅔[i] - m.hnew[i]
     end
 
     ldiv!(m.hnew, m.Px, view(U,:,1))
