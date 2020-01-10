@@ -1,4 +1,4 @@
-module DeepWaterModels
+module ShallowWaterModels
 
 include("dependencies.jl")
 
