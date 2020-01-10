@@ -9,16 +9,17 @@ include("../src/dependencies.jl")
 
 #----
 
-param = ( ϵ  = 1/2,
+param = ( μ  = 1/4,
+          ϵ  = 1/4,
           N  = 2^12,
           L  = 10,
           T  = 5.0,
           dt = 0.001,
-          theta = 2.5)
+          theta = 2)
 
 initial = BellCurve(param)
 solver  = RK4(param)
-model   = Matsuno(param)
+model   = fdBoussinesq_1(param)
 problem = Problem( model, initial, param )
 
 #----
