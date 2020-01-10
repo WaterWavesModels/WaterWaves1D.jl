@@ -1,5 +1,5 @@
 using Test
-using DeepWaterModels
+using ShallowWaterModels
 using JLD
 
 param = ( ϵ  = 1/2,
