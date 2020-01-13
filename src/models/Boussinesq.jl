@@ -1,11 +1,11 @@
-export fdBoussinesq_1,mapto,mapfro
+export Boussinesq,mapto,mapfro
 
 """
-    fdBoussinesq_1(params)
-	This model has been introduced and studied by E. Dinvay and collaborators
+    Boussinesq(params)
+	A Hamiltonian Boussinesq system derived in BonaSmith76 and studied in BonaChenSaut02
 
 """
-mutable struct fdBoussinesq_1 <: AbstractModel
+mutable struct Boussinesq <: AbstractModel
 
     label   :: String
 	datasize:: Int
@@ -19,16 +19,15 @@ mutable struct fdBoussinesq_1 <: AbstractModel
     ffth    :: Vector{Complex{Float64}}
     fftv    :: Vector{Complex{Float64}}
 
-    function fdBoussinesq_1(param::NamedTuple)
+    function Boussinesq(param::NamedTuple)
 
-		label = "fdBoussinesq_1"
+		label = "Boussinesq"
 		datasize = 2
 		μ 	= param.μ
 		ϵ 	= param.ϵ
 		mesh = Mesh(param)
 		#G₀ 	= tanh(sqrt(μ)*abs.(mesh.k)).*(sqrt(μ)*abs.(mesh.k))
-        G₁ 	= tanh.(sqrt(μ)*abs.(mesh.k))./(sqrt(μ)*abs.(mesh.k))
-		G₁[1] 	= 1
+        G₁ 	= 1 ./(1 .+μ/3*abs.(mesh.k).^2)
     	∂ₓ	=  1im * mesh.k            # Differentiation
         Π⅔ 	= abs.(mesh.k) .< mesh.kmax * 2/3 # Dealiasing low-pass filter
 
@@ -42,35 +41,35 @@ mutable struct fdBoussinesq_1 <: AbstractModel
 end
 
 
-function (m::fdBoussinesq_1)(U::Array{Complex{Float64},2})
+function (m::Boussinesq)(U::Array{Complex{Float64},2})
 
 
 	m.ffth .= U[:,1]
     m.fftv .= U[:,2]
    	m.h .= real(ifft(U[:,1]))
-   	m.v .= real(ifft(m.G₁.*U[:,2]))
+   	m.v .= real(ifft(U[:,2]))
 
-   	U[:,1] .= -m.∂ₓ.*m.G₁.*(m.fftv.+m.ϵ*m.Π⅔.*fft(m.h.*m.v))
-   	U[:,2] .= -m.∂ₓ.*(m.ffth.+m.ϵ/2*m.Π⅔.*fft(m.v.^2))
-
-end
-
-"""
-    mapto(fdBoussinesq_1, data)
-
-"""
-function mapto(m::fdBoussinesq_1, data::InitialData)
-
-    [m.Π⅔ .* fft(data.h) m.Π⅔ .* fft(data.u)]
+   	U[:,1] .= -m.∂ₓ.*(m.fftv.+m.ϵ*m.Π⅔.*m.G₁.*fft(m.h.*m.v))
+   	U[:,2] .= -m.∂ₓ.*m.G₁.*(m.ffth.+m.ϵ/2*m.Π⅔.*fft(m.v.^2))
 
 end
 
 """
-    mapfro(fdBoussinesq_1, data)
+    mapto(Boussinesq, data)
 
 """
-function mapfro(m::fdBoussinesq_1,
+function mapto(m::Boussinesq, data::InitialData)
+
+    [m.Π⅔ .* fft(data.h) m.Π⅔ .*m.G₁ .* fft(data.u)]
+
+end
+
+"""
+    mapfro(Boussinesq, data)
+
+"""
+function mapfro(m::Boussinesq,
 	       datum::Array{Complex{Float64},2})
-
-		   real(ifft(datum[:,1])),real(ifft(datum[:,2]))
+		   G = m.G₁.^(-1)
+		   real(ifft(datum[:,1])),real(ifft(G.* datum[:,2]))
 end

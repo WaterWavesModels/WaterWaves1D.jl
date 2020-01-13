@@ -16,11 +16,11 @@ param = ( μ  = 1/20,
 
 init     = BellCurve(param)
 
-model1    = fdBoussinesq_1(param)
+model1    = fdBoussinesq_1b(param)
 solver1   = RK4(param,model1)
 problem1 = Problem(model1, init, param, solver1);
 
-model2  = fdBoussinesq_2(param)
+model2  = fdBoussinesq_1(param)
 solver2   = RK4(param,model2)
 problem2 = Problem(model2, init, param, solver2);
 

@@ -9,11 +9,11 @@ include("../src/dependencies.jl")
 
 #----
 
-param = ( μ  = 1/4,
-          ϵ  = 1/4,
-          N  = 2^12,
+param = ( μ  = 1/20,
+          ϵ  = 1/2,
+          N  = 2^11,
           L  = 10,
-          T  = 5.0,
+          T  = 8.0,
           dt = 0.001,
           theta = 2)
 
