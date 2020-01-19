@@ -150,7 +150,7 @@ end
 #     index = length(times.t)
 #     t = times.t[index]
 #
-#     p = plot(layout=(2,1), title = "Deep Water Models")
+#     p = plot(layout=(2,1), title = "Shallow Water Models")
 #
 #     hr = zeros(Float64, mesh.N)
 #     ur = zeros(Float64, mesh.N)

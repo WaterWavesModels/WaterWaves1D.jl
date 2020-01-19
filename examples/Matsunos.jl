@@ -1,5 +1,5 @@
 # # Comparison of Matsuno deep water problems
-#using DeepWaterModels
+#using ShallowWaterModels
 include("../src/dependencies.jl")
 
 #----

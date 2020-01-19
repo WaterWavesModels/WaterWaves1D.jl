@@ -1,6 +1,6 @@
-site_name:        DeepWaterModels.jl
-repo_url:         https://github.com/WaterWaveModesl/DeepWaterModels.jl
-site_description: Deep Water Models
+site_name:        ShallowWaterModels.jl
+repo_url:         https://github.com/WaterWaveModesl/ShallowWaterModels.jl
+site_description: Shallow Water Models
 site_author:      Vincent Duchene
 
 theme: readthedocs

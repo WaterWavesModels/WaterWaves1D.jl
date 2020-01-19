@@ -1,6 +1,6 @@
 push!(LOAD_PATH,"../src/")
 
-using DeepWaterModels
+using ShallowWaterModels
 using Documenter
 using Plots 
 using Literate
@@ -15,10 +15,10 @@ Literate.notebook(joinpath(@__DIR__, "..",  "examples/two_problems.jl"), NB_OUTP
 Literate.markdown(joinpath(@__DIR__, "..",  "examples/animation.jl"), DOC_OUTPUT)
 Literate.notebook(joinpath(@__DIR__, "..",  "examples/animation.jl"), NB_OUTPUT, execute=false)
 
-makedocs(modules=[DeepWaterModels],
+makedocs(modules=[ShallowWaterModels],
          doctest = false,
          format = :html,
-         sitename = "DeepWaterModels.jl",
+         sitename = "ShallowWaterModels.jl",
          pages = ["Documentation" => "index.md",
                   "Code basics"   => "basics.md",
                   "Animation"     => "examples/animation.md",
@@ -27,5 +27,5 @@ makedocs(modules=[DeepWaterModels],
 
 deploydocs(
     deps   = Deps.pip("mkdocs", "python-markdown-math"),
-    repo   = "github.com/WaterWavesModels/DeepWaterModels.jl.git",
+    repo   = "github.com/WaterWavesModels/ShallowWaterModels.jl.git",
  )

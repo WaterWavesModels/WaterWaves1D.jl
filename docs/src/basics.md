@@ -25,7 +25,7 @@ Problem
 Bump
 ```
 
-## Deep water models
+## Shallow water models
 
 ```@docs
 Cheng
