@@ -1,4 +1,4 @@
-# ShallowWaterModels.jl Documentation
+# ShallowWaterModels.jl
 
 ```@autodocs
 Modules = [ShallowWaterModels]
