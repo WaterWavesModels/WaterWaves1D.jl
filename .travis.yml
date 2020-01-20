@@ -12,7 +12,6 @@ notifications:
 
 after_success:
   - julia -e 'using Pkg; cd(Pkg.dir("ShallowWaterModels")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
-  - julia -e 'using Pkg; cd(Pkg.dir("ShallowWaterModels")); Pkg.add("Documenter"); include(joinpath("docs", "make.jl"))';
 
 jobs:
   include:
