@@ -1,3 +1,5 @@
+ENV["GKSwstype"]="100"
+
 push!(LOAD_PATH,"../src/")
 
 using ShallowWaterModels
