@@ -11,14 +11,14 @@ abstract type AbstractModel end
 abstract type TimeSolver end
 abstract type InitialData end
 
-mutable struct Data
+struct Data
     U :: Array{Array{Complex{Float64},2}}
     datasize :: Int
     datalength:: Int
 
     function Data( v )
         (datalength , datasize ) = size(v)
-        U = [v]
+        U = [deepcopy(v)]
         new(U, datasize, datalength)
     end
 end

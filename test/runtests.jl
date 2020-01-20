@@ -40,7 +40,6 @@ end
 
 end
 
-
 solve!(problem1)
 
 @testset "Test problem with Cheng et al. model" begin

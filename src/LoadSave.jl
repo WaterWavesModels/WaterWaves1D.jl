@@ -10,6 +10,11 @@ struct ProblemSave
     solver  :: Symbol
     data    :: Data
 
+    function ProblemSave(model, initial, param, solver, data)
+    
+         new( model, initial, param, solver, deepcopy(data))
+
+    end
 
 end
 
