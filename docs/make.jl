@@ -17,7 +17,8 @@ Literate.notebook(joinpath(@__DIR__, "..",  "examples/animation.jl"), NB_OUTPUT,
 
 makedocs(modules=[ShallowWaterModels],
          doctest = false,
-         format = :html,
+         authors = "Vincent Duchene",
+         format = Documenter.HTML(),
          sitename = "ShallowWaterModels.jl",
          pages = ["Documentation" => "index.md",
                   "Code basics"   => "basics.md",
@@ -27,5 +28,5 @@ makedocs(modules=[ShallowWaterModels],
 
 deploydocs(
     deps   = Deps.pip("mkdocs", "python-markdown-math"),
-    repo   = "github.com/WaterWavesModels/ShallowWaterModels.jl.git",
+    repo   = "github.com/WaterWavesModels/ShallowWaterModels.jl.git"
  )
