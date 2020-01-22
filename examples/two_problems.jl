@@ -1,6 +1,6 @@
 # # Two water problems
 #
-#md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two_problems.ipynb)
+#md # [`notebook`](@__NBVIEWER_ROOT_URL__/notebooks/two_problems.ipynb)
 #
 #using ShallowWaterModels
 include("../src/dependencies.jl")
@@ -24,7 +24,6 @@ model2  = fdBoussinesq_1(param)
 solver2   = RK4(param,model2)
 problem2 = Problem(model2, init, param, solver2);
 
-
 #----
 
 p = plot(layout=(2,1))
@@ -38,7 +37,7 @@ for problem in problems
 
 end
 
-#savefig("two_problems.png"); nothing # hide
-display(p)
+#nb # display(p)
 #----
+savefig("two_problems.png")
 #md # ![](two_problems.png)
