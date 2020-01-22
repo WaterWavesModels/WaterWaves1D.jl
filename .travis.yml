@@ -5,7 +5,7 @@ os:
   - linux
 
 julia:
-  - 1.0
+  - 1
 
 notifications:
   email: true
@@ -16,7 +16,7 @@ after_success:
 jobs:
   include:
     - stage: "Documentation"
-      julia: 1.0
+      julia: 1
       os: linux
       script:
         - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'

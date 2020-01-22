@@ -2,7 +2,7 @@
 #md #
 #md # deep water problem solved with Cheng model animation
 #md #
-#md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/animation.ipynb)
+#md # [`notebook`](@__NBVIEWER_ROOT_URL__/notebooks/animation.ipynb)
 
 #using ShallowWaterModels
 include("../src/dependencies.jl")
