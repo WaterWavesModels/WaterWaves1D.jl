@@ -2,10 +2,10 @@
 #md #
 #md # deep water problem solved with Cheng model animation
 #md #
-#md # [`notebook`](@__NBVIEWER_ROOT_URL__/notebooks/animation.ipynb)
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/animation.ipynb)
+#md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/animation.ipynb)
 
-#using ShallowWaterModels
-include("../src/dependencies.jl")
+using ShallowWaterModels
 
 #----
 

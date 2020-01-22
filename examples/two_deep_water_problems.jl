@@ -2,8 +2,7 @@
 #
 #md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two_problems.ipynb)
 #
-#using ShallowWaterModels
-include("../src/dependencies.jl")
+using ShallowWaterModels
 
 #----
 param = ( ϵ  = 1/2,

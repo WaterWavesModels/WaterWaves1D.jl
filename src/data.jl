@@ -1,5 +1,8 @@
 export Data
 
+"""
+Data structure to store the solution of the problem along time
+"""
 mutable struct Data
 
     U :: Array{Array{Complex{Float64},2}}

@@ -57,3 +57,26 @@ mutable struct Problem
 
 end
 
+export solve!
+
+function solve!(problem :: Problem)
+
+    @show problem.param
+
+    U = copy(last(problem.data.U))
+
+    dt = problem.times.dt
+
+    J = range(problem.times.nr ,stop = problem.times.Nt-1, step = problem.times.nr)
+    L = 1:problem.times.nr
+
+    @showprogress 1 for j in J
+        for l in L
+            step!(problem.solver, problem.model, U, dt)
+        end
+        push!(problem.data.U,copy(U))
+    end
+
+    println()
+
+end
