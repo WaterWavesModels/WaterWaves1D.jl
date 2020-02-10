@@ -1,20 +1,25 @@
 language: julia
 
-os: osx
+os: 
+  - osx
+  - linux
 
 julia:
-  - 1.0
-  - nightly
-
-osx_image: xcode10
-
-before_install:
-  - brew update
-  - brew install gcc@8 ffmpeg imagemagick cairo
+  - 1
 
 notifications:
   email: true
 
 after_success:
-  - julia -e 'using Pkg; cd(Pkg.dir("DeepWaterModels")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
-  - julia -e 'using Pkg; cd(Pkg.dir("DeepWaterModels")); Pkg.add("Documenter"); include(joinpath("docs", "make.jl"))';
+  - julia -e 'using Pkg; cd(Pkg.dir("ShallowWaterModels")); Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+
+jobs:
+  include:
+    - stage: "Documentation"
+      julia: 1
+      os: linux
+      script:
+        - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'
+        - travis_wait julia --project=docs/ docs/make.jl
+      name: "HTML"
+      after_success: skip

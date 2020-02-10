@@ -1,3 +1,5 @@
+ENV["GKSwstype"]="100"
+
 using Test
 using ShallowWaterModels
 using JLD
@@ -37,7 +39,6 @@ end
     @test param.theta == 1
 
 end
-
 
 solve!(problem1)
 

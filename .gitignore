@@ -9,3 +9,4 @@ docs/build/
 docs/src/examples/
 docs/src/notebooks/
 examples/reference.jld
+test/problem1.jld
