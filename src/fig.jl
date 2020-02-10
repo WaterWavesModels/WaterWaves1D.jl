@@ -6,20 +6,64 @@ function create_animation( p::Problem )
 
     anim = @animate for l in range(1,p.times.Nr-1)
 
-        pl = plot(layout=(2,1))
+        plt = plot(layout=(2,1))
 
 		(hr,ur) = mapfro(p.model,p.data.U[l])
 
-        plot!(pl[1,1], p.mesh.x, hr;
+        plot!(plt[1,1], p.mesh.x, hr;
               ylims=(-0.6,1),
               title="physical space",
               label=p.model.label)
 
-        plot!(pl[2,1], fftshift(p.mesh.k),
+        plot!(plt[2,1], fftshift(p.mesh.k),
               log10.(1e-18.+abs.(fftshift(fft(hr))));
               title="frequency",
               label=p.model.label)
 
+        next!(prog)
+
+    end when mod(l, 200) == 0
+
+    gif(anim, "anim.gif", fps=15); nothing
+
+end
+
+
+function create_animations( pbs::Array{Problem,1} )
+	p0=pbs[1]
+    prog = Progress(p0.times.Nr,1)
+
+    anim = @animate for l in range(1,p0.times.Nr-1)
+
+        plt = plot(layout=(2,1))
+
+		for p in problems
+			if typeof(p.model)==WaterWaves
+				(x,z,v) = mapfro(p.model,p.data.U[l])
+				plot!(plt[1,1], x, z;
+					title="physical space",
+					label=p.model.label)
+
+				plot!(plt[2,1], fftshift(p.mesh.k),
+					log10.(1e-18.+abs.(fftshift(fft(z .- 1))));
+					title="frequency",
+					label=p.model.label)
+
+
+			else
+				(hr,ur) = mapfro(p.model,p.data.U[l])
+
+        		plot!(plt[1,1], p.mesh.x, hr;
+              		ylims=(-0.6,1),
+              		title="physical space",
+              		label=p.model.label)
+
+        		plot!(plt[2,1], fftshift(p.mesh.k),
+              		log10.(1e-18.+abs.(fftshift(fft(hr))));
+              		title="frequency",
+              		label=p.model.label)
+			end
+		end
         next!(prog)
 
     end when mod(l, 200) == 0
@@ -34,16 +78,30 @@ end
 #md # Plot results function
 function fig_problem!( plt, p::Problem )
 
-    (hr,ur) = mapfro(p.model,p.data.U[end])
+	if typeof(p.model)==WaterWaves
 
-    plot!(plt[1,1], p.mesh.x, hr;
-		  title="physical space",
-	          label=p.model.label)
+		(x,z,v) = mapfro(p.model,p.data.U[end])
+		plot!(plt[1,1], x, z;
+			title="physical space",
+			label=p.model.label)
 
-    plot!(plt[2,1], fftshift(p.mesh.k),
-                  log10.(1e-18.+abs.(fftshift(fft(hr))));
-		  title="frequency",
-    	          label=p.model.label)
+		plot!(plt[2,1], fftshift(p.mesh.k),
+			log10.(1e-18.+abs.(fftshift(fft(z .- 1))));
+			title="frequency",
+			label=p.model.label)
+
+	else
+    	(hr,ur) = mapfro(p.model,p.data.U[end])
+
+    	plot!(plt[1,1], p.mesh.x, hr;
+		  	title="physical space",
+	        label=p.model.label)
+
+    	plot!(plt[2,1], fftshift(p.mesh.k),
+            log10.(1e-18.+abs.(fftshift(fft(hr))));
+		  	title="frequency",
+    	    label=p.model.label)
+	end
 
 end
 
@@ -53,18 +111,30 @@ function fig_problem!( plt, p::Problem, t::Real )
 	t=min(t,p.times.tfin)
 	index=1+round(Int,(t/p.times.tfin)*(p.times.Nr-1))
 
+	if typeof(p.model)==WaterWaves
 
-    (hr,ur) = mapfro(p.model,p.data.U[index])
+		(x,z,v) = mapfro(p.model,p.data.U[index])
+		plot!(plt[1,1], x, z;
+			title="physical space",
+			label=p.model.label)
 
-    plot!(plt[1,1], p.mesh.x, hr;
+		plot!(plt[2,1], fftshift(p.mesh.k),
+			log10.(1e-18.+abs.(fftshift(fft(z .- 1))));
+			title="frequency",
+			label=p.model.label)
+
+	else
+    	(hr,ur) = mapfro(p.model,p.data.U[index])
+
+    	plot!(plt[1,1], p.mesh.x, hr;
 		  title=string("physical space at t=",p.times.tr[index]),
 	          label=p.model.label)
 
-    plot!(plt[2,1], fftshift(p.mesh.k),
+    	plot!(plt[2,1], fftshift(p.mesh.k),
                   log10.(1e-18.+abs.(fftshift(fft(hr))));
 		  title="frequency",
     	          label=p.model.label)
-
+	end
 end
 
 function norm_problem!( plt, p::Problem, s::Real )

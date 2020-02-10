@@ -1,5 +1,6 @@
 using ProgressMeter
 using FFTW, LinearAlgebra
+using Statistics #only for function mean...
 ENV["PLOTS_USE_ATOM_PLOTPANE"] = "false"
 # Note that javascript-based libraries (for example: PlotlyJS) cannot be shown in the PlotPane due to issues within Atom's internals.
 using Plots
@@ -22,6 +23,7 @@ include("models/fdBoussinesq_1.jl")
 include("models/fdBoussinesq_1b.jl")
 include("models/fdBoussinesq_2.jl")
 include("models/fdBoussinesq_2b.jl")
+include("models/WaterWaves.jl")
 include("LoadSave.jl")
 include("solve.jl")
 include("fig.jl")
