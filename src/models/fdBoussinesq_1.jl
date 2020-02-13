@@ -21,7 +21,7 @@ mutable struct fdBoussinesq_1 <: AbstractModel
 
     function fdBoussinesq_1(param::NamedTuple)
 
-		label = "fdBoussinesq_1"
+		label = "Boussinesq-Whitham"
 		datasize = 2
 		μ 	= param.μ
 		ϵ 	= param.ϵ

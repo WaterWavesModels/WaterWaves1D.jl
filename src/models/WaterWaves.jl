@@ -97,7 +97,7 @@ function mapto(m::WaterWaves, data::InitialData)
 		error("non-zero initial data are not implemented yet. Sorry!")
 	else
 		function ζ( x :: Vector{Float64} )
-            return exp.(.-((abs.(x)).^2).*log(2))
+            return exp.(.-((abs.(x)).^1).*log(2))
         end
 		function iter( u :: Vector{Float64} )
 		    return imag.(ifft(sqrt(m.μ)*m.Π⅔ .*cotanh(sqrt(m.μ)*(1+m.ϵ*mean(ζ(m.x+m.ϵ*u)))*m.k).*fft(ζ(m.x+m.ϵ*u))))
@@ -109,8 +109,8 @@ function mapto(m::WaterWaves, data::InitialData)
 
 		# détermination du point fixe de la fonction contractante:
 		norm0=norm(ζ(m.x))
-		tol_cont=1e-12
-		max_iter=100
+		tol_cont=1e-16
+		max_iter=10000
 		niter=0
 		nu0=u0 .+ 1
 		while norm(nu0-u0)>tol_cont*norm0 && niter<max_iter
@@ -145,7 +145,7 @@ function mapfro(m::WaterWaves,
 	       datum::Array{Complex{Float64},2})
 
 		   m.ξ .= real.(sqrt(m.μ)*(1+m.ϵ*mean(datum[:,1]))*m.k)
-	       m.xv .= -imag.(sqrt(m.μ)*ifft( cotanh(m.ξ) .* fft( datum[:,1] )))
+	       m.xv .= imag.(sqrt(m.μ)*ifft( cotanh(m.ξ) .* fft( datum[:,1] )))
 
 		   m.x + m.ϵ*m.xv, real.(datum[:,1]) , real.(ifft(m.∂ₓ .* fft( datum[:,2] )))
 end
