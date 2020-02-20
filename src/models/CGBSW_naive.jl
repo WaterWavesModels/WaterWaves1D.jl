@@ -60,6 +60,7 @@ end
 
 """
     mapto(CGBSW_naive, data)
+	the velocity should be zero
 
 """
 function mapto(m::CGBSW_naive, data::InitialData)

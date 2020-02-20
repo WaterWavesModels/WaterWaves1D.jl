@@ -16,7 +16,7 @@ param = ( μ  = 0.1,
 			α = 1,
 			a = -1/3, b = 1/3)
 
-init     = BellCurveExplicit(param)
+init     = Bellcurve(param)
 
 model0    = WaterWaves(param)
 solver0   = RK4(param,model0)

@@ -12,7 +12,7 @@ param = ( ϵ  = 1/2,
           dt = 0.01,
           θ = 1)
 
-init     = BellCurveExplicit(param)
+init     = Bellcurve(param)
 solver   = RK4(param)
 cheng    = CGBSW(param)
 problem1 = Problem( cheng, init, param, solver )

@@ -61,6 +61,7 @@ end
 
 """
     mapto(Matsuno, data)
+	the velocity should be zero
 
 """
 function mapto(m::Matsuno_mod_naive, data::InitialData)

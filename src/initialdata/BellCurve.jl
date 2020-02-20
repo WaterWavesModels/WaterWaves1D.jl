@@ -5,26 +5,27 @@ export BellCurve
     param should contain a value theta
 
 ```math
-h = 2^{(-|x|^\\theta)}
+\\eta = 2^{(-|x|^\\theta)}
 ```
 
 ```math
-u = 0
+v = 0
 ```
 """
 struct BellCurve <: InitialData
 
-    h :: Vector{Float64}
-    u :: Vector{Float64}
+    η
+    v
 
     function BellCurve(p :: NamedTuple)
+        function η( x :: Vector{Float64} )
+            return exp.(.-((abs.(x)).^p.θ).*log(2))
+        end
+        function v( x :: Vector{Float64} )
+            return zeros(length(x))
+        end
 
-        mesh  = Mesh(p)
-        h     = zeros(Float64, mesh.N)
-        h    .= exp.(.-((abs.(mesh.x)).^p.theta).*log(2))
-        u     = zeros(Float64, mesh.N)
-
-        new( h, u )
+        new( η , v )
 
     end
 

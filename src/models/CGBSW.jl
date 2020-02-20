@@ -85,6 +85,7 @@ end
 
 """
     mapto(CGBSW, data)
+    the velocity should be zero
 
 """
 function mapto(m::CGBSW, data::InitialData)

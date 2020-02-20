@@ -10,7 +10,7 @@ param = ( ϵ  = 1/2,
           dt = 0.001,
 		  θ = 2.5)
 
-init     = BellCurveExplicit(param)
+init     = Bellcurve(param)
 
 model0   = Matsuno_mod_naive(param)
 problem0 = Problem(model0, init, param);

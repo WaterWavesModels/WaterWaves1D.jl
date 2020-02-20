@@ -19,7 +19,7 @@ param = ( μ  = 1/20,
           α  = 1,
           θ  = 2)
 
-initial = BellCurveExplicit(param)
+initial = Bellcurve(param)
 solver  = RK4(param)
 model   = fdBoussinesq(param)
 problem = Problem( model, initial, param )

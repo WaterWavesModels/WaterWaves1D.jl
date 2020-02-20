@@ -7,7 +7,7 @@ export HighFreq
 """
 struct HighFreq <: InitialData
 
-    η 
+    η
     v
 
     function HighFreq(p :: NamedTuple)
@@ -22,7 +22,7 @@ struct HighFreq <: InitialData
                     h.+=(1/(2*pi*j)^(p.s))*cos.(2*pi*j*x)
                 end
             end
-            h .*= exp.(-((abs.(mesh.x)).^2)*log(2))
+            h .*= exp.(-((abs.(x)).^2)*log(2))
             return h
         end
 

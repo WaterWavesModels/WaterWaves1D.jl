@@ -18,7 +18,7 @@ param = ( μ  = 1/20,
 		  a=-1/3,
 		  b=1/3)
 
-init = BellCurveExplicit(param)
+init = Bellcurve(param)
 
 model1 = Matsuno(param)
 solver1 = RK4(param,model1)
