@@ -2,7 +2,8 @@
 #
 #md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two_problems.ipynb)
 #
-using ShallowWaterModels
+#using ShallowWaterModels
+include("../src/dependencies.jl")
 
 #----
 param = ( ϵ  = 1/2,
@@ -10,9 +11,10 @@ param = ( ϵ  = 1/2,
             L  = 10,
             T  = 5,
             dt = 0.001,
-			theta = 2)
+			θ = 2,
+			s = 5)
 
-init     = BellCurve(param)
+init     = Random(param)
 
 model1    = CGBSW(param)
 solver1   = RK4(param,model1)

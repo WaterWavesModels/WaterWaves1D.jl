@@ -3,7 +3,8 @@
 #md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/two_problems.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/two_problems.ipynb)
 #
-using ShallowWaterModels
+#using ShallowWaterModels
+include("../src/dependencies.jl")
 
 #----
 param = ( μ  = 1/20,
@@ -12,15 +13,18 @@ param = ( μ  = 1/20,
           L  = 20,
           T  = 15,
           dt = 0.001,
-          theta = 2)
+          θ = 2,
+		  α = 1/2,
+		  a=-1/3,
+		  b=1/3)
 
-init = BellCurve(param)
+init = BellCurveExplicit(param)
 
-model1 = fdBoussinesq_1b(param)
+model1 = Matsuno(param)
 solver1 = RK4(param,model1)
 problem1 = Problem(model1, init, param, solver1);
 
-model2 = fdBoussinesq_1(param)
+model2 = Matsuno_naive(param)
 solver2 = RK4(param,model2)
 problem2 = Problem(model2, init, param, solver2);
 
@@ -39,5 +43,5 @@ end
 
 #nb # display(p)
 #----
-savefig("two_problems.png")
+savefig("two_problems.pdf")
 #md # ![](two_problems.png)

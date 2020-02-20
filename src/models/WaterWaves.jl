@@ -93,22 +93,20 @@ end
 """
 function mapto(m::WaterWaves, data::InitialData)
 
-	if norm(data.u)!=0
+	if norm(data.v(m.x))!=0
 		error("non-zero initial data are not implemented yet. Sorry!")
 	else
-		function ζ( x :: Vector{Float64} )
-            return exp.(.-((abs.(x)).^1).*log(2))
-        end
+
 		function iter( u :: Vector{Float64} )
-		    return imag.(ifft(sqrt(m.μ)*m.Π⅔ .*cotanh(sqrt(m.μ)*(1+m.ϵ*mean(ζ(m.x+m.ϵ*u)))*m.k).*fft(ζ(m.x+m.ϵ*u))))
+		    return imag.(ifft(sqrt(m.μ)*m.Π⅔ .*cotanh(sqrt(m.μ)*(1+m.ϵ*mean(data.η(m.x+m.ϵ*u)))*m.k).*fft(data.η(m.x+m.ϵ*u))))
 		end
 
 		# on démarre avec deux coefficients spécifiques:
-		δ = mean(ζ(m.x))
-		u0 = imag.(ifft(sqrt(m.μ)*m.Π⅔ .*cotanh(sqrt(m.μ)*m.k).*fft(ζ(m.x).-δ)))
+		δ = mean(data.η(m.x))
+		u0 = imag.(ifft(sqrt(m.μ)*m.Π⅔ .*cotanh(sqrt(m.μ)*m.k).*fft(data.η(m.x).-δ)))
 
 		# détermination du point fixe de la fonction contractante:
-		norm0=norm(ζ(m.x))
+		norm0=norm(data.η(m.x))
 		tol_cont=1e-16
 		max_iter=10000
 		niter=0
@@ -125,7 +123,7 @@ function mapto(m::WaterWaves, data::InitialData)
 		else
 			@warn string("The fix point algorithm converged in ",niter," iterations")
 		end
-		δ = mean(ζ(m.x+m.ϵ*u0))
+		δ = mean(data.η(m.x+m.ϵ*u0))
 
 		# Obtention des conditions initiales dans le domaine redressé:
 		#x0 = m.x + m.ϵ*real.(ifft(m.Π⅔.*fft(u0))) #axe longitudinal

@@ -5,24 +5,27 @@ export BellCurveExplicit
     param should contain a value theta
 
 ```math
-h = 2^{(-|x|^\\theta)}
+\\eta = 2^{(-|x|^\\theta)}
 ```
 
 ```math
-u = 0
+v = 0
 ```
 """
 struct BellCurveExplicit <: InitialData
 
-    init
+    η
+    v
 
     function BellCurveExplicit(p :: NamedTuple)
-        θ = p.theta
-        function init( x :: Vector{Float64} )
-            return exp.(.-((abs.(x)).^θ).*log(2))
+        function η( x :: Vector{Float64} )
+            return exp.(.-((abs.(x)).^p.θ).*log(2))
+        end
+        function v( x :: Vector{Float64} )
+            return zeros(length(x))
         end
 
-        new( init )
+        new( η , v )
 
     end
 

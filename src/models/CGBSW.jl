@@ -8,6 +8,7 @@ mutable struct CGBSW <: AbstractModel
 
     label    :: String
     datasize :: Int
+    x        :: Array{Float64,1}
     Γ        :: Array{Float64,1}
     Dx       :: Array{Complex{Float64},1}
     H        :: Array{Complex{Float64},1}
@@ -28,6 +29,7 @@ mutable struct CGBSW <: AbstractModel
         datasize = 2
         ϵ = param.ϵ
         mesh  = Mesh(param)
+        x = mesh.x
         Γ = abs.(mesh.k)
         Dx    =  1im * mesh.k            # Differentiation
         H     = -1im * sign.(mesh.k)     # Hilbert transform
@@ -42,7 +44,7 @@ mutable struct CGBSW <: AbstractModel
 
         Px  = plan_fft(hnew; flags = FFTW.MEASURE)
 
-        new(label, datasize, Γ, Dx, H, Π⅔, ϵ,
+        new(label, datasize, x, Γ, Dx, H, Π⅔, ϵ,
             hnew, unew, I₁, I₂, I₃, Px)
 
     end
@@ -87,7 +89,7 @@ end
 """
 function mapto(m::CGBSW, data::InitialData)
 
-    [m.Π⅔ .* fft(data.h) m.Π⅔ .* fft(data.u)]
+    [m.Π⅔ .* fft(data.η(m.x)) m.Π⅔ .*fft(data.v(m.x))]
 
 end
 

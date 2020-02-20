@@ -11,7 +11,7 @@ struct ProblemSave
     data    :: Data
 
     function ProblemSave(model, initial, param, solver, data)
-    
+
          new( model, initial, param, solver, deepcopy(data))
 
     end
@@ -55,6 +55,8 @@ function convert(::Type{Problem}, p :: ProblemSave)
 
     if p.initial == :BellCurve
         initial = BellCurve(param)
+    elseif p.initial == :BellCurveExplicit
+        initial = BellCurveExplicit(param)
     elseif p.initial == :HighFreq
         initial = HighFreq(param)
     elseif p.initial == :Random

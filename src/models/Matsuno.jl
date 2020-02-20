@@ -8,6 +8,7 @@ mutable struct Matsuno <: AbstractModel
 
     label    :: String
     datasize :: Int
+    x   	:: Array{Float64,1}
     Γ        :: Array{Float64,1}
     Dx       :: Array{Complex{Float64},1}
     H        :: Array{Complex{Float64},1}
@@ -28,6 +29,7 @@ mutable struct Matsuno <: AbstractModel
         datasize = 2
         ϵ        = param.ϵ
         mesh     = Mesh(param)
+        x        = mesh.x
         Γ        = abs.(mesh.k)
         Dx       =  1im * mesh.k        # Differentiation
         H        = -1im * sign.(mesh.k) # Hilbert transform
@@ -43,7 +45,7 @@ mutable struct Matsuno <: AbstractModel
 
         Px  = plan_fft(hnew; flags = FFTW.MEASURE)
 
-        new(label, datasize, Γ, Dx, H, Π⅔, ϵ,
+        new(label, datasize, x, Γ, Dx, H, Π⅔, ϵ,
             hnew, unew, I₀, I₁, I₂, I₃, Px)
     end
 end
@@ -94,10 +96,10 @@ function (m::Matsuno)(U::Array{Complex{Float64},2})
     m.hnew  .*= m.H
     m.I₃    .+= m.hnew
     m.I₃    .*= m.ϵ .* m.Π⅔
-    
+
     for i in eachindex(m.I₃)
         U[i,1] -= m.I₃[i]
-    end 
+    end
 
     m.I₃    .=  m.unew.^2
 
@@ -109,7 +111,7 @@ function (m::Matsuno)(U::Array{Complex{Float64},2})
 
     for i in eachindex(m.I₁)
         U[i,2] =  m.I₁[i]
-    end 
+    end
 
 end
 
@@ -119,7 +121,7 @@ end
 """
 function mapto(m::Matsuno, data::InitialData)
 
-    [m.Π⅔ .* fft(data.h) m.Π⅔ .* fft(data.u)]
+    [m.Π⅔ .* fft(data.η(m.x)) m.Π⅔ .*fft(data.v(m.x))]
 
 end
 

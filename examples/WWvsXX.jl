@@ -2,7 +2,7 @@
 #
 #md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two_problems.ipynb)
 #
-#using DeepWaterModels
+#using ShallowWaterModels
 include("../src/dependencies.jl")
 
 #----
@@ -12,9 +12,11 @@ param = ( μ  = 0.1,
             L  = 20,
             T  = 15,
             dt = 0.001,
-			theta = 1)
+			θ = 1,
+			α = 1,
+			a = -1/3, b = 1/3)
 
-init     = BellCurve(param)
+init     = BellCurveExplicit(param)
 
 model0    = WaterWaves(param)
 solver0   = RK4(param,model0)
@@ -24,7 +26,7 @@ model1    = Boussinesq(param)
 solver1   = RK4(param,model1)
 problem1 = Problem(model1, init, param, solver1);
 
-model2  = fdBoussinesq_1(param)
+model2  = fdBoussinesq(param)
 solver2   = RK4(param,model2)
 problem2 = Problem(model2, init, param, solver2);
 
@@ -44,7 +46,7 @@ p = plot(layout=(2,1))
 for problem in problems
    	fig_problem!( p, problem )
 end
-#savefig("WWvsXX.png"); nothing # hide
+savefig("WWvsXX.png"); nothing # hide
 display(p)
 #create_animations(problems)
 
