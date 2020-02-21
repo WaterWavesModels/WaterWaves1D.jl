@@ -51,12 +51,16 @@ function convert(::Type{Problem}, p :: ProblemSave)
         model = Matsuno_naive(param)
     elseif p.model == :Matsuno_mod_naive
         model = Matsuno_mod_naive(param)
+    elseif p.model == :Boussinesq
+        model = Boussinesq(param)
+    elseif p.model == :fdBoussinesq
+        model = fdBoussinesq(param)
+    elseif p.model == :WaterWaves
+        model = WaterWaves(param)
     end
 
     if p.initial == :BellCurve
         initial = BellCurve(param)
-    elseif p.initial == :BellCurveExplicit
-        initial = BellCurveExplicit(param)
     elseif p.initial == :HighFreq
         initial = HighFreq(param)
     elseif p.initial == :Random
