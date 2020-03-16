@@ -1,8 +1,8 @@
 export Init
 
 """
-    Init(init)
-    init is a NamedTuple and should contain either
+    Init(data)
+    data should contain either
     - a function η and a function v (in this order)
     - a Namedtuple with a function η and a function v
     - a mesh and two vectors Vector{Complex{Float64}} or Vector{Float64} representing η(mesh.x) and v(mesh.x) (in this order)
