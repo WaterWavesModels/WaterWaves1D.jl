@@ -1,6 +1,7 @@
 using ProgressMeter
 using FFTW, LinearAlgebra
-using Statistics #only for function mean...
+using LinearMaps # only for SolitaryWaveWhitham.jl
+using Statistics #only for function mean in WaterWaves.jl...
 ENV["PLOTS_USE_ATOM_PLOTPANE"] = "false"
 # Note that javascript-based libraries (for example: PlotlyJS) cannot be shown in the PlotPane due to issues within Atom's internals.
 using Plots
@@ -14,6 +15,7 @@ include("initialdata/Init.jl")
 include("initialdata/BellCurve.jl")
 include("initialdata/HighFreq.jl")
 include("initialdata/Random.jl")
+include("initialdata/SolitaryWaveWhitham.jl")
 include("models/CGBSW.jl")
 include("models/CGBSW_naive.jl")
 include("models/Matsuno.jl")

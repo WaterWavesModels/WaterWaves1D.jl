@@ -9,7 +9,7 @@ mutable struct Matsuno_naive <: AbstractModel
     label   :: String
 	datasize:: Int
 	x   	:: Vector{Float64}
-    Γ   	:: Vector{Float64,1}
+    Γ   	:: Vector{Float64}
     ∂ₓ      :: Vector{Complex{Float64}}
     H       :: Vector{Complex{Float64}}
     Π⅔      :: BitArray{1}
