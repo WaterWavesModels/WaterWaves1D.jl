@@ -8,10 +8,10 @@ mutable struct Matsuno <: AbstractModel
 
     label    :: String
     datasize :: Int
-    x   	:: Array{Float64,1}
-    Γ        :: Array{Float64,1}
-    Dx       :: Array{Complex{Float64},1}
-    H        :: Array{Complex{Float64},1}
+    x   	 :: Vector{Float64}
+    Γ        :: Vector{Float64}
+    Dx       :: Vector{Complex{Float64}}
+    H        :: Vector{Complex{Float64}}
     Π⅔       :: BitArray{1}
     ϵ        :: Float64
     hnew     :: Vector{Complex{Float64}}

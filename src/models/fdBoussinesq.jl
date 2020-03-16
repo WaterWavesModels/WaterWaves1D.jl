@@ -13,10 +13,10 @@ mutable struct fdBoussinesq <: AbstractModel
 	datasize:: Int
 	μ 		:: Float64
 	ϵ 		:: Float64
-	x   	:: Array{Float64,1}
-    F₁   	:: Array{Float64,1}
-	F₂   	:: Array{Float64,1}
-    ∂ₓ      :: Array{Complex{Float64},1}
+	x   	:: Vector{Float64}
+    F₁   	:: Vector{Float64}
+	F₂   	:: Vector{Float64}
+    ∂ₓ      :: Vector{Complex{Float64}}
     Π⅔      :: BitArray{1}
 	η    	:: Vector{Float64}
 	v    	:: Vector{Float64}

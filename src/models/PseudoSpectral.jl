@@ -14,10 +14,10 @@ mutable struct PseudoSpectral <: AbstractModel
 	μ 		:: Float64
 	ϵ 		:: Float64
 	n 		:: Int
-	x   	:: Array{Float64,1}
-    F₀   	:: Array{Float64,1}
-	G₀   	:: Array{Float64,1}
-    ∂ₓ      :: Array{Complex{Float64},1}
+	x   	:: Vector{Float64}
+    F₀   	:: Vector{Float64}
+	G₀   	:: Vector{Float64}
+    ∂ₓ      :: Vector{Complex{Float64}}
     Π⅔      :: BitArray{1}
 	η    	:: Vector{Float64}
     fftη    :: Vector{Complex{Float64}}

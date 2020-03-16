@@ -15,9 +15,9 @@ mutable struct WaterWaves <: AbstractModel
 
     label   :: String
 	datasize:: Int
-	x   	:: Array{Float64,1}
-	k   	:: Array{Float64,1}
-    ∂ₓ      :: Array{Complex{Float64},1}
+	x   	:: Vector{Float64}
+	k   	:: Vector{Float64}
+    ∂ₓ      :: Vector{Complex{Float64}}
     Π⅔      :: BitArray{1}
 	μ 		:: Float64
     ϵ 		:: Float64
