@@ -1,4 +1,4 @@
-function SolitaryWaveWhithamBoussinesq(mesh :: Mesh, param :: NamedTuple, guess :: Vector{Float64}; iterative = false :: Bool, verbose = true :: Bool, max_iter = 50, tol = 1e-14, KdV = false)
+function SolitaryWaveWhithamBoussinesq(mesh :: Mesh, param :: NamedTuple, guess :: Vector{Float64}; iterative = false :: Bool, verbose = true :: Bool, max_iter = 50, tol = 1e-14, KdV = false, q=1)
         # A good guess for low velocities is
         #function sol(x,α)
         #	2*α*sech.(sqrt(3*2*α)/2*x).^2
@@ -41,12 +41,12 @@ function SolitaryWaveWhithamBoussinesq(mesh :: Mesh, param :: NamedTuple, guess 
                 M₂ = real.(IFFT*(diagm( 0 => F₂)*FFT))
                 function JacF( v₀ :: Vector{Float64} )
                         M₀ = diagm( 0 => vtou(v₀))
-                        -c^2 * Id + M₁ + c*ϵ*M₀*M₂ + ϵ*M₂*(c*M₀+c*diagm( 0 => v₀)*M₂ -3*ϵ/2*M₀*M₂*M₂)
+                        -c^2 * Id + M₁ + c*ϵ*(M₀*M₂ + M₂*M₀)+ ϵ*M₂*(c*diagm( 0 => v₀) -3*ϵ/2*M₀*M₀)*M₂
                 end
         else
                 function JacFfast( v₀ :: Vector{Float64} )
                         u₀ = vtou(v₀)
-                        dF(v) = -c^2*v+real.(ifft(F₁.*fft(v)))+c*ϵ*u₀.*real.(ifft(F₂.*fft(v)))+ϵ*real.(ifft(F₂.*fft(c*u₀.*v+c*v₀.*real.(ifft(F₂.*fft(v))) -3*ϵ/2*u₀.*(real.(ifft(F₂.*fft(v)))).^2)))
+                        dF(v) = -c^2*v+real.(ifft(F₁.*fft(v)))+c*ϵ*u₀.*real.(ifft(F₂.*fft(v)))+ϵ*real.(ifft(F₂.*fft(c*u₀.*v+c*v₀.*real.(ifft(F₂.*fft(v))) -3*ϵ/2*(u₀.^2).*real.(ifft(F₂.*fft(v))))))
                         return LinearMap(dF, length(v₀); issymmetric=true, ismutating=false)
                 end
         end
@@ -73,11 +73,11 @@ function SolitaryWaveWhithamBoussinesq(mesh :: Mesh, param :: NamedTuple, guess 
                         @warn  "The algorithm did not converge"
                 end
                 if iterative == false
-                        du .= -proj( JacF(u) \ fu , dxu )
+                        du .= proj( JacF(u) \ fu , dxu )
                 else
-                        du .= -proj( gmres( JacFfast(u) , fu ) , dxu )
+                        du .= proj( gmres( JacFfast(u) , fu ) , dxu )
                 end
-    		u .+= real.(du)
+    		u .-= q*du
         end
         η = c*u-ϵ/2*vtou(u).^2
         return (η,u,flag)
