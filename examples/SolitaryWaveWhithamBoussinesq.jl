@@ -23,7 +23,7 @@ function sol(x,c,ϵ,μ)
 end
 
 (η,v,flag) = SolitaryWaveWhithamBoussinesq(mesh, merge(param,(α  = 0,)), sol(mesh.x,c,ϵ,μ); iterative = true, q=1)
-(η,v,flag) = SolitaryWaveWhithamBoussinesq(mesh, merge(param,(α  = 1/2,)), v; iterative = false, q=1)
+(η,v,flag) = SolitaryWaveWhithamBoussinesq(mesh, merge(param,(α  = 1/2,)), v; iterative = true, q=1)
 
 init=Init(mesh,η,v)
 
