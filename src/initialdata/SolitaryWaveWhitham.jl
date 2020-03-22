@@ -31,6 +31,7 @@ function SolitaryWaveWhitham(mesh :: Mesh, param :: NamedTuple, guess :: Vector{
         end
 
         if iterative == false
+                k = mesh.k
                 x = mesh.x
                 x₀ = mesh.x[1]
                 FFT = exp.(-1im*k*(x.-x₀)');

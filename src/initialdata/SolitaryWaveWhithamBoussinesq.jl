@@ -32,6 +32,7 @@ function SolitaryWaveWhithamBoussinesq(mesh :: Mesh, param :: NamedTuple, guess 
         end
 
         if iterative == false
+                k = mesh.k
                 x = mesh.x
                 x₀ = mesh.x[1]
                 FFT = exp.(-1im*k*(x.-x₀)');
