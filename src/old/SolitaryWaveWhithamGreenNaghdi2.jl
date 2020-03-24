@@ -16,14 +16,14 @@ function SolitaryWaveWhithamGreenNaghdi2(mesh :: Mesh, param :: NamedTuple, gues
                 F₀ = 1im * k ./ (1 .+ μ/3 * k.^2 ).^(1/4)
         end
 
-        Π⅔ = abs.(k) .< maximum(k) * 2/3
-        krasny(k) = (abs.(k).> tol ).*k
-        krasny!(k) = k[abs.(k).< tol ].=0
+        Π⅔ = abs.(k) .< maximum(k) * 4/3
+        krasny(k) = (abs.(k).> 1e-32 ).*k
+        krasny!(k) = k[abs.(k).< 1e-32 ].=0
 
         Dx       =  1im * mesh.k
 
-        function proj( v :: Vector{Float64} )
-            real.(ifft(krasny(Π⅔.*fft(v))))
+        function dealias( v :: Vector{Float64} )
+                real.(ifft(krasny(Π⅔.*fft(v))))
         end
 
         function proj( u :: Vector{Float64}, v :: Vector{Float64} )
@@ -36,18 +36,18 @@ function SolitaryWaveWhithamGreenNaghdi2(mesh :: Mesh, param :: NamedTuple, gues
         function ζ( v :: Vector{Float64} )
                 v./(1 .- ϵ*v)
         end
-        function Four( v :: Vector{Float64} )
+        function Four( v )
                 real.(ifft(F₀.*fft(v)))
         end
 
         function E( η :: Vector{Float64} , u :: Vector{Float64} )
-                return η.^2 .+ h(η).*(u.^2) .+ μ/3 .* (h(u).^3).* (Four( u ).^2)
+                return η.^2 .+ (1 .+ ϵ*η).*(u.^2) .+ μ/3 .* ((1 .+ ϵ*η).^3).* (Four( u ).^2)
         end
 
         function F( v :: Vector{Float64} )
                 return -1/3 ./ (h(v).^2).* Four( (h(v).^3).* Four(v)) .+
                         ϵ/2 .* ( h(v).*Four(v) ).^2 .+
-                        v .- 1/(c^2) .*ζ(v) .- ϵ/2 .* v.^2
+                        v .- 1/(c^2) .*v.*h(v) .- ϵ/2 .* v.^2
         end
 
         if iterative == false
@@ -61,10 +61,10 @@ function SolitaryWaveWhithamGreenNaghdi2(mesh :: Mesh, param :: NamedTuple, gues
                 M(v) = Diagonal( v )
                 function JacF( v :: Vector{Float64} )
                         -1/3 *M(1 ./ (h(v).^2))* M₀ * M(h(v).^3)* M₀ .-
-                                ϵ * M(1 ./ (h(v).^2)) * M₀ * M( (h(v).^4) .* (M₀*v) ) .+
-                                 2*ϵ/3 * M( 1 ./ h(v) .* ( M₀*((h(v).^3).* (M₀*v) ) ) ) .+
-                                 ϵ * M( (h(v).^2) .* (M₀*v) ) * M₀ .+
-                                 ϵ^2 * M( h(v).^3 .* (M₀ * v).^2 ) .+
+                                ϵ * M(1 ./ (h(v).^2)) * M₀ * M( (h(v).^4) .* Four(v) ) .+
+                                 2*ϵ/3 * M( 1 ./ h(v) .* Four(((h(v).^3).* Four(v) ) ) ) .+
+                                 ϵ * M( (h(v).^2) .* Four(v) ) * M₀ .+
+                                 ϵ^2 * M( h(v).^3 .* Four(v).^2 ) .+
                                  Id .- M(h(v).^2)./(c^2) .- ϵ* M( v )
                 end
         else
@@ -81,14 +81,15 @@ function SolitaryWaveWhithamGreenNaghdi2(mesh :: Mesh, param :: NamedTuple, gues
         flag=0
         iter = 0
         err = 1
-        u = guess./(1 .+ ϵ*guess)
+        u = dealias(guess./(1 .+ ϵ*guess)) # initial guess for iteration
         du = similar(F(u))
         fu = similar(F(u))
         dxu = similar(u)
         for i in range(1, length=max_iter)
                 dxu .= real.(ifft(Dx.*fft(u)))
-                fu .= proj(F(u))
-    	        err = norm(fu,2)/norm(E(u,c*η(u)),1)
+                dxu ./= norm(dxu,2)
+                fu .= F(dealias(u))
+                err = norm(fu,Inf)
     		if err < tol
     			@info string("Converged : ",err,"\n")
     			break
@@ -100,12 +101,12 @@ function SolitaryWaveWhithamGreenNaghdi2(mesh :: Mesh, param :: NamedTuple, gues
                         @warn  "The algorithm did not converge"
                 end
                 if iterative == false
-                        du .= proj( JacF(u) \ fu  )
+                        du .=  JacF(u) \ fu
                 else
-                        du .= proj( gmres( JacFfast(u) , fu ) )
+                        du .=  gmres( JacFfast(u) , fu )
                 end
-    		u .-= q*du
+    		u .-= dealias(q*du)
         end
 
-        return (proj(ζ(u)),c*u,flag)
+        return (ζ(u),c*u,flag)
 end

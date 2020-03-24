@@ -8,12 +8,12 @@ function SolitaryWaveWhithamBoussinesq(mesh :: Mesh, param :: NamedTuple, guess 
         μ = param.μ
 
         k = mesh.k
-        F₁ 	= tanh.(sqrt(μ)*abs.(mesh.k))./(sqrt(μ)*abs.(mesh.k))
+        F₁ 	= tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k))
         F₁[1] 	= 1
         F₂ = F₁.^(param.α)
 
         Π⅔ = abs.(k) .< maximum(k) * 2/3
-        Dx       =  1im * mesh.k
+        Dx       =  1im * k
 
         function proj( u :: Vector{Float64} )
             real.(ifft(Π⅔.*fft(u)))
