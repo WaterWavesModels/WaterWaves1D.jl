@@ -119,7 +119,7 @@ function SolitaryWaveWhithamGreenNaghdi(
                         end
                 end
         else
-                Four(v) = real.(ifft(F₀.*fft(v)))
+                Four(v) = (ifft(F₀.*fft(v)))
                 function JacFfast( v , hv, Fv , F2v, Dv, dxv )
                         function dF(φ)
                                 if method == 1

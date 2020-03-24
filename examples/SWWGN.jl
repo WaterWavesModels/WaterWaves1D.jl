@@ -23,7 +23,7 @@ mesh = Mesh(param)
 (η,u) = SolitaryWaveWhithamGreenNaghdi(
 				mesh, merge(param,(c=1.1,)), ηGN(1.1);
 				method=2, α = 0,
-				tol =  1e-12, max_iter=5,
+				tol =  1e-16, max_iter=4, ktol =1e-12,
 				iterative = true, q=1,
 				verbose = false, GN = false)
 
@@ -147,17 +147,17 @@ end
 function solve!(η₀,η₁,η₂,c,dc,method)
 		tη₂ = copy(η₂)
 		η₂ .= SolitaryWaveWhithamGreenNaghdi(mesh, merge(param,(c=c,)), P.(dc,dc,η₀,η₁,η₂), method=method;
-				tol =  1e-10, max_iter=5, q=1,
-				iterative = false, verbose = true, GN = false)[1]
+				tol =  1e-10, max_iter=5, q=1, α=1,
+				iterative = false, verbose = false, GN = false)[1]
 		η₀ .= η₁
 		η₁ .= tη₂
 end
 
 #------- Calculs
-η₀ = solve(2,1)
-η₁ = solve(4,1)
-η₂ = solve(6,1)
-for cs = range(8; step = 2, stop = 100)
+η₀ = solve(17,3)
+η₁ = solve(18,3)
+η₂ = solve(19,3)
+for cs = range(20; step = 1, stop = 100)
 	print(string("c = ",cs,"\n"))
 	solve!(η₀,η₁,η₂,cs,1,1)
 end
@@ -165,10 +165,10 @@ end
 plot(mesh.x,[η η₂	])
 
 plt = plot(layout=(1,2))
-plot!(plt[1,1], mesh.x, [η -η₂	])
+plot!(plt[1,1], mesh.x, [sη₂-η₂	])
 
 plot!(plt[1,2], fftshift(mesh.k),
-	  log10.(abs.(fftshift(fft(η))))
+	  log10.(abs.(fftshift(fft(η₂))))
 	  )
 
 sη₁=copy(η₁);
