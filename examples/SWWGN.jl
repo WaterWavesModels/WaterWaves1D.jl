@@ -28,7 +28,7 @@ function figure1()
 				tol =  1e-16, max_iter=4,
 				ktol =1e-11, gtol = 1e-14,
 				iterative = true, q=1,
-				verbose = false, GN = false)
+				verbose = false, SGN = false)
 
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [u uGN(1.1)];
@@ -56,7 +56,7 @@ function figure2()
 				method=2, α = 0,
 				tol =  1e-10, max_iter=10,
 				iterative = false, q=1,
-				verbose = true, GN = false)
+				verbose = true, SGN = false)
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [u uGN(2)];
 	  title="c=2",
@@ -82,7 +82,7 @@ function figure3()
 				method=2, α = 1,
 				tol =  1e-10, max_iter=15,
 				iterative = false, q=1,
-				verbose = true, GN = false)
+				verbose = true, SGN = false)
 
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [u uGN(20)];
@@ -108,7 +108,7 @@ function figure4()
 				method=3, α = 0,
 				tol =  1e-10, max_iter=40,
 				iterative = false, q=1,
-				verbose = true, GN = false)
+				verbose = true, SGN = false)
 
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [u/100 uGN(100)/100];

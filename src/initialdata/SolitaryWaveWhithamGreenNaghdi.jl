@@ -52,7 +52,7 @@ function SolitaryWaveWhithamGreenNaghdi(
         k = mesh.k
 
         Dx       =  1im * k
-        if GN == true
+        if SGN == true
                 F₀ = Dx #./ (1 .+ μ/3 * k.^2 ).^(1/4)
         else
                 F₁ 	= tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k))
