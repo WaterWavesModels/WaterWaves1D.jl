@@ -1,13 +1,52 @@
-function SolitaryWaveWhitham(mesh :: Mesh, param :: NamedTuple, guess :: Vector{Float64}; iterative = false :: Bool, verbose = true :: Bool, max_iter = 50, tol = 1e-14, KdV = false)
-        # A good guess for low velocities is
-        #function sol(x,α)
-        #	2*α*sech.(sqrt(3*2*α)/2*x).^2
-        #end
+"""
+    `SolitaryWaveWhitham(mesh, param, guess; kwargs...)`
+
+Computes the Whitham solitary wave with prescribed velocity.
+
+# Arguments
+- `mesh :: Mesh`: parameters of the numerical grid, e.g constructed through Mesh(L,N);
+- `param :: NamedTuple`: parameters of the problem containing velocity c and dimensionless parameters ϵ and μ;
+- `guess :: Vector{Float64}`: initial guess for the surface deformation.
+## Keywords
+- `iterative :: Bool`: inverts Jacobian through GMRES if `true`, LU decomposition if `false`;
+- `verbose :: Bool`: prints numerical errors at each step if `true`;
+- `max_iter :: Int`: maximum number of iterations of the Newton algorithm;
+- `tol :: Real`: general tolerance (default is `1e-10`);
+- `ktol :: Real`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
+- `gtol :: Real`: relative tolerance of the GMRES algorithm;
+- `dealias :: Int`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `q :: Real`: Newton algorithm modified with
+`u_{n+1}=q*u_{n+1}+(1-q)*u_n`
+(default is `1`);
+- `α :: Real`: adds `α` times spectral projection onto the Kernel to the Jacobian;
+- `KdV :: Bool`: if `true` computes the KdV (instead of Whitham) solitary wave.
+# Return values
+`u :: Vector{Float64}` the solution
+"""
+
+function SolitaryWaveWhitham(mesh :: Mesh,
+                param :: NamedTuple,
+                guess :: Vector{Float64};
+                iterative = false :: Bool,
+                verbose = true :: Bool,
+                max_iter = 20 :: Int,
+                tol = 1e-14 :: Real,
+                gtol = 1e-14 :: Real,
+                ktol = 0 :: Real,
+                dealias = 0 :: Int,
+                q=1 :: Real,
+                α=0 :: Real,
+                KdV = false :: Bool)
+
+
         c = param.c
         ϵ = param.ϵ
         μ = param.μ
 
         k = mesh.k
+
+        Dx       =  1im * k
+
         F₁ = sqrt.(tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k)))
         F₁[1]=1
         if KdV == true
@@ -15,16 +54,21 @@ function SolitaryWaveWhitham(mesh :: Mesh, param :: NamedTuple, guess :: Vector{
         end
 
 
-        Π⅔ = abs.(k) .< maximum(k) * 2/3
-        Dx       =  1im * mesh.k
+        if dealias == 0
+                Π = ones(size(k))
+        else
+                Π = abs.(k) .< maximum(k) * (1-dealias/(dealias+2))
+        end
+        krasny(k) = (abs.(k).> ktol ).*k
+        krasny!(k) = k[abs.(k).< ktol ].=0
 
-        function proj( u :: Vector{Float64} )
-            real.(ifft(Π⅔.*fft(u)))
+        function filter( v :: Vector{Float64} )
+                real.(ifft(krasny(Π.*fft(v))))
+        end
+        function filter( v :: Vector{Complex{Float64}} )
+                ifft(krasny(Π.*fft(v)))
         end
 
-        function proj( u :: Vector{Float64}, v :: Vector{Float64} )
-            u-0*(v'*u)*v/(norm(v,2)^2)
-        end
 
         function F( u :: Vector{Float64} )
             -c*u+real.(ifft(F₁.*fft(u)))+3*ϵ/4*u.^2
@@ -36,13 +80,13 @@ function SolitaryWaveWhitham(mesh :: Mesh, param :: NamedTuple, guess :: Vector{
                 x₀ = mesh.x[1]
                 FFT = exp.(-1im*k*(x.-x₀)');
                 IFFT = exp.(1im*k*(x.-x₀)')/length(x);
-                M = real.(IFFT*(diagm( 0 => F₁)*FFT))
-                function JacF( u₀ :: Vector{Float64} )
-                    M+diagm(0 => 3*ϵ/2*u₀ .-c)
+                M = real.(IFFT*(Diagonal( F₁)*FFT))
+                function JacF( v , dxv  )
+                    Symmetric(M+Diagonal(3*ϵ/2*v .-c)+ α*dxv*dxv')
                 end
         else
-                function JacFfast( u₀ :: Vector{Float64} )
-                        dF(u) = -c*u+real.(ifft(F₁.*fft(u)))+3*ϵ/2*u₀.*u
+                function JacFfast( v ,dxv )
+                        dF(φ) = -c*φ+real.(ifft(F₁.*fft(φ)))+3*ϵ/2*v.*φ+ α*dot(dxv,φ)*dxv
                         return LinearMap(dF, length(u₀); issymmetric=true, ismutating=false)
                 end
         end
@@ -50,14 +94,15 @@ function SolitaryWaveWhitham(mesh :: Mesh, param :: NamedTuple, guess :: Vector{
         flag=0
         iter = 0
         err = 1
-        u = copy(guess)
-        du = similar(F(u))
-        fu = similar(F(u))
+        u = filter(guess)
+        du = similar(u)
+        fu = similar(u)
         dxu = similar(u)
         for i in range(1, length=max_iter)
                 dxu .= real.(ifft(Dx.*fft(u)))
-                fu .= proj(F(u),dxu)
-    	        err = norm(fu,2)/norm(u,2)
+                dxu ./= norm(dxu,2)
+                fu .= F(u)
+    	        err = norm(fu,Inf)
     		if err < tol
     			@info string("Converged : ",err,"\n")
     			break
@@ -65,15 +110,14 @@ function SolitaryWaveWhitham(mesh :: Mesh, param :: NamedTuple, guess :: Vector{
                         print(string("error at step ",i,": ",err,"\n"))
     		end
                 if i == max_iter
-                        flag=1
-                        @warn  "The algorithm did not converge"
+                        @warn  string("The algorithm did not converge: ",err,"\n")
                 end
                 if iterative == false
-                        du .= -proj( JacF(u) \ fu , dxu )
+                        du .= JacF(u,dxu) \ fu
                 else
-                        du .= -proj( gmres( JacFfast(u) , fu ) , dxu )
+                        du .= gmres( JacFfast(u,dxu) , fu ; verbose = verbose, tol = gtol )
                 end
-    		u .+= real.(du)
+    		u .-= q*filter(du)
         end
-        return (u,flag)
+        return u
 end

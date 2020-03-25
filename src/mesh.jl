@@ -16,7 +16,7 @@ struct Mesh
 
         dx   = (xmax-xmin)/N
         x    = zeros(Float64, N)
-        x   .= range(xmin, stop=xmax, length=N+1)[1:end-1] 
+        x   .= range(xmin, stop=xmax, length=N+1)[1:end-1]
         dk   = 2π/(N*dx)
         kmin = -N/2*dk
         kmax = (N/2-1)*dk
@@ -27,15 +27,23 @@ struct Mesh
 
     end
 
+    function Mesh(L :: Float64, N :: Int64)
+
+        xmin = - L
+        xmax =   L
+        N    =   N
+
+        Mesh( xmin, xmax, N)
+
+    end
+
     function Mesh(param :: NamedTuple)
 
         xmin = - Float64(param.L)
         xmax =   Float64(param.L)
         N    =   param.N
-        
+
         Mesh( xmin, xmax, N)
 
     end
 end
-
-

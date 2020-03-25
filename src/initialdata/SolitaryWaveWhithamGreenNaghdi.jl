@@ -1,17 +1,49 @@
+export SolitaryWaveWhithamGreenNaghdi
+
+"""
+    `SolitaryWaveWhithamGreenNaghdi(mesh, param, guess; kwargs...)`
+
+Computes the Whitham-Green-Naghdi solitary wave with prescribed velocity.
+
+# Arguments
+- `mesh :: Mesh`: parameters of the numerical grid, e.g constructed through Mesh(L,N);
+- `param :: NamedTuple`: parameters of the problem containing velocity c and dimensionless parameters ϵ and μ;
+- `guess :: Vector{Float64}`: initial guess for the surface deformation.
+## Keywords
+- `method :: Int`: equation used (between `1` and `4`);
+- `iterative :: Bool`: inverts Jacobian through GMRES if `true`, LU decomposition if `false`;
+- `verbose :: Bool`: prints numerical errors at each step if `true`;
+- `max_iter :: Int`: maximum number of iterations of the Newton algorithm;
+- `tol :: Real`: general tolerance (default is `1e-10`);
+- `ktol :: Real`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
+- `gtol :: Real`: relative tolerance of the GMRES algorithm;
+- `dealias :: Int`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `q :: Real`: Newton algorithm modified with
+`u_{n+1}=q*u_{n+1}+(1-q)*u_n`
+(default is `1`);
+- `α :: Real`: adds `α` times spectral projection onto the Kernel to the Jacobian;
+- `SGN :: Bool`: if `true` computes the Serre-Green-Naghdi (instead of Whitham-Green-Naghdi) solitary wave.
+# Return values
+`(η,u) :: Tuple{Vector{Float64},Vector{Float64}}`
+with
+- `η`: surface deformation;
+- `u`: velocity.
+"""
 function SolitaryWaveWhithamGreenNaghdi(
                 mesh :: Mesh,
                 param :: NamedTuple,
                 guess :: Vector{Float64};
-                method = 1 :: Int,
+                method = 2 :: Int,
                 iterative = false :: Bool,
                 verbose = true :: Bool,
                 max_iter = 20 :: Int,
                 tol = 1e-10 :: Real,
                 ktol = 0 :: Real,
+                gtol = 1e-10 :: Real,
                 dealias = 0 :: Int,
                 q=1 :: Real,
-                α=1 :: Real,
-                GN = false :: Bool
+                α=0 :: Real,
+                SGN = false :: Bool
                         )
 
         c = param.c
@@ -215,7 +247,7 @@ function SolitaryWaveWhithamGreenNaghdi(
                         #F₁ = ones(length(k))
                         Precond = lu(IFFT * Diagonal( 1 ./ F₁  )* FFT)
                         Precond = Diagonal( 1 ./ F₁  )
-                        du .=  real.(ifft(gmres( JacFfast(Complex.(u),hu,Fu,F2u,Du,dxu) , fft(fu) ; Pl = Precond, verbose=verbose )))
+                        du .=  real.(ifft(gmres( JacFfast(Complex.(u),hu,Fu,F2u,Du,dxu) , fft(fu) ; Pl = Precond, tol = gtol, verbose=verbose )))
                 end
     		u .-= q*filter(du)
         end
