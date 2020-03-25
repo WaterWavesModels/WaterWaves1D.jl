@@ -1,3 +1,4 @@
+export SolitaryWaveWhitham
 """
     `SolitaryWaveWhitham(mesh, param, guess; kwargs...)`
 
@@ -87,7 +88,7 @@ function SolitaryWaveWhitham(mesh :: Mesh,
         else
                 function JacFfast( v ,dxv )
                         dF(φ) = -c*φ+real.(ifft(F₁.*fft(φ)))+3*ϵ/2*v.*φ+ α*dot(dxv,φ)*dxv
-                        return LinearMap(dF, length(u₀); issymmetric=true, ismutating=false)
+                        return LinearMap(dF, length(v); issymmetric=true, ismutating=false)
                 end
         end
 
