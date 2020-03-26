@@ -27,5 +27,7 @@ include("models/Boussinesq.jl")
 include("models/fdBoussinesq.jl")
 include("models/PseudoSpectral.jl")
 include("models/WaterWaves.jl")
+include("models/WhithamGreenNaghdi.jl")
+
 include("LoadSave.jl")
 include("fig.jl")

@@ -1,17 +1,59 @@
 """
-Reproduces the figures in the work of C. Klein and V. Duchêne
+Reproduces some figures in the work of C. Klein and V. Duchêne
 """
 #using ShallowWaterModels
 include("../src/dependencies.jl")
 
-function sol(x,c,ϵ,μ)
-	(c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*x).^2
+
+#---- Figure 7
+
+param = ( μ  = 1, ϵ  = 1, c=2,
+			N  = 2^9,
+            L  = 10*π,
+            T  = 0.01,
+            dt = 1/20000)
+function solη(x,c,ϵ,μ)
+	(c^2-1)/ϵ*sech(sqrt(3*(c^2-1)/(c^2)/μ)/2*x)^2
 end
-ηGN(c)= sol(mesh.x,c,param.ϵ,param.μ)
-uGN(c)= c*ηGN(c)./(1 .+ param.ϵ*ηGN(c))
+function solu(x,c,ϵ,μ)
+	c*solη(x,c,ϵ,μ) / (1 + ϵ * solη(x,c,ϵ,μ))
+end
+mesh=Mesh(param)
+ηGN= solη.(mesh.x,param.c,param.ϵ,param.μ)
+hGN=(1 .+ param.ϵ*ηGN)
+uGN= solu.(mesh.x,param.c,param.ϵ,param.μ)
+Dx(v) = ifft(1im*mesh.k .* fft(v))
+vGN= uGN - param.μ/3 ./hGN .* real.(Dx(hGN.^3 .*Dx(uGN)))
+
+init     = Init(mesh,ηGN,vGN)
+model = WhithamGreenNaghdi(param;SGN=true)
+problem = Problem(model, init, param)
+@time solve!( problem )
+
+(ηfin,vfin,ufin)=mapfro(model,problem.data.U[end])
+
+E(η,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.^2 .+param.μ/3*(1 .+ param.ϵ*η).^3 .*Dx(u).^2)
+E(η,v,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.*v)
+
+print(string("final energy minus initial energy: ",E(ηfin,vfin,ufin)-E(ηGN,vGN,uGN)))
+
+p = plot(layout=(2,1))
+fig_problem!( p,problem)
+
+plt = plot(layout=(1,2))
+plot!(plt[1,1],mesh.k,log10.(abs.(fft(ufin)));
+		title = "frequency",
+		label = "initial")
+plot!(plt[1,1],mesh.k,log10.(abs.(fft(ufin)));
+		label = "final")
+plot!(plt[1,2],mesh.x,ufin-solu.(mesh.x.-param.c*param.T,param.c,param.ϵ,param.μ);
+		title = "error")
+
+plot(mesh.x,[ufin,solu.(mesh.x.-2*param.T,param.c,param.ϵ,param.μ)])
+
+aaa
 
 
-#---- Figure 1
 function figure1()
 	param = ( μ  = 1,
 			ϵ  = 1,
