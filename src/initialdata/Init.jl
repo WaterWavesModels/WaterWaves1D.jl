@@ -28,18 +28,10 @@ struct Init <: InitialData
         k = mesh.k
         x₀ = mesh.x[1]
         function η( x :: Vector{Float64} )
-            η₀ = Complex.(zeros(length(x)))
-            for j = 1:length(k)
-                η₀ .+= 1/length(k)*exp.(+1im*k[j]*(x .-x₀))*hatη[j]
-            end
-            return real.(η₀)
+            return real.(exp.(1im*(x.-x₀)*k')*hatη/length(k))
         end
         function v( x :: Vector{Float64} )
-            v₀ = Complex.(zeros(length(x)))
-            for j = 1:length(k)
-                v₀ .+= 1/length(k)*exp.(+1im*k[j]*(x .-x₀))*hatv[j]
-            end
-            return real.(v₀)
+            return real.(exp.(1im*(x.-x₀)*k')*hatv/length(k))
         end
 
         new( x->η(x) , x->v(x) )
@@ -51,18 +43,10 @@ struct Init <: InitialData
         k = mesh.k
         x₀ = mesh.x[1]
         function η( x :: Vector{Float64} )
-            η₀ = Complex.(zeros(length(x)))
-            for j = 1:length(k)
-                η₀ .+= 1/length(k)*exp.(+1im*k[j]*(x .-x₀))*hatη[j]
-            end
-            return real.(η₀)
+            return real.(exp.(1im*(x.-x₀)*k')*hatη/length(k))
         end
         function v( x :: Vector{Float64} )
-            v₀ = Complex.(zeros(length(x)))
-            for j = 1:length(k)
-                v₀ .+= 1/length(k)*exp.(+1im*k[j]*(x .-x₀))*hatv[j]
-            end
-            return real.(v₀)
+            return real.(exp.(1im*(x.-x₀)*k')*hatv/length(k))
         end
 
         new( x->η(x) , x->v(x) )
