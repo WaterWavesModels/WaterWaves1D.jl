@@ -54,7 +54,7 @@ function figure2()
 	(η,u) = SolitaryWaveWhithamGreenNaghdi(
 				mesh, merge(param,(c=2,)), ηGN(2);
 				method=2, α = 0,
-				tol =  1e-10, max_iter=10,
+				tol =  1e-12, max_iter=10,
 				iterative = true, q=1,
 				verbose = true, SGN = false)
 	plt = plot(layout=(1,2))
@@ -79,8 +79,8 @@ function figure3()
 
 	(η,u) = SolitaryWaveWhithamGreenNaghdi(
 				mesh, merge(param,(c=20,)), ηGN(20);
-				method=2, α = 1,
-				tol =  1e-10, max_iter=15,
+				method=2, α = 1, #ici α = 1 évite des oscillations important si c = 3 ou c = 20
+				tol =  1e-14, max_iter=15,
 				iterative = false, q=1,
 				verbose = true, SGN = false)
 
@@ -120,8 +120,8 @@ function figure4()
 	  label="WGN")
   end
 
-#------ Figure 5
-function figure5()
+#------ Figure 6
+function figure6()
 	c=20
 	ϵ,μ,α=1,1,0
 	L,N=10*π,2^10
@@ -151,7 +151,6 @@ function figure5()
 	plt = plot(layout=(1,2))
 	surface!(plt[1,1],fftshift(k),fftshift(k)[N:-1:1],log10.(abs.(FFT*Jac*IFFT)))
 	surface!(plt[1,2],fftshift(k),fftshift(k)[N:-1:1],log10.(abs.(FFT*Jacstar*IFFT)))
-	return Jac
 end
 
 #------ Other experiments
