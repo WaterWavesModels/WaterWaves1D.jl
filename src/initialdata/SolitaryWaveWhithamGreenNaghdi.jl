@@ -135,13 +135,13 @@ function SolitaryWaveWhithamGreenNaghdi(
                                         -1/3 *M(1 ./ hv.^2 )* M₀ * M(hv.^3)* (c*M₀ .+ 3*ϵ * M( Fv ))
                                         .+ ϵ * M( hv .* Fv ) * M₀
                                         #.+ M(1 ./hv) .+ 2*ϵ/3 * M(F2v ./ hv) .+ ϵ^2 * M(hv .* Fv.^2) .- M((hv/c).^2)
-                                        .+ M( Dv ) .+ α*dxv*dxv' *M(1 ./ hv.^2 ) )
+                                        .+ M( Dv ) .+ α*M( hv.^2 )*dxv*dxv' *M(1 ./ hv.^2 ) )
                         elseif method == 3
                                 return real.(
                                         -1/3 *M(1 ./ hv.^2 )* M₀ * M(hv.^3)* (M₀ .+ 3*ϵ * M( Fv ))
                                         .+ ϵ * M( hv .* Fv ) * M₀
                                         #.+ M(1 ./hv) .+ 2*ϵ/3 * M(F2v ./ hv) .+ ϵ^2 * M(hv .* Fv.^2) .- M((hv/c).^2)
-                                        .+ M( Dv ) .+ α*dxv*dxv' *M(1 ./ hv.^2 ) )
+                                        .+ M( Dv ) .+ α*M( hv.^2 )*dxv*dxv' *M(1 ./ hv.^2 ) )
                         elseif method == 4
                                 return Symmetric(real.(
                                 ( M₀ * M(hv.^3 ) * ( -1/6*M₀ .- ϵ * M( hv .* Fv ) ) .+
@@ -162,11 +162,11 @@ function SolitaryWaveWhithamGreenNaghdi(
                                  elseif method == 2
                                   return fft( -1/3 ./ hv.^2 .* Four( hv.^3 .* ( c*Four( ifft(φ) ) .+ 3*ϵ*Fv.*ifft(φ) ))
                                           .+ ϵ .* hv .* Fv .* Four( ifft(φ) )
-                                          .+ ifft(φ) .* Dv .+ α*dot(dxv, ifft(φ) ./ hv.^2)*dxv )
+                                          .+ ifft(φ) .* Dv .+ α*dot(dxv, ifft(φ) ./ hv.^2)*hv.^2 .*dxv )
                                   elseif method == 3
                                    return fft( -1/3 ./ hv.^2 .* Four( hv.^3 .* ( Four( ifft(φ) ) .+ 3*ϵ*Fv.*ifft(φ) ))
                                            .+ ϵ .* hv .* Fv .* Four( ifft(φ) )
-                                           .+ ifft(φ) .* Dv .+ α*dot(dxv, ifft(φ) ./ hv.^2)*dxv )
+                                           .+ ifft(φ) .* Dv .+ α*dot(dxv, ifft(φ) ./ hv.^2)*hv.^2 .*dxv )
                                 elseif method == 4
                                  return fft(( -1/3  .* Four( hv.^3 .* ( Four( ifft(φ) ) .+ 3*ϵ*Fv.*hv.*ifft(φ) ))
                                         .+ ϵ .* hv.^4 .* Fv .* Four( ifft(φ) )
@@ -236,7 +236,6 @@ function SolitaryWaveWhithamGreenNaghdi(
                 if iterative == false
                         du .=  JacF(u,hu,Fu,F2u,Du,dxu)  \ fu
                 else
-                        #precond(φ)= real.(ifft( 1 ./ (1 .+ k.^2 /3).* fft(φ)))
                         x = mesh.x
                         x₀ = mesh.x[1]
                         FFT = exp.(-1im*k*(x.-x₀)');
@@ -245,7 +244,6 @@ function SolitaryWaveWhithamGreenNaghdi(
                         F₁[1] 	= 1
                         F₁ = 1 ./ (1 .+ μ*k.^2   )
                         #F₁ = ones(length(k))
-                        Precond = lu(IFFT * Diagonal( 1 ./ F₁  )* FFT)
                         Precond = Diagonal( 1 ./ F₁  )
                         du .=  real.(ifft(gmres( JacFfast(Complex.(u),hu,Fu,F2u,Du,dxu) , fft(fu) ; Pl = Precond, tol = gtol, verbose=verbose )))
                 end

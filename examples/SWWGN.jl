@@ -24,9 +24,9 @@ function figure1()
 
 	(η,u) = SolitaryWaveWhithamGreenNaghdi(
 				mesh, merge(param,(c=1.1,)), ηGN(1.1);
-				method=2, α = 0,
+				method=2, α = -1,
 				tol =  1e-16, max_iter=4,
-				ktol =1e-11, gtol = 1e-14,
+				ktol =1e-11, gtol = 1e-16,
 				iterative = true, q=1,
 				verbose = false, SGN = false)
 
@@ -55,7 +55,7 @@ function figure2()
 				mesh, merge(param,(c=2,)), ηGN(2);
 				method=2, α = 0,
 				tol =  1e-10, max_iter=10,
-				iterative = false, q=1,
+				iterative = true, q=1,
 				verbose = true, SGN = false)
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [u uGN(2)];
@@ -105,8 +105,8 @@ function figure4()
 
 	(η,u) = SolitaryWaveWhithamGreenNaghdi(
 				mesh, merge(param,(c=100,)), ηGN(100);
-				method=3, α = 0,
-				tol =  1e-10, max_iter=40,
+				method=3, α = 1,
+				tol =  1e-10, max_iter=10,
 				iterative = false, q=1,
 				verbose = true, SGN = false)
 
@@ -123,7 +123,7 @@ function figure4()
 #------ Figure 5
 function figure5()
 	c=20
-	ϵ,μ,α=1,1,1
+	ϵ,μ,α=1,1,0
 	L,N=10*π,2^10
 	mesh = Mesh(L,N)
 	k,x=mesh.k,mesh.x
@@ -135,7 +135,7 @@ function figure5()
 	IFFT = exp.(1im*k*(x.-x₀)')/length(x);
 	M₀ = IFFT * Diagonal( F₀ )* FFT
 	M(v) = Diagonal( v )
-	guess = sol(mesh.x,c,param.ϵ,param.μ)
+	guess = sol(mesh.x,c,ϵ,μ)
 	u = c*guess./(1 .+ ϵ*guess)
 	dxu = real.(ifft(1im*k.*fft(u)))
 	dxu ./= norm(dxu,2)
@@ -145,7 +145,7 @@ function figure5()
 	Du = c ./hu .+ 2*ϵ/3 * F2u ./ hu .+ ϵ^2/c * hu .* Fu.^2 .- (hu.^2)/c
 	Jac = (-1/3 *M(1 ./ hu.^2 )* M₀ * M(hu.^3)* (c*M₀ .+ 3*ϵ * M( Fu ))
 					.+ ϵ * M( hu .* Fu ) * M₀
-					.+ M( Du ) .+ α*dxu*dxu' *M(1 ./ hu.^2 ) )
+					.+ M( Du ) .+ α*M( hu.^2 )*dxu*dxu' *M(1 ./ hu.^2 ) )
 	Jacstar = -1/3 *M(1 ./ hu.^2 )* M₀ * M(hu.^3)* c*M₀
 
 	plt = plot(layout=(1,2))
