@@ -5,6 +5,35 @@
 #using ShallowWaterModels
 include("../src/dependencies.jl")
 
+#----
+param = ( μ  = .2,
+			ϵ  = 0.2,
+        	N  = 2^8,
+            L  = 10,
+            T  = 5,
+            dt = 0.01,
+			α = 1/2,
+			SGN = false,)
+
+init     = BellCurve(merge(param,(θ = 2,)))
+model = WhithamGreenNaghdi(param)
+
+problem = Problem(model, init, param)
+
+@time solve!( problem )
+
+model2 = fdBoussinesq(param)
+problem2 = Problem(model2, init, param)
+@time solve!( problem2 )
+
+model3 = WaterWaves(param)
+problem3 = Problem(model3, init, param)
+@time solve!( problem3 )
+
+p = plot(layout=(2,1))
+fig_problem!( p, problem, 10)
+display(p)
+
 
 #----
 param = ( μ  = 1,

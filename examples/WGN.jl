@@ -10,8 +10,8 @@ include("../src/dependencies.jl")
 param = ( μ  = 1, ϵ  = 1, c=2,
 			N  = 2^9,
             L  = 10*π,
-            T  = 0.01,
-            dt = 1/20000)
+            T  = .1,
+            dt = 1/2000)
 function solη(x,c,ϵ,μ)
 	(c^2-1)/ϵ*sech(sqrt(3*(c^2-1)/(c^2)/μ)/2*x)^2
 end
@@ -26,8 +26,8 @@ Dx(v) = ifft(1im*mesh.k .* fft(v))
 vGN= uGN - param.μ/3 ./hGN .* real.(Dx(hGN.^3 .*Dx(uGN)))
 
 init     = Init(mesh,ηGN,vGN)
-model = WhithamGreenNaghdi(param;SGN=true)
-problem = Problem(model, init, param)
+model = WhithamGreenNaghdi(param;SGN=true, ktol=1e-14)
+problem = Problem(model, init, param,RK4_naive(param))
 @time solve!( problem )
 
 (ηfin,vfin,ufin)=mapfro(model,problem.data.U[end])
@@ -36,20 +36,21 @@ E(η,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.^2 .+param.μ/3*(1 .+ param.ϵ*η).
 E(η,v,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.*v)
 
 print(string("final energy minus initial energy: ",E(ηfin,vfin,ufin)-E(ηGN,vGN,uGN)))
+print(string("final energy minus initial energy: ",E(ηfin,ufin)-E(ηGN,uGN)))
+
 
 p = plot(layout=(2,1))
 fig_problem!( p,problem)
 
 plt = plot(layout=(1,2))
-plot!(plt[1,1],mesh.k,log10.(abs.(fft(ufin)));
+plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(vGN))));
 		title = "frequency",
 		label = "initial")
-plot!(plt[1,1],mesh.k,log10.(abs.(fft(ufin)));
+plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(vfin))));
 		label = "final")
 plot!(plt[1,2],mesh.x,ufin-solu.(mesh.x.-param.c*param.T,param.c,param.ϵ,param.μ);
-		title = "error")
-
-plot(mesh.x,[ufin,solu.(mesh.x.-2*param.T,param.c,param.ϵ,param.μ)])
+		title = "error",
+		label="difference")
 
 aaa
 

@@ -39,6 +39,7 @@ function figure1()
 	  log10.(abs.(fftshift(fft(u))));
 	  title="frequency",
 	  label="WGN")
+	savefig("fig1.pdf");
 end
 
 #---- Figure 2
@@ -65,6 +66,8 @@ function figure2()
 	  log10.(abs.(fftshift(fft(u))));
 	  title="frequency",
 	  label="WGN")
+	savefig("fig2.pdf");
+
 end
 
 #---- Figure 3
@@ -92,6 +95,9 @@ function figure3()
 	  log10.(abs.(fftshift(fft(u))));
 	  title="frequency",
 	  label="WGN")
+
+	savefig("fig3.pdf");
+
 end
 #---- Figure 4
 function figure4()
@@ -118,6 +124,9 @@ function figure4()
 	  log10.(abs.(fftshift(fft(u/100))));
 	  title="frequency",
 	  label="WGN")
+
+	savefig("fig4.pdf");
+
   end
 
 #------ Figure 6
@@ -151,6 +160,9 @@ function figure6()
 	plt = plot(layout=(1,2))
 	surface!(plt[1,1],fftshift(k),fftshift(k)[N:-1:1],log10.(abs.(FFT*Jac*IFFT)))
 	surface!(plt[1,2],fftshift(k),fftshift(k)[N:-1:1],log10.(abs.(FFT*Jacstar*IFFT)))
+
+	savefig("fig6.pdf");
+
 end
 
 #------ Other experiments
