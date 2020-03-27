@@ -1,5 +1,32 @@
 export Mesh
 
+"""
+    `Mesh(args)`
+
+Constructs a mesh of collocation points and associated Fourier modes.
+
+# Arguments
+Can be either
+- `xmin :: Float64, xmax :: Float64, N :: Int64`;
+- `L :: Float64, N :: Int64`, same as above with `xmin=-L` and `xmax=L`;
+- `param :: NamedTuple`, param contains `N` and `L`, then same as above.
+
+The mesh as `N` collocation points regularly spaced between `xmin` (included) and `xmax` (excluded)
+
+# Return values
+`m=Mesh(args)` is of parametric type and offers
+with
+- `m.N `: number of collocation points and Fourier modes;
+- `m.xmin`: minimum of the mesh;
+- `m.xmax`: maximum of the mesh;
+- `m.dx`: distance between two collocation points;
+- `m.x`: the vector of collocation points;
+- `m.kmin`: minimum of Fourier modes;
+- `m.kmax`: maximum of Fourier modes;
+- `m.dk`: distance between two Fourier modes;
+- `m.k`: the vector of Fourier modes.
+
+"""
 struct Mesh
 
     N    :: Int64

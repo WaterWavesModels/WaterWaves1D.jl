@@ -2,9 +2,9 @@ export create_animation,fig_problem!
 
 function create_animation( p::Problem )
 
-    prog = Progress(p.times.Nr,1)
+    prog = Progress(p.times.Ns,1)
 
-    anim = @animate for l in range(1,p.times.Nr-1)
+    anim = @animate for l in range(1,p.times.Ns-1)
 
         plt = plot(layout=(2,1))
 
@@ -31,9 +31,9 @@ end
 
 function create_animations( pbs::Array{Problem,1} )
 	p0=pbs[1]
-    prog = Progress(p0.times.Nr,1)
+    prog = Progress(p0.times.Ns,1)
 
-    anim = @animate for l in range(1,p0.times.Nr-1)
+    anim = @animate for l in range(1,p0.times.Ns-1)
 
         plt = plot(layout=(2,1))
 
@@ -109,7 +109,7 @@ function fig_problem!( plt, p::Problem, t::Real )
 
 	t=max(t,0)
 	t=min(t,p.times.tfin)
-	index=1+round(Int,(t/p.times.tfin)*(p.times.Nr-1))
+	index=1+round(Int,(t/p.times.tfin)*(p.times.Ns-1))
 
 	if typeof(p.model)==WaterWaves
 
@@ -127,7 +127,7 @@ function fig_problem!( plt, p::Problem, t::Real )
     	(hr,ur) = mapfro(p.model,p.data.U[index])
 
     	plot!(plt[1,1], p.mesh.x, hr;
-		  title=string("physical space at t=",p.times.tr[index]),
+		  title=string("physical space at t=",p.times.ts[index]),
 	          label=p.model.label)
 
     	plot!(plt[2,1], fftshift(p.mesh.k),
@@ -140,14 +140,14 @@ end
 function norm_problem!( plt, p::Problem, s::Real )
 	N=[];
 	Λ = sqrt.((p.mesh.k.^2).+1);
-	prog = Progress(div(p.times.Nr,10),1)
- 	for index in range(1,stop=p.times.Nr)
+	prog = Progress(div(p.times.Ns,10),1)
+ 	for index in range(1,stop=p.times.Ns)
     	(hr,ur) = mapfro(p.model,p.data.U[index])
 		push!(N,norm(ifft(Λ.^s.*fft(hr))))
 		next!(prog)
 	end
 
-    plot!(plt, p.times.tr, N;
+    plot!(plt, p.times.ts, N;
 		  title=string("norm H^s avec s=",s),
 	          label=p.model.label)
 

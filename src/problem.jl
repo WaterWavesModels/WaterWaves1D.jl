@@ -33,8 +33,8 @@ mutable struct Problem
                      param   :: NamedTuple;
                      solver = RK4(param,model)  :: TimeSolver)
 
-        if in(:nr,keys(param))
-            times = Times(param.dt, param.T, param.nr)
+        if in(:ns,keys(param))
+            times = Times(param.dt, param.T; ns = param.ns)
         else
             times = Times(param.dt, param.T)
         end
@@ -44,23 +44,6 @@ mutable struct Problem
         data  = Data(mapto(model, initial))
 
         new(model, initial, param, solver, times, mesh, data)
-
-    end
-
-    function Problem( model   :: AbstractModel,
-                      initial :: InitialData,
-                      param   :: NamedTuple)
-
-        if in(:nr,keys(param))
-            times = Times(param.dt, param.T, param.nr)
-        else
-            times = Times(param.dt, param.T)
-        end
-        mesh   = Mesh(param)
-        data   = Data(mapto(model,initial))
-        solver = RK4(param,model)
-
-        new(model,initial,param,solver,times,mesh,data)
 
     end
 
@@ -85,14 +68,23 @@ function solve!(problem :: Problem)
 
     dt = problem.times.dt
 
-    J = range(problem.times.nr ,stop = problem.times.Nt-1, step = problem.times.nr)
-    L = 1:problem.times.nr
+    J = range(problem.times.ns ,stop = problem.times.Nc-1, step = problem.times.ns)
 
-    @showprogress 1 for j in J
-        for l in L
+    if problem.times.ns == 1
+        @showprogress 1 for j in J
             step!(problem.solver, problem.model, U, dt)
+            push!(problem.data.U,copy(U))
         end
-        push!(problem.data.U,copy(U))
+
+    else
+        L = 1:problem.times.ns
+        @showprogress 1 for j in J
+            @showprogress 1 for l in L
+                step!(problem.solver, problem.model, U, dt)
+            end
+            println()
+            push!(problem.data.U,copy(U))
+        end
     end
 
     println()
