@@ -8,8 +8,7 @@ Runge-Kutta fourth order solver.
 Constructs an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)
 
 """
-mutable struct RK4_naive <: TimeSolver
-end
+struct RK4_naive <: TimeSolver end
 
 function step!(s  :: RK4_naive,
                f! :: AbstractModel,
@@ -17,7 +16,7 @@ function step!(s  :: RK4_naive,
                dt :: Float64)
 
 
-    U0 = U
+    U0 = copy(U)
     f!( U0 )
     U1 = copy(U0)
 
