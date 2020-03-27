@@ -11,6 +11,7 @@ gr()
 
 include("types.jl")
 include("solvers/RK4.jl")
+include("solvers/RK4_naive.jl")
 include("initialdata/Init.jl")
 include("initialdata/BellCurve.jl")
 include("initialdata/HighFreq.jl")
