@@ -20,15 +20,15 @@ init     = Bellcurve(param)
 
 model0    = WaterWaves(param)
 solver0   = RK4(param,model0)
-problem0 = Problem(model0, init, param, solver0);
+problem0 = Problem(model0, init, param; solver = solver0);
 
 model1    = Boussinesq(param)
 solver1   = RK4(param,model1)
-problem1 = Problem(model1, init, param, solver1);
+problem1 = Problem(model1, init, param; solver = solver1);
 
 model2  = fdBoussinesq(param)
 solver2   = RK4(param,model2)
-problem2 = Problem(model2, init, param, solver2);
+problem2 = Problem(model2, init, param; solver = solver2);
 
 
 #----

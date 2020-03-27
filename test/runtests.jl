@@ -12,10 +12,9 @@ param = ( ϵ  = 1/2,
           dt = 0.01,
           θ = 1)
 
-init     = Bellcurve(param)
-solver   = RK4(param)
+init     = BellCurve(param)
 cheng    = CGBSW(param)
-problem1 = Problem( cheng, init, param, solver )
+problem1 = Problem( cheng, init, param; solver = RK4(param) )
 
 @testset "LoadSave" begin
 
@@ -49,7 +48,7 @@ solve!(problem1)
 end
 
 matsuno  = Matsuno(param)
-problem2 = Problem(matsuno, init, param, solver )
+problem2 = Problem(matsuno, init, param )
 
 solve!( problem2 )
 

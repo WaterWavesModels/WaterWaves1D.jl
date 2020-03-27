@@ -22,11 +22,11 @@ init = Bellcurve(param)
 
 model1 = Matsuno(param)
 solver1 = RK4(param,model1)
-problem1 = Problem(model1, init, param, solver1);
+problem1 = Problem(model1, init, param; solver = solver1);
 
 model2 = Matsuno_naive(param)
 solver2 = RK4(param,model2)
-problem2 = Problem(model2, init, param, solver2);
+problem2 = Problem(model2, init, param; solver = solver2);
 
 #----
 

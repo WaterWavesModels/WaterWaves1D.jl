@@ -2,9 +2,13 @@ export RK4
 export step!
 
 """
-    RK4(params)
+    `RK4(param,model;k)`
 
-Runge-Kutta fourth order solver.
+    Constructs an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
+
+- `param ::NamedTuple` should contain a value N (number of collocation points)
+- `model ::AbstractModel` is optional and determines the number of equations solved
+- `k=2   ::Int` is optional (default = 2) and determines the number of equations solved
 
 """
 mutable struct RK4 <: TimeSolver

@@ -71,7 +71,7 @@ function convert(::Type{Problem}, p :: ProblemSave)
         solver = RK4(param)
     end
 
-    pb = Problem(model, initial, param, solver)
+    pb = Problem(model, initial, param; solver = solver)
     pb.data = p.data
 
     return pb
