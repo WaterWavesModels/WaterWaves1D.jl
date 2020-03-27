@@ -68,7 +68,8 @@ function solve!(problem :: Problem)
 
     dt = problem.times.dt
 
-    J = range(problem.times.ns ,stop = problem.times.Nc-1, step = problem.times.ns)
+    Jn = range(problem.times.ns ,stop = problem.times.Nc-1, step = problem.times.ns)
+    J = 1:length(Jn)
 
     if problem.times.ns == 1
         @showprogress 1 for j in J
@@ -78,12 +79,13 @@ function solve!(problem :: Problem)
 
     else
         L = 1:problem.times.ns
-        @showprogress 1 for j in J
-            @showprogress 1 for l in L
+        for j in J
+            @showprogress string("Step ",j,"/",length(J),"...") 1 for l in L
                 step!(problem.solver, problem.model, U, dt)
             end
-            println()
             push!(problem.data.U,copy(U))
+            println()
+
         end
     end
 
