@@ -3,7 +3,7 @@ export Problem
 """
     `Problem( model, initial, param; solver)`
 
-    Builds an initial-value problem which can then be solved (integrated in time) through `solve!( problem )`
+Builds an initial-value problem which can then be solved (integrated in time) through `solve!( problem )`
 
 # Arguments
 - `model   :: AbstractModel`,  the system of equation solved. May be built, e.g., by `WhithamGreenNaghdi(param)`;
@@ -54,7 +54,7 @@ export solve!
 """
     `solve!( problem)`
 
-    Solves (i.e. integrates in time) an initial-value problem
+Solves (i.e. integrates in time) an initial-value problem
 
 The argument `problem` should be of type `:: Problem`.
 It may be buit, e.g., by `Problem( model, initial, param)`

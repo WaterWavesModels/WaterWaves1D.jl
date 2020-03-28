@@ -6,288 +6,142 @@ include("../src/dependencies.jl")
 
 
 #---- Figure 7
+function figure7()
+	param = ( μ  = 1, ϵ  = 1, c=2,
+				N  = 2^9,
+	            L  = 10*π,
+	            T  = 1,
+	            dt = 1/2000, ns=500)
+	function solη(x,c,ϵ,μ)
+		(c^2-1)/ϵ*sech(sqrt(3*(c^2-1)/(c^2)/μ)/2*x)^2
+	end
+	function solu(x,c,ϵ,μ)
+		c*solη(x,c,ϵ,μ) / (1 + ϵ * solη(x,c,ϵ,μ))
+	end
+	mesh=Mesh(param)
+	ηGN= solη.(mesh.x,param.c,param.ϵ,param.μ)
+	hGN=(1 .+ param.ϵ*ηGN)
+	uGN= solu.(mesh.x,param.c,param.ϵ,param.μ)
+	Dx(v) = real.(ifft(1im*mesh.k .* fft(v)))
+	vGN= uGN - param.μ/3 ./hGN .* (Dx(hGN.^3 .*Dx(uGN)))
 
-param = ( μ  = 1, ϵ  = 1, c=2,
-			N  = 2^9,
-            L  = 10*π,
-            T  = .1,
-            dt = 1/2000)
-function solη(x,c,ϵ,μ)
-	(c^2-1)/ϵ*sech(sqrt(3*(c^2-1)/(c^2)/μ)/2*x)^2
+	init     = Init(mesh,ηGN,vGN)
+	model = WhithamGreenNaghdi(param;SGN=true, ktol=0, iterate=true, precond = false)
+	problem = Problem(model, init, param)
+
+	@time solve!( problem )
+
+	(ηfin,vfin,ufin)   =  mapfro(model,last(problem.data.U))
+	(ηinit,vinit,uinit) = mapfro(model,first(problem.data.U))
+
+
+	E(η,v,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.*v)
+	E1(η,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.^2 .+param.μ/3*(1 .+ param.ϵ*η).^3 .*(Dx(u).^2))
+	E2(η,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.^2 .-param.μ/3*u.*DxF((1 .+ param.ϵ*η).^3 .*(Dx(u))))
+	dE(η1,u1,v1,η2,u2,v2) = sum(η1.^2-η2.^2) + sum((1 .+ param.ϵ*η1).*u1.*v1 - (1 .+ param.ϵ*η2).*u2.*v2)
+	dE1(η1,u1,η2,u2) = sum(η1.^2-η2.^2) + sum((1 .+ param.ϵ*η1).*u1.^2 - (1 .+ param.ϵ*η2).*u2.^2) +
+			param.μ/3*sum(u1.*Dx((1 .+ param.ϵ*η1).^3 .*(Dx(u1)))-u2.*Dx((1 .+ param.ϵ*η2).^3 .*(Dx(u2))))
+	dE2(η1,u1,η2,u2) = sum(η1.^2-η2.^2) + sum((1 .+ param.ϵ*η1).*u1.^2 - (1 .+ param.ϵ*η2).*u2.^2) +
+			param.μ/3*sum((1 .+ param.ϵ*η1).^3 .*(Dx(u1).^2) - (1 .+ param.ϵ*η2).^3 .*(Dx(u2).^2))
+
+	print(string("final energy minus initial energy: ",dE(ηGN,uGN,vGN,ηfin,ufin,vfin),"\n"))
+	print(string("final energy minus initial energy: ",dE1(ηGN,uGN,ηfin,ufin),"\n"))
+	print(string("final energy minus initial energy: ",dE2(ηGN,uGN,ηfin,ufin),"\n"))
+
+	print(string("final energy minus initial energy: ",dE(ηinit,uinit,vinit,ηfin,ufin,vfin),"\n"))
+	print(string("final energy minus initial energy: ",dE1(ηinit,uinit,ηfin,ufin),"\n"))
+	print(string("final energy minus initial energy: ",dE2(ηinit,uinit,ηfin,ufin),"\n"))
+
+
+	#p = plot(layout=(2,1))
+	#fig_problem!( p,problem)
+
+	plt = plot(layout=(1,2))
+	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(vinit))));
+			title = "frequency",
+			label = "initial")
+	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(vfin))));
+			label = "final")
+	plot!(plt[1,2],mesh.x,ufin-solu.(mesh.x.-param.c*param.T,param.c,param.ϵ,param.μ);
+			title = string("error at time t=",problem.times.tfin),
+			label="difference")
+	display(plt)
+
+	savefig("fig7iv.pdf");
+	#save(problem,"fig7")
 end
-function solu(x,c,ϵ,μ)
-	c*solη(x,c,ϵ,μ) / (1 + ϵ * solη(x,c,ϵ,μ))
-end
-mesh=Mesh(param)
-ηGN= solη.(mesh.x,param.c,param.ϵ,param.μ)
-hGN=(1 .+ param.ϵ*ηGN)
-uGN= solu.(mesh.x,param.c,param.ϵ,param.μ)
-Dx(v) = ifft(1im*mesh.k .* fft(v))
-vGN= uGN - param.μ/3 ./hGN .* real.(Dx(hGN.^3 .*Dx(uGN)))
-
-init     = Init(mesh,ηGN,vGN)
-model = WhithamGreenNaghdi(param;SGN=true, ktol=1e-14)
-problem = Problem(model, init, param,RK4_naive(param))
-@time solve!( problem )
-
-(ηfin,vfin,ufin)=mapfro(model,problem.data.U[end])
-
-E(η,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.^2 .+param.μ/3*(1 .+ param.ϵ*η).^3 .*Dx(u).^2)
-E(η,v,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.*v)
-
-print(string("final energy minus initial energy: ",E(ηfin,vfin,ufin)-E(ηGN,vGN,uGN)))
-print(string("final energy minus initial energy: ",E(ηfin,ufin)-E(ηGN,uGN)))
-
-
-p = plot(layout=(2,1))
-fig_problem!( p,problem)
-
-plt = plot(layout=(1,2))
-plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(vGN))));
-		title = "frequency",
-		label = "initial")
-plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(vfin))));
-		label = "final")
-plot!(plt[1,2],mesh.x,ufin-solu.(mesh.x.-param.c*param.T,param.c,param.ϵ,param.μ);
-		title = "error",
-		label="difference")
-
-aaa
-
-
-function figure1()
-	param = ( μ  = 1,
-			ϵ  = 1,
-        	N  = 2^8,
-            L  = 10*π,
-						)
+figure7()
+#------ Figure 8
+function figure8()
+	param = ( μ  = 1, ϵ  = 1, c = 2,
+	    L  = 10*π, N  = 2^10,
+		T  = 0.1, dt = 1/2000, ns=50
+		)
 	mesh = Mesh(param)
-	ηGN(c)= sol(mesh.x,c,param.ϵ,param.μ)
-	uGN(c)= c*ηGN(c)./(1 .+ param.ϵ*ηGN(c))
+	function solη(x,c,ϵ,μ)
+		(c^2-1)/ϵ*sech(sqrt(3*(c^2-1)/(c^2)/μ)/2*x)^2
+	end
+	η(c,x0)= solη.(mesh.x .-x0,c,param.ϵ,param.μ)
+	u(c,x0)= c*η(c,x0)./(1 .+ param.ϵ*η(c,x0))
 
-	(η,u) = SolitaryWaveWhithamGreenNaghdi(
-				mesh, merge(param,(c=1.1,)), ηGN(1.1);
-				method=2, α = 0,
-				tol =  1e-16, max_iter=4,
-				ktol =1e-11, gtol = 1e-16,
-				iterative = true, q=1,
-				verbose = false, SGN = false)
+	(ηinit,uinit) = SolitaryWaveWhithamGreenNaghdi(
+			mesh, param, η(param.c,0);
+			method=2, α = 1,
+			tol =  1e-13, max_iter=10,
+			iterative = true, q=1,
+			verbose = false, SGN = false)
+	(ηfinexact,ufinexact) = SolitaryWaveWhithamGreenNaghdi(
+			mesh, param, η(param.c,param.c*param.T);
+			method=2, α = 1,
+			tol =  1e-13, max_iter=10,
+			iterative = true, q=1,
+			verbose = false, SGN = false)
 
-	plt = plot(layout=(1,2))
-	plot!(plt[1,1], mesh.x, [u uGN(1.1)];
-	  title="c=1.1",
-	  label=["WGN" "SGN"])
+	hinit = 1 .+ param.ϵ*ηinit
+	F₁ 	= tanh.(sqrt(param.μ)*abs.(mesh.k))./(sqrt(param.μ)*abs.(mesh.k))
+	F₁[1]= 1                 # Differentiation
+	F₀   = 1im * sqrt.(3*(1 ./F₁ .- 1)).*sign.(mesh.k)
+	DxF(v) = real.(ifft(F₀ .* fft(v)))
+	vinit= uinit - 1/3 ./hinit .* (DxF(hinit.^3 .*DxF(uinit)))
 
-	plot!(plt[1,2], fftshift(mesh.k),
-	  log10.(abs.(fftshift(fft(u))));
-	  title="frequency",
-	  label="WGN")
-end
+	init     = Init(mesh,ηinit,vinit)
+	model = WhithamGreenNaghdiKlein(param;SGN=false, ktol=0*1e-16, iterate=true, precond = false)
+	problem = Problem(model2, init, param)
 
-#---- Figure 2
-function figure2()
-	param = ( μ  = 1,
-		ϵ  = 1,
-      	N  = 2^10,
-        L  = 10*π,)
-	mesh = Mesh(param)
-	ηGN(c)= sol(mesh.x,c,param.ϵ,param.μ)
-	uGN(c)= c*ηGN(c)./(1 .+ param.ϵ*ηGN(c))
+	@time solve!( problem )
 
-	(η,u) = SolitaryWaveWhithamGreenNaghdi(
-				mesh, merge(param,(c=2,)), ηGN(2);
-				method=2, α = 0,
-				tol =  1e-12, max_iter=10,
-				iterative = true, q=1,
-				verbose = true, SGN = false)
-	plt = plot(layout=(1,2))
-	plot!(plt[1,1], mesh.x, [u uGN(2)];
-	  title="c=2",
-	  label=["WGN" "SGN"])
-	plot!(plt[1,2], fftshift(mesh.k),
-	  log10.(abs.(fftshift(fft(u))));
-	  title="frequency",
-	  label="WGN")
-end
+	E(η,v,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.*v)
+	E1(η,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.^2 .+1/3*(1 .+ param.ϵ*η).^3 .*(DxF(u).^2))
+	E2(η,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.^2 .-1/3*u.*DxF((1 .+ param.ϵ*η).^3 .*(DxF(u))))
+	dE(η1,u1,v1,η2,u2,v2) = sum(η1.^2-η2.^2) + sum((1 .+ param.ϵ*η1).*u1.*v1 - (1 .+ param.ϵ*η2).*u2.*v2)
+	dE1(η1,u1,η2,u2) = sum(η1.^2-η2.^2) + sum((1 .+ param.ϵ*η1).*u1.^2 - (1 .+ param.ϵ*η2).*u2.^2) +
+			1/3*sum(u1.*DxF((1 .+ param.ϵ*η1).^3 .*(DxF(u1)))-u2.*DxF((1 .+ param.ϵ*η2).^3 .*(DxF(u2))))
+	dE2(η1,u1,η2,u2) = sum(η1.^2-η2.^2) + sum((1 .+ param.ϵ*η1).*u1.^2 - (1 .+ param.ϵ*η2).*u2.^2) +
+			1/3*sum((1 .+ param.ϵ*η1).^3 .*(DxF(u1).^2) - (1 .+ param.ϵ*η2).^3 .*(DxF(u2).^2))
 
-#---- Figure 3
-function figure3()
-	param = ( μ  = 1,
-		ϵ  = 1,
-      	N  = 2^10,
-        L  = 10*π,)
-	mesh = Mesh(param)
-	ηGN(c)= sol(mesh.x,c,param.ϵ,param.μ)
-	uGN(c)= c*ηGN(c)./(1 .+ param.ϵ*ηGN(c))
+	(ηfin,vfin,ufin)   =  mapfro(model,last(problem.data.U))
+	print(string("final energy minus initial energy: ",dE(ηinit,uinit,vinit,ηfin,ufin,vfin),"\n"))
+	print(string("final energy minus initial energy: ",dE1(ηinit,uinit,ηfin,ufin),"\n"))
+	print(string("final energy minus initial energy: ",dE2(ηinit,uinit,ηfin,ufin),"\n"))
 
-	(η,u) = SolitaryWaveWhithamGreenNaghdi(
-				mesh, merge(param,(c=20,)), ηGN(20);
-				method=2, α = 1, #ici α = 1 évite des oscillations important si c = 3 ou c = 20
-				tol =  1e-14, max_iter=15,
-				iterative = false, q=1,
-				verbose = true, SGN = false)
+	(ηinit,vinit,uinit) = mapfro(model,first(problem.data.U))
+	print(string("final energy minus initial energy: ",dE(ηinit,uinit,vinit,ηfin,ufin,vfin),"\n"))
+	print(string("final energy minus initial energy: ",dE1(ηinit,uinit,ηfin,ufin),"\n"))
+	print(string("final energy minus initial energy: ",dE2(ηinit,uinit,ηfin,ufin),"\n"))
 
 	plt = plot(layout=(1,2))
-	plot!(plt[1,1], mesh.x, [u uGN(20)];
-	  title="c=20",
-	  label=["WGN" "SGN"])
-	plot!(plt[1,2], fftshift(mesh.k),
-	  log10.(abs.(fftshift(fft(u))));
-	  title="frequency",
-	  label="WGN")
-end
-#---- Figure 4
-function figure4()
-	param = ( μ  = 1,
-		ϵ  = 1,
-    	N  = 2^10,
-      	L  = 10*π,)
-	mesh = Mesh(param)
-	ηGN(c)= sol(mesh.x,c,param.ϵ,param.μ)
-	uGN(c)= c*ηGN(c)./(1 .+ param.ϵ*ηGN(c))
+	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(vinit))));
+			title = "frequency",
+			label = "initial")
+	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(vfin))));
+			label = "final")
+	plot!(plt[1,2],mesh.x,ufin-ufinexact;
+			title = string("error at time t=",problem.times.tfin),
+			label="difference")
+	display(plt)
 
-	(η,u) = SolitaryWaveWhithamGreenNaghdi(
-				mesh, merge(param,(c=100,)), ηGN(100);
-				method=3, α = 1,
-				tol =  1e-10, max_iter=10,
-				iterative = false, q=1,
-				verbose = true, SGN = false)
-
-	plt = plot(layout=(1,2))
-	plot!(plt[1,1], mesh.x, [u/100 uGN(100)/100];
-	  title="c=100",
-	  label=["WGN" "SGN"])
-	plot!(plt[1,2], fftshift(mesh.k),
-	  log10.(abs.(fftshift(fft(u/100))));
-	  title="frequency",
-	  label="WGN")
-  end
-
-#------ Figure 6
-function figure6()
-	c=20
-	ϵ,μ,α=1,1,0
-	L,N=10*π,2^10
-	mesh = Mesh(L,N)
-	k,x=mesh.k,mesh.x
-	F₁ 	= tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k))
-	F₁[1] 	= 1
-	F₀       = 1im * sqrt.(3*(1 ./F₁ .- 1)).*sign.(k)
-	x₀ = mesh.x[1]
-	FFT = exp.(-1im*k*(x.-x₀)');
-	IFFT = exp.(1im*k*(x.-x₀)')/length(x);
-	M₀ = IFFT * Diagonal( F₀ )* FFT
-	M(v) = Diagonal( v )
-	guess = sol(mesh.x,c,ϵ,μ)
-	u = c*guess./(1 .+ ϵ*guess)
-	dxu = real.(ifft(1im*k.*fft(u)))
-	dxu ./= norm(dxu,2)
-	hu = c ./(c .- ϵ*u)
-	Fu = hu.* real.(ifft(F₀.*fft(u)))
-	F2u = real.(ifft(F₀.*fft(hu.^2 .* Fu ) ))
-	Du = c ./hu .+ 2*ϵ/3 * F2u ./ hu .+ ϵ^2/c * hu .* Fu.^2 .- (hu.^2)/c
-	Jac = (-1/3 *M(1 ./ hu.^2 )* M₀ * M(hu.^3)* (c*M₀ .+ 3*ϵ * M( Fu ))
-					.+ ϵ * M( hu .* Fu ) * M₀
-					.+ M( Du ) .+ α*M( hu.^2 )*dxu*dxu' *M(1 ./ hu.^2 ) )
-	Jacstar = -1/3 *M(1 ./ hu.^2 )* M₀ * M(hu.^3)* c*M₀
-
-	plt = plot(layout=(1,2))
-	surface!(plt[1,1],fftshift(k),fftshift(k)[N:-1:1],log10.(abs.(FFT*Jac*IFFT)))
-	surface!(plt[1,2],fftshift(k),fftshift(k)[N:-1:1],log10.(abs.(FFT*Jacstar*IFFT)))
+	#savefig("fig8s.pdf");
+	#save(problem,"fig8s")
 end
 
-#------ Other experiments
-# barycentric Lagrangian interpolation (4.2) in https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-function P(X,dc,u₀,u₁,u₂)
-	(u₀/(2*(X/dc+2))-u₁/(X/dc+1)+u₂/(2*X/dc))/(1/(2*(X/dc+2))-1/(X/dc+1)+1/(2*X/dc))
-end
-
-# function solve!(η₀,η₁,η₂,c,old_dc,new_dc)
-# 		tη₀ = copy(η₀)
-# 		tη₁ = copy(η₁)
-# 		tη₂ = copy(η₂)
-# 		η₀ .= tη₂
-# 		η₁ .= SolitaryWaveWhithamGreenNaghdi(mesh, merge(param,(c=c+1*new_dc,)), P.(1*new_dc,old_dc,tη₀,tη₁,tη₂);
-# 			tol =  1e-12, max_iter=20,
-# 			iterative = false, verbose = true)[1]
-# 		η₂ .= SolitaryWaveWhithamGreenNaghdi(mesh, merge(param,(c=c+2*new_dc,)), P.(2*new_dc,old_dc,tη₀,tη₁,tη₂);
-# 			tol =  1e-12, max_iter=20,
-# 			iterative = false, verbose = true)[1]
-# end
-
-function solve(c,method)
-	SolitaryWaveWhithamGreenNaghdi(
-				mesh, merge(param,(c=c,)), ηGN(c),
-				method = method ;
-				tol =  1e-10, max_iter=10,
-				iterative = false,
-				verbose = true, GN = false)[1]
-end
-
-
-function solve!(η₀,η₁,η₂,c,dc,method)
-		tη₂ = copy(η₂)
-		η₂ .= SolitaryWaveWhithamGreenNaghdi(mesh, merge(param,(c=c,)), P.(dc,dc,η₀,η₁,η₂), method=method;
-				tol =  1e-10, max_iter=5, q=1, α=1,
-				iterative = false, verbose = false, GN = false)[1]
-		η₀ .= η₁
-		η₁ .= tη₂
-end
-
-#------- Calculs
-η₀ = solve(17,3)
-η₁ = solve(18,3)
-η₂ = solve(19,3)
-for cs = range(20; step = 1, stop = 100)
-	print(string("c = ",cs,"\n"))
-	solve!(η₀,η₁,η₂,cs,1,1)
-end
-
-plot(mesh.x,[η η₂	])
-
-plt = plot(layout=(1,2))
-plot!(plt[1,1], mesh.x, [sη₂-η₂	])
-
-plot!(plt[1,2], fftshift(mesh.k),
-	  log10.(abs.(fftshift(fft(η₂))))
-	  )
-
-sη₁=copy(η₁);
-sη₂=copy(η₂);
-sη₃=copy(η₃);
-
-η₀ = real.(ifft(interpolate(fft(sη₁),mesh.k)))
-
-
-
-
-plot(mesh.x,η₀)
-
-plot(mesh.k,log10.(abs.(real.(fft(η₁)))))
-
-function interpolate(η,k)
-	z=Complex.(zeros(length(k)))
-	z[1:Int(length(η)/2)].=η[1:Int(length(η)/2)]
-	z[length(z):-1:length(z)-Int(length(η)/2)+1].=η[length(η):-1:length(η)-Int(length(η)/2)+1]
-	return length(k)/length(η).*z
-end
-
-
-
-
-#---------------- Evolution in time
-init=Init(mesh,η,v)
-
-model  = fdBoussinesq(param)
-solver   = RK4(param,model)
-problem = Problem(model, init, param, solver);
-
-@time solve!( problem )
-
-p = plot(layout=(2,1))
-fig_problem!( p, problem )
-display(p)
-
-plot(mesh.x,[η-mapfro(model,problem.data.U[end])[1]])
-
-@time create_animation( problem )
+figure8()

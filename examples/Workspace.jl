@@ -6,21 +6,19 @@
 include("../src/dependencies.jl")
 
 #----
-param = ( μ  = .2,
-			ϵ  = 0.2,
-        	N  = 2^8,
+param = ( μ  = 0.5,
+			ϵ  = 0.5,
+        	N  = 2^9,
             L  = 10,
             T  = 5,
             dt = 0.01,
-			α = 1/2,
-			SGN = false,)
+			α = 1/2,)
 
 init     = BellCurve(merge(param,(θ = 2,)))
-model = WhithamGreenNaghdi(param)
+model = WhithamGreenNaghdi(param;iterate=true)
+problem1 = Problem(model, init, param)
 
-problem = Problem(model, init, param)
-
-@time solve!( problem )
+@time solve!( problem1 )
 
 model2 = fdBoussinesq(param)
 problem2 = Problem(model2, init, param)
@@ -31,7 +29,10 @@ problem3 = Problem(model3, init, param)
 @time solve!( problem3 )
 
 p = plot(layout=(2,1))
-fig_problem!( p, problem, 10)
+fig_problem!( p, problem1, 10)
+fig_problem!( p, problem2, 10)
+fig_problem!( p, problem3, 10)
+
 display(p)
 
 
