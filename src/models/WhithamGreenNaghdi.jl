@@ -138,7 +138,7 @@ function mapto(m::WhithamGreenNaghdi, data::InitialData)
 
 	U = [m.Π⅔ .* fft(data.η(m.x)) m.Π⅔ .*fft(data.v(m.x))]
 	U[abs.(U).< m.ktol ].=0
-
+	return U
 
 end
 

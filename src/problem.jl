@@ -1,7 +1,7 @@
 export Problem
 
 """
-    `Problem( model, initial, param; solver)`
+    Problem( model, initial, param; solver)
 
 Builds an initial-value problem which can then be solved (integrated in time) through `solve!( problem )`
 
@@ -52,12 +52,12 @@ end
 export solve!
 
 """
-    `solve!( problem)`
+    solve!( problem )
 
 Solves (i.e. integrates in time) an initial-value problem
 
 The argument `problem` should be of type `:: Problem`.
-It may be buit, e.g., by `Problem( model, initial, param)`
+It may be buit, e.g., by `Problem(model, initial, param)`
 
 """
 function solve!(problem :: Problem)
@@ -77,6 +77,14 @@ function solve!(problem :: Problem)
             push!(problem.data.U,copy(U))
         end
 
+    elseif length(problem.times.ts) > 25
+        L = 1:problem.times.ns
+        @showprogress 1 for j in J
+            for l in L
+                step!(problem.solver, problem.model, U, dt)
+            end
+            push!(problem.data.U,copy(U))
+        end
     else
         L = 1:problem.times.ns
         for j in J

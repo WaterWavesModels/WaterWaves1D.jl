@@ -57,15 +57,15 @@ function convert(::Type{Problem}, p :: ProblemSave)
         model = fdBoussinesq(param)
     elseif p.model == :WaterWaves
         model = WaterWaves(param)
+    elseif p.model == :WhithamGreenNaghdi
+        model = WhithamGreenNaghdi(param)
+    elseif p.model == :WhithamGreenNaghdiKlein
+        model = WhithamGreenNaghdiKlein(param)
     end
 
-    if p.initial == :BellCurve
-        initial = BellCurve(param)
-    elseif p.initial == :HighFreq
-        initial = HighFreq(param)
-    elseif p.initial == :Random
-        initial = Random(param)
-    end
+    mesh=Mesh(param)
+    U=first(p.data.U)
+    initial = Init(mesh,U[:,1],U[:,2])
 
     if p.solver == :RK4
         solver = RK4(param)
