@@ -63,6 +63,7 @@ It may be buit, e.g., by `Problem(model, initial, param)`
 function solve!(problem :: Problem)
 
     @show problem.param
+    @show problem.model.label
 
     U = copy(last(problem.data.U))
 

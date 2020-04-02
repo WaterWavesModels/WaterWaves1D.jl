@@ -81,13 +81,13 @@ function (m::WhithamGreenNaghdiSym)(U::Array{Complex{Float64},2})
 	#m.ffthv .= fft(m.h.*m.v)
 	if m.iterate == false
 		m.L .= Symmetric(Diagonal( m.h ) - 1/3 * m.M₀ * Diagonal( m.h.^3 ) * m.M₀)
-		m.u .= m.L \ (m.h.*m.v)
+		m.u .= m.L \ (m.h .* m.v)
 	elseif m.iterate == true
         function LL(u)
             m.h .* u - 1/3 * ifft( m.F₀ .* fft( m.h.^3 .* ifft( m.F₀ .* fft( u ) ) ) )
 		end
 		#m.u = m.v
-		cg!( m.u, LinearMap(LL, length(m.h); issymmetric=true) , (m.h.*m.v) ;
+		cg!( m.u, LinearMap(LL, length(m.h); issymmetric=true) , (m.h .* m.v) ;
 				Pl = m.Precond,
 				verbose = false,
 				tol = m.gtol )
@@ -109,7 +109,7 @@ function mapto(m::WhithamGreenNaghdiSym, data::InitialData)
 	m.η .= Complex.(data.η(m.x))
 	m.v .= Complex.(data.v(m.x))
 	m.h .= 1 .+ m.ϵ*m.η
-	m.L .= Symmetric(Diagonal( m.h ) - 1/3 * m.M₀ * Diagonal( m.h.^3 ) * m.M₀)
+	m.L .= Diagonal( m.h ) - 1/3 * m.M₀ * Diagonal( m.h.^3 ) * m.M₀
 	m.u .= m.L \ (m.h.*m.v)
 	return [m.η m.v]
 
@@ -121,8 +121,17 @@ end
 """
 function mapfro(m::WhithamGreenNaghdiSym,
 	       datum::Array{Complex{Float64},2})
-	   		m.h .= 1 .+ m.ϵ*datum[:,1]
-			m.L .= Symmetric(Diagonal( m.h ) - 1/3 * m.M₀ * Diagonal( m.h.^3 ) * m.M₀)
-
-		   real.(datum[:,1]),real.(datum[:,2]),real.(m.L \ (m.h.*datum[:,2]))
+		    m.η .= datum[:,1]
+	   		m.h .= 1 .+ m.ϵ*m.η
+			m.v .= datum[:,2]
+			#m.L .= Symmetric(Diagonal( m.h ) - 1/3 * m.M₀ * Diagonal( m.h.^3 ) * m.M₀)
+			function LL(u)
+	            m.h .* u - 1/3 * ifft( m.F₀ .* fft( m.h.^3 .* ifft( m.F₀ .* fft( u ) ) ) )
+			end
+			#m.u = m.v
+			cg!( m.u, LinearMap(LL, length(m.h); issymmetric=true) , (m.h.*m.v) ;
+					Pl = m.Precond,
+					verbose = false,
+					tol = m.gtol )
+		   real.(m.η),real.(m.v),real.(m.u)
 end

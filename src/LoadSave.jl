@@ -57,6 +57,8 @@ function convert(::Type{Problem}, p :: ProblemSave)
         model = WaterWaves(param)
     elseif p.model == :WhithamGreenNaghdi
         model = WhithamGreenNaghdi(param)
+    elseif p.model == :WhithamGreenNaghdiSym
+        model = WhithamGreenNaghdiSym(param)
     elseif p.model == :WhithamGreenNaghdiKlein
         model = WhithamGreenNaghdiKlein(param)
     end
