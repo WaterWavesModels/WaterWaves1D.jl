@@ -15,19 +15,16 @@ mutable struct WhithamGreenNaghdiSym <: AbstractModel
     ∂ₓ      :: Vector{Complex{Float64}}
     Π⅔      :: BitArray{1}
 	Id 	    :: BitArray{2}
-	FFT 	:: Array{Complex{Float64},2}
-	IFFT 	:: Array{Complex{Float64},2}
-	IFFTF₀ 	:: Array{Complex{Float64},2}
-	F₀FFT 	:: Array{Complex{Float64},2}
+	M₀  	:: Array{Complex{Float64},2}
     h    	:: Vector{Complex{Float64}}
 	u    	:: Vector{Complex{Float64}}
 	v    	:: Vector{Complex{Float64}}
-	fftη    :: Vector{Complex{Float64}}
-	fftu   :: Vector{Complex{Float64}}
+	η       :: Vector{Complex{Float64}}
+	fftu    :: Vector{Complex{Float64}}
 	ffthv  	:: Vector{Complex{Float64}}
 	hdu    	:: Vector{Complex{Float64}}
 	L   	:: Array{Complex{Float64},2}
-	Precond :: Diagonal{Float64,Array{Float64,1}}
+	Precond :: Any
 	iterate :: Bool
 	ktol 	:: Real
 	gtol 	:: Real
@@ -48,57 +45,59 @@ mutable struct WhithamGreenNaghdiSym <: AbstractModel
 		x₀ = mesh.x[1]
 
 		∂ₓ	=  1im * mesh.k
-		F₁ 	= tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k))
-		F₁[1] 	= 1                 # Differentiation
 		if SGN == true
-	                F₀ = sqrt(μ)*∂ₓ
+			F₁ 	= 1 ./ (1 .+ μ/3*k.^2)
+			F₀ = sqrt(μ)*∂ₓ
 	    else
-	                F₀ = 1im * sqrt.(3*(1 ./F₁ .- 1)).*sign.(k)
-		end
-		if precond == true
-			Precond = Diagonal( 1 ./  F₁ )
-		else
-			Precond = Diagonal( 1 .+ μ*k.^2 ) #Diagonal( ones(size(k)) )
+			F₁ 	= tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k))
+			F₁[1] 	= 1
+			F₀ = 1im * sqrt.(3*(1 ./F₁ .- 1)).*sign.(k)
 		end
         Π⅔ 	= abs.(mesh.k) .<= mesh.kmax * (1-dealias/(2+dealias)) # Dealiasing low-pass filter
 		FFT = exp.(-1im*k*(x.-x₀)')
         IFFT = exp.(1im*k*(x.-x₀)')/length(x)
-		IFFTF₀ = IFFT * Diagonal( F₀ )
-		F₀FFT = Diagonal( F₀ ) * FFT
+		M₀ = IFFT * Diagonal( F₀ ) *IFFT
         Id = Diagonal(ones(size(x)));
+		if precond == true
+			Precond = lu(IFFT*Diagonal( 1 ./ F₁ )*FFT)
+		else
+			Precond = Identity() #Diagonal( ones(size(k)) )
+		end
 		h = zeros(Complex{Float64}, mesh.N)
-		u, v, fftη, fftu, ffthv, hdu = (similar(h),).*ones(6)
+		u, v, η, fftu, ffthv, hdu = (copy(h),).*ones(6)
 		L = similar(FFT)
 
-        new(label, datasize, μ, ϵ, x, F₀, ∂ₓ, Π⅔, Id, FFT, IFFT, IFFTF₀, F₀FFT, h, u, v, fftη, fftu, ffthv, hdu, L, Precond, iterate, ktol, gtol )
+        new(label, datasize, μ, ϵ, x, F₀, ∂ₓ, Π⅔, Id, M₀, h, u, v, η, fftu, ffthv, hdu, L, Precond, iterate, ktol, gtol )
     end
 end
 
 
 function (m::WhithamGreenNaghdiSym)(U::Array{Complex{Float64},2})
-	m.fftη .= U[:,1]
-	m.v .= ifft(U[:,2])
-	#m.fftη[abs.(m.fftη).< m.ktol ].=0   # Krasny filter
+	m.η .= U[:,1]
+	m.v .= U[:,2]
+	#m.η[abs.(m.η).< m.ktol ].=0   # Krasny filter
 	#m.fftv[abs.(m.fftv).< m.ktol ].=0   # Krasny filter
-	m.h .= 1 .+ m.ϵ*ifft(m.fftη)
-	m.ffthv .= fft(m.h.*m.v)
+	m.h .= 1 .+ m.ϵ*U[:,1]
+	#m.ffthv .= fft(m.h.*m.v)
 	if m.iterate == false
-		m.L .= m.FFT * Diagonal( m.h ) * m.IFFT - 1/3 * m.F₀FFT * Diagonal( m.h.^3 ) * m.IFFTF₀
-		m.fftu .= m.L \ m.ffthv
+		m.L .= Symmetric(Diagonal( m.h ) - 1/3 * m.M₀ * Diagonal( m.h.^3 ) * m.M₀)
+		m.u .= m.L \ (m.h.*m.v)
 	elseif m.iterate == true
-        function LL(hatu)
-            fft( m.h .* ifft(hatu) )- 1/3 * m.F₀ .* fft( m.h.^3 .* ifft( m.F₀ .* hatu ) )
+        function LL(u)
+            m.h .* u - 1/3 * ifft( m.F₀ .* fft( m.h.^3 .* ifft( m.F₀ .* fft( u ) ) ) )
 		end
-		m.fftu .= gmres( LinearMap(LL, length(m.h); issymmetric=false, ismutating=false) , m.ffthv ;
+		#m.u = m.v
+		cg!( m.u, LinearMap(LL, length(m.h); issymmetric=true) , (m.h.*m.v) ;
 				Pl = m.Precond,
+				verbose = false,
 				tol = m.gtol )
 	end
-	m.u .= ifft(m.fftu)
-	m.hdu .= m.h .* ifft(m.F₀.*m.fftu)
+	#m.u .= ifft(m.fftu)
+	m.hdu .= m.h .* ifft(m.F₀.* fft(m.u))
 
-   	U[:,1] .= -m.∂ₓ.*fft(m.h.*m.u)
-   	U[:,2] .= -m.∂ₓ.*(m.fftη .+ m.ϵ * m.Π⅔.*fft( m.u.*m.v
-					.- 1/2 * m.u.^2 .- 1/2 * m.hdu.^2 ) )
+   	U[:,1] .= -ifft(m.∂ₓ.*m.Π⅔.*fft(m.h.*m.u))
+   	U[:,2] .= -ifft(m.∂ₓ.*m.Π⅔.*fft(m.η .+ m.ϵ * m.u.*m.v
+					.- m.ϵ/2 * m.u.^2 .- m.ϵ/2 * m.hdu.^2 ) )
 	# U[abs.(U).< m.ktol ].=0 # Krasny filter
 end
 
@@ -107,8 +106,12 @@ end
 
 """
 function mapto(m::WhithamGreenNaghdiSym, data::InitialData)
-
-	[m.Π⅔ .* fft(data.η(m.x)) m.Π⅔ .*fft(data.v(m.x))]
+	m.η .= Complex.(data.η(m.x))
+	m.v .= Complex.(data.v(m.x))
+	m.h .= 1 .+ m.ϵ*m.η
+	m.L .= Symmetric(Diagonal( m.h ) - 1/3 * m.M₀ * Diagonal( m.h.^3 ) * m.M₀)
+	m.u .= m.L \ (m.h.*m.v)
+	return [m.η m.v]
 
 end
 
@@ -118,8 +121,8 @@ end
 """
 function mapfro(m::WhithamGreenNaghdiSym,
 	       datum::Array{Complex{Float64},2})
-	   		m.h .= 1 .+ m.ϵ*ifft(datum[:,1])
-		    m.L .= m.Id - 1/3 * m.FFT * Diagonal( 1 ./m.h ) * m.IFFT*  m.F₀FFT * Diagonal( m.h.^3 ) * m.IFFTF₀
+	   		m.h .= 1 .+ m.ϵ*datum[:,1]
+			m.L .= Symmetric(Diagonal( m.h ) - 1/3 * m.M₀ * Diagonal( m.h.^3 ) * m.M₀)
 
-		   real(ifft(datum[:,1])),real(ifft(datum[:,2])),real(ifft(m.L \ datum[:,2]))
+		   real.(datum[:,1]),real.(datum[:,2]),real.(m.L \ (m.h.*datum[:,2]))
 end

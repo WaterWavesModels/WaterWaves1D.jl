@@ -58,7 +58,7 @@ mutable struct WhithamGreenNaghdiKlein <: AbstractModel
 		if precond == true
 			Precond = Diagonal( 1 ./  F₁ )
 		else
-			Precond = Diagonal( 1 .+ μ*k.^2 ) #Diagonal( ones(size(k)) )
+			Precond = Diagonal( 1 .+ μ/3*k.^2 ) #Diagonal( ones(size(k)) )
 		end
         Π⅔ 	= abs.(mesh.k) .<= mesh.kmax * (1-dealias/(2+dealias)) # Dealiasing low-pass filter
 		FFT = exp.(-1im*k*(x.-x₀)');
