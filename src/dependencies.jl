@@ -1,7 +1,8 @@
 using ProgressMeter
 using FFTW, LinearAlgebra
-using LinearMaps,IterativeSolvers # only for SolitaryWaveWhitham.jl
+using LinearMaps,IterativeSolvers 
 using Statistics #only for function mean in WaterWaves.jl...
+using JLD #only for LoadSave
 ENV["PLOTS_USE_ATOM_PLOTPANE"] = "false"
 # Note that javascript-based libraries (for example: PlotlyJS) cannot be shown in the PlotPane due to issues within Atom's internals.
 using Plots
