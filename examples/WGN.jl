@@ -194,8 +194,8 @@ function figure10(p::Int,c::Real;sav=[])
 	param = ( μ  = 1, ϵ  = 1, c=c,
 				N  = 2^10,
 	            L  = 10*π,
-	            T  = 1.5,
-	            dt = 1.5/10^3, ns=100)
+	            T  = 1,
+	            dt = 15/10^4, ns=1)
 	function solη(x,c,ϵ,μ)
 		(c^2-1)/ϵ*sech(sqrt(3*(c^2-1)/(c^2)/μ)/2*x)^2
 	end
@@ -217,7 +217,7 @@ function figure10(p::Int,c::Real;sav=[])
 	vGN= uGN - param.μ/3 ./hGN .* (Dx(hGN.^3 .*Dx(uGN)))
 
 	init = Init(mesh,ηGN,vGN)
-	model = WhithamGreenNaghdi(param;SGN=true, ktol=0, iterate=false, precond = false)
+	model = WhithamGreenNaghdi(param;SGN=true, ktol=1e-11, iterate=true, precond = false, dealias = 1)
 	problem = Problem(model, init, param)
 
 	@time solve!( problem )
@@ -241,14 +241,17 @@ function figure10(p::Int,c::Real;sav=[])
 	print(string("normalized error: ",dE(ηinit,uinit,ηfin,ufin)/E(ηinit,uinit),"\n"))
 
 	plt = plot(layout=(1,2))
-	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(vinit))));
+	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(ηinit))));
 			title = "frequency",
 			label = "initial")
-	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(vfin))));
+	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(ηfin))));
 			label = "final")
+	plot!(plt[1,2],mesh.x,[ηfin solη.(mesh.x.-c*param.T,c,param.ϵ,param.μ)];
+			title = string("at time t=",problem.times.tfin),
+			label=["zeta" "unperturbed soliton"])
 	plot!(plt[1,2],mesh.x,[ufin solu.(mesh.x.-c*param.T,c,param.ϵ,param.μ)];
 			title = string("at time t=",problem.times.tfin),
-			label=["solution" "unperturbed soliton"])
+			label=["u" "unperturbed soliton"])
 	display(plt)
 	if sav != [] savefig(string("fig9a-",sav,".pdf")); end
 
@@ -270,22 +273,20 @@ function figure10(p::Int,c::Real;sav=[])
 		return real.(ifft(fftu))
 	end
 	@showprogress 1 for i in 1:length(ts)
-		us[:,i].=compute(problem.data.U[i][:,1],problem.data.U[i][:,2])
+		#us[:,i].=compute(problem.data.U[i][:,1],problem.data.U[i][:,2])
+		us[:,i].=real.(ifft(problem.data.U[i][:,1]))
 	end
 
-	plt=plot()
-	my_cg = cgrad([:blue,:green])
-	surface!(plt,x,ts,us',view_angle=(20,30), color = my_cg)
-	display(plt)
-	if sav != [] savefig(string("fig9b-",sav,".pdf")); end
+	# plt=plot()
+	# my_cg = cgrad([:blue,:green])
+	# surface!(plt,x,ts,us',view_angle=(20,30), color = my_cg)
+	# display(plt)
+	# if sav != [] savefig(string("fig9b-",sav,".pdf")); end
 
 	plt = plot()
 	plot!(plt,ts,maximum(abs.(us),dims=1)',
 			title="L infty norm",
-			label="u")
-	#plot!(plt[1,2],ts,[normalize(mini,Inf) normalize(L2,Inf)],
-	#		title=["minimizer functional" "L2 norm"],
-	#		label="")
+			label="")
 	display(plt)
 
 	if sav != [] savefig(string("fig10-",sav,".pdf")); end
