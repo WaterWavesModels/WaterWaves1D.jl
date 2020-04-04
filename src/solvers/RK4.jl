@@ -11,7 +11,7 @@ export step!
 - `k=2   ::Int` is optional (default = 2) and determines the number of equations solved
 
 """
-mutable struct RK4 <: TimeSolver
+struct RK4 <: TimeSolver
 
     Uhat :: Array{Complex{Float64},2}
     dU   :: Array{Complex{Float64},2}
