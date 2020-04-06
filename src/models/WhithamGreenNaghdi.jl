@@ -40,7 +40,7 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 	x   	:: Vector{Float64}
     F₀   	:: Vector{Complex{Float64}}
     ∂ₓ      :: Vector{Complex{Float64}}
-    Π⅔      :: BitArray{1}
+    Π⅔      :: Vector{Float64}
 	Id 	    :: BitArray{2}
 	FFT 	:: Array{Complex{Float64},2}
 	IFFT 	:: Array{Complex{Float64},2}
@@ -86,7 +86,9 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		else
 			Precond = Diagonal( 1 .+ μ/3*k.^2 ) #Diagonal( ones(size(k)) )
 		end
-        Π⅔ 	= abs.(mesh.k) .<= mesh.kmax * (1-dealias/(2+dealias)) # Dealiasing low-pass filter
+		K = mesh.kmax * (1-dealias/(2+dealias))
+		delias(k) = min(max(0,(K - k) /20),1)
+        Π⅔ 	= delias.( abs.(mesh.k))   # Dealiasing low-pass filter
 		FFT = exp.(-1im*k*(x.-x₀)');
         IFFT = exp.(1im*k*(x.-x₀)')/length(x);
 		M₀ = IFFT * Diagonal( F₀ ) * FFT
@@ -111,16 +113,16 @@ function (m::WhithamGreenNaghdi)(U::Array{Complex{Float64},2})
 		m.fftu .= m.L \ m.fftv
 	elseif m.iterate == true
         function LL(hatu)
-            hatu- 1/3 *fft( 1 ./m.h .* ifft( m.F₀ .* fft( m.h.^3 .* ifft( m.F₀ .* hatu ) ) ) )
+            hatu- 1/3 *m.Π⅔.*fft( 1 ./m.h .* ifft( m.F₀ .* m.Π⅔.*fft( m.h.^3 .* ifft( m.F₀ .* hatu ) ) ) )
 		end
 		m.fftu .= gmres( LinearMap(LL, length(m.h); issymmetric=false, ismutating=false) , m.fftv ;
 				Pl = m.Precond,
 				tol = m.gtol )
 	end
 	m.u .= ifft(m.fftu)
-	m.hdu .= m.h .* ifft(m.F₀.*m.fftu)
-   	U[:,1] .= -m.∂ₓ.*fft(m.h .* m.u)
-	U[:,2] .= -m.∂ₓ.*(m.fftη .+ m.ϵ * m.Π⅔.*fft( m.u.*ifft(m.fftv)
+	m.hdu .= m.h .* ifft(m.Π⅔.*m.F₀.*m.fftu)
+   	U[:,1] .= -m.∂ₓ.*m.Π⅔.*(m.fftu .+ m.ϵ * fft(ifft(m.fftη) .* m.u))
+	U[:,2] .= -m.∂ₓ.*m.Π⅔.*(m.fftη .+ m.ϵ * fft( m.u.*ifft(m.fftv)
 					.- 1/2 * m.u.^2 .- 1/2 * m.hdu.^2 ) )
 	U[abs.(U).< m.ktol ].=0
 end

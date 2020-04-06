@@ -8,7 +8,6 @@ include("../src/dependencies.jl")
 
 
 #---- Figure 14
-
 """
 	figure14(ε,SGN;sav)
 
@@ -93,70 +92,220 @@ function figure14(ε::Real,SGN::Bool;sav=[])
 	end
 end
 
-figure14(0.01,true;sav="SGN")
+#figure14(0.01,true;sav="SGN")
 
-function sol(x,c,ϵ,μ)
-	(c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*x).^2
-end
-ηGN(c)= sol(mesh.x,c,param.ϵ,param.μ)
-uGN(c)= c*ηGN(c)./(1 .+ param.ϵ*ηGN(c))
+#---- Figure 14
+"""
+	figure14(ε,SGN;sav)
 
+Dispersive shock wave for SGN or WGN.
+- Argument `ε` is the square root of the shallowness parameter
+- Solves SGN if `SGN` is `true`, WGN otherwise.
+- Optional argument 'sav': if a string is given, then saves data and figures.
 
-#---- Figure 1
-function figure1()
-	param = ( μ  = 1,
-			ϵ  = 1,
-        	N  = 2^8,
-            L  = 10*π,
-						)
-	mesh = Mesh(param)
-	ηGN(c)= sol(mesh.x,c,param.ϵ,param.μ)
-	uGN(c)= c*ηGN(c)./(1 .+ param.ϵ*ηGN(c))
+"""
+function figure17(ε::Real,SGN::Bool;sav=[])
+	param = ( μ  = ε^2, ϵ  = 1,
+				N  = 2^11,
+	            L  = 5*π,
+	            T  = 10,
+	            dt = 10/10^3, ns=10,
+				dealias = 1,
+				SGN=SGN,
+				ktol=0*1e-6,
+				gtol=1e-12,
+				iterate=true, precond = false)
 
-	(η,u) = SolitaryWaveWhithamGreenNaghdi(
-				mesh, merge(param,(c=1.1,)), ηGN(1.1);
-				method=2, α = 0,
-				tol =  1e-16, max_iter=4,
-				ktol =1e-11, gtol = 1e-16,
-				iterative = true, q=1,
-				verbose = false, SGN = false)
+	mesh=Mesh(param)
+	function krasny!(v)
+		v[abs.(v).<1e-14].=0
+		return v
+	end
+	Dx(v) = real.(ifft( 1im*mesh.k.* krasny!(fft(v))))
+	Dx2(v) = real.(ifft( -(mesh.k.^2) .* fft(v)))
+	Dx2(v) = Dx(Dx(v))
+	ϵ = param.ϵ;μ=param.μ;
+	w = - (mesh.x).* exp.(-(mesh.x).^2)
+	u = w .+ μ/12 *Dx2(w) .+ μ*ϵ/6* w.*Dx2(w)
+	η = u .+ ϵ/4*u.^2 .- μ/6* Dx2( u+3*ϵ/4* u.^2) .- μ*ϵ/6 * u .* Dx2(u) .- 5*μ*ϵ/48 * Dx(u).^2
+	h=1 .+ param.ϵ*η
+	if SGN == true
+		F₀ = sqrt(param.μ)*1im*mesh.k
+	else
+		F₁ 	= tanh.(sqrt(param.μ)*abs.(mesh.k))./(sqrt(param.μ)*abs.(mesh.k))
+		F₁[1]= 1                 # Differentiation
+		F₀   = 1im * sqrt.(3*(1 ./F₁ .- 1)).*sign.(mesh.k)
+	end
+	DxF(v) = real.(ifft(F₀ .* fft(v)))
+	v= u - 1/3 ./h .* (DxF(h.^3 .*DxF(u)))
+
+	init     = Init(mesh,η,v)
+	model = WhithamGreenNaghdi(param;SGN=param.SGN, dealias = param.dealias, ktol=param.ktol, gtol=param.gtol, iterate=param.iterate, precond = param.precond)
+	problem = Problem(model, init, param)
+
+	@time solve!( problem )
+
+	if sav != [] save(problem,string("fig17-",sav)); end
+
+	fftηfin=last(problem.data.U)[:,1]
 
 	plt = plot(layout=(1,2))
-	plot!(plt[1,1], mesh.x, [u uGN(1.1)];
-	  title="c=1.1",
-	  label=["WGN" "SGN"])
+	#plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(ηinit))));
+	#		title = "frequency",
+	#		label = "initial")
+	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fftηfin)));
+			title = "frequency",
+			label = "final")
+	#plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fftηfin)));
+	#		label = "final 2")
+	plot!(plt[1,2],mesh.x,real.(ifft(fftηfin));
+			title = string("surface time t=",problem.times.tfin),
+			label="eta")
+	display(plt)
 
-	plot!(plt[1,2], fftshift(mesh.k),
-	  log10.(abs.(fftshift(fft(u))));
-	  title="frequency",
-	  label="WGN")
-	savefig("fig1.pdf");
+
+	ts = problem.times.ts
+	us=zeros(param.N,length(ts));
+	@showprogress 1 for i in 1:length(ts)
+		#us[:,i].=compute(problem.data.U[i][:,1],problem.data.U[i][:,2])
+		us[:,i].=real.(ifft(problem.data.U[i][:,1]))
+	end
+
+	plt=plot()
+	my_cg = cgrad([:blue,:green])
+	surface!(plt,mesh.x,ts,us',view_angle=(20,30), color = my_cg)
+	display(plt)
+	if sav != [] savefig(string("fig17-",sav,".pdf")); end
+
+	# plt = plot()
+	# plot!(plt,ts,maximum(abs.(us),dims=1)',
+	# 		title="L infty norm",
+	# 		label="")
+	# display(plt)
+
+
+	anim = @animate for i in range(1,length(ts))
+		plt = plot(layout=(1,2))
+		plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(problem.data.U[i][:,1])));
+				title = "frequency",
+				label = "")
+		plot!(plt[1,2],mesh.x,us[:,i];
+				title = string("surface at time t=",problem.times.ts[i]),
+				label="")
+		#display(plt)
+		#ylims!(plt[1,2],-1,18)
+		#xlims!(plt[1,2],-10,75)
+		#next!(prog)
+	end
+
+	gif(anim, string("anim-",sav,".gif"), fps=15); nothing
+
+	# if sav != []
+	#
+	# 	savefig(string("fig17-",sav,".pdf"));
+	# 	p = plot(layout=(2,1))
+	# 	fig_problem!(p,problem)
+	# 	savefig(string("fig18-",sav,".pdf"));
+	# 	save(problem,string("fig17-",sav));
+	# end
 end
 
-#---- Figure 2
-function figure2()
-	param = ( μ  = 1,
-		ϵ  = 1,
-      	N  = 2^10,
-        L  = 10*π,)
-	mesh = Mesh(param)
-	ηGN(c)= sol(mesh.x,c,param.ϵ,param.μ)
-	uGN(c)= c*ηGN(c)./(1 .+ param.ϵ*ηGN(c))
+function figure19(λ::Real,SGN::Bool;sav=[])
+	param = ( μ  = 1, ϵ  = 1,
+				N  = 2^12,
+	            L  = 3*π,
+	            T  = 0.6,
+	            dt = 0.6/10^4, ns=100,
+				dealias = 1,
+				SGN=SGN,
+				ktol=0*1e-6,
+				gtol=1e-12,
+				iterate=true, precond = true)
 
-	(η,u) = SolitaryWaveWhithamGreenNaghdi(
-				mesh, merge(param,(c=2,)), ηGN(2);
-				method=2, α = 0,
-				tol =  1e-12, max_iter=10,
-				iterative = true, q=1,
-				verbose = true, SGN = false)
+	mesh=Mesh(param)
+	η = -λ*exp.(-mesh.x.^2)
+	u = -mesh.x.*exp.(-mesh.x.^2)
+	h=1 .+ param.ϵ*η
+	if SGN == true
+		F₀ = sqrt(param.μ)*1im*mesh.k
+	else
+		F₁ 	= tanh.(sqrt(param.μ)*abs.(mesh.k))./(sqrt(param.μ)*abs.(mesh.k))
+		F₁[1]= 1                 # Differentiation
+		F₀   = 1im * sqrt.(3*(1 ./F₁ .- 1)).*sign.(mesh.k)
+	end
+	DxF(v) = real.(ifft(F₀ .* fft(v)))
+	v= u - 1/3 ./h .* (DxF(h.^3 .*DxF(u)))
+
+	init     = Init(mesh,η,v)
+	model = WhithamGreenNaghdi(param;SGN=param.SGN, dealias = param.dealias, ktol=param.ktol, gtol=param.gtol, iterate=param.iterate, precond = param.precond)
+	problem = Problem(model, init, param)
+
+	@time solve!( problem )
+
+	if sav != [] save(problem,string("fig19-",sav)); end
+
+	fftηfin=last(problem.data.U)[:,1]
+
 	plt = plot(layout=(1,2))
-	plot!(plt[1,1], mesh.x, [u uGN(2)];
-	  title="c=2",
-	  label=["WGN" "SGN"])
-	plot!(plt[1,2], fftshift(mesh.k),
-	  log10.(abs.(fftshift(fft(u))));
-	  title="frequency",
-	  label="WGN")
-	savefig("fig2.pdf");
+	#plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(ηinit))));
+	#		title = "frequency",
+	#		label = "initial")
+	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fftηfin)));
+			title = "frequency",
+			label = "final")
+	#plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fftηfin)));
+	#		label = "final 2")
+	plot!(plt[1,2],mesh.x,real.(ifft(fftηfin));
+			title = string("surface time t=",problem.times.tfin),
+			label="eta")
+	display(plt)
 
+
+	ts = problem.times.ts
+	us=zeros(param.N,length(ts));
+	@showprogress 1 for i in 1:length(ts)
+		#us[:,i].=compute(problem.data.U[i][:,1],problem.data.U[i][:,2])
+		us[:,i].=real.(ifft(problem.data.U[i][:,1]))
+	end
+
+	plt=plot()
+	my_cg = cgrad([:blue,:green])
+	surface!(plt,mesh.x,ts,us',view_angle=(20,30), color = my_cg)
+	display(plt)
+	if sav != [] savefig(string("fig19t-",sav,".pdf")); end
+
+	# plt = plot()
+	# plot!(plt,ts,maximum(abs.(us),dims=1)',
+	# 		title="L infty norm",
+	# 		label="")
+	# display(plt)
+	function plotfig(i)
+		plt = plot(layout=(1,2))
+		plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(problem.data.U[i][:,1])));
+				title = "frequency",
+				label = "")
+		plot!(plt[1,2],mesh.x,us[:,i];
+				title = string("surface at time t=",problem.times.ts[i]),
+				label="")
+	end
+	if sav != []
+		anim = @animate for i in range(1,length(ts))
+			plotfig(i)
+			#display(plt)
+			#ylims!(plt[1,2],-1,18)
+			#xlims!(plt[1,2],-10,75)
+			#next!(prog)
+		end
+		gif(anim, string("anim-",sav,".gif"), fps=15); nothing
+	end
+	plotfig(length(ts))
+	if sav != [] savefig(string("fig19f-",sav,".pdf")); end
+	#
+	# 	savefig(string("fig17-",sav,".pdf"));
+	# 	p = plot(layout=(2,1))
+	# 	fig_problem!(p,problem)
+	# 	savefig(string("fig18-",sav,".pdf"));
+	# 	save(problem,string("fig17-",sav));
+	# end
 end
+figure19(0.9,false,sav="l09WGNdealias4")

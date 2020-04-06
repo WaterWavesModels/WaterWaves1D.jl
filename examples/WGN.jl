@@ -185,17 +185,30 @@ perturbed SGN solitary wave integrated in time.
 - Optional argument 'sav': if a string is given, then saves data and figures.
 
 """
+p=4
+c=4
+sav="c4tp01"
 function figure10(p::Int,c::Real;sav=[])
 	if p == 1
 		λ = 0.99
 	elseif p == 2
 		λ = 1.01
+	elseif p == 3
+		λ = -0.01
+	elseif p == 4
+		λ = +0.01
 	end
-	param = ( μ  = 1, ϵ  = 1, c=c,
-				N  = 2^10,
-	            L  = 10*π,
-	            T  = 1,
-	            dt = 15/10^4, ns=1)
+	param = ( μ = 1, ϵ = 1, c = c, λ = λ,
+				N  = 2^12,
+	            L  = 30*π,
+	            T  = 20,
+	            dt = 20/10^4, ns=100,
+				dealias = 0,
+				SGN=true,
+				ktol=0*1e-6,
+				gtol=1e-12,
+				iterate=true,
+				precond = false)
 	function solη(x,c,ϵ,μ)
 		(c^2-1)/ϵ*sech(sqrt(3*(c^2-1)/(c^2)/μ)/2*x)^2
 	end
@@ -208,16 +221,14 @@ function figure10(p::Int,c::Real;sav=[])
 	uGN=solu.(mesh.x,c,param.ϵ,param.μ)
 	if p == 1 || p == 2
 		uGN= λ*uGN
-	elseif p == 3
-		uGN .-= 0.01*exp.(-mesh.x.^2)
-	elseif p == 4
-		uGN .+= 0.1*exp.(-mesh.x.^2)
+	elseif p == 3 || p == 4
+		uGN .+= λ*exp.(-mesh.x.^2)
 	end
 	Dx(v) = real.(ifft(1im*mesh.k .* fft(v)))
 	vGN= uGN - param.μ/3 ./hGN .* (Dx(hGN.^3 .*Dx(uGN)))
 
 	init = Init(mesh,ηGN,vGN)
-	model = WhithamGreenNaghdi(param;SGN=true, ktol=1e-11, iterate=true, precond = false, dealias = 1)
+	model = WhithamGreenNaghdi(param;SGN=param.SGN, dealias = param.dealias, ktol=param.ktol, gtol=param.gtol, iterate=param.iterate, precond = param.precond)
 	problem = Problem(model, init, param)
 
 	@time solve!( problem )
@@ -291,8 +302,8 @@ function figure10(p::Int,c::Real;sav=[])
 
 	if sav != [] savefig(string("fig10-",sav,".pdf")); end
 end
-figure10(4,10,sav="test1")  # use with p = 1,2,3 or 4 (type of perturbation); and c=2 (velocity)
-figure12(4,10)  # use with p = 1,2,3 or 4 (type of perturbation); and c=2 (velocity)
+#figure10(4,10,sav="test1")  # use with p = 1,2,3 or 4 (type of perturbation); and c=2 (velocity)
+#figure12(4,10)  # use with p = 1,2,3 or 4 (type of perturbation); and c=2 (velocity)
 
 #------ Figure 12
 

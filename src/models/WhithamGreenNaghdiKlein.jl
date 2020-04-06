@@ -95,7 +95,7 @@ function (m::WhithamGreenNaghdiKlein)(U::Array{Complex{Float64},2})
 	m.I1 .= m.h.*ifft(m.F₀.*m.fftu)
 	m.I2 .= ifft(m.F₀.*fft(m.h.^2 .*m.I1))
 
-   	U[:,1] .= -m.∂ₓ.*fft(m.h .* m.u)
+	U[:,1] .= -m.∂ₓ.*(m.fftu .+ m.ϵ * m.Π⅔.*fft(ifft(m.fftη) .* m.u))
    	U[:,2] .= m.∂ₓ.*(-m.fftη .- m.ϵ/2 * m.Π⅔.*fft(m.u.^2)
 					.+ m.ϵ * m.Π⅔.*fft(1/3 * m.u ./ m.h .* m.I2 .+ 1/2 * m.I1.^2))
 	#U[:,2] .= -m.∂ₓ.*(m.fftη .+ m.ϵ * m.Π⅔.*fft( m.u.*ifft(m.fftv)
