@@ -53,7 +53,7 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 	fftu  	:: Vector{Complex{Float64}}
 	hdu    	:: Vector{Complex{Float64}}
 	L   	:: Array{Complex{Float64},2}
-	Precond :: Diagonal{Float64,Array{Float64,1}}
+	Precond :: Any
 	iterate :: Bool
 	ktol 	:: Real
 	gtol 	:: Real
@@ -65,6 +65,8 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		else
 			label = string("Whitham-Green-Naghdi")
 		end
+		@info label
+
 		datasize = 2
 		μ 	= param.μ
 		ϵ 	= param.ϵ
@@ -84,11 +86,23 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		if precond == true
 			Precond = Diagonal( 1 ./  F₁ )
 		else
-			Precond = Diagonal( 1 .+ μ/3*k.^2 ) #Diagonal( ones(size(k)) )
+			Precond = Diagonal( 1 .+ 100*μ/3*k.^2 )
+			#Precond = lu( exp.(-1im*k*x') ) # #Diagonal( ones(size(k)) )
 		end
 		K = mesh.kmax * (1-dealias/(2+dealias))
 		delias(k) = min(max(0,(K - k) /20),1)
         Π⅔ 	= delias.( abs.(mesh.k))   # Dealiasing low-pass filter
+		if dealias == 0
+			@info "no dealiasing"
+			Π⅔ 	= ones(size(mesh.k))
+		else
+			@info "dealiasing"
+		end
+		if iterate == true
+			@info "GMRES method"
+		else
+			@info "LU decomposition"
+		end
 		FFT = exp.(-1im*k*(x.-x₀)');
         IFFT = exp.(1im*k*(x.-x₀)')/length(x);
 		M₀ = IFFT * Diagonal( F₀ ) * FFT
@@ -139,6 +153,10 @@ See documentation of `WhithamGreenNaghdi` for more details.
 function mapto(m::WhithamGreenNaghdi, data::InitialData)
 
 	U = [m.Π⅔ .* fft(data.η(m.x)) m.Π⅔ .*fft(data.v(m.x))]
+	# m.fftη .= U[:,1]
+	# m.h .= 1 .+ m.ϵ*ifft(m.fftη)
+	# m.L .= m.Id - 1/3 * m.FFT * Diagonal( 1 ./m.h ) * m.M₀ * Diagonal( m.h.^3 ) * m.IFFTF₀
+	# m.Precond = lu(m.L)
 	U[abs.(U).< m.ktol ].=0
 	return U
 
