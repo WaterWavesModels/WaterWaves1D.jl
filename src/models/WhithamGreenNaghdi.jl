@@ -90,8 +90,7 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 			#Precond = lu( exp.(-1im*k*x') ) # #Diagonal( ones(size(k)) )
 		end
 		K = mesh.kmax * (1-dealias/(2+dealias))
-		delias(k) = min(max(0,(K - k) /20),1)
-        Π⅔ 	= delias.( abs.(mesh.k))   # Dealiasing low-pass filter
+		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
 		if dealias == 0
 			@info "no dealiasing"
 			Π⅔ 	= ones(size(mesh.k))

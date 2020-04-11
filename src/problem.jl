@@ -62,8 +62,8 @@ It may be buit, e.g., by `Problem(model, initial, param)`
 """
 function solve!(problem :: Problem)
 
-    @show problem.param
-    @show problem.model.label
+    @info string("\nNow solving the model ",problem.model.label,"\n",
+        "with parameters\n",problem.param)
 
     U = copy(last(problem.data.U))
 
