@@ -7,23 +7,29 @@ export HighFreq
 """
 struct HighFreq <: InitialData
 
-    h :: Vector{Float64}
-    u :: Vector{Float64}
+    η
+    v
 
     function HighFreq(p :: NamedTuple)
 
-    	mesh  = Mesh(p)
-        h = zeros(size(mesh.x))
-        for j in p.freq
-            if j==0
-                h.+= cos.(mesh.x)
-            else
-                h.+=(1/(2*pi*j)^(p.s))*cos.(2*pi*j*mesh.x)
+        function η( x :: Vector{Float64} )
+
+            h = zeros(size(x))
+            for j in p.freq
+                if j==0
+                    h.+= cos.(x)
+                else
+                    h.+=(1/(2*pi*j)^(p.s))*cos.(2*pi*j*x)
+                end
             end
+            h .*= exp.(-((abs.(x)).^2)*log(2))
+            return h
         end
-        h .*= exp.(-((abs.(mesh.x)).^2)*log(2))
-        u = mesh.x.*h
-    	new( h,u )
+
+        function v( x :: Vector{Float64} )
+            return u = x.*η(x)
+        end
+    	new( η,v )
 
     end
 
