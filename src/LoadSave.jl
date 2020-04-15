@@ -1,5 +1,3 @@
-using JLD
-
 export ProblemSave, save, load
 
 struct ProblemSave
@@ -11,7 +9,7 @@ struct ProblemSave
     data    :: Data
 
     function ProblemSave(model, initial, param, solver, data)
-    
+
          new( model, initial, param, solver, deepcopy(data))
 
     end
@@ -51,21 +49,29 @@ function convert(::Type{Problem}, p :: ProblemSave)
         model = Matsuno_naive(param)
     elseif p.model == :Matsuno_mod_naive
         model = Matsuno_mod_naive(param)
+    elseif p.model == :Boussinesq
+        model = Boussinesq(param)
+    elseif p.model == :fdBoussinesq
+        model = fdBoussinesq(param)
+    elseif p.model == :WaterWaves
+        model = WaterWaves(param)
+    elseif p.model == :WhithamGreenNaghdi
+        model = WhithamGreenNaghdi(param)
+    elseif p.model == :WhithamGreenNaghdiSym
+        model = WhithamGreenNaghdiSym(param)
+    elseif p.model == :WhithamGreenNaghdiKlein
+        model = WhithamGreenNaghdiKlein(param)
     end
 
-    if p.initial == :BellCurve
-        initial = BellCurve(param)
-    elseif p.initial == :HighFreq
-        initial = HighFreq(param)
-    elseif p.initial == :Random
-        initial = Random(param)
-    end
+    mesh=Mesh(param)
+    U=first(p.data.U)
+    initial = Init(mesh,U[:,1],U[:,2])
 
     if p.solver == :RK4
         solver = RK4(param)
     end
 
-    pb = Problem(model, initial, param, solver)
+    pb = Problem(model, initial, param; solver = solver)
     pb.data = p.data
 
     return pb

@@ -1,8 +1,9 @@
 #md # # Animation
 #md #
-#md # deep water problem solved with Cheng model animation
+#md # shallow water problem solved with Boussinesq-Whitham model animation
 #md #
-#md # [`notebook`](@__NBVIEWER_ROOT_URL__/notebooks/animation.ipynb)
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/notebooks/animation.ipynb)
+#md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/notebooks/animation.ipynb)
 
 #using ShallowWaterModels
 include("../src/dependencies.jl")
@@ -15,11 +16,12 @@ param = ( μ  = 1/20,
           L  = 10,
           T  = 8.0,
           dt = 0.001,
-          theta = 2)
+          α  = 1,
+          θ  = 2)
 
-initial = BellCurve(param)
+initial = Bellcurve(param)
 solver  = RK4(param)
-model   = fdBoussinesq_1(param)
+model   = fdBoussinesq(param)
 problem = Problem( model, initial, param )
 
 #----

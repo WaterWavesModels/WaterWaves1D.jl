@@ -2,6 +2,7 @@ ENV["GKSwstype"]="100"
 
 using Test
 using ShallowWaterModels
+#include("../src/dependencies.jl")
 using JLD
 
 param = ( ϵ  = 1/2,
@@ -9,12 +10,11 @@ param = ( ϵ  = 1/2,
           L  = 10,
           T  = 5,
           dt = 0.01,
-          theta = 1)
+          θ = 1)
 
 init     = BellCurve(param)
-solver   = RK4(param)
 cheng    = CGBSW(param)
-problem1 = Problem( cheng, init, param, solver )
+problem1 = Problem( cheng, init, param; solver = RK4(param) )
 
 @testset "LoadSave" begin
 
@@ -36,7 +36,7 @@ end
     @test param.L  == 10
     @test param.T  == 5
     @test param.dt == 0.01
-    @test param.theta == 1
+    @test param.θ == 1
 
 end
 
@@ -48,7 +48,7 @@ solve!(problem1)
 end
 
 matsuno  = Matsuno(param)
-problem2 = Problem(matsuno, init, param, solver )
+problem2 = Problem(matsuno, init, param )
 
 solve!( problem2 )
 

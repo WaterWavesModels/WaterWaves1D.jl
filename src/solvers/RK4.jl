@@ -2,44 +2,33 @@ export RK4
 export step!
 
 """
-    RK4(params)
+    `RK4(param,model;k)`
 
-Runge-Kutta fourth order solver.
+    Constructs an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
+
+- `param ::NamedTuple` should contain a value N (number of collocation points)
+- `model ::AbstractModel` is optional and determines the number of equations solved
+- `k=2   ::Int` is optional (default = 2) and determines the number of equations solved
 
 """
-mutable struct RK4 <: TimeSolver
+struct RK4 <: TimeSolver
 
     Uhat :: Array{Complex{Float64},2}
     dU   :: Array{Complex{Float64},2}
 
     function RK4( param::NamedTuple, model::AbstractModel )
 
-        n = param.N
-
-        Uhat = zeros(Complex{Float64}, (n,model.datasize))
-        dU   = zeros(Complex{Float64}, (n,model.datasize))
+        Uhat = zeros(Complex{Float64}, (param.N,model.datasize))
+        dU   = zeros(Complex{Float64}, (param.N,model.datasize))
 
         new( Uhat, dU)
 
     end
 
-    function RK4( param::NamedTuple )
+    function RK4( param::NamedTuple; k=2::Int )
 
-        n = param.N
-
-        Uhat = zeros(Complex{Float64}, (n,2))
-        dU   = zeros(Complex{Float64}, (n,2))
-
-        new( Uhat, dU)
-
-    end
-
-    function RK4( param::NamedTuple, k::Int )
-
-        n = param.N
-
-        Uhat = zeros(Complex{Float64}, (n,k))
-        dU   = zeros(Complex{Float64}, (n,k))
+        Uhat = zeros(Complex{Float64}, (param.N,k))
+        dU   = zeros(Complex{Float64}, (param.N,k))
 
         new( Uhat, dU)
 
@@ -52,7 +41,7 @@ function step!(s  :: RK4,
                U  :: Array{Complex{Float64},2},
                dt :: Float64)
 
-    
+
     s.Uhat .= U
     f!( s.Uhat )
     s.dU .= s.Uhat
