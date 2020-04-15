@@ -64,6 +64,9 @@ function run_gpu( param, steps )
     U = copy(last(data.U))
     dt = times.dt
 
+   	d_fftη = CuArray(U[:,1])
+   	d_fftu = CuArray(U[:,2])
+    d_fftv = copy(d_fftu)
     d_h    = CuArray(model.h)
     d_u    = CuArray(model.u)
     d_hdu  = CuArray(model.hdu)
@@ -78,9 +81,10 @@ function run_gpu( param, steps )
 
     function compute!(m::WhithamGreenNaghdi, U )
     
-    	d_fftη = CuArray(U[:,1])
-    	d_fftu = CuArray(U[:,2])
-        d_fftv = copy(d_fftu)
+    	copyto!(d_fftη, U[:,1])
+    	copyto!(d_fftu, U[:,2])
+
+        d_fftv .= d_fftu
     
         fw = CUFFT.plan_fft!(d_fftη)
         bw = CUFFT.plan_ifft!(d_fftv)
@@ -180,8 +184,6 @@ param = (
 # trigger compilation
 run_gpu(param, 1)
 run_cpu(param, 1)
-
-reset_timer!()
 
 @show CUDAdrv.name(CuDevice(0))
 
