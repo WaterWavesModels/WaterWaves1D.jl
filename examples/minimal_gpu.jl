@@ -1,59 +1,45 @@
-using TimerOutputs
 using ProgressMeter
 using FFTW, LinearAlgebra
-using Statistics
-using JLD2, FileIO
-using Printf
 using Test
 using ShallowWaterModels
 
-function run_vincent( param )
+using CUDAdrv
+using CuArrays
+using Adapt
 
-    @timeit "Setup" begin
+function run_cpu( param, steps )
 
-        mesh = Mesh(param) # construct mesh of collocation points, Fourier modes, etc.
+    mesh = Mesh(param) # construct mesh of collocation points, Fourier modes, etc.
+    η = exp.(-(mesh.x) .^ 2)
+    v = zero(η)  # Initial data
+    init = Init(mesh, η, v)
+    times = Times(param.dt, param.T)
+	model = WhithamGreenNaghdi(param; iterate=false)
+    solver = RK4(param, model) 
+    data  = Data(mapto(model, init))
+    U = copy(last(data.U))
+    dt = times.dt
 
-        η = exp.(-(mesh.x) .^ 2)
+    @showprogress 1 for i in 1:steps
 
-        v = zero(η)  # Initial data
+        solver.Uhat .= U
+        model( solver.Uhat )
+        solver.Uhat .= U
+        solver.dU .= solver.Uhat
 
-        init = Init(mesh, η, v)
+        solver.Uhat .= U .+ dt/2 .* solver.Uhat
+        model( solver.Uhat )
+        solver.dU .+= 2 .* solver.Uhat
 
-        times = Times(param.dt, param.T)
+        solver.Uhat .= U .+ dt/2 .* solver.Uhat
+        model( solver.Uhat )
+        solver.dU .+= 2 .* solver.Uhat
 
-	    model = WhithamGreenNaghdi(param; iterate=false)
+        solver.Uhat .= U .+ dt .* solver.Uhat
+        model( solver.Uhat )
+        solver.dU .+= solver.Uhat
 
-        solver = RK4(param, model) 
-
-        data  = Data(mapto(model, init))
-
-        U = copy(last(data.U))
-
-        dt = times.dt
-    end
-
-    @showprogress 1 for i in 1:param.ns
-
-        @timeit "RK4" solver.Uhat .= U
-        @timeit "Model" model( solver.Uhat )
-        @timeit "RK4" solver.Uhat .= U
-        @timeit "RK4" solver.dU .= solver.Uhat
-
-        @timeit "RK4" solver.Uhat .= U .+ dt/2 .* solver.Uhat
-        @timeit "Model" model( solver.Uhat )
-        @timeit "RK4" solver.dU .+= 2 .* solver.Uhat
-
-        @timeit "RK4" solver.Uhat .= U .+ dt/2 .* solver.Uhat
-        @timeit "Model" model( solver.Uhat )
-        @timeit "RK4" solver.dU .+= 2 .* solver.Uhat
-
-        @timeit "RK4" solver.Uhat .= U .+ dt .* solver.Uhat
-        @timeit "Model" model( solver.Uhat )
-        @timeit "RK4" solver.dU .+= solver.Uhat
-
-        @timeit "RK4" U .+= dt/6 .* solver.dU
-
-        @timeit "Diagnostic" push!(data.U, copy(U))
+        U .+= dt/6 .* solver.dU
 
     end
 
@@ -63,104 +49,117 @@ end
 
 
 
-function compute!(m::WhithamGreenNaghdi, U )
 
-	m.h .= U[:,1]
-    ifft!(m.h)
-    m.h .*= m.ϵ
-	m.h .+= 1 
 
+function run_gpu( param, steps )
+
+    mesh = Mesh(param) # construct mesh of collocation points, Fourier modes, etc.
+    η = exp.(-(mesh.x) .^ 2)
+    v = zero(η)  # Initial data
+    init = Init(mesh, η, v)
+    times = Times(param.dt, param.T)
+	model = WhithamGreenNaghdi(param; iterate=false)
+    solver = RK4(param, model) 
+    data  = Data(mapto(model, init))
+    U = copy(last(data.U))
+    dt = times.dt
+
+    d_h    = CuArray(model.h)
+    d_u    = CuArray(model.u)
+    d_hdu  = CuArray(model.hdu)
+    d_fft  = CuArray(model.FFT)
+    d_ifft = CuArray(model.IFFTF₀)
+    d_mo   = CuArray(model.M₀)
+    d_pi   = CuArray(model.Π⅔)
+    d_id   = CuArray(model.Id)
+    d_fo   = CuArray(model.F₀)
+    d_L    = CuArray(model.L)
+    d_dx   = CuArray(model.∂ₓ)
+
+    function compute!(m::WhithamGreenNaghdi, U )
     
-	@timeit "LU" m.L .= m.Id - 1/3 * m.FFT * Diagonal( 1 ./m.h ) * m.M₀ * Diagonal( m.h.^3 ) * m.IFFTF₀
+    	d_fftη = CuArray(U[:,1])
+    	d_fftu = CuArray(U[:,2])
+        d_fftv = copy(d_fftu)
+    
+        fw = CUFFT.plan_fft!(d_fftη)
+        bw = CUFFT.plan_ifft!(d_fftv)
+    
+        d_h .= d_fftη
+        bw * d_h
+        d_h .*= m.ϵ
+    	d_h .+= 1 
+    
+    	d_L .= Diagonal( d_h .* d_h .* d_h ) * d_ifft
+    	d_L .= d_mo * d_L
+    	d_L .= Diagonal( 1 ./ d_h ) * d_L
+    	d_L .= d_fft * d_L
+    	d_L .= d_id - 1/3 * d_L
+    
+        d_L, ipiv = CuArrays.CUSOLVER.getrf!(d_L)
+        CuArrays.CUSOLVER.getrs!('N', d_L, ipiv, d_fftu)
+    
+        d_u .= d_fftu
+        d_hdu .= d_u
+        
+        bw * d_u
+    
+    	d_hdu .*= d_fo
+    	d_hdu .*= d_pi
+        bw * d_hdu
+    	d_hdu .*= d_h 
+    	d_hdu .*= d_hdu
+    	d_hdu .*= 1/2
+    
+        bw * d_fftv
+        d_fftv .*= d_u
+        d_fftv .-= 1/2 .* d_u .* d_u
+        d_fftv .-= d_hdu
+    
+        fw * d_fftv
+        d_fftv .*= m.ϵ
+        d_fftv .+= d_fftη
+        d_fftv .*= d_pi
+        d_fftv .*= d_dx
+    
+        bw * d_fftη
+        d_fftη .*= d_u
+        fw * d_fftη
+        d_fftη .*= m.ϵ
+        d_fftη .+= d_fftu
+        d_fftη .*= d_pi
+        d_fftη .*= d_dx
 
-	m.fftu .= m.L \ view(U,:,2)
-
-	m.u .= ifft(m.fftu)
-
-	m.hdu .= m.fftu
-	m.hdu .*= m.F₀
-	m.hdu .*= m.Π⅔
-    ifft!(m.hdu)
-	m.hdu .*= m.h 
-	m.hdu .*= m.hdu
-	m.hdu .*= 1/2
-
-    m.fftv = U[:,2]
-    ifft!(m.fftv)
-    m.fftv .*= m.u
-    m.fftv .-= 1/2 .* m.u.^2
-    m.fftv .-= m.hdu
-    fft!(m.fftv)
-    m.fftv .*= m.ϵ
-    m.fftv .+= view(U,:,1)
-    m.fftv .*= m.Π⅔ 
-    m.fftv .*= m.∂ₓ
-	U[:,2] .= - m.fftv 
-
-
-    m.fftv .= U[:,1]
-    ifft!(m.fftv)
-    m.fftv .*= m.u
-    fft!(m.fftv)
-    m.fftv .*= m.ϵ
-    m.fftv .+= m.fftu
-    m.fftv .*= m.Π⅔ 
-    m.fftv .*= m.∂ₓ
-   	U[:,1] .= - m.fftv
-
-
-	U[abs.(U).< m.ktol ] .= 0.0
-
-end
-
-
-function run_pierre( param )
-
-    @timeit "Setup" begin
-
-        mesh = Mesh(param) # construct mesh of collocation points, Fourier modes, etc.
-
-        η = exp.(-(mesh.x) .^ 2)
-
-        v = zero(η)  # Initial data
-
-        init = Init(mesh, η, v)
-
-        times = Times(param.dt, param.T)
-
-	    model = WhithamGreenNaghdi(param; iterate=false)
-
-        solver = RK4(param, model) 
-
-        data  = Data(mapto(model, init))
-
-        U = copy(last(data.U))
-
-        dt = times.dt
+        d_fftη .*= -1
+        d_fftv .*= -1
+    
+    	U[:,1] .= Array(d_fftη)
+    	U[:,2] .= Array(d_fftv)
+    
+    	U[abs.(U).< m.ktol ] .= 0.0
+    
     end
 
-    @showprogress 1 for i in 1:param.ns
+    @showprogress 1 for i in 1:steps
 
-        @timeit "RK4" solver.Uhat .= U
-        @timeit "Model" compute!(model, solver.Uhat )
-        @timeit "RK4" solver.Uhat .= U
-        @timeit "RK4" solver.dU .= solver.Uhat
+        solver.Uhat .= U
+        compute!(model, solver.Uhat )
+        solver.Uhat .= U
+        solver.dU .= solver.Uhat
 
-        @timeit "RK4" solver.Uhat .= U .+ dt/2 .* solver.Uhat
-        @timeit "Model" compute!(model, solver.Uhat )
-        @timeit "RK4" solver.dU .+= 2 .* solver.Uhat
+        solver.Uhat .= U .+ dt/2 .* solver.Uhat
+        compute!(model, solver.Uhat )
+        solver.dU .+= 2 .* solver.Uhat
 
-        @timeit "RK4" solver.Uhat .= U .+ dt/2 .* solver.Uhat
-        @timeit "Model" compute!(model, solver.Uhat )
-        @timeit "RK4" solver.dU .+= 2 .* solver.Uhat
+        solver.Uhat .= U .+ dt/2 .* solver.Uhat
+        compute!(model, solver.Uhat )
+        solver.dU .+= 2 .* solver.Uhat
 
-        @timeit "RK4" solver.Uhat .= U .+ dt .* solver.Uhat
-        @timeit "Model" compute!(model, solver.Uhat )
-        @timeit "RK4" solver.dU .+= solver.Uhat
+        solver.Uhat .= U .+ dt .* solver.Uhat
+        compute!(model, solver.Uhat )
+        solver.dU .+= solver.Uhat
 
-        @timeit "RK4" U .+= dt/6 .* solver.dU
-
-        @timeit "Diagnostic" push!(data.U, copy(U))
+        U .+= dt/6 .* solver.dU
 
     end
 
@@ -178,18 +177,15 @@ param = (
         ns = 10,         # stores data every ns time steps
       )
 
-reset_timer!()
-
-@time U_vincent = run_vincent(param)
-
-print_timer()
+# trigger compilation
+run_gpu(param, 1)
+run_cpu(param, 1)
 
 reset_timer!()
 
-@time U_pierre = run_pierre(param)
+@show CUDAdrv.name(CuDevice(0))
 
-print_timer()
+@time U_gpu = run_gpu(param, 100)
+@time U_cpu = run_cpu(param, 100)
 
-println()
-
-@test U_vincent ≈ U_pierre
+@test U_cpu ≈ U_gpu
