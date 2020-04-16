@@ -102,7 +102,7 @@ function (m::PseudoSpectral)(U::Array{Complex{Float64},2})
 		m.v  .= ifft(U[:,2])
 		m.Lphi .= -ifft(m.Q)
 		m.Q += -m.ϵ *m.∂ₓ.*fft(m.η.*ifft(m.fftv)) .+ m.ϵ*m.G₀.*fft(m.η.*m.Lphi)
-		m.R += m.ϵ/2*m.Π.*fft(-m.v.^2 .+ m.Lphi.^2)
+		m.R += m.ϵ/2*fft(-m.v.^2 .+ m.Lphi.^2)
 	end
 	if m.n >= 3
 		m.LzLphi .= ifft(-m.G₀.* fft(m.η.*m.Lphi))
@@ -122,7 +122,7 @@ function (m::PseudoSpectral)(U::Array{Complex{Float64},2})
 				1/4*m.ϵ^3 * m.∂ₓ.*m.∂ₓ.*fft((m.η .* m.Lphi).^2)
 	end
    	U[:,1] .= m.Π⅔.*m.Q/sqrt(m.μ)
-   	U[:,2] .= m.Π⅔.*m.∂ₓ.*m.R/sqrt(m.μ)
+   	U[:,2] .= m.Π⅔.*m.∂ₓ.*m.Π.*m.R/sqrt(m.μ)
 
 end
 
