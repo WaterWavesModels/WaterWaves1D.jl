@@ -1,13 +1,4 @@
-using Pkg
-
-GPU_ENABLED = haskey(Pkg.installed(), "CUDAdrv")
-
-if GPU_ENABLED
-
-    using CUDAdrv, CuArrays, CuArrays.CUFFT
-
-end
-
+using CUDAdrv, CuArrays, CuArrays.CUFFT
 
 export WhithamGreenNaghdiGPU
 
@@ -24,29 +15,24 @@ struct WhithamGreenNaghdiGPU <: AbstractModel
     μ::Real
     ϵ::Real
     x::Vector{Float64}
-    F₀::Vector{Complex{Float64}}
-    ∂ₓ::Vector{Complex{Float64}}
+    F₀::Vector{ComplexF64}
+    ∂ₓ::Vector{ComplexF64}
     Π⅔::Vector{Float64}
     Id::BitArray{2}
-    FFT::Array{Complex{Float64},2}
-    IFFT::Array{Complex{Float64},2}
-    IFFTF₀::Array{Complex{Float64},2}
-    M₀::Array{Complex{Float64},2}
-    h::Vector{Complex{Float64}}
-    u::Vector{Complex{Float64}}
-    fftv::Vector{Complex{Float64}}
-    fftη::Vector{Complex{Float64}}
-    fftu::Vector{Complex{Float64}}
-    hdu::Vector{Complex{Float64}}
-    L::Array{Complex{Float64},2}
+    FFT::Array{ComplexF64,2}
+    IFFTF₀::Array{ComplexF64,2}
+    M₀::Array{ComplexF64,2}
+    ktol::Real
 
 
     function WhithamGreenNaghdiGPU(
         param::NamedTuple;
-        iterate = true,
         SGN = false,
+        ktol = 0,
         dealias = 0,
     )
+
+        @show CUDAdrv.name(CuDevice(0))
 
         if SGN == true
             label = string("Serre-Green-Naghdi")
@@ -81,19 +67,14 @@ struct WhithamGreenNaghdiGPU <: AbstractModel
         else
             @info "dealiasing"
         end
-        if iterate == true
-            @info "GMRES method"
-        else
-            @info "LU decomposition"
-        end
+
+        @info "LU decomposition"
+
         FFT = exp.(-1im * k * (x .- x₀)')
         IFFT = exp.(1im * k * (x .- x₀)') / length(x)
-        M₀ = IFFT * Diagonal(F₀) * FFT
         IFFTF₀ = IFFT * Diagonal(F₀)
+        M₀ = IFFT * Diagonal(F₀) * FFT
         Id = Diagonal(ones(size(x)))
-        h = zeros(Complex{Float64}, mesh.N)
-        u, fftv, fftη, fftu, hdu = (similar(h),) .* ones(5)
-        L = similar(FFT)
 
         new(
             label,
@@ -106,49 +87,41 @@ struct WhithamGreenNaghdiGPU <: AbstractModel
             Π⅔,
             Id,
             FFT,
-            IFFT,
             IFFTF₀,
             M₀,
-            h,
-            u,
-            fftv,
-            fftη,
-            fftu,
-            hdu,
-            L,
+            ktol
         )
     end
 end
 
 
-function (m::WhithamGreenNaghdi)( U, dt )
+function (model::WhithamGreenNaghdiGPU)( U::Array{ComplexF64,2} )
 
     d_fftη = CuArray(U[:, 1])
     d_fftu = CuArray(U[:, 2])
     d_fftv = copy(d_fftu)
-    d_h = CuArray(model.h)
-    d_u = CuArray(model.u)
-    d_hdu = CuArray(model.hdu)
-    d_fft = CuArray(model.FFT)
-    d_ifft = CuArray(model.IFFTF₀)
+    d_h = similar(d_fftu)
+    d_u = similar(d_fftu)
+    d_hdu = similar(d_fftu)
     d_mo = CuArray(model.M₀)
     d_pi = CuArray(model.Π⅔)
     d_id = CuArray(model.Id)
     d_fo = CuArray(model.F₀)
-    d_L = CuArray(model.L)
+    d_L = CuArray(model.FFT)
     d_dx = CuArray(model.∂ₓ)
-
-    d_fftv .= d_fftu
+    d_fft = CuArray(model.FFT) 
+    d_ifft0 = CuArray(model.IFFTF₀)
 
     fw = CUFFT.plan_fft!(d_fftη)
     bw = CUFFT.plan_ifft!(d_fftv)
 
+    d_fftv .= d_fftu
     d_h .= d_fftη
     bw * d_h
-    d_h .*= m.ϵ
+    d_h .*= model.ϵ
     d_h .+= 1
 
-    d_L .= Diagonal(d_h .* d_h .* d_h) * d_ifft
+    d_L .= Diagonal(d_h .* d_h .* d_h) * d_ifft0
     d_L .= d_mo * d_L
     d_L .= Diagonal(1 ./ d_h) * d_L
     d_L .= d_fft * d_L
@@ -175,7 +148,7 @@ function (m::WhithamGreenNaghdi)( U, dt )
     d_fftv .-= d_hdu
 
     fw * d_fftv
-    d_fftv .*= m.ϵ
+    d_fftv .*= model.ϵ
     d_fftv .+= d_fftη
     d_fftv .*= d_pi
     d_fftv .*= d_dx
@@ -183,7 +156,7 @@ function (m::WhithamGreenNaghdi)( U, dt )
     bw * d_fftη
     d_fftη .*= d_u
     fw * d_fftη
-    d_fftη .*= m.ϵ
+    d_fftη .*= model.ϵ
     d_fftη .+= d_fftu
     d_fftη .*= d_pi
     d_fftη .*= d_dx
@@ -194,7 +167,7 @@ function (m::WhithamGreenNaghdi)( U, dt )
     U[:, 1] .= Array(d_fftη)
     U[:, 2] .= Array(d_fftv)
 
-    U[abs.(U).<m.ktol] .= 0.0
+	U[abs.(U) .< model.ktol] .= 0.0
 
 end
 

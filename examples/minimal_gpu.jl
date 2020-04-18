@@ -1,16 +1,17 @@
 using ProgressMeter
 using FFTW, LinearAlgebra
 using Test
-using ShallowWaterModels
 
-function run_cpu( param, steps )
+include("../src/dependencies.jl")
+
+function run_cpu( param )
 
     mesh = Mesh(param) # construct mesh of collocation points, Fourier modes, etc.
     η = exp.(-(mesh.x) .^ 2)
     v = zero(η)  # Initial data
     init = Init(mesh, η, v)
     times = Times(param.dt, param.T)
-	model = WhithamGreenNaghdi(param; iterate=false)
+	model = WhithamGreenNaghdi(param; iterate=true)
     solver = RK4(param, model) 
     data  = Data(mapto(model, init))
     U = copy(last(data.U))
@@ -20,18 +21,18 @@ function run_cpu( param, steps )
 
 	solve!( problem )
 
-    real(problem.U)
+    real(problem.data.U)
 
 end
 
-function run_gpu( param, steps )
+function run_gpu( param )
 
     mesh = Mesh(param) # construct mesh of collocation points, Fourier modes, etc.
     η = exp.(-(mesh.x) .^ 2)
     v = zero(η)  # Initial data
     init = Init(mesh, η, v)
     times = Times(param.dt, param.T)
-	model = WhithamGreenNaghdiGPU(param; iterate=false)
+	model = WhithamGreenNaghdiGPU(param)
     solver = RK4(param, model) 
     data  = Data(mapto(model, init))
     U = copy(last(data.U))
@@ -41,7 +42,7 @@ function run_gpu( param, steps )
 
 	solve!( problem )
 
-    real(problem.U)
+    real(problem.data.U)
 
 end
 
@@ -50,18 +51,14 @@ param = (
         ϵ = 1,
         N = 1024,       # number of collocation points
         L = 10π,        # mesh of size 2L
-        T = 1.0,        # final time
+        T = 0.002,        # final time
         dt = 0.0001,    # timestep
-        ns = 10,         # stores data every ns time steps
+        ns = 1,         # stores data every ns time steps
       )
 
 # trigger compilation
-run_gpu(param, 1)
-run_cpu(param, 1)
+@time U_cpu = run_cpu(param)
+@time U_gpu = run_gpu(param)
 
-@show CUDAdrv.name(CuDevice(0))
+@test U_gpu ≈ U_cpu
 
-@time U_gpu = run_gpu(param, 100)
-@time U_cpu = run_cpu(param, 100)
-
-@test U_cpu ≈ U_gpu
