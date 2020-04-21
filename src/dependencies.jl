@@ -1,6 +1,6 @@
 using ProgressMeter
 using FFTW, LinearAlgebra
-using LinearMaps,IterativeSolvers 
+using LinearMaps,IterativeSolvers
 using Statistics #only for function mean in WaterWaves.jl...
 using JLD #only for LoadSave
 ENV["PLOTS_USE_ATOM_PLOTPANE"] = "false"
@@ -20,6 +20,7 @@ include("initialdata/Random.jl")
 include("initialdata/SolitaryWaveWhitham.jl")
 include("initialdata/SolitaryWaveWhithamBoussinesq.jl")
 include("initialdata/SolitaryWaveWhithamGreenNaghdi.jl")
+include("initialdata/CnoidalWaveWhithamGreenNaghdi.jl")
 include("models/CGBSW.jl")
 include("models/CGBSW_naive.jl")
 include("models/Matsuno.jl")
@@ -32,6 +33,8 @@ include("models/WaterWaves.jl")
 include("models/WhithamGreenNaghdi.jl")
 include("models/WhithamGreenNaghdiKlein.jl")
 include("models/WhithamGreenNaghdiSym.jl")
+include("models/WhithamGreenNaghdiSpectrum.jl")
+
 
 include("LoadSave.jl")
 include("fig.jl")

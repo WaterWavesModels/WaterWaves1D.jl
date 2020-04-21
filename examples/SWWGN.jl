@@ -4,7 +4,12 @@ Reproduces the figures in the work of C. Klein and V. Duchêne
 """
 #using ShallowWaterModels
 include("../src/dependencies.jl")
-
+# function ηGN(x,c,ϵ,μ)
+# 	(c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*x).^2
+# end
+# function uGN(x,c,ϵ,μ)
+# 	c*ηGN(x,c,ϵ,μ)/(1 + ϵ*ηGN(x,c,ϵ,μ))
+# end
 
 #---- Figure 1
 """
@@ -17,34 +22,33 @@ function figure1()
 			ϵ  = 1,
         	N  = 2^8,
             L  = 10*π,
-						)
-	mesh = Mesh(param)
-	function sol(x,c,ϵ,μ)
-		(c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*x).^2
-	end
-	ηGN(c)= sol(mesh.x,c,param.ϵ,param.μ)
-	uGN(c)= c*ηGN(c)./(1 .+ param.ϵ*ηGN(c))
+			c  = 1.1
+				)
 
-	(η,u) = SolitaryWaveWhithamGreenNaghdi(
-				mesh, merge(param,(c=1.1,)), ηGN(1.1);
+	(η,u,v,mesh) = SolitaryWaveWhithamGreenNaghdi(
+				param, [0.];
+				exact = true, SGN = false,
 				method=2, α = 0,
 				tol =  1e-16, max_iter=4,
 				ktol =1e-11, gtol = 1e-16,
 				iterative = true, q=1,
-				verbose = false, SGN = false)
+				verbose = false)
+
+	(ηGN,uGN) = SolitaryWaveWhithamGreenNaghdi(
+				param, [0.];
+				exact = true, SGN = true, max_iter=0)
 
 	plt = plot(layout=(1,2))
-	plot!(plt[1,1], mesh.x, [u uGN(1.1)];
+	plot!(plt[1,1], mesh.x, [u uGN];
 	  title="c=1.1",
 	  label=["WGN" "SGN"])
 
 	plot!(plt[1,2], fftshift(mesh.k),
-	  [log10.(abs.(fftshift(fft(u))))
-	  log10.(abs.(fftshift(fft(uGN(1.1)))))];
+	  [log10.(abs.(fftshift(fft(u)))) log10.(abs.(fftshift(fft(uGN))))];
 	  title="frequency",
-	  label="WGN")
+	  label=["WGN" "SGN"])
 	display(plt)
-	savefig("fig1.pdf");
+	#savefig("fig1.pdf");
 end
 
 #---- Figure 2
@@ -58,30 +62,30 @@ function figure2(c=2)
 	param = ( μ  = 1,
 		ϵ  = 1,
       	N  = 2^10,
-        L  = 10*π,)
-	mesh = Mesh(param)
-	function sol(x,c,ϵ,μ)
-		(c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*x).^2
-	end
-	ηGN(c)= sol(mesh.x,c,param.ϵ,param.μ)
-	uGN(c)= c*ηGN(c)./(1 .+ param.ϵ*ηGN(c))
+        L  = 10*π,
+		c=c)
 
-	(η,u) = SolitaryWaveWhithamGreenNaghdi(
-				mesh, merge(param,(c=c,)), ηGN(c);
+	(η,u,v,mesh) = SolitaryWaveWhithamGreenNaghdi(
+				param, [0.];
+				exact = true, SGN = false,
 				method=2, α = 0,
 				tol =  1e-12, max_iter=10,
 				iterative = true, q=1,
-				verbose = false, SGN = false)
+				verbose = false)
+	(ηGN,uGN) = SolitaryWaveWhithamGreenNaghdi(
+				param, [0.];
+				exact = true, SGN = true, max_iter=0)
+
 	plt = plot(layout=(1,2))
-	plot!(plt[1,1], mesh.x, [u uGN(c)];
+	plot!(plt[1,1], mesh.x, [u uGN];
 	  title=string("c=",c),
 	  label=["WGN" "SGN"])
 	plot!(plt[1,2], fftshift(mesh.k),
-	  [log10.(abs.(fftshift(fft(u)))) log10.(abs.(fftshift(fft(uGN(c)))))];
+	  [log10.(abs.(fftshift(fft(u)))) log10.(abs.(fftshift(fft(uGN))))];
 	  title="frequency",
 	  label=["WGN" "SGN"])
 	display(plt)
-	savefig("fig2.pdf");
+	#savefig("fig2.pdf");
 end
 
 #---- Figure 3
@@ -95,31 +99,31 @@ function figure3(c=20)
 	param = ( μ  = 1,
 		ϵ  = 1,
       	N  = 2^10,
-        L  = 10*π,)
-	mesh = Mesh(param)
-	function sol(x,c,ϵ,μ)
-		(c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*x).^2
-	end
-	ηGN(c)= sol(mesh.x,c,param.ϵ,param.μ)
-	uGN(c)= c*ηGN(c)./(1 .+ param.ϵ*ηGN(c))
+        L  = 10*π,
+		c = c)
 
-	(η,u) = SolitaryWaveWhithamGreenNaghdi(
-				mesh, merge(param,(c=c,)), ηGN(c);
+	(η,u,v,mesh) = SolitaryWaveWhithamGreenNaghdi(
+				param, [0.];
+				exact = true, SGN = false,
 				method=2, α = 1, #ici α = 1 évite des oscillations important si c = 3 ou c = 20
 				tol =  1e-14, max_iter=15,
 				iterative = false, q=1,
-				verbose = true, SGN = false)
+				verbose = true)
+
+	(ηGN,uGN) = SolitaryWaveWhithamGreenNaghdi(
+				param, [0.];
+				exact = true, SGN = true, max_iter=0)
 
 	plt = plot(layout=(1,2))
-	plot!(plt[1,1], mesh.x, [u uGN(c)];
+	plot!(plt[1,1], mesh.x, [u uGN];
 	  title=string("c=",c),
 	  label=["WGN" "SGN"])
 	plot!(plt[1,2], fftshift(mesh.k),
-	  [log10.(abs.(fftshift(fft(u)))) log10.(abs.(fftshift(fft(uGN(c)))))];
+	  [log10.(abs.(fftshift(fft(u)))) log10.(abs.(fftshift(fft(uGN))))];
 	  title="frequency",
 	  label=["WGN" "SGN"])
     display(plt)
-	savefig("fig3.pdf");
+	#savefig("fig3.pdf");
 end
 #---- Figure 4
 """
@@ -133,32 +137,29 @@ function figure4(c=100)
 	param = ( μ  = 1,
 		ϵ  = 1,
     	N  = 2^10,
-      	L  = 10*π,)
-	mesh = Mesh(param)
-	function sol(x,c,ϵ,μ)
-		(c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*x).^2
-	end
-	ηGN(c)= sol(mesh.x,c,param.ϵ,param.μ)
-	uGN(c)= c*ηGN(c)./(1 .+ param.ϵ*ηGN(c))
+      	L  = 10*π,
+		c=c)
 
-	(η,u) = SolitaryWaveWhithamGreenNaghdi(
-				mesh, merge(param,(c=c,)), ηGN(c);
+	(η,u,v,mesh) = SolitaryWaveWhithamGreenNaghdi(
+				param, [0.];
+				exact = true, SGN = false,
 				method=3, α = 1,
 				tol =  1e-10, max_iter=10,
 				iterative = false, q=1,
-				verbose = true, SGN = false)
+				verbose = true)
+	(ηGN,uGN) = SolitaryWaveWhithamGreenNaghdi(
+				param, [0.];
+				exact = true, SGN = true, max_iter=0)
 
 	plt = plot(layout=(1,2))
-	plot!(plt[1,1], mesh.x, [u/c uGN(c)/c];
+	plot!(plt[1,1], mesh.x, [u/c uGN/c];
 	  title=string("c=",c),
 	  label=["WGN" "SGN"])
 	plot!(plt[1,2], fftshift(mesh.k),
-	  [log10.(abs.(fftshift(fft(u/c))))
-	  log10.(abs.(fftshift(fft(uGN(c)/c))))];
+	  [log10.(abs.(fftshift(fft(u/c)))) log10.(abs.(fftshift(fft(uGN/c))))];
 	  title="frequency",
 	  label="WGN")
-
-	savefig("fig4.pdf");
+	#savefig("fig4.pdf");
 end
 
 #------ Figure 6
@@ -201,5 +202,5 @@ function figure6()
 	surface!(plt[1,1],fftshift(k),fftshift(k)[N:-1:1],log10.(abs.(FFT*Jac*IFFT)))
 	surface!(plt[1,2],fftshift(k),fftshift(k)[N:-1:1],log10.(abs.(FFT*Jacstar*IFFT)))
 
-	savefig("fig6.pdf");
+	#savefig("fig6.pdf");
 end

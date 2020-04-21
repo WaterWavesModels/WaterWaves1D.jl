@@ -1,43 +1,49 @@
-export SolitaryWaveWhithamGreenNaghdi
+export CnoidalWaveWhithamGreenNaghdi
 
 """
-    `SolitaryWaveWhithamGreenNaghdi(param, guess; kwargs...)`
+    `CnoidalWaveWhithamGreenNaghdi(mesh, param, guess; kwargs...)`
 
-Computes the Whitham-Green-Naghdi solitary wave with prescribed velocity.
+Computes the Serre-Green-Naghdi cnoidal wave with prescribed `h₀<h₁<h₂`.
+`h_1` is the minimum, `h_2` is the maximum.
+As `h₀ -> h₁`, the cnoidal wave converges towards the solitary wave.
 
 # Arguments
-- `param :: NamedTuple`: parameters of the problem containing velocity `c` and dimensionless parameters `ϵ` and `μ`, and mesh size `L` and number of collocation points `N`;
-- `guess :: Vector{Real}`: initial guess for the surface deformation.
+- `param :: NamedTuple`: parameters of the problem containing `h₀<h₁<h₂` and dimensionless parameters `ϵ` and `μ`, and number of collocation points `N`;
+- `guess :: Vector{Float64}`: initial guess for the surface deformation.
 ## Keywords
+- `P :: Int`: the number of periods of the cnoidal wave in the constructed mesh;
 - `SGN :: Bool`: if `true` computes the Serre-Green-Naghdi (instead of Whitham-Green-Naghdi) solitary wave;
-- `exact :: Bool`: if `true`, overrides the guess with the exact formula for SGN (default is `false`);
+- `exact :: Bool`: if true, uses the exact formula for SGN, either as the solution if `SGN=true`, or overrides the guess if  `SGN=false`
 - `method :: Int`: equation used (between `1` and `4`);
-- `iterative :: Bool`: inverts Jacobian through GMRES if `true`, LU decomposition if `false` (default is `false`);
-- `verbose :: Bool`: prints numerical errors at each step if `true` (default is `false`);
-- `max_iter :: Int`: maximum number of iterations of the Newton algorithm (default is `20`);
+- `iterative :: Bool`: inverts Jacobian through GMRES if `true`, LU decomposition if `false`;
+- `verbose :: Bool`: prints numerical errors at each step if `true`;
+- `max_iter :: Int`: maximum number of iterations of the Newton algorithm;
 - `tol :: Real`: general tolerance (default is `1e-10`);
 - `ktol :: Real`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
-- `gtol :: Real`: relative tolerance of the GMRES algorithm (default is `1e-10`);
+- `gtol :: Real`: relative tolerance of the GMRES algorithm;
 - `dealias :: Int`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
-- `q :: Real`: Newton algorithm modified with `u_{n+1}=q*u_{n+1}+(1-q)*u_n` (default is `1`);
+- `q :: Real`: Newton algorithm modified with
+`u_{n+1}=q*u_{n+1}+(1-q)*u_n`
+(default is `1`);
 - `α :: Real`: adds `α` times spectral projection onto the Kernel to the Jacobian (default is `0`).
 # Return values
-`(η,u,v)` with
+`(η,u,v,mesh,param)` with
 - `η :: Vector{Float64}`: surface deformation;
 - `u :: Vector{Float64}`: layer-averaged velocity;
 - `v :: Vector{Float64}`: tangential velocity;
-- `mesh :: Vector{Float64}` collocation points.
-
-
+- `mesh :: Vector{Float64}` collocation points;
+- `param :: NamedTuple`: useful parameters
 """
-function SolitaryWaveWhithamGreenNaghdi(
+using Elliptic
+function CnoidalWaveWhithamGreenNaghdi(
                 param :: NamedTuple,
                 guess :: Vector{Float64};
+                P = 2 :: Int,
                 SGN = false :: Bool,
                 exact = false :: Bool,
                 method = 2 :: Int,
                 iterative = false :: Bool,
-                verbose = false :: Bool,
+                verbose = true :: Bool,
                 max_iter = 20 :: Int,
                 tol = 1e-10 :: Real,
                 ktol = 0 :: Real,
@@ -47,28 +53,57 @@ function SolitaryWaveWhithamGreenNaghdi(
                 α=0 :: Real
                         )
         if SGN == true
-                @info string("Computing the SGN solitary wave with velocity c=",param.c)
+                @info string("Computing the SGN cnoidal wave with parameters",(param.h₀,param.h₁,param.h₂))
         else
-                @info string("Computing the WGN solitary wave with velocity c=",param.c)
+                @info string("Computing the WGN solitary wave with parameters",(param.h₀,param.h₁,param.h₂))
+                error("Computing the WGN solitary wave has not been coded yet. Sorry.")
         end
 
-
-        c = param.c
         ϵ = param.ϵ
         μ = param.μ
 
-        mesh = Mesh(param)
-
         if exact == true
                 @info "Using the exact formula for the SGN solitary wave as initial guess"
-                guess = (c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*mesh.x).^2
+                # a₁ = ϵ*param.a₁
+                # m = param.m
+                # a₀= 1-a₁*Elliptic.E(m)/Elliptic.K(m)
+                # c = sqrt(a₀ * (a₀+a₁) * (a₀+(1-m^2)*a₁) )
+                # κ = sqrt(3*a₁)/(2*c)/sqrt(μ)
+                # #guess = a₀ .-1 .+ a₁*(Jacobi.dn.(κ*mesh.x,m).^2)
+                # h₀ = a₀
+                # h₁ = a₀+(1-m^2)*a₁
+                # h₂ = a₀+a₁
+                h₀=param.h₀
+                h₁=param.h₁
+                h₂=param.h₂
+                c = sqrt(h₀*h₁*h₂)
+                @info string("The velocity is c=",c)
+                m = sqrt((h₂-h₁)/(h₂-h₀))
+                κ = sqrt(3*(h₂-h₀))/(2*c)/sqrt(μ)
+                λ = Elliptic.K(m^2)/κ
+                @info string("The period is λ=",λ)
+                mesh = Mesh((L=P*λ,N=param.N))
+                guess = h₁ .-1 .+ (h₂-h₁)*(Jacobi.cn.(κ*mesh.x,m^2).^2)
+
+                a₀ = h₀
+                a₁ = h₂ - h₀
+                guess2 = a₀ .-1 .+ a₁*(Jacobi.dn.(κ*mesh.x,m^2).^2)
+                H₀= a₀+a₁*Elliptic.E(m^2)/Elliptic.K(m^2)
+                u2 = c*(1 ./ H₀ .- 1 ./(1 .+ guess2))
+                param = (h₀=h₀,h₁=h₁,h₂=h₂,a₀=a₀,a₁=a₁,H₀=H₀,c=c,λ=λ,m=m,κ=κ)
+                if SGN == true
+                        max_iter = 0
+                end
+        else
+                c = param.c
+                mesh=Mesh((L=param.L,N=param.N))
         end
 
         k = mesh.k
 
         Dx       =  1im * k
         if SGN == true
-                F₀ = Dx #./ (1 .+ μ/3 * k.^2 ).^(1/4)
+                F₀ = sqrt(μ)*Dx #./ (1 .+ μ/3 * k.^2 ).^(1/4)
         else
                 F₁ 	= tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k))
                 F₁[1] 	= 1
@@ -263,19 +298,23 @@ function SolitaryWaveWhithamGreenNaghdi(
     		u .-= q*filter(du)
         end
 
-        if method == 1
-                η = u
-        elseif method ==2
-                η = u./(c .- ϵ*u)
-        elseif method ==3 || method == 4
-                η = u./(1 .- ϵ*u)
-        end
-
+        # if method == 1
+        #         return (mesh,guess,u,c*u./(1 .+ϵ*u))
+        # elseif method ==2
+        #         return (mesh,guess,u./(c .- ϵ*u),u)
+        # elseif method ==3 || method == 4
+        #         return (mesh,guess,u./(1 .- ϵ*u),c*u)
+        # end
+        η = guess/ϵ
         h = 1 .+ ϵ*η
         u = c*η./h
         DxF(v) = real.(ifft(F₀ .* fft(v)))
 	v = u - 1/3 ./h .* (DxF(h.^3 .*DxF(u)))
+        #
+        # h2 = 1 .+ ϵ*guess2
+        # v2 = u2 - 1/3 ./h2 .* (DxF(h2.^3 .*DxF(u2)))
 
-        return (η,u,v,mesh)
+
+        return (η,u,v,param,mesh)
 
 end
