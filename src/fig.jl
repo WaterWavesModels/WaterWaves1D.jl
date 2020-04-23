@@ -2,9 +2,9 @@ export create_animation,fig_problem!
 
 function create_animation( p::Problem )
 
-    prog = Progress(p.times.Ns,1)
+	prog = Progress(p.times.Ns;dt=1,desc="Creating animation: ")
 
-    anim = @animate for l in range(1,p.times.Ns-1)
+    anim = @animate for l in range(1,stop=min(p.times.Ns-1,200))
 
         plt = plot(layout=(2,1))
 
@@ -22,22 +22,22 @@ function create_animation( p::Problem )
 
         next!(prog)
 
-    end when mod(l, 200) == 0
+    end
 
     gif(anim, "anim.gif", fps=15); nothing
 
 end
 
 
-function create_animations( pbs::Array{Problem,1} )
+function create_animation( pbs::Array{Any,1} )
 	p0=pbs[1]
-    prog = Progress(p0.times.Ns,1)
+    prog = Progress(p0.times.Ns;dt=1,desc="Creating animation: ")
 
-    anim = @animate for l in range(1,p0.times.Ns-1)
+    anim = @animate for l in range(1,stop=min(p0.times.Ns-1,200))
 
         plt = plot(layout=(2,1))
 
-		for p in problems
+		for p in pbs
 			if typeof(p.model)==WaterWaves
 				(x,z,v) = mapfro(p.model,p.data.U[l])
 				plot!(plt[1,1], x, z;
@@ -66,7 +66,7 @@ function create_animations( pbs::Array{Problem,1} )
 		end
         next!(prog)
 
-    end when mod(l, 200) == 0
+    end
 
     gif(anim, "anim.gif", fps=15); nothing
 
