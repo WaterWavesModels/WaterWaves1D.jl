@@ -1,3 +1,5 @@
+using Elliptic
+
 export CnoidalWaveWhithamGreenNaghdi
 
 """
@@ -34,7 +36,6 @@ As `h₀ -> h₁`, the cnoidal wave converges towards the solitary wave.
 - `mesh :: Vector{Float64}` collocation points;
 - `param :: NamedTuple`: useful parameters
 """
-using Elliptic
 function CnoidalWaveWhithamGreenNaghdi(
                 param :: NamedTuple,
                 guess :: Vector{Float64};
