@@ -7,10 +7,10 @@ Computes the Whitham-Green-Naghdi solitary wave with prescribed velocity.
 
 # Arguments
 - `param :: NamedTuple`: parameters of the problem containing velocity `c` and dimensionless parameters `ϵ` and `μ`, and mesh size `L` and number of collocation points `N`;
-- `guess :: Vector{Real}`: initial guess for the surface deformation.
 ## Keywords
+- `guess :: Vector{Real}`: initial guess for the surface deformation (if not provided, the exact formula for SGN is used);
+- `x₀ :: Real`: center of solitary wave (if guess is not provided);
 - `SGN :: Bool`: if `true` computes the Serre-Green-Naghdi (instead of Whitham-Green-Naghdi) solitary wave;
-- `exact :: Bool`: if `true`, overrides the guess with the exact formula for SGN (default is `false`);
 - `method :: Int`: equation used (between `1` and `4`);
 - `iterative :: Bool`: inverts Jacobian through GMRES if `true`, LU decomposition if `false` (default is `false`);
 - `verbose :: Bool`: prints numerical errors at each step if `true` (default is `false`);
@@ -31,10 +31,10 @@ Computes the Whitham-Green-Naghdi solitary wave with prescribed velocity.
 
 """
 function SolitaryWaveWhithamGreenNaghdi(
-                param :: NamedTuple,
-                guess :: Vector{Float64};
+                param :: NamedTuple;
+                guess = zeros(0) :: Vector{Float64},
+                x₀ = 0 :: Real,
                 SGN = false :: Bool,
-                exact = false :: Bool,
                 method = 2 :: Int,
                 iterative = false :: Bool,
                 verbose = false :: Bool,
@@ -59,9 +59,9 @@ function SolitaryWaveWhithamGreenNaghdi(
 
         mesh = Mesh(param)
 
-        if exact == true
+        if guess == zeros(0)
                 @info "Using the exact formula for the SGN solitary wave as initial guess"
-                guess = (c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*mesh.x).^2
+                guess = (c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*(mesh.x.-x₀)).^2
         end
 
         k = mesh.k

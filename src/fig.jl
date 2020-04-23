@@ -1,9 +1,10 @@
 export create_animation,fig_problem!
 
-function create_animation( p::Problem )
+function create_animation( p::Problem;str="anim"::String )
 
 	prog = Progress(p.times.Ns;dt=1,desc="Creating animation: ")
-
+	(h0,u0) = mapfro(p.model,first(p.data.U))
+	y0 = minimum(h0);y1 = maximum(h0);
     anim = @animate for l in range(1,stop=min(p.times.Ns-1,200))
 
         plt = plot(layout=(2,1))
@@ -11,25 +12,24 @@ function create_animation( p::Problem )
 		(hr,ur) = mapfro(p.model,p.data.U[l])
 
         plot!(plt[1,1], p.mesh.x, hr;
-              ylims=(-0.6,1),
               title="physical space",
-              label=p.model.label)
+			  ylims=(y0-(y1-y0)/10,y1+(y1-y0)/10)
+			  )
 
         plot!(plt[2,1], fftshift(p.mesh.k),
               log10.(1e-18.+abs.(fftshift(fft(hr))));
-              title="frequency",
-              label=p.model.label)
+              title="frequency")
 
         next!(prog)
 
     end
 
-    gif(anim, "anim.gif", fps=15); nothing
+    gif(anim, string(str,".gif"), fps=15); nothing
 
 end
 
 
-function create_animation( pbs::Array{Any,1} )
+function create_animation( pbs::Array{Any,1};str="anim"::String )
 	p0=pbs[1]
     prog = Progress(p0.times.Ns;dt=1,desc="Creating animation: ")
 
@@ -54,7 +54,6 @@ function create_animation( pbs::Array{Any,1} )
 				(hr,ur) = mapfro(p.model,p.data.U[l])
 
         		plot!(plt[1,1], p.mesh.x, hr;
-              		ylims=(-0.6,1),
               		title="physical space",
               		label=p.model.label)
 
@@ -68,7 +67,7 @@ function create_animation( pbs::Array{Any,1} )
 
     end
 
-    gif(anim, "anim.gif", fps=15); nothing
+    gif(anim, string(str,".gif"), fps=15); nothing
 
 end
 
@@ -135,6 +134,18 @@ function fig_problem!( plt, p::Problem, t::Real )
 		  title="frequency",
     	          label=p.model.label)
 	end
+end
+function fig_problem( p::Problem, t::Real )
+	plt = plot(layout=(2,1))
+	fig_problem!( plt, p::Problem, t::Real )
+	display(plt)
+	return plt
+end
+function fig_problem( p::Problem)
+	plt = plot(layout=(2,1))
+	fig_problem!( plt, p::Problem )
+	display(plt)
+	return plt
 end
 
 function norm_problem!( plt, p::Problem, s::Real )
