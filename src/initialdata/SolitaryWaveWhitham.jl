@@ -1,14 +1,15 @@
 export SolitaryWaveWhitham
 """
-    `SolitaryWaveWhitham(mesh, param, guess; kwargs...)`
+    `SolitaryWaveWhitham(param; kwargs...)`
 
 Computes the Whitham solitary wave with prescribed velocity.
 
-# Arguments
-- `mesh :: Mesh`: parameters of the numerical grid, e.g constructed through Mesh(L,N);
-- `param :: NamedTuple`: parameters of the problem containing velocity c and dimensionless parameters ϵ and μ;
-- `guess :: Vector{Float64}`: initial guess for the surface deformation.
+# Argument
+- `param :: NamedTuple`: parameters of the problem containing velocity `c` and dimensionless parameters `ϵ` and `μ`, and mesh size `L` and number of collocation points `N`;
+
 ## Keywords
+- `guess :: Vector{Real}`: initial guess for the surface deformation (if not provided, the exact formula for KdV is used);
+- `x₀ :: Real`: center of solitary wave (if guess is not provided);
 - `iterative :: Bool`: inverts Jacobian through GMRES if `true`, LU decomposition if `false`;
 - `verbose :: Bool`: prints numerical errors at each step if `true`;
 - `max_iter :: Int`: maximum number of iterations of the Newton algorithm;
@@ -24,10 +25,10 @@ Computes the Whitham solitary wave with prescribed velocity.
 # Return values
 `u :: Vector{Float64}` the solution
 """
-
-function SolitaryWaveWhitham(mesh :: Mesh,
-                param :: NamedTuple,
-                guess :: Vector{Float64};
+function SolitaryWaveWhitham(
+                param :: NamedTuple;
+                guess = zeros(0) :: Vector{Float64},
+                x₀ = 0 :: Real,
                 iterative = false :: Bool,
                 verbose = true :: Bool,
                 max_iter = 20 :: Int,
@@ -40,20 +41,26 @@ function SolitaryWaveWhitham(mesh :: Mesh,
                 KdV = false :: Bool)
 
 
+        mesh=Mesh(param)
         c = param.c
         ϵ = param.ϵ
         μ = param.μ
 
-        k = mesh.k
-
-        Dx       =  1im * k
-
-        F₁ = sqrt.(tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k)))
-        F₁[1]=1
-        if KdV == true
-                F₁ = 1 .-μ/6*k.^2
+        if guess == zeros(0)
+                @info "Using the exact formula for the KdV solitary wave as initial guess"
+                guess = 2*(c-1)/ϵ*sech.(sqrt(3*2*(c-1)/μ)/2*mesh.x.-x₀).^2
         end
 
+        k  = mesh.k
+        Dx =  1im * k
+        if KdV == true
+                @info string("Solving the KdV solitary wave with velocity c=",param.c)
+                F₁ = 1 .-μ/6*k.^2
+        else
+                @info string("Solving the Whitham solitary wave with velocity c=",param.c)
+                F₁ = sqrt.(tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k)))
+                F₁[1]=1
+        end
 
         if dealias == 0
                 Π = ones(size(k))

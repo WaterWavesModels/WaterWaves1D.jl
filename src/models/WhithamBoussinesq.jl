@@ -1,13 +1,13 @@
-export fdBoussinesq,mapto,mapfro
+export WhithamBoussinesq,mapto,mapfro
 
 """
-    fdBoussinesq_1(params)
+    WhithamBoussinesq(params)
 	params must contain a parameter α.
 	If α = 1, then the model has been introduced and studied by E. Dinvay and collaborators.
 	If α = 1/2, then the model is a quasilinear version.
 	If α < 1/2, then expect instabilities stemming from ill-posedness of the model.
 """
-mutable struct fdBoussinesq <: AbstractModel
+mutable struct WhithamBoussinesq <: AbstractModel
 
     label   :: String
 	datasize:: Int
@@ -23,9 +23,9 @@ mutable struct fdBoussinesq <: AbstractModel
     fftη    :: Vector{Complex{Float64}}
     fftv    :: Vector{Complex{Float64}}
 
-    function fdBoussinesq(param::NamedTuple)
+    function WhithamBoussinesq(param::NamedTuple)
 
-		label = string("Boussinesq-Whitham")
+		label = string("Whitham-Boussinesq")
 		datasize = 2
 		μ 	= param.μ
 		ϵ 	= param.ϵ
@@ -47,7 +47,7 @@ mutable struct fdBoussinesq <: AbstractModel
 end
 
 
-function (m::fdBoussinesq)(U::Array{Complex{Float64},2})
+function (m::WhithamBoussinesq)(U::Array{Complex{Float64},2})
 
 
     m.fftv .= U[:,2]
@@ -62,20 +62,20 @@ function (m::fdBoussinesq)(U::Array{Complex{Float64},2})
 end
 
 """
-    mapto(fdBoussinesq, data)
+    mapto(WhithamBoussinesq, data)
 
 """
-function mapto(m::fdBoussinesq, data::InitialData)
+function mapto(m::WhithamBoussinesq, data::InitialData)
 
 	[m.Π⅔ .* fft(data.η(m.x)) m.Π⅔ .*fft(data.v(m.x))]
 
 end
 
 """
-    mapfro(fdBoussinesq, data)
+    mapfro(WhithamBoussinesq, data)
 
 """
-function mapfro(m::fdBoussinesq,
+function mapfro(m::WhithamBoussinesq,
 	       datum::Array{Complex{Float64},2})
 
 		   real(ifft(datum[:,1])),real(ifft(datum[:,2]))

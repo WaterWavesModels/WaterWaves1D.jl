@@ -6,10 +6,10 @@ include("../src/dependencies.jl")
 
 #---- KdV
 """
-	`SolitaryWaveKdV()`
+	`PlotSolitaryWaveKdV()`
 A proof of concept: numerically computes the solitary wave of the KdV equation with prescribed velocity c=5
 """
-function SolitaryWaveKdV()
+function PlotSolitaryWaveKdV()
 	param = ( μ  = 1,
 			ϵ  = 1,
         	N  = 2^10,
@@ -21,9 +21,9 @@ function SolitaryWaveKdV()
 		2*α*sech.(sqrt(3*2*α)/2*x).^2
 	end
 
-	u₀ = SolitaryWaveWhitham(mesh, merge(param,(c=2.5,)), sol(mesh.x,1.5)+.1*exp.(-(mesh.x).^2); iterative = false, KdV = true, α=1,tol = 1e-8)
-	u₁ = SolitaryWaveWhitham(mesh, merge(param,(c=2.6,)), sol(mesh.x,1.6)+.1*exp.(-(mesh.x).^2); iterative = false, KdV = true, α=1,tol = 1e-8)
-	u₂ = SolitaryWaveWhitham(mesh, merge(param,(c=2.7,)), sol(mesh.x,1.7)+.5*exp.(-(mesh.x).^2); iterative = false, KdV = true, α=1,tol = 1e-8)
+	u₀ = SolitaryWaveWhitham( merge(param,(c=2.5,)); guess = sol(mesh.x,1.5)+.1*exp.(-(mesh.x).^2), iterative = false, KdV = true, α=1,tol = 1e-8)
+	u₁ = SolitaryWaveWhitham( merge(param,(c=2.6,)); guess = sol(mesh.x,1.6)+.1*exp.(-(mesh.x).^2), iterative = false, KdV = true, α=1,tol = 1e-8)
+	u₂ = SolitaryWaveWhitham( merge(param,(c=2.7,)); guess = sol(mesh.x,1.7)+.5*exp.(-(mesh.x).^2), iterative = false, KdV = true, α=1,tol = 1e-8)
 
 	# barycentric Lagrange interpolation (4.2) in https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
 	function P(X,dc,u₀,u₁,u₂)
@@ -33,13 +33,12 @@ function SolitaryWaveKdV()
 
 	function solve!(u₀,u₁,u₂,c,dc)
 			tu₂ = copy(u₂)
-			u₂ .= SolitaryWaveWhitham(mesh, merge(param,(c=c,)), P.(dc,dc,u₀,u₁,u₂); iterative = false, α=1, KdV = true, verbose = true, max_iter = 5, tol = 1e-10)
+			u₂ .= SolitaryWaveWhitham( merge(param,(c=c,)); guess = P.(dc,dc,u₀,u₁,u₂), iterative = false, α=1, KdV = true, verbose = true, max_iter = 5, tol = 1e-10)
 			u₀ .= u₁
 			u₁ .= tu₂
 	end
 
 	for cs = range(2.8; step = 0.1, stop = 5)
-		print(string("c = ",cs,"\n"))
 		solve!(u₀,u₁,u₂,cs,0.1)
 	end
 
@@ -70,13 +69,13 @@ end
 
 #----
 """
-	`SolitaryWaveWhitham(c)`
+	`PlotSolitaryWaveWhitham(c)`
 
 Computes the solitary wave of the Whitham equation with prescribed velocity.
 
 `c` is the velocity, and should be more between `1` and `1.2290408`.
 """
-function SolitaryWaveWhitham(c)
+function PlotSolitaryWaveWhitham(c)
  function solKdV(x,α)
    	 2*α*sech.(sqrt(3*2*α)/2*x).^2
  end
@@ -89,7 +88,7 @@ function SolitaryWaveWhitham(c)
              L  = 10/sqrt(c-1),
  			)
  	mesh = Mesh(param)
-	u = SolitaryWaveWhitham(mesh, merge(param,(c=c,)), solKdV(mesh.x,c-1); iterative = false)
+	u = SolitaryWaveWhitham( merge(param,(c=c,)); iterative = false)
 
  else
 	param = ( μ  = 1,
@@ -103,14 +102,14 @@ function SolitaryWaveWhitham(c)
 	function P(X,dc,u₀,u₁,u₂)
 		(u₀/(2*(X/dc+2))-u₁/(X/dc+1)+u₂/(2*X/dc))/(1/(2*(X/dc+2))-1/(X/dc+1)+1/(2*X/dc))
 	end
-
-	function Q(X,dc,u₀,u₁,u₂)
-		(u₀./(2*(X/dc+2)) .-u₁./(X/dc+1) .+u₂./(2*X/dc))./(1/(2*(X/dc+2))-1/(X/dc+1)+1/(2*X/dc))
-	end
+	#
+	# function Q(X,dc,u₀,u₁,u₂)
+	# 	(u₀./(2*(X/dc+2)) .-u₁./(X/dc+1) .+u₂./(2*X/dc))./(1/(2*(X/dc+2))-1/(X/dc+1)+1/(2*X/dc))
+	# end
 
 	function solve2!(u₀,u₁,u₂,c,dc)
 			tu₂ = copy(u₂)
-			u₂ .= SolitaryWaveWhitham(mesh, merge(param,(c=c,)), P.(dc,dc,u₀,u₁,u₂); iterative = false, verbose = true, max_iter = 5)
+			u₂ .= SolitaryWaveWhitham(merge(param,(c=c,)); guess = P.(dc,dc,u₀,u₁,u₂), iterative = false, verbose = true, max_iter = 5)
 			u₀ .= u₁
 			u₁ .= tu₂
 	end
@@ -120,21 +119,20 @@ function SolitaryWaveWhitham(c)
 			tu₁ = copy(u₁)
 			tu₂ = copy(u₂)
 			u₀ .= tu₂
-			u₁ .= SolitaryWaveWhitham(mesh, merge(param,(c=c+1*new_dc,)), P.(1*new_dc,old_dc,tu₀,tu₁,tu₂); iterative = false, verbose = true)
-			u₂ .= SolitaryWaveWhitham(mesh, merge(param,(c=c+2*new_dc,)), P.(2*new_dc,old_dc,tu₀,tu₁,tu₂); iterative = false, verbose = true)
+			u₁ .= SolitaryWaveWhitham( merge(param,(c=c+1*new_dc,)); guess = P.(1*new_dc,old_dc,tu₀,tu₁,tu₂), iterative = false, verbose = true)
+			u₂ .= SolitaryWaveWhitham( merge(param,(c=c+2*new_dc,)); guess = P.(2*new_dc,old_dc,tu₀,tu₁,tu₂), iterative = false, verbose = true)
 	end
 
-	u₀ = SolitaryWaveWhitham(mesh, merge(param,(c=1.1,)), solKdV(mesh.x,0.1); iterative = false)
-	u₁ = SolitaryWaveWhitham(mesh, merge(param,(c=1.11,)), solKdV(mesh.x,0.11); iterative = false)
-	u₂ = SolitaryWaveWhitham(mesh, merge(param,(c=1.12,)), solKdV(mesh.x,0.12); iterative = false)
+	u₀ = SolitaryWaveWhitham( merge(param,(c=1.10,)); iterative = false)
+	u₁ = SolitaryWaveWhitham( merge(param,(c=1.11,)); iterative = false)
+	u₂ = SolitaryWaveWhitham( merge(param,(c=1.12,)); iterative = false)
 
 	if c < 1.22
-		for cs = range(1.11; step = 0.01, stop = c)
-			print(string("c = ",cs,"\n"))
+		for cs = range(1.13; step = 0.01, stop = c)
 			solve2!(u₀,u₁,u₂,cs,0.01)
 		end
 	else
-		for cs = range(1.11; step = 0.01, stop = 1.22)
+		for cs = range(1.13; step = 0.01, stop = 1.22)
 			print(string("c = ",cs,"\n"))
 			solve2!(u₀,u₁,u₂,cs,0.01)
 		end
@@ -143,32 +141,26 @@ function SolitaryWaveWhitham(c)
 
 		if c < 1.229
 			for cs = range(1.221+3e-4; step = 1e-4, stop = c)
-				print(string("c = ",cs,"\n"))
 				solve2!(u₀,u₁,u₂,cs,1e-4)
 			end
 		else
 			c=1.2290408
 			for cs = range(1.221+3e-4; step = 1e-4, stop = 1.229)
-				print(string("c = ",cs,"\n"))
 				solve2!(u₀,u₁,u₂,cs,1e-4)
 			end
 
 			solve2!(u₀,u₁,u₂,1.229,1e-4,1e-6)
 
-
 			for cs = range(1.229+3e-6; step = 1e-6, stop = 1.22904)
-				print(string("c = ",cs,"\n"))
 				solve2!(u₀,u₁,u₂,cs,1e-6)
 			end
 
 			solve2!(u₀,u₁,u₂,1.22904,1e-6,1e-8)
 
 			for cs = range(1.22904+3e-8; step = 1e-8, stop = 1.2290407)
-				print(string("c = ",cs,"\n"))
 				solve2!(u₀,u₁,u₂,cs,1e-8)
 			end
 			for cs = range(1.2290407+1e-8; step = 1e-8, stop = 1.2290408)
-				print(string("c = ",cs,"\n"))
 				solve2!(u₀,u₁,u₂,cs,1e-8)
 			end
 		end

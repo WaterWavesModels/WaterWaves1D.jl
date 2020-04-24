@@ -4,11 +4,12 @@ export SolitaryWaveWhithamBoussinesq
 
 Computes the Whitham-Boussinesq solitary wave with prescribed velocity.
 
-# Arguments
-- `mesh :: Mesh`: parameters of the numerical grid, e.g constructed through Mesh(L,N);
-- `param :: NamedTuple`: parameters of the problem containing velocity `c` and dimensionless parameters `ϵ` and `μ`;
-- `guess :: Vector{Float64}`: initial guess for the surface deformation.
+# Argument
+- `param :: NamedTuple`: parameters of the problem containing velocity `c` and dimensionless parameters `ϵ` and `μ`, and mesh size `L` and number of collocation points `N`;
+
 ## Keywords
+- `guess :: Vector{Real}`: initial guess for the surface deformation (if not provided, the exact formula for SGN is used);
+- `x₀ :: Real`: center of solitary wave (if guess is not provided);
 - `model :: Real`: determines the model used (typically `1` or `1/2`, default is 1);
 - `iterative :: Bool`: inverts Jacobian through GMRES if `true`, LU decomposition if `false`;
 - `verbose :: Bool`: prints numerical errors at each step if `true`;
@@ -27,9 +28,10 @@ with
 - `η`: surface deformation;
 - `u`: velocity.
 """
-function SolitaryWaveWhithamBoussinesq(mesh :: Mesh,
-        param :: NamedTuple,
-        guess :: Vector{Float64};
+function SolitaryWaveWhithamBoussinesq(
+        param :: NamedTuple;
+        guess = zeros(0) :: Vector{Float64},
+        x₀ = 0 :: Real,
         model = 1 :: Real,
         iterative = false :: Bool,
         verbose = true :: Bool,
@@ -48,6 +50,18 @@ function SolitaryWaveWhithamBoussinesq(mesh :: Mesh,
         ϵ = param.ϵ
         μ = param.μ
 
+        mesh=Mesh(param)
+        if guess == zeros(0)
+                @info "Using the exact formula for the SGN solitary wave as initial guess"
+                η = (c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*(mesh.x.-x₀)).^2
+                h = 1 .+ param.ϵ*η
+                u = c*η./h
+                k = mesh.k
+        	F₀ = sqrt(param.μ)*1im * k
+        	DxF(v) = real.(ifft(F₀ .* fft(v)))
+        	guess = u - 1/3 ./h .* (DxF(h.^3 .*DxF(u)))
+        end
+
         k = mesh.k
         F₁ 	= tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k))
         F₁[1] 	= 1
@@ -62,10 +76,10 @@ function SolitaryWaveWhithamBoussinesq(mesh :: Mesh,
         krasny(k) = (abs.(k).>= ktol ).*k
         krasny!(k) = k[abs.(k).< ktol ].=0
 
-        function filter( v :: Vector{Float64} )
+        function filt( v :: Vector{Float64} )
                 real.(ifft(krasny(Π.*fft(v))))
         end
-        function filter( v :: Vector{Complex{Float64}} )
+        function filt( v :: Vector{Complex{Float64}} )
                 ifft(krasny(Π.*fft(v)))
         end
         function Four1( v  )
@@ -74,7 +88,7 @@ function SolitaryWaveWhithamBoussinesq(mesh :: Mesh,
         function Four2( v  )
                 ifft(F₂.*fft(v))
         end
-        function F( v )
+        function FF( v )
                 w = Four2(v)
                 return real.(-c^2*v .+ Four1(v) .+ c*ϵ/2*w.^2 .+ ϵ*Four2(c*w.*v .- ϵ/2*w.^3))
         end
@@ -102,14 +116,14 @@ function SolitaryWaveWhithamBoussinesq(mesh :: Mesh,
         flag=0
         iter = 0
         err = 1
-        u = filter(guess)
+        u = filt(guess)
         du = similar(u)
         fu = similar(u)
         dxu = similar(u)
         for i in range(1, length=max_iter)
                 dxu .= real.(ifft(Dx.*fft(u)))
                 dxu ./= norm(dxu,2)
-                fu .= F(u)
+                fu .= FF(u)
     	        err = norm(fu,Inf)
     		if err < tol
     			@info string("Converged : ",err,"\n")
@@ -126,7 +140,7 @@ function SolitaryWaveWhithamBoussinesq(mesh :: Mesh,
                 else
                         du .= gmres( JacFfast(u,dxu) , fu ; verbose = verbose, tol = gtol )
                 end
-    		u .-= q*filter(du)
+    		u .-= q*filt(du)
         end
-        return (c*u-ϵ/2*real.(Four2(u).^2),u)
+        return (c*u-ϵ/2*real.(Four2(u).^2),u,mesh)
 end
