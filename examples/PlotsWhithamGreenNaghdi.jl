@@ -4,7 +4,7 @@
 # #
 #export PlotSolitaryWaveWGN1,PlotSolitaryWaveWGN2,PlotSolitaryWaveWGN3,PlotJacobianWGN,IntegrateSolitaryWaveWGN,StabilitySolitaryWaveWGN,IntegrateWGN
 
-using ShallowWaterModels,FFTW,Plots,ProgressMeter;gr()
+using ShallowWaterModels,FFTW,Plots,LinearAlgebra,ProgressMeter;gr()
 #include("../src/dependencies.jl")
 
 #---- Figures 1 and 2
@@ -213,7 +213,7 @@ Arguments are all optional:
 
 Use with `IntegrateSolitaryWaveWGN()` or e.g. `IntegrateSolitaryWaveWGN(c=2,N=2^9,L=10*π,T=1,dt=1/2000,SGN=true)`
 """
-function IntegrateSolitaryWaveWGN(;SGN=false,c=2,N=2^9,L=10*π,T=1,dt=1/2000,sav=[])
+function IntegrateSolitaryWaveWGN(;SGN=false,c=2,N=2^10,L=10*π,T=1,dt=1/2000,sav=[])
 	if sav != [] ns=floor(Int,max(1,T/dt/100)) else ns=1 end
 
 	param = ( μ  = 1, ϵ  = 1, c = c,

@@ -44,4 +44,4 @@ for problem in problems
 end
 display(p)
 savefig("WWvsXX.pdf"); nothing # hide
-create_animation(problems)
+create_animation(problems;str="WWvsXX")

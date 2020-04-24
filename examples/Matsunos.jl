@@ -1,6 +1,6 @@
 # # Comparison of Matsuno deep water problems
-#using ShallowWaterModels
-include("../src/dependencies.jl")
+using ShallowWaterModels,Plots;gr()
+#include("../src/dependencies.jl")
 
 #----
 param = ( ϵ  = 1/2,
@@ -10,7 +10,7 @@ param = ( ϵ  = 1/2,
           dt = 0.001,
 		  θ = 2.5)
 
-init     = Bellcurve(param)
+init     = BellCurve(param)
 
 model0   = Matsuno_mod_naive(param)
 problem0 = Problem(model0, init, param);

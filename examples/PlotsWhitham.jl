@@ -1,5 +1,5 @@
 # # Computes the solitary wave of the Whitham equation with prescribed velocity
-using ShallowWaterModels,FFTW,Plots;
+using ShallowWaterModels,FFTW,Plots;gr()
 #include("../src/dependencies.jl")
 
 #---- KdV
