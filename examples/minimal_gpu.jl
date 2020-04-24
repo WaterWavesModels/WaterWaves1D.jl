@@ -3,6 +3,7 @@ using FFTW, LinearAlgebra
 using Test
 
 include("../src/dependencies.jl")
+include("../models/WhithamGreenNaghdiGPU.jl")
 
 function run_cpu( param )
 
@@ -12,7 +13,7 @@ function run_cpu( param )
     init = Init(mesh, η, v)
     times = Times(param.dt, param.T)
 	model = WhithamGreenNaghdi(param; iterate=true)
-    solver = RK4(param, model) 
+    solver = RK4(param, model)
     data  = Data(mapto(model, init))
     U = copy(last(data.U))
     dt = times.dt
@@ -33,7 +34,7 @@ function run_gpu( param )
     init = Init(mesh, η, v)
     times = Times(param.dt, param.T)
 	model = WhithamGreenNaghdiGPU(param)
-    solver = RK4(param, model) 
+    solver = RK4(param, model)
     data  = Data(mapto(model, init))
     U = copy(last(data.U))
     dt = times.dt
@@ -61,4 +62,3 @@ param = (
 @time U_gpu = run_gpu(param)
 
 @test U_gpu ≈ U_cpu
-
