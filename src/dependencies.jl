@@ -27,12 +27,10 @@ include("models/Matsuno.jl")
 include("models/Matsuno_naive.jl")
 include("models/Matsuno_mod_naive.jl")
 include("models/Boussinesq.jl")
-include("models/fdBoussinesq.jl")
 include("models/PseudoSpectral.jl")
 include("models/WaterWaves.jl")
+include("models/WhithamBoussinesq.jl")
 include("models/WhithamGreenNaghdi.jl")
-include("models/WhithamGreenNaghdiSpectrum.jl")
-
 
 include("LoadSave.jl")
 include("fig.jl")
