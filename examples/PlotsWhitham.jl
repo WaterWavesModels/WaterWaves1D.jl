@@ -1,8 +1,6 @@
-"""
-Computes the solitary wave of the Whitham equation with prescribed velocity
-"""
-#using ShallowWaterModels
-include("../src/dependencies.jl")
+# # Computes the solitary wave of the Whitham equation with prescribed velocity
+using ShallowWaterModels,FFTW,Plots;
+#include("../src/dependencies.jl")
 
 #---- KdV
 """
@@ -49,12 +47,12 @@ function PlotSolitaryWaveKdV()
 
     plot!(plt[1,1], mesh.x, [ucomp uexact];
      title=string("c=5"),
-     label=["computed" "formula"])
+     label=["computed" "exact"])
 
     plot!(plt[2,1], fftshift(mesh.k),
      [log10.(abs.(fftshift(fft(ucomp)))) log10.(abs.(fftshift(fft(uexact))))];
      title="frequency",
-	 label=["computed" "formula"])
+	 label=["computed" "exact"])
 
 	 plot!(plt[1,2], mesh.x, ucomp-uexact;
       title=string("c=5"),
@@ -80,7 +78,7 @@ function PlotSolitaryWaveWhitham(c)
    	 2*α*sech.(sqrt(3*2*α)/2*x).^2
  end
  if c<=1 || c>1.2290408
-	 error("the velocity should be between `1` and `1.2290408`")
+	 error("The velocity should be between `1` and `1.2290408`")
  elseif c<1.15
 	param = ( μ  = 1,
  			ϵ  = 1,

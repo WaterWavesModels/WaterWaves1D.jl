@@ -1,10 +1,11 @@
-export PlotSolitaryWaveWGN1,PlotSolitaryWaveWGN2,PlotSolitaryWaveWGN3,PlotJacobianWGN,IntegrateSolitaryWaveWGN,StabilitySolitaryWaveWGN,IntegrateWGN
-"""
-Reproduces the figures in the work of C. Klein and V. Duchêne
-on the Serre-Green-Naghdi and Whitham-Green-Naghdi systems
-"""
-#using ShallowWaterModels
-include("../src/dependencies.jl")
+# #
+# Reproduces the figures in the work of C. Klein and V. Duchêne
+# on the Serre-Green-Naghdi and Whitham-Green-Naghdi systems
+# #
+#export PlotSolitaryWaveWGN1,PlotSolitaryWaveWGN2,PlotSolitaryWaveWGN3,PlotJacobianWGN,IntegrateSolitaryWaveWGN,StabilitySolitaryWaveWGN,IntegrateWGN
+
+using ShallowWaterModels,FFTW,Plots,ProgressMeter;gr()
+#include("../src/dependencies.jl")
 
 #---- Figures 1 and 2
 """

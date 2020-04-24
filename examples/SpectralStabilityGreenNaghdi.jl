@@ -1,10 +1,9 @@
-export Spectrum
-"""
-Study of the spectral stability of the Serre-Green-Naghdi equations.
-"""
+# #
+# Study of the spectral stability of the Serre-Green-Naghdi equations.
+# #
 
-#using ShallowWaterModels
-include("../src/dependencies.jl")
+using ShallowWaterModels,LinearAlgebra,FFTW,ProgressMeter,Plots;gr()
+#include("../src/dependencies.jl")
 
 """
     `Spectrum(model,η,u,c,ν;kwargs)`

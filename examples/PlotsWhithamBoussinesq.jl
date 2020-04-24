@@ -1,11 +1,10 @@
-export PlotSolitaryWaveWhithamBoussinesq,IntegrateSolitaryWaveWhithamBoussinesq
-"""
-A proof of concept:
-1) numerically computes the solitary wave of a Whitham-Boussinesq equation with prescribed velocity
-2) integrates the equation with time
-"""
-#using ShallowWaterModels
-include("../src/dependencies.jl")
+# #
+# A proof of concept:
+# 1) PlotSolitaryWaveWhithamBoussinesq() numerically computes the solitary wave of a Whitham-Boussinesq equation with prescribed velocity
+# 2) IntegrateSolitaryWaveWhithamBoussinesq() integrates the equation with time
+# #
+using ShallowWaterModels,FFTW,Plots;gr()
+#include("../src/dependencies.jl")
 
 
 #----
@@ -97,7 +96,7 @@ function IntegrateSolitaryWaveWhithamBoussinesq()
 	model  = WhithamBoussinesq(param)
 	problem = Problem(model, init, param);
 
-	@time solve!( problem )
+	solve!( problem )
 	ηf = mapfro(model,problem.data.U[end])[1]
 	p = plot(layout=(1,2))
 	plot!(p[1,1],mesh.x,[η ηf];
@@ -108,5 +107,5 @@ function IntegrateSolitaryWaveWhithamBoussinesq()
 	label="")
 	display(p)
 
-	@time create_animation( problem )
+	create_animation( problem )
 end
