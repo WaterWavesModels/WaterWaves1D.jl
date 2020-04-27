@@ -237,7 +237,7 @@ function IntegrateSolitaryWaveWGN(;SGN=false,c=2,N=2^10,L=10*π,T=1,dt=1/2000,sa
 	problem = Problem(model, init, param)
 	solve!( problem )
 
-	(ηcomp,vcomp,ucomp)   =  mapfro(model,last(problem.data.U))
+	(ηcomp,vcomp,ucomp)   =  mapfrofull(model,last(problem.data.U))
 
 	E(η,u,v) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.*v)
 	# E1(η,u) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.^2 .+param.μ/3*(1 .+ param.ϵ*η).^3 .*(Dx(u).^2))
@@ -352,7 +352,7 @@ function StabilitySolitaryWaveWGN(;p=2,c=2,N=2^10,L=10*π,T=10,dt=10/10^4,SGN=fa
 
 	if sav != [] save(problem,sav); end
 
-	(ηfin,vfin,ufin)   =  mapfro(model,last(problem.data.U))
+	(ηfin,vfin,ufin)   =  mapfrofull(model,last(problem.data.U))
 
 
 	# E(η) = sum(η.^2 ./ (1 .+ η) .+ param.μ/3*(1 .+ param.ϵ*η).^3 .*(Dx(η ./ (1 .+ η)).^2))
@@ -497,7 +497,7 @@ function IntegrateWGN(scenario;δ=0.1,N=2^11,L=3*π,T= 5,dt = 5/10^4,SGN=false,d
 	problem = Problem(model, init, param)
 	solve!( problem )
 
-	(ηfin,vfin,ufin)   =  mapfro(model,last(problem.data.U))
+	(ηfin,vfin,ufin)   =  mapfrofull(model,last(problem.data.U))
 	E(η,u,v) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.*v)
 	dE(η1,u1,v1,η2,u2,v2) = sum(η1.^2-η2.^2) + sum((1 .+ param.ϵ*η1).*u1.*v1 - (1 .+ param.ϵ*η2).*u2.*v2)
 

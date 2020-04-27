@@ -165,16 +165,33 @@ end
     mapfro(WhithamGreenNaghdi, data)
 `data` is of type `Array{Complex{Float64},2}`, e.g. `last(p.data.U)` where `p` is of type `Problem`.
 
+Returns `(η,v)`, where
+- `η` is the surface deformation;
+- `v` is the derivative of the trace of the velocity potential.
+
+Performs an inverse Fourier transform and takes the real part.
+
+See documentation of `WhithamGreenNaghdi` for more details.
+"""
+function mapfro(m::WhithamGreenNaghdi,
+	       datum::Array{Complex{Float64},2})
+
+		   real(ifft(datum[:,1])),real(ifft(datum[:,2]))
+end
+"""
+    mapfrofull(WhithamGreenNaghdi, data)
+`data` is of type `Array{Complex{Float64},2}`, e.g. `last(p.data.U)` where `p` is of type `Problem`.
+
 Returns `(η,v,u)`, where
 - `η` is the surface deformation;
 - `v` is the derivative of the trace of the velocity potential;
 - `u` corresponds to the layer-averaged velocity.
 
-Inverse Fourier transform and real part, plus solving the elliptic problem for `u`.
+Performs an inverse Fourier transform and take the real part, plus solves the costly elliptic problem for `u`.
 
 See documentation of `WhithamGreenNaghdi` for more details.
 """
-function mapfro(m::WhithamGreenNaghdi,
+function mapfrofull(m::WhithamGreenNaghdi,
 	       datum::Array{Complex{Float64},2})
 		m.fftη .= datum[:,1]
 	   	m.h .= 1 .+ m.ϵ*ifft(m.fftη)
