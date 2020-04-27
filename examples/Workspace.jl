@@ -2,8 +2,88 @@
 #
 #md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two_problems.ipynb)
 #
-#using ShallowWaterModels
-include("../src/dependencies.jl")
+using ShallowWaterModels,Plots,FFTW
+#include("../src/dependencies.jl")
+
+#----
+
+param = ( μ  = 1, ϵ  = 1, N  = 2^13,
+		h₀=1.0962,h₁=1.1,h₂=1.2)
+(η,u,v,mesh,par)=CnoidalWaveWhithamGreenNaghdi(param;P=160,SGN=true)
+x=mesh.x
+using Statistics
+h=1 .+η
+meanη=mean(h)
+m=-sqrt(param.h₀*param.h₁*param.h₂)
+
+M=-m*mean(1 ./ h)/sqrt(mean(h)) #Froude number, close to 1
+
+L=80*par.λ
+
+interp(x)=sech.(x/3).^2
+η₀(x)=(0.13173.+(1.2-1.13173)*interp(x))
+η1=η.*(x.>=-L).*(x.<=L)+η₀.(x.+L).*(x.<-L)+η₀.(x.-L).*(x.>L)
+v₀(x)=(meanv .+(v[Int(end/2)]-meanv)*interp(x))
+v1=v.*(x.>=-L).*(x.<=L)+v₀(x.+L).*(x.<-L)+v₀(x.-L).*(x.>L)
+v1 .-=par.c
+
+
+interp(x)=sech.(x/2).^2
+η₀(x)=(0.13173.+(1.2-1.13173)*interp(x))
+η2=η.*(x.>=-L).*(x.<=L)+η₀.(x.+L).*(x.<-L)+η₀.(x.-L).*(x.>L)
+v₀(x)=(meanv .+(v[Int(end/2)]-meanv)*interp(x))
+v2=v.*(x.>=-L).*(x.<=L)+v₀(x.+L).*(x.<-L)+v₀(x.-L).*(x.>L)
+v2 .-=par.c
+
+
+interp(x)=sech.(10*x).^2
+η₀(x)=(0.13173.+(1.2-1.13173)*interp(x))
+η3=η.*(x.>=-L).*(x.<=L)+η₀.(x.+L).*(x.<-L)+η₀.(x.-L).*(x.>L)
+v₀(x)=(meanv .+(v[Int(end/2)]-meanv)*interp(x))
+v3=v.*(x.>=-L).*(x.<=L)+v₀(x.+L).*(x.<-L)+v₀(x.-L).*(x.>L)
+v3 .-=par.c
+
+
+plot(mesh.x,[η1 η2 η3])
+f1=fftshift(log10.(abs.(fft(η1))))
+f2=fftshift(log10.(abs.(fft(η2))))
+f3=fftshift(log10.(abs.(fft(η3))))
+
+plot(fftshift(mesh.k),[f1 f2 f3])
+
+init1=Init(mesh,η1,v1)
+init2=Init(mesh,η2,v2)
+init3=Init(mesh,η3,v3)
+param2=merge(param,(L=-mesh.xmin,T  = 100, dt = 0.01,))
+model=WhithamGreenNaghdi(param2,SGN=true)
+problem1 = Problem(model, init1, param2)
+problem2 = Problem(model, init2, param2)
+problem3 = Problem(model, init3, param2)
+solve!( problem1 )
+solve!( problem2 )
+solve!( problem3 )
+
+p = plot(layout=(2,1))
+fig_problem!(p,problem1,50)
+fig_problem!(p,problem2,50)
+fig_problem!(p,problem3,50)
+savefig("Gavrilyuk50.pdf")
+xlims!(-L-100,-L+10)
+savefig("Gavrilyuk50zoom.pdf")
+
+
+p = plot(layout=(2,1))
+fig_problem!(p,problem1,100)
+fig_problem!(p,problem2,100)
+fig_problem!(p,problem3,100)
+savefig("Gavrilyuk100.pdf")
+xlims!(-L-100,-L+10)
+savefig("Gavrilyuk100zoom.pdf")
+
+save(problem1,"problem1")
+save(problem2,"problem2")
+save(problem3,"problem3")
+
 
 #----
 param = ( μ  = 0.5,
