@@ -1,7 +1,7 @@
 export SolitaryWaveWhithamGreenNaghdi
 
 """
-    `SolitaryWaveWhithamGreenNaghdi(param, guess; kwargs...)`
+    `SolitaryWaveWhithamGreenNaghdi(param; kwargs...)`
 
 Computes the Whitham-Green-Naghdi solitary wave with prescribed velocity.
 

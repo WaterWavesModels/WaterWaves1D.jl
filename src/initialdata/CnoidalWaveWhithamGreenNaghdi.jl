@@ -3,19 +3,18 @@ using Elliptic
 export CnoidalWaveWhithamGreenNaghdi
 
 """
-    `CnoidalWaveWhithamGreenNaghdi(mesh, param, guess; kwargs...)`
+    `CnoidalWaveWhithamGreenNaghdi(param; kwargs...)`
 
 Computes the Serre-Green-Naghdi cnoidal wave with prescribed `h₀<h₁<h₂`.
 `h_1` is the minimum, `h_2` is the maximum.
 As `h₀ -> h₁`, the cnoidal wave converges towards the solitary wave.
 
 # Arguments
-- `param :: NamedTuple`: parameters of the problem containing `h₀<h₁<h₂` and dimensionless parameters `ϵ` and `μ`, and number of collocation points `N`;
-- `guess :: Vector{Float64}`: initial guess for the surface deformation.
+- `param :: NamedTuple`: parameters of the problem containing `h₀<h₁<h₂` and dimensionless parameters `ϵ` and `μ`, and number of collocation points `N`.
 ## Keywords
+- `guess :: Vector{Float64}`: initial guess for the surface deformation (if not provided, the exact formula for SGN is used);
 - `P :: Int`: the number of periods of the cnoidal wave in the constructed mesh;
 - `SGN :: Bool`: if `true` computes the Serre-Green-Naghdi (instead of Whitham-Green-Naghdi) solitary wave;
-- `exact :: Bool`: if true, uses the exact formula for SGN, either as the solution if `SGN=true`, or overrides the guess if  `SGN=false`
 - `method :: Int`: equation used (between `1` and `4`);
 - `iterative :: Bool`: inverts Jacobian through GMRES if `true`, LU decomposition if `false`;
 - `verbose :: Bool`: prints numerical errors at each step if `true`;
@@ -37,15 +36,14 @@ As `h₀ -> h₁`, the cnoidal wave converges towards the solitary wave.
 - `param :: NamedTuple`: useful parameters
 """
 function CnoidalWaveWhithamGreenNaghdi(
-                param :: NamedTuple,
-                guess :: Vector{Float64};
+                param :: NamedTuple;
+                guess = zeros(0) :: Vector{Float64},
                 P = 2 :: Int,
                 SGN = false :: Bool,
-                exact = false :: Bool,
                 method = 2 :: Int,
                 iterative = false :: Bool,
                 verbose = true :: Bool,
-                max_iter = 20 :: Int,
+                max_iter = 0 :: Int,
                 tol = 1e-10 :: Real,
                 ktol = 0 :: Real,
                 gtol = 1e-10 :: Real,
@@ -63,7 +61,7 @@ function CnoidalWaveWhithamGreenNaghdi(
         ϵ = param.ϵ
         μ = param.μ
 
-        if exact == true
+        if guess == zeros(0)
                 @info "Using the exact formula for the SGN solitary wave as initial guess"
                 # a₁ = ϵ*param.a₁
                 # m = param.m
@@ -82,7 +80,7 @@ function CnoidalWaveWhithamGreenNaghdi(
                 m = sqrt((h₂-h₁)/(h₂-h₀))
                 κ = sqrt(3*(h₂-h₀))/(2*c)/sqrt(μ)
                 λ = Elliptic.K(m^2)/κ
-                @info string("The period is λ=",λ)
+                @info string("The period is 2*λ=",2*λ)
                 mesh = Mesh((L=P*λ,N=param.N))
                 guess = h₁ .-1 .+ (h₂-h₁)*(Jacobi.cn.(κ*mesh.x,m^2).^2)
 
@@ -316,6 +314,6 @@ function CnoidalWaveWhithamGreenNaghdi(
         # v2 = u2 - 1/3 ./h2 .* (DxF(h2.^3 .*DxF(u2)))
 
 
-        return (η,u,v,param,mesh)
+        return (η,u,v,mesh,param)
 
 end

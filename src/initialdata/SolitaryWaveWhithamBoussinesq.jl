@@ -1,6 +1,6 @@
 export SolitaryWaveWhithamBoussinesq
 """
-    `SolitaryWaveWhithamBoussinesq(mesh, param, guess; kwargs...)`
+    `SolitaryWaveWhithamBoussinesq(param; kwargs...)`
 
 Computes the Whitham-Boussinesq solitary wave with prescribed velocity.
 
