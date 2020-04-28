@@ -89,7 +89,7 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		if precond == true
 			Precond = Diagonal( 1 ./  F₁ )
 		else
-			Precond = Diagonal( 1 .+ 100*μ/3*k.^2 )
+			Precond = Diagonal( 1 .+ μ/3*k.^2 )
 			#Precond = lu( exp.(-1im*k*x') ) # #Diagonal( ones(size(k)) )
 		end
 		K = mesh.kmax * (1-dealias/(2+dealias))
