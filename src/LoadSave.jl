@@ -47,46 +47,29 @@ function convert(::Type{Problem}, p :: ProblemSave)
     @show p.initial
     @show p.solver
     @show p.data.datasize,p.data.datalength
-    #
-    # if p.model == :CGBSW
-    #     model = CGBSW(param)
-    # elseif p.model == :CGBSW_naive
-    #     model = CGBSW_naive(param)
-    # elseif p.model == :Matsuno
-    #     model = Matsuno(param)
-    # elseif p.model == :Matsuno_naive
-    #     model = Matsuno_naive(param)
-    # elseif p.model == :Matsuno_mod_naive
-    #     model = Matsuno_mod_naive(param)
-    # elseif p.model == :Boussinesq
-    #     model = Boussinesq(param)
-    # elseif p.model == :fdBoussinesq
-    #     model = fdBoussinesq(param)
-    # elseif p.model == :WaterWaves
-    #     model = WaterWaves(param)
-    # elseif p.model == :WhithamGreenNaghdi
-    #     model = WhithamGreenNaghdi(param)
-    # elseif p.model == :WhithamGreenNaghdiSym
-    #     model = WhithamGreenNaghdiSym(param)
-    # elseif p.model == :WhithamGreenNaghdiKlein
-    #     model = WhithamGreenNaghdiKlein(param)
-    # end
+
+    # Reconstructs the model
     model = getfield(ShallowWaterModels, p.model)(param)
     if :kwargs in fieldnames(typeof(model))
         model = getfield(ShallowWaterModels, p.model)(param;param.kwargs...)
     end
 
+    # Reconstructs the initial data
     mesh=Mesh(param)
     U=first(p.data.U)
     initial = Init(mesh,U[:,1],U[:,2])
-    #
-    # if p.solver == :RK4
-    #     solver = RK4(param)
-    # end
-    solver = getfield(ShallowWaterModels, p.solver)(param)
 
+    # Reconstructs the solver (may not work with other user-defined solvers)
+    if p.solver == :RK4_naive
+        solver = RK4_naive()
+    else
+        solver = getfield(ShallowWaterModels, p.solver)(param)
+    end
 
+    # Reconstructs the structure of the problem
     pb = Problem(model, initial, param; solver = solver)
+
+    # Writes the raw data
     pb.data = p.data
 
     return pb
@@ -94,6 +77,12 @@ function convert(::Type{Problem}, p :: ProblemSave)
 end
 
 import JLD.save
+
+"""
+    `save(p::Problem,name::String)`
+
+Saves the content of an object `Problem` into the file `name.jld`.
+"""
 
 function save(p::Problem,name::String)
 
@@ -104,6 +93,11 @@ end
 
 import JLD.load
 
+"""
+    `load(name::String)`
+
+Loads the contents of the file `name.jld` as a problem of type `:Problem`.
+"""
 function load(name::String)
 
     convert(Problem, JLD.load(string(name,".jld"), name ))
