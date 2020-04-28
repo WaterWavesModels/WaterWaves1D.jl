@@ -5,54 +5,52 @@ using ShallowWaterModels
 #include("../src/dependencies.jl")
 using JLD
 
-param = ( ϵ  = 1/2,
-          N  = 2^10,
-          L  = 10,
-          T  = 5,
-          dt = 0.01,
-          θ = 1)
+param = ( ϵ  = 1/2, μ = 1, θ = 1)
+paramX= ( N  = 2^8, L  = 10)
+paramT= ( T  = 5, dt = 0.1)
 
 init     = BellCurve(param)
-cheng    = CGBSW(param)
-problem1 = Problem( cheng, init, param; solver = RK4(param) )
+model    = WhithamGreenNaghdi(merge(param,paramX);ktol=1e-10)
+problem1 = Problem( model, init, merge(paramT,paramX); solver = RK4(paramX) )
 
 @testset "LoadSave" begin
 
-    dump  = convert(ProblemSave, problem1 )
-    p2    = convert(Problem, dump )
+    dump  = convert( ProblemSave, problem1 )
+    pload = convert( Problem, dump )
 
     save(problem1, "problem1")
-
     pload = load("problem1")
 
     @test true
+    @test pload.model.kwargs.ktol == 1e-10
 
 end
 
 @testset "Parameters" begin
 
     @test param.ϵ  == 0.5
-    @test param.N  == 1024
-    @test param.L  == 10
-    @test param.T  == 5
-    @test param.dt == 0.01
+    @test param.μ  == 1
+    @test paramX.N  == 256
+    @test paramX.L  == 10
+    @test paramT.T  == 5
+    @test paramT.dt == 0.1
     @test param.θ == 1
 
 end
 
 solve!(problem1)
 
-@testset "Test problem with Cheng et al. model" begin
+@testset "Test problem with Whitham-Green-Naghdi model" begin
     @test !any(isnan,problem1.data.U[end][1])
     @test !any(isnan,problem1.data.U[end][2])
 end
 
-matsuno  = Matsuno(param)
-problem2 = Problem(matsuno, init, param )
+WW3  = PseudoSpectral(merge(param,paramX);order=3,dealias=1)
+problem2 = Problem(WW3, init, merge(paramX,paramT) )
 
 solve!( problem2 )
 
-@testset "Test problem with Matsuno model" begin
+@testset "Test problem with Pseudo-spectral model" begin
     @test !any(isnan,problem2.data.U[end][1])
     @test !any(isnan,problem2.data.U[end][2])
 end

@@ -35,6 +35,8 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 
     label   :: String
 	datasize:: Int
+	param	:: NamedTuple
+	kwargs  :: NamedTuple
 	μ 		:: Real
 	ϵ 		:: Real
 	x   	:: Vector{Float64}
@@ -68,6 +70,7 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		@info label
 
 		datasize = 2
+		kwargs = (iterate=iterate,SGN=SGN,dealias=dealias,ktol=ktol,gtol=gtol,precond=precond)
 		μ 	= param.μ
 		ϵ 	= param.ϵ
 		mesh = Mesh(param)
@@ -111,7 +114,7 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		u, fftv, fftη, fftu, hdu = (similar(h),).*ones(5)
 		L = similar(FFT)
 
-        new(label, datasize, μ, ϵ, x, F₀, ∂ₓ, Π⅔, Id, FFT, IFFT, IFFTF₀, M₀, h, u, fftv, fftη, fftu, hdu, L, Precond, iterate, ktol, gtol )
+        new(label, datasize, param, kwargs, μ, ϵ, x, F₀, ∂ₓ, Π⅔, Id, FFT, IFFT, IFFTF₀, M₀, h, u, fftv, fftη, fftu, hdu, L, Precond, iterate, ktol, gtol )
     end
 end
 
