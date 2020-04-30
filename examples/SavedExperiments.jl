@@ -6,7 +6,7 @@ using ShallowWaterModels,Plots,FFTW,Statistics;gr()
 #include("../src/dependencies.jl")
 
 #---- Cold-Hot states transition for Serre-Green-Naghdi, discussed in the paper of Sergey Gavrilyuk, Boniface Nkonga, Keh-Ming Shyue and Lev Truskinovsky
-function ColdHot(scenario)
+function ColdHot(;scenario)
 	if scenario !=1 && scenario !=2
 		error("the scenario must be 1 or 2")
 	end
@@ -14,50 +14,47 @@ function ColdHot(scenario)
 			h₀=1.0962,h₁=1.1,h₂=1.2)
 	@time (η,u,v,mesh,par)=CnoidalWaveWhithamGreenNaghdi(param;P=200,SGN=true)
 	x=mesh.x
-	h=1 .+ η
+	h=1 .+ param.ϵ*η
 	m=-sqrt(param.h₀*param.h₁*param.h₂)
 	if scenario == 1
 		meanη=mean(h)-1
-		meanv=m*mean(1 ./h)
+		meanu=m*mean(1 ./h)
 	else
 		meanη=1.09808-1
-		meanv=m/1.09808
+		meanu=m/1.09808
 	end
 
 	M=-m*mean(1 ./ h)/sqrt(mean(h)) #Froude number, close to 1
 	L=80*par.λ
 
-	v.-=mean(v)
-	v.+=m*mean(1 ./h)
+	u.-=mean(u)
+	u.+=m*mean(1 ./h)
 
-	interp1(x)=sech.(x/3).^2
-	η1₀(x)=(meanη.+(0.2-meanη)*interp1(x))
-	η1=η.*(x.>=-L).*(x.<=L)+η1₀.(x.+L).*(x.<-L)+η1₀.(x.-L).*(x.>L)
-	v1₀(x)=(meanv .+(v[Int(end/2)]-meanv)*interp1(x))
-	v1=v.*(x.>=-L).*(x.<=L)+v1₀(x.+L).*(x.<-L)+v1₀(x.-L).*(x.>L)
-	#v1 .+=m*mean(1 ./h)
+	interp(x,δ)=sech.(x/δ).^2
+	η₀(x,δ)=(meanη.+(0.2-meanη)*interp(x,δ))
+	u₀(x,δ)=(meanu .+(u[Int(end/2)]-meanu)*interp(x,δ))
 
+	Dx(v)=real.(ifft(1im*mesh.k.*fft(v)))
 
-	interp2(x)=sech.(x/2).^2
-	η2₀(x)=(meanη.+(0.2-meanη)*interp2(x))
-	η2=η.*(x.>=-L).*(x.<=L)+η2₀.(x.+L).*(x.<-L)+η2₀.(x.-L).*(x.>L)
-	v2₀(x)=(meanv .+(v[Int(end/2)]-meanv)*interp2(x))
-	v2=v.*(x.>=-L).*(x.<=L)+v2₀(x.+L).*(x.<-L)+v2₀(x.-L).*(x.>L)
-	#v2 .+=m*mean(1 ./h)
+	η1=η.*(x.>=-L).*(x.<=L)+η₀(x.+L,0.1).*(x.<-L)+η₀(x.-L,0.1).*(x.>L)
+	u1=u.*(x.>=-L).*(x.<=L)+u₀(x.+L,0.1).*(x.<-L)+u₀(x.-L,0.1).*(x.>L)
+	v1=u1-param.μ/3*Dx(h.^3 .*Dx(u1))./h
 
+	η2=η.*(x.>=-L).*(x.<=L)+η₀(x.+L,2).*(x.<-L)+η₀(x.-L,2).*(x.>L)
+	u2=u.*(x.>=-L).*(x.<=L)+u₀(x.+L,2).*(x.<-L)+u₀(x.-L,2).*(x.>L)
+	v2=u2-param.μ/3*Dx(h.^3 .*Dx(u2))./h
 
-	interp3(x)=sech.(10*x).^2
-	η3₀(x)=(meanη.+(0.2-meanη)*interp3(x))
-	η3=η.*(x.>=-L).*(x.<=L)+η3₀.(x.+L).*(x.<-L)+η3₀.(x.-L).*(x.>L)
-	v3₀(x)=(meanv .+(v[Int(end/2)]-meanv)*interp3(x))
-	v3=v.*(x.>=-L).*(x.<=L)+v3₀(x.+L).*(x.<-L)+v3₀(x.-L).*(x.>L)
-	#v3 .+=m*mean(1 ./h)
+	η3=η.*(x.>=-L).*(x.<=L)+η₀(x.+L,3).*(x.<-L)+η₀(x.-L,3).*(x.>L)
+	u3=u.*(x.>=-L).*(x.<=L)+u₀(x.+L,3).*(x.<-L)+u₀(x.-L,3).*(x.>L)
+	v3=u3-param.μ/3*Dx(h.^3 .*Dx(u3))./h
 
 	init1=Init(mesh,η1,v1)
 	init2=Init(mesh,η2,v2)
 	init3=Init(mesh,η3,v3)
+
 	param2=merge(param,(L=-mesh.xmin,T = 5000, dt = 0.05, ns=1000))
 	@time model=WhithamGreenNaghdi(param2;SGN=true,dealias=1,precond=false, gtol=1e-12)
+
 	problem1 = Problem(model, init1, param2)
 	problem2 = Problem(model, init2, param2)
 	problem3 = Problem(model, init3, param2)
@@ -95,6 +92,8 @@ function ColdHot(scenario)
 	savefig("ColdHot5000Xzoom.pdf")
 	ylims!(p[1,1],0.0975,0.1)
 	savefig("ColdHot5000Yzoom.pdf")
+
+	display(p)
 
 	save(problem1,"ColdHot1")
 	save(problem2,"ColdHot2")
