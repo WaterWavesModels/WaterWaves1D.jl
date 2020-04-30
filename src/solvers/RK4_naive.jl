@@ -2,10 +2,11 @@ export RK4_naive
 export step!
 
 """
-    `RK4_naive()`
+    RK4_naive()
 
 Runge-Kutta fourth order solver.
-Constructs an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)
+
+A naive version of `RK4`, without argument since no pre-allocation is performed.
 
 """
 struct RK4_naive <: TimeSolver end
