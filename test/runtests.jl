@@ -18,8 +18,8 @@ problem1 = Problem( model, init, merge(paramT,paramX); solver = RK4(paramX) )
     dump  = convert( ProblemSave, problem1 )
     pload = convert( Problem, dump )
 
-    save(problem1, "problem1")
-    pload = load("problem1")
+    save(problem1, "testsave")
+    pload = load("testsave")
 
     @test true
     @test pload.model.kwargs.ktol == 1e-10
