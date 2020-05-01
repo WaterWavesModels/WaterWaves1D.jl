@@ -14,22 +14,27 @@ Constructs an object of type `TimeSolver` to be used in `Problem(model, initial,
 
 The other arguments are keywords and are optional.
 
-- `datasize :: Int` determines the number of equations solved (default is `datasize=2`);
+- `datasize` determines the number of equations solved (default is `datasize=2`);
 - `model :: AbstractModel` determines the number of equations solved if it contains a field `:datasize`.
+- `realdata` if `true` (default is `false`), then pre-allocated vectors are real-valued.
 
 """
 struct RK4 <: TimeSolver
 
-    Uhat :: Array{Complex{Float64},2}
-    dU   :: Array{Complex{Float64},2}
+    Uhat :: Array
+    dU   :: Array
 
-    function RK4( param::NamedTuple; model=GenericModel()::AbstractModel, datasize=2::Int )
+    function RK4( param::NamedTuple; model=GenericModel()::AbstractModel, datasize=2, realdata=false )
         if :datasize in fieldnames(typeof(model))
             datasize = model.datasize
         end
-        Uhat = zeros(Complex{Float64}, (param.N,datasize))
-        dU   = zeros(Complex{Float64}, (param.N,datasize))
-
+        if realdata == true
+            Uhat = zeros(Float64, (param.N,datasize))
+            dU   = zeros(Float64, (param.N,datasize))
+        else
+            Uhat = zeros(Complex{Float64}, (param.N,datasize))
+            dU   = zeros(Complex{Float64}, (param.N,datasize))
+        end
         new( Uhat, dU)
 
     end
@@ -38,8 +43,8 @@ end
 
 function step!(s  :: RK4,
                f! :: AbstractModel,
-               U  :: Array{Complex{Float64},2},
-               dt :: Float64)
+               U  ,
+               dt )
 
 
     s.Uhat .= U

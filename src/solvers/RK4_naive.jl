@@ -13,8 +13,8 @@ struct RK4_naive <: TimeSolver end
 
 function step!(s  :: RK4_naive,
                f! :: AbstractModel,
-               U  :: Array{Complex{Float64},2},
-               dt :: Float64)
+               U  ,
+               dt )
 
 
     U0 = copy(U)
