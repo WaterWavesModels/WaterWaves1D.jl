@@ -1,6 +1,5 @@
+export WhithamGreenNaghdiGPU,mapto,mapfro
 using CUDAdrv, CuArrays, CuArrays.CUFFT
-
-export WhithamGreenNaghdiGPU
 
 """
     WhithamGreenNaghdiGPU(param;kwargs)
@@ -109,7 +108,7 @@ function (model::WhithamGreenNaghdiGPU)( U::Array{ComplexF64,2} )
     d_fo = CuArray(model.F₀)
     d_L = CuArray(model.FFT)
     d_dx = CuArray(model.∂ₓ)
-    d_fft = CuArray(model.FFT) 
+    d_fft = CuArray(model.FFT)
     d_ifft0 = CuArray(model.IFFTF₀)
 
     fw = CUFFT.plan_fft!(d_fftη)
@@ -203,11 +202,11 @@ See documentation of `WhithamGreenNaghdi` for more details.
 """
 function mapfro(m::WhithamGreenNaghdiGPU, datum::Array{Complex{Float64},2})
 
-    m.fftη .= datum[:, 1]
-    m.h .= 1 .+ m.ϵ * ifft(m.fftη)
-    m.L .=
-        m.Id - 1 / 3 * m.FFT * Diagonal(1 ./ m.h) * m.M₀ * Diagonal(m.h .^ 3) * m.IFFTF₀
+    fftη = datum[:, 1]
+    h = 1 .+ m.ϵ * ifft(fftη)
+    L =
+        m.Id - 1 / 3 * m.FFT * Diagonal(1 ./ h) * m.M₀ * Diagonal(h .^ 3) * m.IFFTF₀
 
-    real(ifft(datum[:, 1])), real(ifft(datum[:, 2])), real(ifft(m.L \ datum[:, 2]))
+    real(ifft(datum[:, 1])), real(ifft(datum[:, 2])), real(ifft(L \ datum[:, 2]))
 
 end

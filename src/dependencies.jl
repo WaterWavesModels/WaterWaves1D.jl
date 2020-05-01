@@ -11,8 +11,10 @@ gr()
 #plotlyjs()
 
 include("types.jl")
+
 include("solvers/RK4.jl")
 include("solvers/RK4_naive.jl")
+
 include("initialdata/Init.jl")
 include("initialdata/BellCurve.jl")
 include("initialdata/HighFreq.jl")
@@ -21,6 +23,7 @@ include("initialdata/SolitaryWaveWhitham.jl")
 include("initialdata/SolitaryWaveWhithamBoussinesq.jl")
 include("initialdata/SolitaryWaveWhithamGreenNaghdi.jl")
 include("initialdata/CnoidalWaveWhithamGreenNaghdi.jl")
+
 include("models/CGBSW.jl")
 include("models/CGBSW_naive.jl")
 include("models/Matsuno.jl")
@@ -31,6 +34,7 @@ include("models/PseudoSpectral.jl")
 include("models/WaterWaves.jl")
 include("models/WhithamBoussinesq.jl")
 include("models/WhithamGreenNaghdi.jl")
+include("models/WhithamGreenNaghdiGPU.jl") #comment this line if you have problems with CuArrays
 
 include("LoadSave.jl")
 include("fig.jl")
