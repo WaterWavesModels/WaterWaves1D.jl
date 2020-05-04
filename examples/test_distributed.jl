@@ -13,7 +13,6 @@ addprocs(3)
     using Pkg
     Pkg.activate(".")
     using ShallowWaterModels
-    using ParallelDataTransfer
 
 end
 
@@ -30,10 +29,10 @@ function run_simulation()
 
         #---- parameters
         param = ( μ  = .1,
-        		  ϵ  = 1,
-                  N  = 2^8,  # number of collocation points
-                  L  = 10,   # size of the mesh (-L,L)
-                  T  = 1,	   # final time of computation
+       		  ϵ  = 1,
+                  N  = 2^11,  # number of collocation points
+                  L  = 10,    # size of the mesh (-L,L)
+                  T  = 5,     # final time of computation
                   dt = 0.001, # timestep
         				);
         #---- initial data
@@ -55,36 +54,39 @@ function run_simulation()
         end
 
     end
+
+    @timeit "Consecutive solving" begin
+        p2 = []
+        for model in models
+            println(model.label)
+            push!(p2, solve_problem(model))
+        end
+    end
     
     @timeit "Distributed" begin
 
         rc = RemoteChannel(()->Channel(3));
         pids = collect(workers())
         @sync for model in models
-             @async put!(rc, copy(solve_problem(model)))
+             @async put!(rc, (model.label,solve_problem(model)))
         end
 
-        p1 = [copy(take!(rc)) for _ in 1:3]
+        results = (take!(rc) for _ in 1:3)
 
+        p1 = Dict( k => v for (k,v) in results)
+
+        @show keys(p1)
     end
 
-    @timeit "Consecutive solving" begin
-        p2 = []
-        for model in models
-            println(model.label)
-            push!(p2, copy(solve_problem(model)))
-        end
-    end
 
     print_timer()
 
     #---- Tests
     @testset "Final" begin
-     	@test p1[1] == p2[2]
-     	@test p1[2] == p2[3]
-     	@test p1[3] == p2[1]
+     	@test p1["water waves"] == p2[1]
+     	@test p1["WW2"] == p2[2]
+     	@test p1["WW3"] == p2[3]
     end
-
 
 end
 
