@@ -108,7 +108,7 @@ function fig_problem!( plt, p::Problem, t::Real )
 
 	t=max(t,0)
 	t=min(t,p.times.tfin)
-	index=1+round(Int,(t/p.times.tfin)*(p.times.Ns-1))
+	index = indexin(false,p.times.ts.<t)[1]
 
 	if typeof(p.model)==WaterWaves
 

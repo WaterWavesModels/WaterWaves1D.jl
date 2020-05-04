@@ -31,9 +31,16 @@ mutable struct Problem
     function Problem(model   :: AbstractModel,
                      initial :: InitialData,
                      param   :: NamedTuple;
-                     solver = RK4(param;model=model)  :: TimeSolver)
+                     solver = RK4(param;model=model)  :: TimeSolver,
+                     verbose = true :: Bool)
 
-        if in(:ns,keys(param))
+        if verbose == true
+            @info string("\nBuilds the initial-value problem for model ",model.label,"\n",
+                         "with parameters\n",param)
+        end
+        if in(:Ns,keys(param))
+            times = Times(param.dt, param.T; Ns = param.Ns)
+        elseif in(:ns,keys(param))
             times = Times(param.dt, param.T; ns = param.ns)
         else
             times = Times(param.dt, param.T)
@@ -60,39 +67,39 @@ The argument `problem` should be of type `:: Problem`.
 It may be buit, e.g., by `Problem(model, initial, param)`
 
 """
-function solve!(problem :: Problem)
+function solve!(problem :: Problem;verbose=true::Bool)
 
-    @info string("\nNow solving the model ",problem.model.label,"\n",
-        "with parameters\n",problem.param)
+    if verbose == true
+        @info string("\nNow solving the initial-value problem for model ",problem.model.label,"\n",
+            "with parameters\n",problem.param)
+    end
 
     U = copy(last(problem.data.U))
 
-    dt = problem.times.dt
+    dt     = problem.times.dt
+    solver = problem.solver
+    model  = problem.model
+    data   = problem.data.U
 
-    Jn = range(problem.times.ns ,stop = problem.times.Nc-1, step = problem.times.ns)
-    J = 1:length(Jn)
-
-    if problem.times.ns == 1
-        @showprogress 1 for j in J
-            step!(problem.solver, problem.model, U, dt)
-            push!(problem.data.U,copy(U))
+    if problem.times.tc == problem.times.ts
+        @showprogress 1 for j in 1:problem.times.Ns-1
+            step!(solver, model, U, dt)
+            push!(data,copy(U))
         end
 
     elseif length(problem.times.ts) > 25
-        L = 1:problem.times.ns
-        @showprogress 1 for j in J
-            for l in L
-                step!(problem.solver, problem.model, U, dt)
+        @showprogress 1 for j in 1:problem.times.Ns-1
+            for l in 1:problem.times.ns[j]
+                step!(solver, model, U, dt)
             end
-            push!(problem.data.U,copy(U))
+            push!(data,copy(U))
         end
     else
-        L = 1:problem.times.ns
-        for j in J
-            @showprogress string("Step ",j,"/",length(J),"...") 1 for l in L
-                step!(problem.solver, problem.model, U, dt)
+        for j in 1:problem.times.Ns-1
+            @showprogress string("Step ",j,"/",problem.times.Ns-1,"...") 1 for l in 1:problem.times.ns[j]
+                step!(solver, model, U, dt)
             end
-            push!(problem.data.U,copy(U))
+            push!(data,copy(U))
             println()
 
         end
