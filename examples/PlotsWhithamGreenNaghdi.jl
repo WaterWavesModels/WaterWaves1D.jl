@@ -270,7 +270,7 @@ function IntegrateSolitaryWaveWGN(;SGN=false,c=2,N=2^10,L=10*π,T=1,dt=1/2000,sa
 	if sav != []
 		savefig(string(sav,".pdf"));
 		create_animation(problem;str=string(sav,"-anim.pdf"))
-		fig_problem(problem)
+		plot_solution(problem)
 		savefig(string(sav,"-final.pdf"));
 		save(problem,sav);
 	end

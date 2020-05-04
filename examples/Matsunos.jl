@@ -31,7 +31,7 @@ p = plot(layout=(2,1))
 for problem in problems
 	print("\nNow solving the model ",problem.model.label,"\n")
    	@time solve!( problem )
-   	fig_problem!( p, problem )
+   	plot_solution!( p, problem )
 
 end
 
