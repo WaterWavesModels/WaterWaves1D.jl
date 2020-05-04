@@ -108,3 +108,38 @@ function solve!(problem :: Problem;verbose=true::Bool)
     println()
 
 end
+using Base.Threads
+function solve!(problems :: Array)
+    U=[];nsteps=0
+    for problem in problems
+        push!(U,copy(last(problem.data.U)))
+        nsteps+=problem.times.Ns-1
+    end
+    pg=Progress(nsteps;dt=1)
+    @threads for i in 1:length(problems)
+        #pg[i]=Progress(length(Jn[i]);dt=1)
+        if problems[i].times.ns == 1
+
+            for j in 1:problems[i].times.Ns-1
+                step!(problems[i].solver, problems[i].model, U[i], problems[i].times.dt)
+                push!(problems[i].data.U,copy(U[i]))
+                next!(pg)
+            end
+
+        else
+            for j in 1:problems[i].times.Ns-1
+                for l in 1:problems[i].times.ns[j]
+                    step!(problems[i].solver, problems[i].model, U[i], problems[i].times.dt)
+                end
+                push!(problems[i].data.U,copy(U[i]))
+                next!(pg)
+            end
+        end
+        @info string("\nDone solving the model ",problems[i].model.label,"\n",
+            "with parameters\n",problems[i].param)
+
+    end
+
+    println()
+
+end
