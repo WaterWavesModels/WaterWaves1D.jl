@@ -12,7 +12,7 @@ function ColdHot(;scenario)
 	end
 	param = ( μ  = 1, ϵ  = 1, N  = 2^13,
 			h₀=1.0962,h₁=1.1,h₂=1.2)
-	@time (η,u,v,mesh,par)=CnoidalWaveWhithamGreenNaghdi(param;P=200,SGN=true)
+	@time (η,u,v,mesh,par)=CnoidalWaveWhithamGreenNaghdi(param;P=500,SGN=true)
 	x=mesh.x
 	h=1 .+ param.ϵ*η
 	m=-sqrt(param.h₀*param.h₁*param.h₂)
@@ -25,7 +25,7 @@ function ColdHot(;scenario)
 	end
 
 	M=-m*mean(1 ./ h)/sqrt(mean(h)) #Froude number, close to 1
-	L=80*par.λ
+	L=250*par.λ
 
 	u.-=mean(u)
 	u.+=m*mean(1 ./h)
@@ -52,8 +52,8 @@ function ColdHot(;scenario)
 	init2=Init(mesh,η2,v2)
 	init3=Init(mesh,η3,v3)
 
-	param2=merge(param,(L=-mesh.xmin,T = 5000, dt = 0.05, ns=1000))
-	@time model=WhithamGreenNaghdi(param2;SGN=true,dealias=1,precond=false, gtol=1e-12)
+	param2=merge(param,(L=-mesh.xmin,T = 8000, dt = 0.05, ns=1000))
+	@time model=WhithamGreenNaghdi(param2;SGN=true,dealias=0,precond=false, gtol=1e-12)
 
 	problem1 = Problem(model, init1, param2)
 	problem2 = Problem(model, init2, param2)
@@ -62,36 +62,38 @@ function ColdHot(;scenario)
 	solve!( problem2 )
 	solve!( problem3 )
 
+
 	p = plot(layout=(2,1))
-	fig_problem!(p,problem1,1000)
-	fig_problem!(p,problem2,1000)
-	fig_problem!(p,problem3,1000)
-	savefig("ColdHot1000.pdf")
-	xlims!(p[1,1],-L-100,-L+50)
-	savefig("ColdHot1000Xzoom.pdf")
-	ylims!(p[1,1],0.0975,0.1)
-	savefig("ColdHot1000Yzoom.pdf")
+	plot_solution!(p,problem1,t=2000)
+	plot_solution!(p,problem2,t=2000)
+	plot_solution!(p,problem3,t=2000)
+	savefig("ColdHot2000.pdf")
+	xlims!(p[1,1],-L-200,-L+50)
+	savefig("ColdHot2000Xzoom.pdf")
+	ylims!(p[1,1],0.095,0.1)
+	savefig("ColdHot2000Yzoom.pdf")
+
+	p = plot(layout=(2,1))
+	plot_solution!(p,problem1,t=4000)
+	plot_solution!(p,problem2,t=4000)
+	plot_solution!(p,problem3,t=4000)
+	savefig("ColdHot4000.pdf")
+	xlims!(p[1,1],-L-200,-L+50)
+	savefig("ColdHot4000Xzoom.pdf")
+	ylims!(p[1,1],0.095,0.1)
+	savefig("ColdHot4000Yzoom.pdf")
 
 
 	p = plot(layout=(2,1))
-	fig_problem!(p,problem1,3000)
-	fig_problem!(p,problem2,3000)
-	fig_problem!(p,problem3,3000)
-	savefig("ColdHot3000.pdf")
-	xlims!(p[1,1],-L-100,-L+50)
-	savefig("ColdHot3000Xzoom.pdf")
-	ylims!(p[1,1],0.0975,0.1)
-	savefig("ColdHot3000Yzoom.pdf")
+	plot_solution!(p,problem1,t=8000)
+	plot_solution!(p,problem2,t=8000)
+	plot_solution!(p,problem3,t=8000)
+	savefig("ColdHot8000.pdf")
+	xlims!(p[1,1],-L-200,-L+50)
+	savefig("ColdHot8000Xzoom.pdf")
+	ylims!(p[1,1],0.095,0.1)
+	savefig("ColdHot8000Yzoom.pdf")
 
-	p = plot(layout=(2,1))
-	fig_problem!(p,problem1)
-	fig_problem!(p,problem2)
-	fig_problem!(p,problem3)
-	savefig("ColdHot5000.pdf")
-	xlims!(p[1,1],-L-100,-L+50)
-	savefig("ColdHot5000Xzoom.pdf")
-	ylims!(p[1,1],0.0975,0.1)
-	savefig("ColdHot5000Yzoom.pdf")
 
 	display(p)
 
@@ -115,7 +117,7 @@ function Wavebreaking1()
 	problem = Problem(model, init, param)
 	@time solve!( problem )
 	p = plot(layout=(2,1))
-	fig_problem!( p, problem, .03898)
+	plot_solution!( p, problem, .03898)
 	plot!(xlims=[(0.0018,0.0025) (-100000,100000 )])
 	display(p)
 end
@@ -135,7 +137,7 @@ function Wavebreaking2()
 	problem = Problem(model, init, param)
 	@time solve!( problem )
 	p = plot(layout=(2,1))
-	fig_problem!( p, problem, .92)
+	plot_solution!( p, problem,t= .92)
 	plot!(xlims=[(0.275,0.285) (-100000,100000 )])
 	display(p)
 end

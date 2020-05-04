@@ -38,10 +38,6 @@ for problem in problems
 end
 
 #---- visualization
-p = plot(layout=(2,1))
-for problem in problems
-   	fig_problem!( p, problem)
-end
-display(p)
+plot_solution(problems)
 savefig("WWvsXX.pdf"); nothing # hide
-create_animation(problems;str="WWvsXX")
+create_animation(problems;name="WWvsXX")
