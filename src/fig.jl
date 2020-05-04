@@ -1,152 +1,152 @@
-export create_animation,fig_problem!,fig_problem
+export create_animation,plot_solution!,plot_solution
+#
+# function create_animation( p::Problem; str="anim"::String, ylims=nothing )
+#
+# 	if ylims==nothing
+# 		(η0,v0) = solution(p;t=0)
+# 		y0 = minimum(η0);y1 = maximum(η0);
+# 		ylims=(y0-(y1-y0)/10,y1+(y1-y0)/10)
+# 	end
+# 	prog = Progress(p.times.Ns;dt=1,desc="Creating animation: ")
+#
+#     anim = @animate for l in range(1,stop=min(p.times.Ns-1,200))
+#         plt = plot_solution( p; t=p.times.ts[l] )
+# 		if typeof(ylims)==Tuple ylims!(plt[1,1],ylims) end
+#         next!(prog)
+#     end
+#
+#     gif(anim, string(str,".gif"), fps=15); nothing
+#
+# end
+#
+"""
+	create_animation( p; name::String, ylims=(a,b) )
 
-function create_animation( p::Problem;str="anim"::String )
+Creates an animation showing the evolution of initial-value problems.
 
-	prog = Progress(p.times.Ns;dt=1,desc="Creating animation: ")
-	(h0,u0) = mapfro(p.model,first(p.data.U))
-	y0 = minimum(h0);y1 = maximum(h0);
-    anim = @animate for l in range(1,stop=min(p.times.Ns-1,200))
+Argument `p` is either an element or a vector, list of elements of type `Problem`.
 
-        plt = plot(layout=(2,1))
+The animation is saved as `name.gif` if `string` is provided; `anim.gif` otherwise.
 
-		(hr,ur) = mapfro(p.model,p.data.U[l])
+`ylims` allows to specifies the y axis limits.
+If nothing is provided, then the limits are determined from the initial data.
+If anything but a Tuple is provided, the axis limits evolve with the solution.
 
-        plot!(plt[1,1], p.mesh.x, hr;
-              title="physical space",
-			  ylims=(y0-(y1-y0)/10,y1+(y1-y0)/10)
-			  )
+"""
+function create_animation( problems; name="anim"::String, ylims=nothing )
+	label=nothing
+	if isa(problems,Problem) # if create_animation is called with a single problem
+		problems=[problems];  # A one-element array to allow `for pb in p`
+		label=problems[1].model.label; # saves the model's name
+		problems[1].model.label=""; 	# replace it with blank so that it does not appear in the plots
+	end
 
-        plot!(plt[2,1], fftshift(p.mesh.k),
-              log10.(1e-18.+abs.(fftshift(fft(hr))));
-              title="frequency")
+	if ylims == nothing
+		(η,v) = solution(problems[1];t=0)
+		y0 = minimum(η);y1 = maximum(η);
+		ylims=(y0-(y1-y0)/10,y1+(y1-y0)/10)
+	end
 
-        next!(prog)
-
-    end
-
-    gif(anim, string(str,".gif"), fps=15); nothing
-
-end
-
-
-function create_animation( pbs::Array{Any,1};str="anim"::String )
-	p0=pbs[1]
-    prog = Progress(p0.times.Ns;dt=1,desc="Creating animation: ")
-
-    anim = @animate for l in range(1,stop=min(p0.times.Ns-1,200))
-
-        plt = plot(layout=(2,1))
-
-		for p in pbs
-			if typeof(p.model)==WaterWaves
-				(x,z,v) = mapfro(p.model,p.data.U[l])
-				plot!(plt[1,1], x, z;
-					title="physical space",
-					label=p.model.label)
-
-				plot!(plt[2,1], fftshift(p.mesh.k),
-					log10.(1e-18.+abs.(fftshift(fft(z .- 1))));
-					title="frequency",
-					label=p.model.label)
-
-
-			else
-				(hr,ur) = mapfro(p.model,p.data.U[l])
-
-        		plot!(plt[1,1], p.mesh.x, hr;
-              		title="physical space",
-              		label=p.model.label)
-
-        		plot!(plt[2,1], fftshift(p.mesh.k),
-              		log10.(1e-18.+abs.(fftshift(fft(hr))));
-              		title="frequency",
-              		label=p.model.label)
-			end
+	prog = Progress(problems[1].times.Ns;dt=1,desc="Creating animation: ")
+    anim = @animate for l in range(1,stop=min(problems[1].times.Ns,200))
+		plt = plot(layout=(2,1))
+		for pb in problems
+			plot_solution!( plt, pb; t=pb.times.ts[l] )
 		end
+		if isa(ylims,Tuple) ylims!(plt[1,1],ylims) end
         next!(prog)
-
     end
+	if label!=nothing problems[1].model.label=label end # puts back the model's name
 
-    gif(anim, string(str,".gif"), fps=15); nothing
-
+	gif(anim, string(name,".gif"), fps=15); nothing
 end
 
 #----
 #
 #
-#md # Plot results function
-function fig_problem!( plt, p::Problem )
+# #md # Plot results function
+# function fig_problem!( plt, p::Problem )
+#
+# 	if typeof(p.model)==WaterWaves
+#
+# 		(x,z,v) = mapfro(p.model,p.data.U[end])
+# 		plot!(plt[1,1], x, z;
+# 			title="physical space",
+# 			label=p.model.label)
+#
+# 		plot!(plt[2,1], fftshift(p.mesh.k),
+# 			log10.(1e-18.+abs.(fftshift(fft(z .- 1))));
+# 			title="frequency",
+# 			label=p.model.label)
+#
+# 	else
+#     	(hr,ur) = mapfro(p.model,p.data.U[end])
+#
+#     	plot!(plt[1,1], p.mesh.x, hr;
+# 		  	title="physical space",
+# 	        label=p.model.label)
+#
+#     	plot!(plt[2,1], fftshift(p.mesh.k),
+#             log10.(1e-18.+abs.(fftshift(fft(hr))));
+# 		  	title="frequency",
+#     	    label=p.model.label)
+# 	end
+#
+# end
+"""
+	plot_solution!( plt; problems; t,x )
 
-	if typeof(p.model)==WaterWaves
+Plots in `plt` the solution of initial-value problems at a given time.
 
-		(x,z,v) = mapfro(p.model,p.data.U[end])
-		plot!(plt[1,1], x, z;
-			title="physical space",
-			label=p.model.label)
+Argument `problems` is either an element or a vector or list of elements of type `Problem`.
 
-		plot!(plt[2,1], fftshift(p.mesh.k),
-			log10.(1e-18.+abs.(fftshift(fft(z .- 1))));
-			title="frequency",
-			label=p.model.label)
+Keyword `t` is the time. If not provided, then the last computed time is plotted.
 
-	else
-    	(hr,ur) = mapfro(p.model,p.data.U[end])
+If a vector `x` is provided and if it is possible, the solution is interpolated to the collocation points given by `x`.
 
-    	plot!(plt[1,1], p.mesh.x, hr;
-		  	title="physical space",
-	        label=p.model.label)
+"""
+function plot_solution!( plt, problems; t=nothing,x=nothing )
+	if typeof(problems)==Problem problems=[problems] end
+	for p in problems
+		if x != nothing
+			(ηfull,vfull,xfull) = solution(p)
+			fftη = fft(ηfull)
+			(η,v,X,t) = solution(p;t=t,x=x)
+			flag=true
+		else
+			(η,v,X,t) = solution(p;t=t,x=x)
+			fftη = fft(η)
+		end
 
-    	plot!(plt[2,1], fftshift(p.mesh.k),
-            log10.(1e-18.+abs.(fftshift(fft(hr))));
-		  	title="frequency",
-    	    label=p.model.label)
+	    plot!(plt[1,1], X, η;
+			  title=string("elevation at t=",t),
+		      label=p.model.label)
+
+	    plot!(plt[2,1], fftshift(p.mesh.k),
+	        log10.(1e-18.+abs.(fftshift(fftη)));
+			  title="Fourier modes",
+	    	  label=p.model.label)
 	end
-
 end
+"""
+	plot_solution( problems; t,x )
 
-function fig_problem!( plt, p::Problem, t::Real )
+Same as `plot_solution!` but generates and returns the plot.
+"""
 
-	t=max(t,0)
-	t=min(t,p.times.tfin)
-	index = indexin(false,p.times.ts.<t)[1]
-
-	if typeof(p.model)==WaterWaves
-
-		(x,z,v) = mapfro(p.model,p.data.U[index])
-		plot!(plt[1,1], x, z;
-			title="physical space",
-			label=p.model.label)
-
-		plot!(plt[2,1], fftshift(p.mesh.k),
-			log10.(1e-18.+abs.(fftshift(fft(z .- 1))));
-			title="frequency",
-			label=p.model.label)
-
-	else
-    	(hr,ur) = mapfro(p.model,p.data.U[index])
-
-    	plot!(plt[1,1], p.mesh.x, hr;
-		  title=string("physical space at t=",p.times.ts[index]),
-	          label=p.model.label)
-
-    	plot!(plt[2,1], fftshift(p.mesh.k),
-                  log10.(1e-18.+abs.(fftshift(fft(hr))));
-		  title="frequency",
-    	          label=p.model.label)
-	end
-end
-function fig_problem( p::Problem, t::Real )
+function plot_solution( problems; t=nothing,x=nothing )
 	plt = plot(layout=(2,1))
-	fig_problem!( plt, p::Problem, t::Real )
+	plot_solution!( plt, problems; t=t,x=x )
 	display(plt)
 	return plt
 end
-function fig_problem( p::Problem)
-	plt = plot(layout=(2,1))
-	fig_problem!( plt, p::Problem )
-	display(plt)
-	return plt
-end
+
+# function fig_problem( p::Problem)
+# 	plt = plot(layout=(2,1))
+# 	fig_problem!( plt, p::Problem )
+# 	display(plt)
+# 	return plt
+# end
 
 function norm_problem!( plt, p::Problem, s::Real )
 	N=[];

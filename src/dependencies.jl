@@ -38,3 +38,4 @@ include("models/WhithamGreenNaghdiGPU.jl") #comment this line if you have proble
 
 include("LoadSave.jl")
 include("fig.jl")
+include("tools.jl")
