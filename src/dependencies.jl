@@ -2,7 +2,7 @@ export include_all
 
 using ProgressMeter
 using FFTW
-using LinearAlgebra
+#using LinearAlgebra
 ENV["PLOTS_USE_ATOM_PLOTPANE"] = "false"
 # Note that javascript-based libraries (for example: PlotlyJS) cannot be shown in the PlotPane due to issues within Atom's internals.
 #using Plots
@@ -12,26 +12,25 @@ ENV["PLOTS_USE_ATOM_PLOTPANE"] = "false"
 
 include("types.jl")
 include("solvers/RK4.jl")
-include("models/WaterWaves.jl")
 include("tools.jl")
 
 
-function include_all(;dir=nothing)
+function include_all(dir=nothing)
     if dir!=nothing
         dir=string("src/",dir)
-        for file in readdir(dir)
-            try include(string(dir,"/",file))
+        for file in readdir(abspath(dir),join=true)
+            try include(file)
                 @info string("included ",file)
             catch
                 @info string("did not include ",file)
             end
         end
     else
-        include_all(dir="solvers")
-        include_all(dir="initialdata")
-        include_all(dir="models")
-        include("src/Figures.jl")
-        include("src/LoadSave.jl")
+        include_all("solvers")
+        include_all("initialdata")
+        include_all("models")
+        include(abspath("src/Figures.jl"))
+        include(abspath("src/LoadSave.jl"))
     end
 end
 

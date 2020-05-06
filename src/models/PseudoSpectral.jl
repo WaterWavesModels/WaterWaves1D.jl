@@ -29,8 +29,8 @@ This generates
 mutable struct PseudoSpectral <: AbstractModel
 
     label   :: String
-	mapto
-	mapfro
+	mapto	:: Function
+	mapfro	:: Function
 	datasize:: Int
 	μ 		:: Float64
 	ϵ 		:: Float64

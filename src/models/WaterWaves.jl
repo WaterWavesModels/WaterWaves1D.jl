@@ -1,6 +1,6 @@
 export WaterWaves
 #using Statistics #only for function mean in WaterWaves.jl...
-using FFTW
+using FFTW,LinearAlgebra
 
 function cotanh( x :: Vector{Float64} )
 	y=1 ./ tanh.(x+(x.==0))
@@ -19,8 +19,8 @@ end
 mutable struct WaterWaves <: AbstractModel
 
     label   :: String
-	mapto
-	mapfro
+	mapto	:: Function
+	mapfro	:: Function
 	datasize:: Int
 	x   	:: Vector{Float64}
 	k   	:: Vector{Float64}
