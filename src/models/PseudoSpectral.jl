@@ -1,5 +1,5 @@
 export PseudoSpectral,mapto,mapfro
-
+using FFTW
 """
     PseudoSpectral(param;kwargs)
 

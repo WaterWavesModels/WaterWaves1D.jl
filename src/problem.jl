@@ -59,11 +59,11 @@ end
 export solve!
 
 """
-    solve!( problem )
+    solve!( problem; verbose=true )
 
 Solves (i.e. integrates in time) an initial-value problem
 
-The argument `problem` should be of type `:: Problem`.
+The argument `problem` should be of type `Problem`.
 It may be buit, e.g., by `Problem(model, initial, param)`
 
 """
@@ -109,7 +109,16 @@ function solve!(problem :: Problem;verbose=true::Bool)
 
 end
 using Base.Threads
-function solve!(problems :: Array)
+
+"""
+    solve!( problems; verbose=true )
+
+Solves (i.e. integrates in time) a collection of initial-value problems.
+
+The argument `problems` should be a collection (list, array...) of elements of type `Problem`.
+
+"""
+function solve!(problems; verbose=true::Bool)
     U=[];nsteps=0
     for problem in problems
         push!(U,copy(last(problem.data.U)))
@@ -135,8 +144,10 @@ function solve!(problems :: Array)
                 next!(pg)
             end
         end
-        @info string("\nDone solving the model ",problems[i].model.label,"\n",
-            "with parameters\n",problems[i].param)
+        if verbose == true
+            @info string("\nDone solving the model ",problems[i].model.label,"\n",
+                "with parameters\n",problems[i].param)
+        end
 
     end
 

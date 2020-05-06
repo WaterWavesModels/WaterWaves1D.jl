@@ -1,9 +1,14 @@
-export WaterWaves,mapto,mapfro,cotanh
+export WaterWaves,mapto,mapfro
+#using Statistics #only for function mean in WaterWaves.jl...
+using FFTW,LinearAlgebra
 
 function cotanh( x :: Vector{Float64} )
 	y=1 ./ tanh.(x+(x.==0))
 	y[x.==0].=0
 	return y
+end
+function mean(x)
+	sum(x)/length(x)
 end
 
 """

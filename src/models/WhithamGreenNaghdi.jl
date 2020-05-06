@@ -1,4 +1,5 @@
 export WhithamGreenNaghdi,mapto,mapfro
+using LinearMaps,IterativeSolvers
 
 """
     WhithamGreenNaghdi(param;kwargs)
