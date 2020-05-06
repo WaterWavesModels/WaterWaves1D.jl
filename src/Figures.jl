@@ -1,6 +1,6 @@
 export create_animation,plot_solution!,plot_solution
 using Plots;gr()
-
+using ProgressMeter
 """
 	create_animation( p; name::String, ylims=(a,b) )
 
