@@ -12,7 +12,7 @@ A naive version of `RK4`, without argument since no pre-allocation is performed.
 struct RK4_naive <: TimeSolver end
 
 function step!(s  :: RK4_naive,
-               f! :: AbstractModel,
+               f! ,
                U  ,
                dt )
 

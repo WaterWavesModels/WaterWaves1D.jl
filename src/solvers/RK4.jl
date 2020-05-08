@@ -1,22 +1,21 @@
 export RK4
 export step!
-struct GenericModel <: AbstractModel end
-# Useful to have a default keyword argument of type AbstractModel
 
 """
-    RK4(param,model;datasize=2)
+    RK4(arguments;realdata)
 
 Runge-Kutta fourth order solver.
 
 Constructs an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
 
-`param :: NamedTuple` should contain a value `N` (number of collocation points)
+Arguments can be either
+1. an object of type `AbstractModel`;
+2. a `Tuple` `(N,m)` where `N` is the nuber of collocation points and `m` the number of data (equations solved);
+3. two integers `N` an `m` as above (the latter is optional, by default `m=2`).
+4. a `NamedTuple` containing a key `N` and an integer `m` (the latter is optional, by default `m=2`).
 
-The other arguments are keywords and are optional.
-
-- `datasize` determines the number of equations solved (default is `datasize=2`);
-- `model :: AbstractModel` determines the number of equations solved if it contains a field `:datasize`.
-- `realdata` if `true` (default is `false`), then pre-allocated vectors are real-valued.
+The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
+By default, they are either determined by the model in case `1.`, complex-valued otherwise.
 
 """
 struct RK4 <: TimeSolver
@@ -24,10 +23,38 @@ struct RK4 <: TimeSolver
     Uhat :: Array
     dU   :: Array
 
-    function RK4( param::NamedTuple; model=GenericModel()::AbstractModel, datasize=2, realdata=false )
-        if :datasize in fieldnames(typeof(model))
-            datasize = model.datasize
+    function RK4( model :: AbstractModel; realdata=nothing )
+        Uhat = model.mapto(Init(x->0*x,x->0*x))
+        dU   = copy(Uhat)
+        if realdata==true
+            Uhat = real.(Uhat);dU = real.(dU)
         end
+        if realdata==false
+            Uhat = complex.(Uhat);dU = complex.(dU)
+        end
+        new( Uhat, dU)
+    end
+    function RK4( datasize; realdata=false )
+        if realdata == true
+            Uhat = zeros(Float64, datasize)
+            dU   = zeros(Float64, datasize)
+        else
+            Uhat = zeros(Complex{Float64}, datasize)
+            dU   = zeros(Complex{Float64}, datasize)
+        end
+        new( Uhat, dU)
+    end
+    function RK4( N::Int, datasize=2::Int; realdata=false )
+        if realdata == true
+            Uhat = zeros(Float64, (N,datasize))
+            dU   = zeros(Float64, (N,datasize))
+        else
+            Uhat = zeros(Complex{Float64}, (N,datasize))
+            dU   = zeros(Complex{Float64}, (N,datasize))
+        end
+        new( Uhat, dU)
+    end
+    function RK4( param::NamedTuple, datasize=2::Int; realdata=false )
         if realdata == true
             Uhat = zeros(Float64, (param.N,datasize))
             dU   = zeros(Float64, (param.N,datasize))
@@ -36,13 +63,11 @@ struct RK4 <: TimeSolver
             dU   = zeros(Complex{Float64}, (param.N,datasize))
         end
         new( Uhat, dU)
-
     end
-
 end
 
 function step!(s  :: RK4,
-               f! :: AbstractModel,
+               f! ,
                U  ,
                dt )
 
