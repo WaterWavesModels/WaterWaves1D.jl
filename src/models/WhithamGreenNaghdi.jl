@@ -1,4 +1,4 @@
-export WhithamGreenNaghdi,mapto,mapfro
+export WhithamGreenNaghdi,mapto,mapfro,mapfrofull
 using LinearMaps,IterativeSolvers
 
 """
@@ -89,9 +89,15 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		end
 		if precond == true
 			Precond = Diagonal( 1 ./  F₁ )
-		else
+		elseif precond == false
 			Precond = Diagonal( 1 .+ μ/3*k.^2 )
 			#Precond = lu( exp.(-1im*k*x') ) # #Diagonal( ones(size(k)) )
+		elseif precond >=0
+			Precond = Diagonal( 1 .+ μ/3*(precond^2*k).^2 )
+		elseif precond < 0
+			Precond = Diagonal( (sqrt(μ)*precond^2*abs.(k))./tanh.(sqrt(μ)*precond^2*abs.(k)) )
+		else
+			Precond = Diagonal( ones(size(k)) )
 		end
 		K = mesh.kmax * (1-dealias/(2+dealias))
 		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
