@@ -48,7 +48,7 @@ mutable struct Problem
 
         mesh  = Mesh(param)
 
-        data  = Data(model.mapto(initial))
+        data  = Data(mapto(model, initial))
 
         new(model, initial, param, solver, times, mesh, data)
 

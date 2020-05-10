@@ -1,5 +1,4 @@
-export PseudoSpectral
-using FFTW
+export PseudoSpectral,mapto,mapfro
 """
     PseudoSpectral(param;kwargs)
 
@@ -29,8 +28,6 @@ This generates
 mutable struct PseudoSpectral <: AbstractModel
 
     label   :: String
-	mapto	:: Function
-	mapfro	:: Function
 	datasize:: Int
 	μ 		:: Float64
 	ϵ 		:: Float64
@@ -85,26 +82,7 @@ mutable struct PseudoSpectral <: AbstractModel
 		η = copy(z) ; v = copy(z) ; Lphi = copy(z) ; LzLphi = copy(z) ; dxv = copy(z) ;
 		fftη = copy(z) ; fftv = copy(z) ; Q = copy(z) ; R = copy(z) ;
 
-		"""
-		    mapto(PseudoSpectral, data)
-
-		"""
-		function mapto(data::InitialData)
-
-			[Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
-
-		end
-
-		"""
-		    mapfro(PseudoSpectral, data)
-
-		"""
-		function mapfro(datum::Array{Complex{Float64},2})
-				   real(ifft(datum[:,1])),real(ifft(datum[:,2]))
-		end
-
-
-        new(label, mapto, mapfro, datasize, μ, ϵ, n, x, F₀, G₀, ∂ₓ, Π, Π⅔, η, v, fftη, fftv, Q, R, Lphi, LzLphi, dxv )
+        new(label, datasize, μ, ϵ, n, x, F₀, G₀, ∂ₓ, Π, Π⅔, η, v, fftη, fftv, Q, R, Lphi, LzLphi, dxv )
     end
 end
 
@@ -145,4 +123,23 @@ function (m::PseudoSpectral)(U::Array{Complex{Float64},2})
    	U[:,1] .= m.Π⅔.*m.Q/sqrt(m.μ)
    	U[:,2] .= m.Π⅔.*m.∂ₓ.*m.Π.*m.R/sqrt(m.μ)
 
+end
+
+"""
+    mapto(PseudoSpectral, data)
+
+"""
+function mapto(m::PseudoSpectral, data::InitialData)
+
+	[m.Π⅔ .* fft(data.η(m.x)) m.Π⅔ .*fft(data.v(m.x))]
+
+end
+
+"""
+    mapfro(PseudoSpectral, data)
+
+"""
+function mapfro(m::PseudoSpectral,
+	       datum::Array{Complex{Float64},2})
+		   real(ifft(datum[:,1])),real(ifft(datum[:,2]))
 end

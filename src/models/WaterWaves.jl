@@ -1,14 +1,10 @@
-export WaterWaves
+export WaterWaves,mapto,mapfro
 #using Statistics #only for function mean in WaterWaves.jl...
-using FFTW,LinearAlgebra
 
 function cotanh( x :: Vector{Float64} )
 	y=1 ./ tanh.(x+(x.==0))
 	y[x.==0].=0
 	return y
-end
-function mean(x)
-	sum(x)/length(x)
 end
 
 """
@@ -19,8 +15,6 @@ end
 mutable struct WaterWaves <: AbstractModel
 
     label   :: String
-	mapto	:: Function
-	mapfro	:: Function
 	datasize:: Int
 	x   	:: Vector{Float64}
 	k   	:: Vector{Float64}
@@ -66,69 +60,7 @@ mutable struct WaterWaves <: AbstractModel
 		M2 = zeros(Float64, mesh.N)
 		q0 = 0
 
-		"""
-		    mapto(WaterWaves, data)
-			Constructs conformal variables in the flat strip
-
-		"""
-		function mapto(data::InitialData)
-
-			if norm(data.v(x))!=0
-				error("non-zero initial data are not implemented yet. Sorry!")
-			else
-
-				function iter( u :: Vector{Float64} )
-				    return imag.(ifft(sqrt(μ)*Π⅔ .*cotanh(sqrt(μ)*(1+ϵ*mean(data.η(x+ϵ*u)))*k).*fft(data.η(x+ϵ*u))))
-				end
-
-				# on démarre avec deux coefficients spécifiques:
-				δ = mean(data.η(x))
-				u0 = imag.(ifft(sqrt(μ)*Π⅔ .*cotanh(sqrt(μ)*k).*fft(data.η(x).-δ)))
-
-				# détermination du point fixe de la fonction contractante:
-				norm0=norm(data.η(x))
-				tol_cont=1e-16
-				max_iter=10000
-				niter=0
-				nu0=u0 .+ 1
-				while norm(nu0-u0)>tol_cont*norm0 && niter<max_iter
-				    nu0=u0
-				    u0 = iter(nu0)
-				    niter+=1
-				end
-
-				if niter==max_iter
-				    @warn "The fix point algorithm did not converge"
-				    @warn string("Estimated error : ",norm(nu0-u0)/norm0)
-				else
-					@warn string("The fix point algorithm converged in ",niter," iterations")
-				end
-				δ = mean(data.η(x+ϵ*u0))
-
-				# Obtention des conditions initiales dans le domaine redressé:
-				#x0 = x + ϵ*real.(ifft(Π⅔.*fft(u0))) #axe longitudinal
-				z0 = δ .+ 1/sqrt(μ)*real.(ifft(1im*Π⅔.*tanh.(sqrt(μ)*k*(1+ϵ*δ)).*fft(u0)))
-				phi0 = 0 .* z0
-
-			end
-			[z0 phi0] ######
-		end
-
-		"""
-		    mapfro(WaterWaves, data)
-			Reconstructs physical variables from conformal variables
-
-		"""
-		function mapfro(datum::Array{Float64,2})
-
-				   ξ .= real.(sqrt(μ)*(1+ϵ*mean(datum[:,1]))*k)
-			       xv .= imag.(sqrt(μ)*ifft( cotanh(ξ) .* fft( datum[:,1] )))
-
-				   x + ϵ*xv, real.(datum[:,1]) , real.(ifft(∂ₓ .* fft( datum[:,2] )))
-		end
-
-
-        new(label, mapto, mapfro, datasize, x, k, ∂ₓ, Π⅔, μ, ϵ, z, phi, ξ, xv, Dxv, Dz, Dphi, J, M1, M2, q0)
+        new(label, datasize, x, k, ∂ₓ, Π⅔, μ, ϵ, z, phi, ξ, xv, Dxv, Dz, Dphi, J, M1, M2, q0)
     end
 end
 
@@ -153,4 +85,66 @@ function (m::WaterWaves)(U::Array{Complex{Float64},2})
 	U[:,2] .= -m.z -m.ϵ*m.Dphi.*m.M2 + 0.5*m.ϵ*m.μ*(m.M1.^2)./m.J - 0.5*m.ϵ*(m.Dphi.^2)./m.J + m.ϵ*m.q0*m.Dphi
 
 
+end
+
+"""
+    mapto(WaterWaves, data)
+	Constructs conformal variables in the flat strip
+
+"""
+function mapto(m::WaterWaves, data::InitialData)
+
+	if norm(data.v(m.x))!=0
+		error("non-zero initial data are not implemented yet. Sorry!")
+	else
+
+		function iter( u :: Vector{Float64} )
+		    return imag.(ifft(sqrt(m.μ)*m.Π⅔ .*cotanh(sqrt(m.μ)*(1+m.ϵ*mean(data.η(m.x+m.ϵ*u)))*m.k).*fft(data.η(m.x+m.ϵ*u))))
+		end
+
+		# on démarre avec deux coefficients spécifiques:
+		δ = mean(data.η(m.x))
+		u0 = imag.(ifft(sqrt(m.μ)*m.Π⅔ .*cotanh(sqrt(m.μ)*m.k).*fft(data.η(m.x).-δ)))
+
+		# détermination du point fixe de la fonction contractante:
+		norm0=norm(data.η(m.x))
+		tol_cont=1e-16
+		max_iter=10000
+		niter=0
+		nu0=u0 .+ 1
+		while norm(nu0-u0)>tol_cont*norm0 && niter<max_iter
+		    nu0=u0
+		    u0 = iter(nu0)
+		    niter+=1
+		end
+
+		if niter==max_iter
+		    @warn "The fix point algorithm did not converge"
+		    @warn string("Estimated error : ",norm(nu0-u0)/norm0)
+		else
+			@warn string("The fix point algorithm converged in ",niter," iterations")
+		end
+		δ = mean(data.η(m.x+m.ϵ*u0))
+
+		# Obtention des conditions initiales dans le domaine redressé:
+		#x0 = m.x + m.ϵ*real.(ifft(m.Π⅔.*fft(u0))) #axe longitudinal
+		z0 = δ .+ 1/sqrt(m.μ)*real.(ifft(1im*m.Π⅔.*tanh.(sqrt(m.μ)*m.k*(1+m.ϵ*δ)).*fft(u0)))
+		phi0 = 0 .* z0
+
+	end
+	[z0 phi0] ######
+end
+
+"""
+    mapfro(WaterWaves, data)
+	Reconstructs physical variables from conformal variables
+
+"""
+function mapfro(m::WaterWaves,
+	       datum::Array{Complex{Float64},2})
+
+		   m.ξ .= real.(sqrt(m.μ)*(1+m.ϵ*mean(datum[:,1]))*m.k)
+	       m.xv .= imag.(sqrt(m.μ)*ifft( cotanh(m.ξ) .* fft( datum[:,1] )))
+
+		   m.x + m.ϵ*m.xv, real.(datum[:,1]) , real.(ifft(m.∂ₓ .* fft( datum[:,2] )))
 end
