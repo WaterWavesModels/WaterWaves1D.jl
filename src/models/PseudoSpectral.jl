@@ -31,7 +31,7 @@ mutable struct PseudoSpectral <: AbstractModel
     label   :: String
 	mapto	:: Function
 	mapfro	:: Function
-	datasize:: Int
+	f!		:: Function
 	μ 		:: Float64
 	ϵ 		:: Float64
 	n 		:: Int
@@ -85,32 +85,60 @@ mutable struct PseudoSpectral <: AbstractModel
 		η = copy(z) ; v = copy(z) ; Lphi = copy(z) ; LzLphi = copy(z) ; dxv = copy(z) ;
 		fftη = copy(z) ; fftv = copy(z) ; Q = copy(z) ; R = copy(z) ;
 
-		"""
-		    mapto(PseudoSpectral, data)
-
-		"""
 		function mapto(data::InitialData)
 
 			[Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
 
 		end
 
-		"""
-		    mapfro(PseudoSpectral, data)
+		function mapfro(U)
 
-		"""
-		function mapfro(datum::Array{Complex{Float64},2})
-				   real(ifft(datum[:,1])),real(ifft(datum[:,2]))
+				   real(ifft(U[:,1])),real(ifft(U[:,2]))
+		end
+
+		function f!(U) 		# utile uniquement pour solve2!
+
+			fftη .= U[:,1]
+		    fftv .= U[:,2]
+			Q .= -∂ₓ.*F₀.*fftv
+			R .= -fftη
+
+			# attention,  G₀=-L dans Choi
+			if n >= 2
+				η  .= ifft(Π.*U[:,1])
+				v  .= ifft(U[:,2])
+				Lphi .= -ifft(Q)
+				Q += -ϵ *∂ₓ.*fft(η.*ifft(fftv)) .+ ϵ*G₀.*fft(η.*Lphi)
+				R += ϵ/2*fft(-v.^2 .+ Lphi.^2)
+			end
+			if n >= 3
+				LzLphi .= ifft(-G₀.* fft(η.*Lphi))
+				dxv .= ifft(∂ₓ.*fftv)
+				Q += ϵ^2*G₀.*fft(η.* LzLphi + 1/2 * η.^2 .* dxv ) .- ϵ^2*∂ₓ.*∂ₓ.*fft( 1/2 * η.^2  .*Lphi)
+				R += ϵ^2*fft(Lphi .* ( LzLphi .+ η.* dxv ) )
+			end
+			if n >= 4
+				Q += ϵ^3 * G₀.*fft(η.*ifft(-G₀.* fft(η.*LzLphi + 1/2 * η.^2 .* dxv ) )
+							.+ 1/2 * η.^2 .* ifft(∂ₓ.*∂ₓ.*fft( η  .* Lphi ) )
+							.- 1/6 * η.^3 .* ifft(∂ₓ.*∂ₓ.*fft( Lphi ) ) ) .-
+					   ϵ^3 * ∂ₓ.*∂ₓ.*fft( 1/2 * η.^2  .*LzLphi .+ 1/3 * η.^3  .* dxv )
+				R += ϵ^3 * fft( Lphi .*  ifft(-G₀.* fft(η.*LzLphi + 1/2 * η.^2 .* dxv ) )
+						.+ 1/2* (LzLphi .+ η .* dxv ).^2
+						.+ 1/2* η.* Lphi.^2 .* ifft(∂ₓ.*∂ₓ.* fftη)
+						.- 1/2* (η.^2).* (ifft(∂ₓ .* fft(Lphi))).^2 ) .+
+						1/4*ϵ^3 * ∂ₓ.*∂ₓ.*fft((η .* Lphi).^2)
+			end
+		   	U[:,1] .= Π⅔.*Q/sqrt(μ)
+		   	U[:,2] .= Π⅔.*∂ₓ.*Π.*R/sqrt(μ)
+
 		end
 
 
-        new(label, mapto, mapfro, datasize, μ, ϵ, n, x, F₀, G₀, ∂ₓ, Π, Π⅔, η, v, fftη, fftv, Q, R, Lphi, LzLphi, dxv )
+        new(label, mapto, mapfro, f!, μ, ϵ, n, x, F₀, G₀, ∂ₓ, Π, Π⅔, η, v, fftη, fftv, Q, R, Lphi, LzLphi, dxv )
     end
 end
 
-
-function (m::PseudoSpectral)(U::Array{Complex{Float64},2})
-
+function (m::PseudoSpectral)(U)  # utile uniquement pour solve!
 
 	m.fftη .= U[:,1]
     m.fftv .= U[:,2]

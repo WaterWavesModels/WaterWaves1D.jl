@@ -21,7 +21,7 @@ mutable struct WaterWaves <: AbstractModel
     label   :: String
 	mapto	:: Function
 	mapfro	:: Function
-	datasize:: Int
+	f!		:: Function
 	x   	:: Vector{Float64}
 	k   	:: Vector{Float64}
     ∂ₓ      :: Vector{Complex{Float64}}
@@ -119,21 +119,39 @@ mutable struct WaterWaves <: AbstractModel
 			Reconstructs physical variables from conformal variables
 
 		"""
-		function mapfro(datum::Array{Float64,2})
+		function mapfro(U)
 
-				   ξ .= real.(sqrt(μ)*(1+ϵ*mean(datum[:,1]))*k)
-			       xv .= imag.(sqrt(μ)*ifft( cotanh(ξ) .* fft( datum[:,1] )))
+				   ξ .= real.(sqrt(μ)*(1+ϵ*mean(U[:,1]))*k)
+			       xv .= imag.(sqrt(μ)*ifft( cotanh(ξ) .* fft( U[:,1] )))
 
-				   x + ϵ*xv, real.(datum[:,1]) , real.(ifft(∂ₓ .* fft( datum[:,2] )))
+				   x + ϵ*xv, real.(U[:,1]) , real.(ifft(∂ₓ .* fft( U[:,2] )))
 		end
 
+		function f!(U)			# utile uniquement pour solve2!
+			   	z .= U[:,1]
+			   	phi .= U[:,2]
+				ξ .= sqrt(μ)*(1 .+ ϵ*mean(z))*k
+				xv .=imag.(sqrt(μ)*ifft( Π⅔ .* cotanh(ξ) .* fft( z )))
+				Dxv .= real.(ifft(Π⅔ .* ∂ₓ.* fft(xv)))
+				Dz .= real.(ifft(Π⅔ .* ∂ₓ.*fft(z)))
+				Dphi .= real.(ifft(Π⅔ .* ∂ₓ.*fft(phi)))
 
-        new(label, mapto, mapfro, datasize, x, k, ∂ₓ, Π⅔, μ, ϵ, z, phi, ξ, xv, Dxv, Dz, Dphi, J, M1, M2, q0)
+				J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2 # Jacobien
+				M1 = imag.(1/sqrt(μ)*ifft(Π⅔ .* tanh.(ξ).* ∂ₓ .* fft(phi)))
+				M2 = imag.( -sqrt(μ)*ifft(Π⅔ .* cotanh(ξ) .* fft(M1./J )))
+				q0 = mean((1 .+ ϵ*Dxv).*M2 + ϵ*μ*Dz.*M1./J)
+
+				U[:,1] .= (1 .+ ϵ*Dxv).*M1./J - ϵ.*Dz.*M2 + ϵ*q0*Dz
+				U[:,2] .= -z -ϵ*Dphi.*M2 + 0.5*ϵ*μ*(M1.^2)./J - 0.5*ϵ*(Dphi.^2)./J + ϵ*q0*Dphi
+
+			end
+
+
+        new(label, mapto, mapfro, f!, x, k, ∂ₓ, Π⅔, μ, ϵ, z, phi, ξ, xv, Dxv, Dz, Dphi, J, M1, M2, q0)
     end
 end
 
-
-function (m::WaterWaves)(U::Array{Complex{Float64},2})
+function (m::WaterWaves)(U)	# utile uniquement pour solve!
 
 
    	m.z .= U[:,1]
