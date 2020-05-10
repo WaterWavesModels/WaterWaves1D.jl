@@ -19,14 +19,13 @@ end
 mutable struct WaterWaves <: AbstractModel
 
     label   :: String
+	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	f!		:: Function
 
     function WaterWaves(param::NamedTuple)
 
 		label = "water waves"
-		datasize = 2
 		μ 	= param.μ
 		ϵ 	= param.ϵ
 		mesh = Mesh(param)
@@ -123,6 +122,6 @@ mutable struct WaterWaves <: AbstractModel
 			end
 
 
-        new(label, mapto, mapfro, f!)
+        new(label, f!, mapto, mapfro)
     end
 end

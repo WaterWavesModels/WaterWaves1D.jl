@@ -2,6 +2,7 @@ ENV["GKSwstype"]="100"
 
 using Test
 using ShallowWaterModels
+include_all()
 #include("../src/dependencies.jl")
 using JLD
 

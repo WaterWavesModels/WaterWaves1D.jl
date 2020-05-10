@@ -1,4 +1,4 @@
-export Boussinesq,mapto,mapfro
+export Boussinesq
 
 """
     Boussinesq(params)
@@ -7,24 +7,14 @@ export Boussinesq,mapto,mapfro
 """
 mutable struct Boussinesq <: AbstractModel
 
-    label   :: String
-	datasize:: Int
-	μ 		:: Float64
-	ϵ 		:: Float64
-	x   	:: Vector{Float64}
-    F₁   	:: Vector{Float64}
-	F₂   	:: Vector{Float64}
-    ∂ₓ      :: Vector{Complex{Float64}}
-    Π⅔      :: BitArray{1}
-	η    	:: Vector{Float64}
-	v    	:: Vector{Float64}
-    fftη    :: Vector{Complex{Float64}}
-    fftv    :: Vector{Complex{Float64}}
+	label   :: String
+	f!		:: Function
+	mapto	:: Function
+	mapfro	:: Function
 
     function Boussinesq(param::NamedTuple)
 
 		label = string("Boussinesq")
-		datasize = 2
 		μ 	= param.μ
 		ϵ 	= param.ϵ
 		mesh = Mesh(param)
@@ -39,41 +29,27 @@ mutable struct Boussinesq <: AbstractModel
 		fftη = zeros(Complex{Float64}, mesh.N)
         fftv = zeros(Complex{Float64}, mesh.N)
 
-        new(label, datasize, μ, ϵ, x, F₁, F₂, ∂ₓ, Π⅔, η, v, fftη, fftv )
+		function f!(U)
+
+		    fftv .= U[:,2]
+			fftη .= F₂.*U[:,2]
+			v .= real(ifft(fftη))
+			fftη .= U[:,1]
+		   	η .= real(ifft(U[:,1]))
+
+		   	U[:,1] .= -∂ₓ.*(F₁.*fftv.+ϵ*Π⅔.*F₂.*fft(η.*v))
+		   	U[:,2] .= -∂ₓ.*(fftη.+ϵ/2*Π⅔.*fft(v.^2))
+
+		end
+
+		function mapto(data::InitialData)
+			[Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
+		end
+
+		function mapfro(U)
+			real(ifft(U[:,1])),real(ifft(U[:,2]))
+		end
+
+        new(label, f!, mapto, mapfro )
     end
-end
-
-
-function (m::Boussinesq)(U::Array{Complex{Float64},2})
-
-
-    m.fftv .= U[:,2]
-	m.fftη .= m.F₂.*U[:,2]
-	m.v .= real(ifft(m.fftη))
-	m.fftη .= U[:,1]
-   	m.η .= real(ifft(U[:,1]))
-
-   	U[:,1] .= -m.∂ₓ.*(m.F₁.*m.fftv.+m.ϵ*m.Π⅔.*m.F₂.*fft(m.η.*m.v))
-   	U[:,2] .= -m.∂ₓ.*(m.fftη.+m.ϵ/2*m.Π⅔.*fft(m.v.^2))
-
-end
-
-"""
-    mapto(Boussinesq, data)
-
-"""
-function mapto(m::Boussinesq, data::InitialData)
-
-	[m.Π⅔ .* fft(data.η(m.x)) m.Π⅔ .*fft(data.v(m.x))]
-
-end
-
-"""
-    mapfro(Boussinesq, data)
-
-"""
-function mapfro(m::Boussinesq,
-	       datum::Array{Complex{Float64},2})
-
-		   real(ifft(datum[:,1])),real(ifft(datum[:,2]))
 end

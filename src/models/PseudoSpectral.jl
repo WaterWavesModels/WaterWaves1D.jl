@@ -29,9 +29,9 @@ This generates
 mutable struct PseudoSpectral <: AbstractModel
 
     label   :: String
+	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	f!		:: Function
 
     function PseudoSpectral(param::NamedTuple;order=2::Int,lowpass=0::Real,dealias=0::Int,)
 		if order in [1,2,3,4]
@@ -41,7 +41,6 @@ mutable struct PseudoSpectral <: AbstractModel
 			@info string("solving system with nonlinearity of order ", order)
 		end
 		label = string("WW",order)
-		datasize = 2
 		μ 	= param.μ
 		ϵ 	= param.ϵ
 		n 	= order
@@ -116,6 +115,6 @@ mutable struct PseudoSpectral <: AbstractModel
 		end
 
 
-        new(label, mapto, mapfro, f! )
+        new(label, f!, mapto, mapfro )
     end
 end

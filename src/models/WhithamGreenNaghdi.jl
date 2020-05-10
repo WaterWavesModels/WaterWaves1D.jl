@@ -34,32 +34,41 @@ This generates
 """
 mutable struct WhithamGreenNaghdi <: AbstractModel
 
-    label   :: String
-	datasize:: Int
+	label   :: String
+	f!		:: Function
+	mapto	:: Function
+	mapfro	:: Function
+	mapfrofull	:: Function
 	param	:: NamedTuple
 	kwargs  :: NamedTuple
-	μ 		:: Real
-	ϵ 		:: Real
-	x   	:: Vector{Float64}
-    F₀   	:: Vector{Complex{Float64}}
-    ∂ₓ      :: Vector{Complex{Float64}}
-    Π⅔      :: Vector{Float64}
-	Id 	    :: BitArray{2}
-	FFT 	:: Array{Complex{Float64},2}
-	IFFT 	:: Array{Complex{Float64},2}
-	IFFTF₀ 	:: Array{Complex{Float64},2}
-	M₀      :: Array{Complex{Float64},2}
-    h    	:: Vector{Complex{Float64}}
-	u    	:: Vector{Complex{Float64}}
-	fftv    :: Vector{Complex{Float64}}
-	fftη   	:: Vector{Complex{Float64}}
-	fftu  	:: Vector{Complex{Float64}}
-	hdu    	:: Vector{Complex{Float64}}
-	L   	:: Array{Complex{Float64},2}
-	Precond :: Any
-	iterate :: Bool
-	ktol 	:: Real
-	gtol 	:: Real
+
+
+    # label   :: String
+	# datasize:: Int
+	# param	:: NamedTuple
+	# kwargs  :: NamedTuple
+	# μ 		:: Real
+	# ϵ 		:: Real
+	# x   	:: Vector{Float64}
+    # F₀   	:: Vector{Complex{Float64}}
+    # ∂ₓ      :: Vector{Complex{Float64}}
+    # Π⅔      :: Vector{Float64}
+	# Id 	    :: BitArray{2}
+	# FFT 	:: Array{Complex{Float64},2}
+	# IFFT 	:: Array{Complex{Float64},2}
+	# IFFTF₀ 	:: Array{Complex{Float64},2}
+	# M₀      :: Array{Complex{Float64},2}
+    # h    	:: Vector{Complex{Float64}}
+	# u    	:: Vector{Complex{Float64}}
+	# fftv    :: Vector{Complex{Float64}}
+	# fftη   	:: Vector{Complex{Float64}}
+	# fftu  	:: Vector{Complex{Float64}}
+	# hdu    	:: Vector{Complex{Float64}}
+	# L   	:: Array{Complex{Float64},2}
+	# Precond :: Any
+	# iterate :: Bool
+	# ktol 	:: Real
+	# gtol 	:: Real
 
 
     function WhithamGreenNaghdi(param::NamedTuple;iterate=true,SGN=false,dealias=0,ktol=0,gtol=1e-14,precond=true)
@@ -70,7 +79,6 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		end
 		@info label
 
-		datasize = 2
 		kwargs = (iterate=iterate,SGN=SGN,dealias=dealias,ktol=ktol,gtol=gtol,precond=precond)
 		μ 	= param.μ
 		ϵ 	= param.ϵ
@@ -115,91 +123,81 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		u, fftv, fftη, fftu, hdu = (similar(h),).*ones(5)
 		L = similar(FFT)
 
-        new(label, datasize, param, kwargs, μ, ϵ, x, F₀, ∂ₓ, Π⅔, Id, FFT, IFFT, IFFTF₀, M₀, h, u, fftv, fftη, fftu, hdu, L, Precond, iterate, ktol, gtol )
-    end
-end
-
-
-function (m::WhithamGreenNaghdi)(U::Array{Complex{Float64},2})
-	m.fftη .= U[:,1]
-	m.h .= 1 .+ m.ϵ*ifft(m.fftη)
-	m.fftv .= U[:,2]
-	#m.fftv[abs.(m.fftv).< m.ktol ].=0   # Krasny filter
-	if m.iterate == false
-		m.L .= m.Id - 1/3 * m.FFT * Diagonal( 1 ./m.h ) * m.M₀ * Diagonal( m.h.^3 ) * m.IFFTF₀
-		m.fftu .= m.L \ m.fftv
-	elseif m.iterate == true
-        function LL(hatu)
-            hatu- 1/3 *m.Π⅔.*fft( 1 ./m.h .* ifft( m.F₀ .* m.Π⅔.*fft( m.h.^3 .* ifft( m.F₀ .* hatu ) ) ) )
+		function f!(U)
+			fftη .= U[:,1]
+			h .= 1 .+ ϵ*ifft(fftη)
+			fftv .= U[:,2]
+			#fftv[abs.(fftv).< ktol ].=0   # Krasny filter
+			if iterate == false
+				L .= Id - 1/3 * FFT * Diagonal( 1 ./h ) * M₀ * Diagonal( h.^3 ) * IFFTF₀
+				fftu .= L \ fftv
+			elseif iterate == true
+		        function LL(hatu)
+		            hatu- 1/3 *Π⅔.*fft( 1 ./h .* ifft( F₀ .* Π⅔.*fft( h.^3 .* ifft( F₀ .* hatu ) ) ) )
+				end
+				fftu .= gmres( LinearMap(LL, length(h); issymmetric=false, ismutating=false) , fftv ;
+						Pl = Precond,
+						tol = gtol )
+			end
+			u .= ifft(fftu)
+			hdu .= h .* ifft(Π⅔.*F₀.*fftu)
+		   	U[:,1] .= -∂ₓ.*Π⅔.*(fftu .+ ϵ * fft(ifft(fftη) .* u))
+			U[:,2] .= -∂ₓ.*Π⅔.*(fftη .+ ϵ * fft( u.*ifft(fftv)
+							.- 1/2 * u.^2 .- 1/2 * hdu.^2 ) )
+			U[abs.(U).< ktol ].=0
 		end
-		m.fftu .= gmres( LinearMap(LL, length(m.h); issymmetric=false, ismutating=false) , m.fftv ;
-				Pl = m.Precond,
-				tol = m.gtol )
-	end
-	m.u .= ifft(m.fftu)
-	m.hdu .= m.h .* ifft(m.Π⅔.*m.F₀.*m.fftu)
-   	U[:,1] .= -m.∂ₓ.*m.Π⅔.*(m.fftu .+ m.ϵ * fft(ifft(m.fftη) .* m.u))
-	U[:,2] .= -m.∂ₓ.*m.Π⅔.*(m.fftη .+ m.ϵ * fft( m.u.*ifft(m.fftv)
-					.- 1/2 * m.u.^2 .- 1/2 * m.hdu.^2 ) )
-	U[abs.(U).< m.ktol ].=0
-end
 
-"""
-    mapto(WhithamGreenNaghdi, data)
-`data` is of type `InitialData`, maybe constructed by `Init(...)`.
+		"""
+		    mapto(WhithamGreenNaghdi, data)
+		`data` is of type `InitialData`, maybe constructed by `Init(...)`.
 
-Performs a discrete Fourier transform with, possibly, dealiasing and Krasny filter.
+		Performs a discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 
-See documentation of `WhithamGreenNaghdi` for more details.
+		See documentation of `WhithamGreenNaghdi` for more details.
 
-"""
-function mapto(m::WhithamGreenNaghdi, data::InitialData)
+		"""
+		function mapto(data::InitialData)
+			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
+			U[abs.(U).< ktol ].=0
+			return U
+		end
 
-	U = [m.Π⅔ .* fft(data.η(m.x)) m.Π⅔ .*fft(data.v(m.x))]
-	# m.fftη .= U[:,1]
-	# m.h .= 1 .+ m.ϵ*ifft(m.fftη)
-	# m.L .= m.Id - 1/3 * m.FFT * Diagonal( 1 ./m.h ) * m.M₀ * Diagonal( m.h.^3 ) * m.IFFTF₀
-	# m.Precond = lu(m.L)
-	U[abs.(U).< m.ktol ].=0
-	return U
+		"""
+		    mapfro(WhithamGreenNaghdi, data)
+		`data` is of type `Array{Complex{Float64},2}`, e.g. `last(p.data.U)` where `p` is of type `Problem`.
 
-end
+		Returns `(η,v)`, where
+		- `η` is the surface deformation;
+		- `v` is the derivative of the trace of the velocity potential.
 
-"""
-    mapfro(WhithamGreenNaghdi, data)
-`data` is of type `Array{Complex{Float64},2}`, e.g. `last(p.data.U)` where `p` is of type `Problem`.
+		Performs an inverse Fourier transform and takes the real part.
 
-Returns `(η,v)`, where
-- `η` is the surface deformation;
-- `v` is the derivative of the trace of the velocity potential.
+		See documentation of `WhithamGreenNaghdi` for more details.
+		"""
+		function mapfro(U)
+			real(ifft(U[:,1])),real(ifft(U[:,2]))
+		end
+		"""
+		    mapfrofull(WhithamGreenNaghdi, data)
+		`data` is of type `Array{Complex{Float64},2}`, e.g. `last(p.data.U)` where `p` is of type `Problem`.
 
-Performs an inverse Fourier transform and takes the real part.
+		Returns `(η,v,u)`, where
+		- `η` is the surface deformation;
+		- `v` is the derivative of the trace of the velocity potential;
+		- `u` corresponds to the layer-averaged velocity.
 
-See documentation of `WhithamGreenNaghdi` for more details.
-"""
-function mapfro(m::WhithamGreenNaghdi,
-	       datum::Array{Complex{Float64},2})
+		Performs an inverse Fourier transform and take the real part, plus solves the costly elliptic problem for `u`.
 
-		   real(ifft(datum[:,1])),real(ifft(datum[:,2]))
-end
-"""
-    mapfrofull(WhithamGreenNaghdi, data)
-`data` is of type `Array{Complex{Float64},2}`, e.g. `last(p.data.U)` where `p` is of type `Problem`.
+		See documentation of `WhithamGreenNaghdi` for more details.
+		"""
+		function mapfrofull(U)
+				fftη .= U[:,1]
+			   	h .= 1 .+ ϵ*ifft(fftη)
+				L .= Id - 1/3 * FFT * Diagonal( 1 ./h ) * M₀ * Diagonal( h.^3 ) * IFFTF₀
 
-Returns `(η,v,u)`, where
-- `η` is the surface deformation;
-- `v` is the derivative of the trace of the velocity potential;
-- `u` corresponds to the layer-averaged velocity.
+				   real(ifft(U[:,1])),real(ifft(U[:,2])),real(ifft(L \ U[:,2]))
+		end
 
-Performs an inverse Fourier transform and take the real part, plus solves the costly elliptic problem for `u`.
-
-See documentation of `WhithamGreenNaghdi` for more details.
-"""
-function mapfrofull(m::WhithamGreenNaghdi,
-	       datum::Array{Complex{Float64},2})
-		m.fftη .= datum[:,1]
-	   	m.h .= 1 .+ m.ϵ*ifft(m.fftη)
-		m.L .= m.Id - 1/3 * m.FFT * Diagonal( 1 ./m.h ) * m.M₀ * Diagonal( m.h.^3 ) * m.IFFTF₀
-
-		   real(ifft(datum[:,1])),real(ifft(datum[:,2])),real(ifft(m.L \ datum[:,2]))
+        new(label, f!, mapto, mapfro, mapfrofull, param, kwargs)
+    end
 end
