@@ -22,23 +22,6 @@ mutable struct WaterWaves <: AbstractModel
 	mapto	:: Function
 	mapfro	:: Function
 	f!		:: Function
-	x   	:: Vector{Float64}
-	k   	:: Vector{Float64}
-    ∂ₓ      :: Vector{Complex{Float64}}
-    Π⅔      :: BitArray{1}
-	μ 		:: Float64
-    ϵ 		:: Float64
-	z    	:: Vector{Float64}
-	phi    	:: Vector{Float64}
-	ξ    	:: Vector{Float64}
-	xv    	:: Vector{Float64}
-	Dxv   	:: Vector{Float64}
-	Dz    	:: Vector{Float64}
-	Dphi    :: Vector{Float64}
-	J    	:: Vector{Float64}
-	M1    	:: Vector{Float64}
-	M2    	:: Vector{Float64}
-	q0 		:: Float64
 
     function WaterWaves(param::NamedTuple)
 
@@ -66,11 +49,7 @@ mutable struct WaterWaves <: AbstractModel
 		M2 = zeros(Float64, mesh.N)
 		q0 = 0
 
-		"""
-		    mapto(WaterWaves, data)
-			Constructs conformal variables in the flat strip
-
-		"""
+		# Constructs conformal variables in the flat strip
 		function mapto(data::InitialData)
 
 			if norm(data.v(x))!=0
@@ -114,11 +93,7 @@ mutable struct WaterWaves <: AbstractModel
 			[z0 phi0] ######
 		end
 
-		"""
-		    mapfro(WaterWaves, data)
-			Reconstructs physical variables from conformal variables
-
-		"""
+		# Reconstructs physical variables from conformal variables
 		function mapfro(U)
 
 				   ξ .= real.(sqrt(μ)*(1+ϵ*mean(U[:,1]))*k)
@@ -127,7 +102,8 @@ mutable struct WaterWaves <: AbstractModel
 				   x + ϵ*xv, real.(U[:,1]) , real.(ifft(∂ₓ .* fft( U[:,2] )))
 		end
 
-		function f!(U)			# utile uniquement pour solve2!
+		# Water Waves equations are ∂t U = f!(U)
+		function f!(U)
 			   	z .= U[:,1]
 			   	phi .= U[:,2]
 				ξ .= sqrt(μ)*(1 .+ ϵ*mean(z))*k
@@ -147,28 +123,6 @@ mutable struct WaterWaves <: AbstractModel
 			end
 
 
-        new(label, mapto, mapfro, f!, x, k, ∂ₓ, Π⅔, μ, ϵ, z, phi, ξ, xv, Dxv, Dz, Dphi, J, M1, M2, q0)
+        new(label, mapto, mapfro, f!)
     end
-end
-
-function (m::WaterWaves)(U)	# utile uniquement pour solve!
-
-
-   	m.z .= U[:,1]
-   	m.phi .= U[:,2]
-	m.ξ .= sqrt(m.μ)*(1 .+ m.ϵ*mean(m.z))*m.k
-	m.xv .=imag.(sqrt(m.μ)*ifft( m.Π⅔ .* cotanh(m.ξ) .* fft( m.z )))
-	m.Dxv .= real.(ifft(m.Π⅔ .* m.∂ₓ.* fft(m.xv)))
-	m.Dz .= real.(ifft(m.Π⅔ .* m.∂ₓ.*fft(m.z)))
-	m.Dphi .= real.(ifft(m.Π⅔ .* m.∂ₓ.*fft(m.phi)))
-
-	m.J .= (1 .+ m.ϵ*m.Dxv).^2 + m.μ*(m.ϵ*m.Dz).^2 # Jacobien
-	m.M1 = imag.(1/sqrt(m.μ)*ifft(m.Π⅔ .* tanh.(m.ξ).* m.∂ₓ .* fft(m.phi)))
-	m.M2 = imag.( -sqrt(m.μ)*ifft(m.Π⅔ .* cotanh(m.ξ) .* fft(m.M1./m.J )))
-	m.q0 = mean((1 .+ m.ϵ*m.Dxv).*m.M2 + m.ϵ*m.μ*m.Dz.*m.M1./m.J)
-
-	U[:,1] .= (1 .+ m.ϵ*m.Dxv).*m.M1./m.J - m.ϵ.*m.Dz.*m.M2 + m.ϵ*m.q0*m.Dz
-	U[:,2] .= -m.z -m.ϵ*m.Dphi.*m.M2 + 0.5*m.ϵ*m.μ*(m.M1.^2)./m.J - 0.5*m.ϵ*(m.Dphi.^2)./m.J + m.ϵ*m.q0*m.Dphi
-
-
 end

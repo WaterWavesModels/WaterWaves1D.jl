@@ -35,7 +35,7 @@ end
 
 #---- computation
 for problem in problems
-	solve2!( problem )
+	solve!( problem )
 end
 
 #---- visualization

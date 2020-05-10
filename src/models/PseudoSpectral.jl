@@ -32,25 +32,6 @@ mutable struct PseudoSpectral <: AbstractModel
 	mapto	:: Function
 	mapfro	:: Function
 	f!		:: Function
-	μ 		:: Float64
-	ϵ 		:: Float64
-	n 		:: Int
-	x   	:: Vector{Float64}
-    F₀   	:: Vector{Float64}
-	G₀   	:: Vector{Float64}
-    ∂ₓ      :: Vector{Complex{Float64}}
-	Π   	:: Vector{Float64}
-    Π⅔      :: BitArray{1}
-	η	    :: Vector{Complex{Float64}}
-    v	    :: Vector{Complex{Float64}}
-	fftη    :: Vector{Complex{Float64}}
-    fftv    :: Vector{Complex{Float64}}
-	Q	    :: Vector{Complex{Float64}}
-    R	    :: Vector{Complex{Float64}}
-	Lphi	:: Vector{Complex{Float64}}
-	LzLphi	:: Vector{Complex{Float64}}
-	dxv		:: Vector{Complex{Float64}}
-
 
     function PseudoSpectral(param::NamedTuple;order=2::Int,lowpass=0::Real,dealias=0::Int,)
 		if order in [1,2,3,4]
@@ -96,7 +77,8 @@ mutable struct PseudoSpectral <: AbstractModel
 				   real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
 
-		function f!(U) 		# utile uniquement pour solve2!
+		# Pseudo Spectral model equations are ∂t U = f!(U)
+		function f!(U)
 
 			fftη .= U[:,1]
 		    fftv .= U[:,2]
@@ -134,43 +116,6 @@ mutable struct PseudoSpectral <: AbstractModel
 		end
 
 
-        new(label, mapto, mapfro, f!, μ, ϵ, n, x, F₀, G₀, ∂ₓ, Π, Π⅔, η, v, fftη, fftv, Q, R, Lphi, LzLphi, dxv )
+        new(label, mapto, mapfro, f! )
     end
-end
-
-function (m::PseudoSpectral)(U)  # utile uniquement pour solve!
-
-	m.fftη .= U[:,1]
-    m.fftv .= U[:,2]
-	m.Q .= -m.∂ₓ.*m.F₀.*m.fftv
-	m.R .= -m.fftη
-
-	# attention,  m.G₀=-L dans Choi
-	if m.n >= 2
-		m.η  .= ifft(m.Π.*U[:,1])
-		m.v  .= ifft(U[:,2])
-		m.Lphi .= -ifft(m.Q)
-		m.Q += -m.ϵ *m.∂ₓ.*fft(m.η.*ifft(m.fftv)) .+ m.ϵ*m.G₀.*fft(m.η.*m.Lphi)
-		m.R += m.ϵ/2*fft(-m.v.^2 .+ m.Lphi.^2)
-	end
-	if m.n >= 3
-		m.LzLphi .= ifft(-m.G₀.* fft(m.η.*m.Lphi))
-		m.dxv .= ifft(m.∂ₓ.*m.fftv)
-		m.Q += m.ϵ^2*m.G₀.*fft(m.η.* m.LzLphi + 1/2 * m.η.^2 .* m.dxv ) .- m.ϵ^2*m.∂ₓ.*m.∂ₓ.*fft( 1/2 * m.η.^2  .*m.Lphi)
-		m.R += m.ϵ^2*fft(m.Lphi .* ( m.LzLphi .+ m.η.* m.dxv ) )
-	end
-	if m.n >= 4
-		m.Q += m.ϵ^3 * m.G₀.*fft(m.η.*ifft(-m.G₀.* fft(m.η.*m.LzLphi + 1/2 * m.η.^2 .* m.dxv ) )
-					.+ 1/2 * m.η.^2 .* ifft(m.∂ₓ.*m.∂ₓ.*fft( m.η  .* m.Lphi ) )
-					.- 1/6 * m.η.^3 .* ifft(m.∂ₓ.*m.∂ₓ.*fft( m.Lphi ) ) ) .-
-			   m.ϵ^3 * m.∂ₓ.*m.∂ₓ.*fft( 1/2 * m.η.^2  .*m.LzLphi .+ 1/3 * m.η.^3  .* m.dxv )
-		m.R += m.ϵ^3 * fft( m.Lphi .*  ifft(-m.G₀.* fft(m.η.*m.LzLphi + 1/2 * m.η.^2 .* m.dxv ) )
-				.+ 1/2* (m.LzLphi .+ m.η .* m.dxv ).^2
-				.+ 1/2* m.η.* m.Lphi.^2 .* ifft(m.∂ₓ.*m.∂ₓ.* m.fftη)
-				.- 1/2* (m.η.^2).* (ifft(m.∂ₓ .* fft(m.Lphi))).^2 ) .+
-				1/4*m.ϵ^3 * m.∂ₓ.*m.∂ₓ.*fft((m.η .* m.Lphi).^2)
-	end
-   	U[:,1] .= m.Π⅔.*m.Q/sqrt(m.μ)
-   	U[:,2] .= m.Π⅔.*m.∂ₓ.*m.Π.*m.R/sqrt(m.μ)
-
 end
