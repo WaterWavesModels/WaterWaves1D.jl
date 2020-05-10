@@ -31,7 +31,7 @@ mutable struct Problem
     function Problem(model   :: AbstractModel,
                      initial :: InitialData,
                      param   :: NamedTuple;
-                     solver = RK4(param;model=model)  :: TimeSolver,
+                     solver = RK4(model)  :: TimeSolver,
                      verbose = true :: Bool)
 
         if verbose == true

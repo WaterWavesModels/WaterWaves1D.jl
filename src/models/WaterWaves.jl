@@ -65,7 +65,7 @@ mutable struct WaterWaves <: AbstractModel
 end
 
 
-function (m::WaterWaves)(U::Array{Complex{Float64},2})
+function (m::WaterWaves)(U)
 
 
    	m.z .= U[:,1]
@@ -141,7 +141,7 @@ end
 
 """
 function mapfro(m::WaterWaves,
-	       datum::Array{Complex{Float64},2})
+	       datum)
 
 		   m.ξ .= real.(sqrt(m.μ)*(1+m.ϵ*mean(datum[:,1]))*m.k)
 	       m.xv .= imag.(sqrt(m.μ)*ifft( cotanh(m.ξ) .* fft( datum[:,1] )))

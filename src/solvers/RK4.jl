@@ -24,7 +24,7 @@ struct RK4 <: TimeSolver
     dU   :: Array
 
     function RK4( model :: AbstractModel; realdata=nothing )
-        Uhat = model.mapto(Init(x->0*x,x->0*x))
+        Uhat = mapto(model,Init(x->0*x,x->0*x))
         dU   = copy(Uhat)
         if realdata==true
             Uhat = real.(Uhat);dU = real.(dU)
