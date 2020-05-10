@@ -1,6 +1,5 @@
 export create_animation,plot_solution!,plot_solution
-using Plots;gr()
-using ProgressMeter
+
 """
 	create_animation( p; name::String, ylims=(a,b) )
 
@@ -78,12 +77,12 @@ function plot_solution!( plt, problems; t=nothing,x=nothing )
 	    	  label=p.model.label)
 	end
 end
-
 """
 	plot_solution( problems; t,x )
 
 Same as `plot_solution!` but generates and returns the plot.
 """
+
 function plot_solution( problems; t=nothing,x=nothing )
 	plt = plot(layout=(2,1))
 	plot_solution!( plt, problems; t=t,x=x )

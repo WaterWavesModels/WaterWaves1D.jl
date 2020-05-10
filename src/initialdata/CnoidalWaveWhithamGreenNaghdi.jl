@@ -1,6 +1,6 @@
-export CnoidalWaveWhithamGreenNaghdi
 using Elliptic
-using LinearMaps,IterativeSolvers
+
+export CnoidalWaveWhithamGreenNaghdi
 
 """
     `CnoidalWaveWhithamGreenNaghdi(param; kwargs...)`

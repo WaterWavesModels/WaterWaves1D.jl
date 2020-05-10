@@ -1,5 +1,4 @@
 export SolitaryWaveWhithamBoussinesq
-using LinearMaps,IterativeSolvers
 """
     `SolitaryWaveWhithamBoussinesq(param; kwargs...)`
 
