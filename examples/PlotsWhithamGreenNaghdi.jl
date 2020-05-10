@@ -546,3 +546,4 @@ function IntegrateWGN(scenario;δ=0.1,N=2^11,L=3*π,T= 5,dt = 5/10^4,SGN=false,d
 		gif(anim, string(sav,"-anim.gif"), fps=15); nothing
 	end
 end
+test
