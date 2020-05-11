@@ -1,4 +1,5 @@
 export Matsuno
+using LinearAlgebra
 
 """
     Matsuno(params)
