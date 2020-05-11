@@ -1,21 +1,25 @@
 export create_animation,plot_solution!,plot_solution
-using Plots;gr()
+using Plots;
 using ProgressMeter
 """
-	create_animation( p; name::String, ylims=(a,b) )
+	create_animation( p; name::String, ylims=(a,b), Nframes::Int )
 
 Creates an animation showing the evolution of initial-value problems.
 
 Argument `p` is either an element or a vector, list of elements of type `Problem`.
 
-The animation is saved as `name.gif` if `string` is provided; `anim.gif` otherwise.
+The animation is saved as `name.gif` if `string` is provided.
 
 `ylims` allows to specifies the y axis limits.
 If nothing is provided, then the limits are determined from the initial data.
 If anything but a Tuple is provided, the axis limits evolve with the solution.
 
+`Nframes` gives the (maximal) number of frames in the animation.
+
+Return `anim` an animation, which can generate a `gif` through `gif(anim, "my_name.gif", fps=15)`
+
 """
-function create_animation( problems; name="anim"::String, ylims=nothing )
+function create_animation( problems; name=nothing, ylims=nothing, Nframes = 201 )
 	label=nothing
 	if isa(problems,Problem) # if create_animation is called with a single problem
 		problems=[problems];  # A one-element array to allow `for pb in p`
@@ -28,9 +32,10 @@ function create_animation( problems; name="anim"::String, ylims=nothing )
 		y0 = minimum(η);y1 = maximum(η);
 		ylims=(y0-(y1-y0)/10,y1+(y1-y0)/10)
 	end
-
-	prog = Progress(problems[1].times.Ns;dt=1,desc="Creating animation: ")
-    anim = @animate for l in range(1,stop=min(problems[1].times.Ns,200))
+	Ns=problems[1].times.Ns
+	L=range(1,stop=Ns,step=max(1,ceil(Int,Ns/Nframes)))
+	prog = Progress(length(L);dt=1,desc="Creating animation: ")
+    anim = @animate for l in L
 		plt = plot(layout=(2,1))
 		for pb in problems
 			plot_solution!( plt, pb; t=pb.times.ts[l] )
@@ -39,8 +44,8 @@ function create_animation( problems; name="anim"::String, ylims=nothing )
         next!(prog)
     end
 	if label!=nothing problems[1].model.label=label end # puts back the model's name
-
-	gif(anim, string(name,".gif"), fps=15); nothing
+	if name != nothing gif(anim, string(name,".gif"), fps=15); end
+	return anim
 end
 
 """
@@ -77,6 +82,7 @@ function plot_solution!( plt, problems; t=nothing,x=nothing )
 			  title="Fourier modes",
 	    	  label=p.model.label)
 	end
+	nothing
 end
 
 """
@@ -87,7 +93,6 @@ Same as `plot_solution!` but generates and returns the plot.
 function plot_solution( problems; t=nothing,x=nothing )
 	plt = plot(layout=(2,1))
 	plot_solution!( plt, problems; t=t,x=x )
-	display(plt)
 	return plt
 end
 
