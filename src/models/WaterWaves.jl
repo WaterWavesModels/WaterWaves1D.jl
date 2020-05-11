@@ -13,7 +13,23 @@ end
 
 """
     WaterWaves(params)
-	The Water Waves system, through conformal mapping
+
+Define an object of type `AbstractModel` in view of solving the water waves system
+(via conformal mapping).
+
+# Argument
+`param` is of type `NamedTuple` and must contain
+- dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
+- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
+
+# Return values
+Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
+1. a function `WaterWaves.f!` to be called in the time-integration solver;
+2. a function `WaterWaves.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
+3. a function `WaterWaves.mapfro` which from such data matrix returns the Tuple of real vectors `(x,η,v)`, where
+	- `x` is a vector of collocation points (non-regularly spaced);
+    - `η` is the surface deformation at points `x`;
+    - `v` is the derivative of the trace of the velocity potential at points `x`.
 
 """
 mutable struct WaterWaves <: AbstractModel
@@ -22,6 +38,7 @@ mutable struct WaterWaves <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	param	:: NamedTuple
 
     function WaterWaves(param::NamedTuple)
 
@@ -95,33 +112,33 @@ mutable struct WaterWaves <: AbstractModel
 		# Reconstructs physical variables from conformal variables
 		function mapfro(U)
 
-				   ξ .= real.(sqrt(μ)*(1+ϵ*mean(U[:,1]))*k)
-			       xv .= imag.(sqrt(μ)*ifft( cotanh(ξ) .* fft( U[:,1] )))
+		   ξ .= real.(sqrt(μ)*(1+ϵ*mean(U[:,1]))*k)
+	       xv .= imag.(sqrt(μ)*ifft( cotanh(ξ) .* fft( U[:,1] )))
 
-				   x + ϵ*xv, real.(U[:,1]) , real.(ifft(∂ₓ .* fft( U[:,2] )))
+		   return x + ϵ*xv, real.(U[:,1]) , real.(ifft(∂ₓ .* fft( U[:,2] )))
 		end
 
 		# Water Waves equations are ∂t U = f!(U)
 		function f!(U)
-			   	z .= U[:,1]
-			   	phi .= U[:,2]
-				ξ .= sqrt(μ)*(1 .+ ϵ*mean(z))*k
-				xv .=imag.(sqrt(μ)*ifft( Π⅔ .* cotanh(ξ) .* fft( z )))
-				Dxv .= real.(ifft(Π⅔ .* ∂ₓ.* fft(xv)))
-				Dz .= real.(ifft(Π⅔ .* ∂ₓ.*fft(z)))
-				Dphi .= real.(ifft(Π⅔ .* ∂ₓ.*fft(phi)))
+		   	z .= U[:,1]
+		   	phi .= U[:,2]
+			ξ .= sqrt(μ)*(1 .+ ϵ*mean(z))*k
+			xv .=imag.(sqrt(μ)*ifft( Π⅔ .* cotanh(ξ) .* fft( z )))
+			Dxv .= real.(ifft(Π⅔ .* ∂ₓ.* fft(xv)))
+			Dz .= real.(ifft(Π⅔ .* ∂ₓ.*fft(z)))
+			Dphi .= real.(ifft(Π⅔ .* ∂ₓ.*fft(phi)))
 
-				J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2 # Jacobien
-				M1 = imag.(1/sqrt(μ)*ifft(Π⅔ .* tanh.(ξ).* ∂ₓ .* fft(phi)))
-				M2 = imag.( -sqrt(μ)*ifft(Π⅔ .* cotanh(ξ) .* fft(M1./J )))
-				q0 = mean((1 .+ ϵ*Dxv).*M2 + ϵ*μ*Dz.*M1./J)
+			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2 # Jacobien
+			M1 = imag.(1/sqrt(μ)*ifft(Π⅔ .* tanh.(ξ).* ∂ₓ .* fft(phi)))
+			M2 = imag.( -sqrt(μ)*ifft(Π⅔ .* cotanh(ξ) .* fft(M1./J )))
+			q0 = mean((1 .+ ϵ*Dxv).*M2 + ϵ*μ*Dz.*M1./J)
 
-				U[:,1] .= (1 .+ ϵ*Dxv).*M1./J - ϵ.*Dz.*M2 + ϵ*q0*Dz
-				U[:,2] .= -z -ϵ*Dphi.*M2 + 0.5*ϵ*μ*(M1.^2)./J - 0.5*ϵ*(Dphi.^2)./J + ϵ*q0*Dphi
+			U[:,1] .= (1 .+ ϵ*Dxv).*M1./J - ϵ.*Dz.*M2 + ϵ*q0*Dz
+			U[:,2] .= -z -ϵ*Dphi.*M2 + 0.5*ϵ*μ*(M1.^2)./J - 0.5*ϵ*(Dphi.^2)./J + ϵ*q0*Dphi
 
-			end
+		end
 
 
-        new(label, f!, mapto, mapfro)
+		new(label, f!, mapto, mapfro, param )
     end
 end

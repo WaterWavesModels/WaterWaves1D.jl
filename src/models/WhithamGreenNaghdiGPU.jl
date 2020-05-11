@@ -14,28 +14,32 @@ struct WhithamGreenNaghdiGPU <: AbstractModel
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
-
-
+	param	:: NamedTuple
+	kwargs  :: NamedTuple
 
     function WhithamGreenNaghdiGPU(
         param::NamedTuple;
         SGN = false,
         ktol = 0,
         dealias = 0,
+		verbose = true
     )
 
         @show CUDAdrv.name(CuDevice(0))
 
-        if SGN == true
-            label = string("Serre-Green-Naghdi")
-        else
-            label = string("Whitham-Green-Naghdi")
-        end
-        @info label
+		if SGN == true
+			label = string("Serre-Green-Naghdi")
+		else
+			label = string("Whitham-Green-Naghdi")
+		end
+		if verbose @info string("model ",label) end
 
-        μ = param.μ
-        ϵ = param.ϵ
-        mesh = Mesh(param)
+		kwargs = (SGN=SGN,dealias=dealias,ktol=ktol,verbose=verbose)
+		μ 	= param.μ
+		ϵ 	= param.ϵ
+		mesh = Mesh(param)
+		param = ( ϵ = ϵ, μ = μ, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
+
         k = mesh.k
         x = mesh.x
         x₀ = mesh.x[1]
@@ -52,14 +56,13 @@ struct WhithamGreenNaghdiGPU <: AbstractModel
 
         K = mesh.kmax * (1 - dealias / (2 + dealias))
         Π⅔ = abs.(mesh.k) .<= K # Dealiasing low-pass filter
-        if dealias == 0
-            @info "no dealiasing"
-            Π⅔ = ones(size(mesh.k))
-        else
-            @info "dealiasing"
-        end
-
-        @info "LU decomposition"
+		if dealias == 0
+			if verbose @info "no dealiasing" end
+			Π⅔ 	= ones(size(mesh.k))
+		elseif verbose
+			@info string("dealiasing : spectral scheme for power ", dealias + 1," nonlinearity ")
+		end
+        if verbose @info "LU decomposition" end
 
         FFT = exp.(-1im * k * (x .- x₀)')
         IFFT = exp.(1im * k * (x .- x₀)') / length(x)
@@ -144,15 +147,6 @@ struct WhithamGreenNaghdiGPU <: AbstractModel
 
         end
 
-        """
-            mapto(WhithamGreenNaghdi, data)
-        `data` is of type `InitialData`, maybe constructed by `Init(...)`.
-
-        Performs a discrete Fourier transform with, possibly, dealiasing and Krasny filter.
-
-        See documentation of `WhithamGreenNaghdi` for more details.
-
-        """
         function mapto(data::InitialData)
 
             U = [Π⅔ .* fft(data.η(x)) Π⅔ .* fft(data.v(x))]
@@ -161,20 +155,7 @@ struct WhithamGreenNaghdiGPU <: AbstractModel
 
         end
 
-        """
-            mapfro(WhithamGreenNaghdi, data)
-        `data` is of type `Array{Complex{Float64},2}`, e.g. `last(p.data.U)` where `p` is of type `Problem`.
-
-        Returns `(η,v,u)`, where
-        - `η` is the surface deformation;
-        - `v` is the derivative of the trace of the velocity potential;
-        - `u` corresponds to the layer-averaged velocity.
-
-        Inverse Fourier transform and real part, plus solving the elliptic problem for `u`.
-
-        See documentation of `WhithamGreenNaghdi` for more details.
-        """
-        function mapfrofull(U)
+        function mapfro(U)
             real(ifft(U[:, 1])), real(ifft(U[:, 2]))
         end
 
@@ -185,7 +166,6 @@ struct WhithamGreenNaghdiGPU <: AbstractModel
             real(ifft(U[:, 1])), real(ifft(U[:, 2])), real(ifft(L \ U[:, 2]))
         end
 
-
-        new( label, f!, mapto, mapfro, mapfrofull )
+        new( label, f!, mapto, mapfro, mapfrofull, param, kwargs )
     end
 end
