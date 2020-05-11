@@ -151,7 +151,7 @@ function solve!(problems; verbose=true::Bool)
         else
             for j in 1:problems[i].times.Ns-1
                 for l in 1:problems[i].times.ns[j]
-                    step!(problems[i].solver, problems[i].model, U[i], problems[i].times.dt)
+                    step!(problems[i].solver, problems[i].model.f!, U[i], problems[i].times.dt)
                 end
                 push!(problems[i].data.U,copy(U[i]))
                 next!(pg)
