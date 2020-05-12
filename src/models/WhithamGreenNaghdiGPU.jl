@@ -1,5 +1,5 @@
 export WhithamGreenNaghdiGPU
-using CUDAdrv, CuArrays, CuArrays.CUFFT
+using CUDAdrv, CuArrays, CuArrays.CUFFT,LinearAlgebra
 
 """
     WhithamGreenNaghdiGPU(param;kwargs)

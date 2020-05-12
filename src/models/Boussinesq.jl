@@ -1,5 +1,5 @@
 export Boussinesq
-
+using FFTW
 """
     Boussinesq(params;kwargs)
 

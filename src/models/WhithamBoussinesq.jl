@@ -1,5 +1,5 @@
 export WhithamBoussinesq
-
+using FFTW
 """
     WhithamBoussinesq(params;kwargs)
 

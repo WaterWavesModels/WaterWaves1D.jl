@@ -1,5 +1,5 @@
 export CGBSW
-
+using FFTW
 """
     CGBSW( params )
 

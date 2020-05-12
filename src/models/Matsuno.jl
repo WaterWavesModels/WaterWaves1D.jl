@@ -1,5 +1,5 @@
 export Matsuno
-using LinearAlgebra
+using FFTW,LinearAlgebra
 
 """
     Matsuno(params)

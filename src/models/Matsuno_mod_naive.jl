@@ -1,5 +1,5 @@
-export Matsuno_mod_naive,mapto,mapfro
-
+export Matsuno_mod_naive
+using FFTW
 """
 	Modified Matsuno models with a naive step function
     Matsuno_mod_naive(params)
