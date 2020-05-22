@@ -15,8 +15,10 @@ the modified Green-Naghdi model proposed by V. Duchêne, S. Israwi and R. Talhou
 ## Keywords
 - `SGN`: if `true` computes the Serre-Green-Naghdi (SGN) instead of Whitham-Green-Naghdi (WGN) system (default is `false`);
 - `iterative`: solve the elliptic problem through GMRES if `true`, LU decomposition if `false` (default is `true`);
-- `precond`: Preconditioner of GMRES is based on WGN if `true`, SGN otherwise (default is `true`);
+- `precond`: use a (left) preconditioner for GMRES if `true` (default), choose `precond` as the preconditioner if provided;
 - `gtol`: relative tolerance of the GMRES algorithm (default is `1e-14`);
+- `restart`: the corresponding option of the GMRES algorithm (default is `100`);
+- `maxiter`: the corresponding option of GMRES (default is `nothing`);
 - `ktol`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `verbose`: prints information if `true` (default is `true`).
@@ -44,7 +46,7 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 	param	:: NamedTuple
 	kwargs  :: NamedTuple
 
-    function WhithamGreenNaghdi(param::NamedTuple;iterate=true,SGN=false,dealias=0,ktol=0,gtol=1e-14,precond=true,verbose=true)
+    function WhithamGreenNaghdi(param::NamedTuple;SGN=false,dealias=0,ktol=0,iterate=true,gtol=1e-14,precond=true,restart=nothing,maxiter=nothing,verbose=true)
 		if SGN == true
 			label = string("Serre-Green-Naghdi")
 		else
@@ -71,15 +73,11 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 			F₀ = 1im * sqrt.(3*(1 ./F₁ .- 1)).*sign.(k)
 		end
 		if precond == true
-			Precond = Diagonal( 1 ./  F₁ )
+			Precond = Diagonal( 1 .+ μ/3*k.^2 ) #Diagonal( 1 ./  F₁ )
 		elseif precond == false
-			Precond = Diagonal( 1 .+ μ/3*k.^2 )
-		elseif precond >=0
-			Precond = Diagonal( 1 .+ μ/3*(precond^2*k).^2 )
-		elseif precond < 0
-			Precond = Diagonal( 1 .- μ/3*precond^4*real.(F₀.^2) )
-		else
 			Precond = Diagonal( ones(size(k)) )
+		else
+			Precond = precond
 		end
 		K = mesh.kmax * (1-dealias/(2+dealias))
 		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
@@ -96,12 +94,15 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		end
 		FFT = exp.(-1im*k*(x.-x₀)');
         IFFT = exp.(1im*k*(x.-x₀)')/length(x);
-		M₀ = IFFT * Diagonal( F₀ ) * FFT
-		IFFTF₀ = IFFT * Diagonal( F₀ )
+		M₀ = IFFT * Diagonal( F₀ .* Π⅔)* FFT
+		IFFTF₀ = IFFT * Diagonal( F₀ .* Π⅔)
         Id = Diagonal(ones(size(x)));
 		h = zeros(Complex{Float64}, mesh.N)
 		u, fftv, fftη, fftu, hdu = (similar(h),).*ones(5)
 		L = similar(FFT)
+		if maxiter == nothing maxiter = mesh.N end
+		if restart == nothing restart = min(20,mesh.N) end
+
 
 		# Evolution equations are ∂t U = f!(U)
 		function f!(U)
@@ -109,15 +110,14 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 			h .= 1 .+ ϵ*ifft(fftη)
 			fftv .= U[:,2]
 			if iterate == false
-				L .= Id - 1/3 * FFT * Diagonal( 1 ./h ) * M₀ * Diagonal( h.^3 ) * IFFTF₀
+				L .= Id - 1/3 * Diagonal(Π⅔) * FFT * Diagonal( 1 ./h ) * M₀ * Diagonal( h.^3 ) * IFFTF₀
 				fftu .= L \ fftv
 			elseif iterate == true
 		        function LL(hatu)
-		            hatu- 1/3 *Π⅔.*fft( 1 ./h .* ifft( F₀ .* Π⅔.*fft( h.^3 .* ifft( F₀ .* hatu ) ) ) )
+		            hatu- 1/3 *Π⅔.*fft( 1 ./h .* ifft( F₀ .* Π⅔.*fft( h.^3 .* ifft( F₀ .* Π⅔.* hatu ) ) ) )
 				end
 				fftu .= gmres( LinearMap(LL, length(h); issymmetric=false, ismutating=false) , fftv ;
-						Pl = Precond,
-						tol = gtol )
+						restart = restart, maxiter = maxiter, Pl = Precond, tol = gtol )
 			end
 			u .= ifft(fftu)
 			hdu .= h .* ifft(Π⅔.*F₀.*fftu)
@@ -149,7 +149,7 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		function mapfrofull(U)
 				fftη .= U[:,1]
 			   	h .= 1 .+ ϵ*ifft(fftη)
-				L .= Id - 1/3 * FFT * Diagonal( 1 ./h ) * M₀ * Diagonal( h.^3 ) * IFFTF₀
+				L .= Id - 1/3 * Diagonal(Π⅔) * FFT * Diagonal( 1 ./h ) * M₀ * Diagonal( h.^3 ) * IFFTF₀
 
 				   real(ifft(U[:,1])),real(ifft(U[:,2])),real(ifft(L \ U[:,2]))
 		end
