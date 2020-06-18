@@ -11,9 +11,11 @@ the modified water waves expansion proposed by West et al., Craig-Sulem, etc.
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
 
-## Keywords
+## Optional keyword arguments
+- `ν`: shallow/deep water multiplication factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0` (or `μ=Inf`).
 - `order :: Int`: the order of the expansion; linear system if `1`, quadratic if `2`, cubic if `3`, quartic if `4` (default and other values yield `2`);
-- `lowpass`: parameter of smooth regularization operator (default is `0`, i.e. no regularization);
+- `δ`: parameter of smooth regularization operator (default is `0`, i.e. no regularization);
+- `reg`: order of the smooth regularization operator (default is `1`);
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `verbose`: prints information if `true` (default is `true`).
@@ -37,7 +39,7 @@ mutable struct PseudoSpectral <: AbstractModel
 	kwargs	:: NamedTuple
 
     function PseudoSpectral(param::NamedTuple;
-							order=2,lowpass=0,ktol=0,dealias=0, verbose=true)
+							ν=nothing,order=2,δ=0,reg=1,ktol=0,dealias=0, verbose=true)
 
 		if order in [1,2,3,4] && verbose
 			@info string("Pseudo-spectral model with nonlinearity of order ", order)
@@ -49,18 +51,26 @@ mutable struct PseudoSpectral <: AbstractModel
 
 		μ 	= param.μ
 		ϵ 	= param.ϵ
+		if ν == nothing
+			if μ > 1
+				ν = 1/sqrt(μ)
+			else
+				ν = 1
+			end
+		end
+
 		n 	= order
 		mesh = Mesh(param)
 
 		param = ( ϵ = ϵ, μ = μ, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
-		kwargs = (order=order,lowpass=lowpass,dealias=dealias,ktol=ktol,verbose=verbose)
+		kwargs = (ν=ν,order=order,δ=δ,reg=reg,dealias=dealias,ktol=ktol,verbose=verbose)
 
 		x = mesh.x
 		k = copy(mesh.k)
-		cutoff = k -> (1 + tanh(-abs(k)+1/abs(k)))/2
-		Π = cutoff.(lowpass*k)   # regularisation cutoff
+		#cutoff = k -> (1 + tanh(-abs(k)+1/abs(k)))/2
+		cutoff = k -> (1-exp(-1/abs(k)^2))^(reg/2)
+		Π = cutoff.(δ*k)   # regularisation cutoff
 		K = mesh.kmax * (1-dealias/(2+dealias))
-		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
 		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
 		if dealias == 0
 			if verbose @info "no dealiasing" end
@@ -68,9 +78,15 @@ mutable struct PseudoSpectral <: AbstractModel
 		elseif verbose
 			@info string("dealiasing : spectral scheme for power ", dealias + 1," nonlinearity ")
 		end
-        F₀ 	= tanh.(sqrt(μ)*abs.(mesh.k))./(sqrt(μ)*abs.(mesh.k))
-		F₀[1] 	= 1
-		G₀ 	= sqrt(μ)*abs.(mesh.k).*tanh.(sqrt(μ)*abs.(mesh.k))
+		if μ == Inf || ν==0
+			∂ₓF₀ 	= 1im * sign.(mesh.k)
+			G₀ 	= abs.(mesh.k)
+			μ = 1
+			ν = 1
+		else
+        	∂ₓF₀ 	= 1im* sign.(mesh.k) .* tanh.(sqrt(μ)*abs.(mesh.k))
+			G₀ 	= sqrt(μ)*abs.(mesh.k).*tanh.(sqrt(μ)*abs.(mesh.k))
+		end
 		∂ₓ	=  1im * sqrt(μ)* mesh.k            # Differentiation
 		z = zeros(Complex{Float64}, mesh.N)
 		η = copy(z) ; v = copy(z) ; Lphi = copy(z) ; LzLphi = copy(z) ; dxv = copy(z) ;
@@ -96,8 +112,8 @@ mutable struct PseudoSpectral <: AbstractModel
 
 			fftη .= U[:,1]
 		    fftv .= U[:,2]
-			Q .= -∂ₓ.*F₀.*fftv
-			R .= -fftη
+			Q .= -∂ₓF₀.*fftv
+			R .= -fftη*ν
 
 			# attention,  G₀=-L dans Choi
 			if n >= 2
@@ -124,8 +140,8 @@ mutable struct PseudoSpectral <: AbstractModel
 						.- 1/2* (η.^2).* (ifft(∂ₓ .* fft(Lphi))).^2 ) .+
 						1/4*ϵ^3 * ∂ₓ.*∂ₓ.*fft((η .* Lphi).^2)
 			end
-		   	U[:,1] .= Π⅔.*Q/sqrt(μ)
-		   	U[:,2] .= Π⅔.*∂ₓ.*Π.*R/sqrt(μ)
+		   	U[:,1] .= Π⅔.*Q/sqrt(μ)/ν
+		   	U[:,2] .= Π⅔.*∂ₓ.*Π.*R/sqrt(μ)/ν
 			U[abs.(U).< ktol ].=0
 
 		end
