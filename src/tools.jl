@@ -46,7 +46,7 @@ end
 
 
 """
-    solution(p::Problem;t,x,interpolate)
+    solution(p::Problem;t,x,interpol)
 
 Gives the solution of a solved initial-value at a given time `t`.
 
@@ -54,7 +54,7 @@ Gives the solution of a solved initial-value at a given time `t`.
 - Argument `p` is of type `Problem`.
 - Keyword argument `t` is optional, the last computed time is returned by default.
 - Keyword argument `x` is optional, if provided the solution is interpolated to the collocation vector `x`.
-- Keyword argument `interpolate` is optional, if an integer is provided the solution is interpolated on as many collocation points (if `true`, then the default value `2^3` is chosen).
+- Keyword argument `interpol` is optional, if an integer is provided the solution is interpolated on as many collocation points (if `true`, then the default value `2^3` is chosen).
 
 
 # Return values
@@ -66,7 +66,7 @@ Provides `(η,v,x,t)` where
 
 """
 
-function solution(p::Problem; t=nothing, x=nothing, interpolate = false)
+function solution(p::Problem; t=nothing, x=nothing, interpol = false)
 	if t == nothing t = p.times.tfin end
 	t=min(max(t,0),p.times.tfin)
 	index = indexin(false,p.times.ts.<t)[1]
@@ -86,13 +86,13 @@ function solution(p::Problem; t=nothing, x=nothing, interpolate = false)
 		else
 			x=mesh.x
 		end
-		if interpolate == true
+		if interpol == true
 			new_mesh,η = interpolate(mesh,η)
 			new_mesh,v = interpolate(mesh,v)
 			x = new_mesh.x
-		elseif isa(interpolate,Int)
-			new_mesh,η = interpolate(mesh,η;n=interpolate)
-			new_mesh,v = interpolate(mesh,v;n=interpolate)
+		elseif isa(interpol,Int)
+			new_mesh,η = interpolate(mesh,η;n=interp)
+			new_mesh,v = interpolate(mesh,v;n=interp)
 			x = new_mesh.x
 		end
 	end

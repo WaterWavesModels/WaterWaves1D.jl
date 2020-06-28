@@ -20,7 +20,7 @@ Return `anim` an animation, which can generate for instance a `gif` through `gif
 
 """
 function create_animation( problems; name=nothing, x = nothing, ylims=nothing,vlims=nothing,flims=nothing, Nframes = 201,
-							interpolate=false, surface=true,fourier=true, velocity=false )
+							interpol=false, surface=true,fourier=true, velocity=false )
 	label=nothing
 	if isa(problems,Problem) # if create_animation is called with a single problem
 		problems=[problems];  # A one-element array to allow `for pb in p`
@@ -54,7 +54,7 @@ function create_animation( problems; name=nothing, x = nothing, ylims=nothing,vl
 		plt = plot(layout=(m,1))
 		for pb in problems
 			plot_solution!( plt, pb; t=pb.times.ts[l],x=x,
-					interpolate=interpolate,surface=surface,fourier=fourier, velocity=velocity )
+					interpol=interpol,surface=surface,fourier=fourier, velocity=velocity )
 		end
 		n=1
 		if surface
@@ -77,7 +77,7 @@ function create_animation( problems; name=nothing, x = nothing, ylims=nothing,vl
 end
 
 """
-	plot_solution!( plt; problems; t,x,interpolate,surface,velocity,fourier )
+	plot_solution!( plt; problems; t,x,interpol,surface,velocity,fourier )
 
 Plots in `plt` the solution of initial-value problems at a given time.
 
@@ -87,11 +87,11 @@ Plots in `plt` the solution of initial-value problems at a given time.
 ## Keywords
 - `t` is the time. If not provided, then the last computed time is plotted.
 - if a vector `x` is provided and if possible, the solution is interpolated to the collocation points `x`.
-- if `interpolate` is provided as an integer, the solution is interpolated on as many collocation points (if `true`, then the default value `2^3` is chosen).
+- if `interpol` is provided as an integer, the solution is interpolated on as many collocation points (if `true`, then the default value `2^3` is chosen).
 - `surface`, `velocity` and `fourier` (booleans) determine respectively whether surface deformation, `η`, tangential velocity, `v`, and the Fourier coefficients of `η` (in log-scale) are plotted.
 
 """
-function plot_solution!( plt, problems; t=nothing,x=nothing,interpolate=false,surface=true, fourier=true, velocity=false )
+function plot_solution!( plt, problems; t=nothing,x=nothing,interpol=false,surface=true, fourier=true, velocity=false )
 	if typeof(problems)==Problem problems=[problems] end
 	for p in problems
 		if x != nothing
@@ -100,7 +100,7 @@ function plot_solution!( plt, problems; t=nothing,x=nothing,interpolate=false,su
 			fftv = fft(v)
 			(η,v,X,t) = solution(p;t=t,x=x)
 		else
-			(η,v,X,t) = solution(p;t=t,interpolate=interpolate)
+			(η,v,X,t) = solution(p;t=t,interpol=interpol)
 			fftη = fft(η)
 			fftv = fft(v)
 		end
@@ -136,9 +136,9 @@ end
 
 Same as `plot_solution!` but generates and returns the plot.
 """
-function plot_solution( problems; t=nothing,x=nothing, interpolate=false, surface=true, velocity=false, fourier=true, )
+function plot_solution( problems; t=nothing,x=nothing, interpol=false, surface=true, velocity=false, fourier=true, )
 	plt = plot(layout=(1+fourier+velocity,1))
-	plot_solution!( plt, problems; t=t,x=x, interpolate=interpolate, surface=surface,fourier=fourier, velocity=velocity )
+	plot_solution!( plt, problems; t=t,x=x, interpol=interpol, surface=surface,fourier=fourier, velocity=velocity )
 	return plt
 end
 
