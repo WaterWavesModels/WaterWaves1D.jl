@@ -40,7 +40,7 @@ function create_animation( problems; name=nothing, x = nothing, ylims=nothing,vl
 	end
 	if flims == nothing
 		(η,v) = solution(problems[1];t=0)
-		f=log10.(abs.(fft(η)))
+		f=(abs.(fft(η)))
 		y0 = minimum(f);y1 = maximum(f);
 		flims=(y0-(y1-y0)/10,y1+(y1-y0)/10)
 	end
@@ -91,9 +91,15 @@ Plots in `plt` the solution of initial-value problems at a given time.
 - `surface`, `velocity` and `fourier` (booleans) determine respectively whether surface deformation, `η`, tangential velocity, `v`, and the Fourier coefficients of `η` (in log-scale) are plotted.
 
 """
-function plot_solution!( plt, problems; t=nothing,x=nothing,interpol=false,surface=true, fourier=true, velocity=false )
-	if typeof(problems)==Problem problems=[problems] end
-	for p in problems
+function plot_solution!( plt, problems; t=nothing,x=nothing,interpol=false,surface=true, fourier=true, velocity=false, label=nothing )
+	if typeof(problems)==Problem problems=[problems]; label = [label] end
+	for i in 1:length(problems)
+		p = problems[i]
+		if label == nothing || label == [nothing]
+			lbl=p.model.label
+		else
+			lbl=label[i]
+		end
 		if x != nothing
 			(η,v) = solution(p)
 			fftη = fft(η)
@@ -109,23 +115,26 @@ function plot_solution!( plt, problems; t=nothing,x=nothing,interpol=false,surfa
 		if surface
 	    	plot!(plt[n,1], X, η;
 			  title=string("surface deformation at t=",t),
-		      label=p.model.label)
+		      label=lbl)
 			n+=1
 		end
 
 	  	if velocity
 	    	plot!(plt[n,1], X, v;
 			  title=string("tangential velocity at t=",t),
-		      label=p.model.label)
+		      label=lbl)
 			n+=1
 		end
 
 		if fourier
-	    	plot!(plt[n,1], fftshift(p.mesh.k),
-	          log10.(1e-20.+abs.(fftshift(fftη)));
-			  title="Fourier coefficients",
-			  yaxis="log scale",
-	    	  label=p.model.label)
+			if !all(isnan,fftη)
+	    		plot!(plt[n,1], fftshift(p.mesh.k),
+	          		eps(1.).+abs.(fftshift(fftη));
+			  		title="Fourier coefficients (log scale)",
+			  		#yaxis="log scale",
+			  		yscale=:log10,
+	    	  		label=lbl)
+			end
 		end
 	end
 	nothing
@@ -136,9 +145,9 @@ end
 
 Same as `plot_solution!` but generates and returns the plot.
 """
-function plot_solution( problems; t=nothing,x=nothing, interpol=false, surface=true, velocity=false, fourier=true, )
+function plot_solution( problems; t=nothing,x=nothing, interpol=false, surface=true, velocity=false, fourier=true, label=nothing)
 	plt = plot(layout=(1+fourier+velocity,1))
-	plot_solution!( plt, problems; t=t,x=x, interpol=interpol, surface=surface,fourier=fourier, velocity=velocity )
+	plot_solution!( plt, problems; t=t,x=x, interpol=interpol, surface=surface,fourier=fourier, velocity=velocity, label=label )
 	return plt
 end
 
