@@ -121,27 +121,27 @@ mutable struct PseudoSpectral <: AbstractModel
 				v  .= ifft(U[:,2])
 				Lphi .= -ifft(Q)
 				Q += -ϵ *∂ₓ.*fft(η.*ifft(fftv)) .+ ϵ*G₀.*fft(η.*Lphi)
-				R += ϵ/2*fft(-v.^2 .+ Lphi.^2)
+				R += ϵ/2*Π.*fft(-v.^2 .+ Lphi.^2)
 			end
 			if n >= 3
 				LzLphi .= ifft(-G₀.* fft(η.*Lphi))
 				dxv .= ifft(∂ₓ.*fftv)
 				Q += ϵ^2*G₀.*fft(η.* LzLphi + 1/2 * η.^2 .* dxv ) .- ϵ^2*∂ₓ.*∂ₓ.*fft( 1/2 * η.^2  .*Lphi)
-				R += ϵ^2*fft(Lphi .* ( LzLphi .+ η.* dxv ) )
+				R += ϵ^2*Π.*fft(Lphi .* ( LzLphi .+ η.* dxv ) )
 			end
 			if n >= 4
 				Q += ϵ^3 * G₀.*fft(η.*ifft(-G₀.* fft(η.*LzLphi + 1/2 * η.^2 .* dxv ) )
 							.+ 1/2 * η.^2 .* ifft(∂ₓ.*∂ₓ.*fft( η  .* Lphi ) )
 							.- 1/6 * η.^3 .* ifft(∂ₓ.*∂ₓ.*fft( Lphi ) ) ) .-
 					   ϵ^3 * ∂ₓ.*∂ₓ.*fft( 1/2 * η.^2  .*LzLphi .+ 1/3 * η.^3  .* dxv )
-				R += ϵ^3 * fft( Lphi .*  ifft(-G₀.* fft(η.*LzLphi + 1/2 * η.^2 .* dxv ) )
+				R += ϵ^3 * Π.*fft( Lphi .*  ifft(-G₀.* fft(η.*LzLphi + 1/2 * η.^2 .* dxv ) )
 						.+ 1/2* (LzLphi .+ η .* dxv ).^2
 						.+ 1/2* η.* Lphi.^2 .* ifft(∂ₓ.*∂ₓ.* fftη)
 						.- 1/2* (η.^2).* (ifft(∂ₓ .* fft(Lphi))).^2 ) .+
 						1/4*ϵ^3 * ∂ₓ.*∂ₓ.*fft((η .* Lphi).^2)
 			end
 		   	U[:,1] .= Π⅔.*Q/sqrt(μ)/ν
-		   	U[:,2] .= Π⅔.*∂ₓ.*Π.*R/sqrt(μ)/ν
+		   	U[:,2] .= Π⅔.*∂ₓ.*R/sqrt(μ)/ν
 			U[abs.(U).< ktol ].=0
 
 		end
