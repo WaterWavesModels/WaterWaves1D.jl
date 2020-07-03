@@ -1,4 +1,4 @@
-export ProblemSave, save, load
+export ProblemSave, save, loadpb
 using JLD
 struct ProblemSave
 
@@ -119,11 +119,11 @@ end
 import JLD.load
 
 """
-    `load(name::String)`
+    `loadpb(name::String)`
 
 Loads the contents of the file `name.jld` as a problem of type `:Problem`.
 """
-function load(name::String)
+function loadpb(name::String)
 
     convert(Problem, JLD.load(string(name,".jld"), name ))
 
