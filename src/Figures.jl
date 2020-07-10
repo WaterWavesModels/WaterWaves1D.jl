@@ -146,7 +146,7 @@ end
 Same as `plot_solution!` but generates and returns the plot.
 """
 function plot_solution( problems; t=nothing,x=nothing, interpol=false, surface=true, velocity=false, fourier=true, label=nothing)
-	plt = plot(layout=(1+fourier+velocity,1))
+	plt = plot(layout=(surface+fourier+velocity,1))
 	plot_solution!( plt, problems; t=t,x=x, interpol=interpol, surface=surface,fourier=fourier, velocity=velocity, label=label )
 	return plt
 end
