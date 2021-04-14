@@ -91,8 +91,8 @@ function solution(p::Problem; t=nothing, x=nothing, interpol = false)
 			new_mesh,v = interpolate(mesh,v)
 			x = new_mesh.x
 		elseif isa(interpol,Int)
-			new_mesh,η = interpolate(mesh,η;n=interp)
-			new_mesh,v = interpolate(mesh,v;n=interp)
+			new_mesh,η = interpolate(mesh,η;n=interpol)
+			new_mesh,v = interpolate(mesh,v;n=interpol)
 			x = new_mesh.x
 		end
 	end

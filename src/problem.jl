@@ -107,7 +107,7 @@ function solve!(problem :: Problem;verbose=true::Bool)
     else
         for j in 1:problem.times.Ns-1
             @showprogress string("Step ",j,"/",problem.times.Ns-1,"...") 1 for l in 1:problem.times.ns[j]
-                step2!(solver, model.f!, U, dt)
+                step!(solver, model.f!, U, dt)
             end
             push!(data,copy(U))
             println()
