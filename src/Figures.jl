@@ -11,6 +11,7 @@ Argument `problems` is either an element or a collection (vector, list, etc.) of
 The animation is saved as `name.gif` if `name` is provided.
 
 Other keyword arguments are as follows
+- `xlims` allows to specifies the x axis limits for the surface deformation. If `nothing` is provided (default), then the full numerical basin is represented.
 - `ylims` allows to specifies the y axis limits for the surface deformation. If `nothing` is provided (default), then the limits are determined from the initial data. If anything but a `Tuple` is provided, the axis limits evolve with the solution.
 - `vlims` and `flims` are as above, but for the velocity and Fourier coefficients plots.
 - `Nframes` gives the (maximal) number of frames in the animation.
@@ -19,7 +20,8 @@ Other keyword arguments are as follows
 Return `anim` an animation, which can generate for instance a `gif` through `gif(anim, "my_name.gif", fps=15)`.
 
 """
-function create_animation( problems; name=nothing, x = nothing, ylims=nothing,vlims=nothing,flims=nothing, Nframes = 201,
+function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
+							xlims=nothing, ylims=nothing,vlims=nothing,flims=nothing,
 							interpol=false, surface=true,fourier=true, velocity=false )
 	label=nothing
 	if isa(problems,Problem) # if create_animation is called with a single problem
@@ -59,6 +61,7 @@ function create_animation( problems; name=nothing, x = nothing, ylims=nothing,vl
 		n=1
 		if surface
 			if isa(ylims,Tuple) ylims!(plt[n,1],ylims) end
+			if isa(xlims,Tuple) xlims!(plt[n,1],xlims) end
 			n+=1
 		end
 		if velocity
