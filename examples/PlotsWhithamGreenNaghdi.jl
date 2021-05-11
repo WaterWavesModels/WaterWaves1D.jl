@@ -213,7 +213,7 @@ Arguments are all optional:
 - `c` the velocity,
 - `N` the number of collocation points,
 - `L` the half-length of the mesh,
-- `T` yje final time of integration,
+- `T` the final time of integration,
 - `dt` the timestep,
 - `SGN`: use SGN if `true`, and WGN if `false` (default is `false`),
 - `name`: a string used to save raw data and the figure.
