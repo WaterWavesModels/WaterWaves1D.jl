@@ -36,6 +36,8 @@ mutable struct WaterWaves <: AbstractModel
 
     label   :: String
 	f!		:: Function
+	f1!		:: Function
+	f2!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 	param	:: NamedTuple
@@ -140,8 +142,40 @@ mutable struct WaterWaves <: AbstractModel
 			U[:,2] .= real.(-ifft(∂ₓ .* fft( z +ϵ*Dphi.*M2 + ϵ/2 .*(Dphi.^2 -μ*M1.^2)./J - ϵ*q0*Dphi)))
 
 		end
+		function f1!(U1,U2)
+		   	z .= U1
+		   	Dphi .= U2
+			ξ .= sqrt(μ)*(1 .+ ϵ*mean(z))*k
+			#xv .=real.(ifft( Π⅔ .* cotanh(ξ) .* fft( z )))
+			Dxv .= real.(sqrt(μ)*ifft(-1im* Π⅔ .* ∂ₓ.* cotanh(ξ) .* fft(z)))
+			Dz .= real.(ifft(Π⅔ .* ∂ₓ.*fft(z)))
+
+			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2 # Jacobien
+			M1 = real.(-1im/sqrt(μ)*ifft(Π⅔ .* tanh.(ξ).* fft(Dphi)))
+			M2 = real.( 1im*sqrt(μ)*ifft(Π⅔ .* cotanh(ξ) .* fft(M1./J )))
+			q0 = mean((1 .+ ϵ*Dxv).*M2 + ϵ*μ*Dz.*M1./J)
+
+			U1 .= (1 .+ ϵ*Dxv).*M1./J - ϵ*Dz.*M2 + ϵ*q0*Dz
+
+		end
+		function f2!(U1,U2)
+		   	z .= U1
+		   	Dphi .= U2
+			ξ .= sqrt(μ)*(1 .+ ϵ*mean(z))*k
+			#xv .=real.(ifft( Π⅔ .* cotanh(ξ) .* fft( z )))
+			Dxv .= real.(sqrt(μ)*ifft(-1im* Π⅔ .* ∂ₓ.* cotanh(ξ) .* fft(z)))
+			Dz .= real.(ifft(Π⅔ .* ∂ₓ.*fft(z)))
+
+			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2 # Jacobien
+			M1 = real.(-1im/sqrt(μ)*ifft(Π⅔ .* tanh.(ξ).* fft(Dphi)))
+			M2 = real.( 1im*sqrt(μ)*ifft(Π⅔ .* cotanh(ξ) .* fft(M1./J )))
+			q0 = mean((1 .+ ϵ*Dxv).*M2 + ϵ*μ*Dz.*M1./J)
+
+			U2 .= real.(-ifft(∂ₓ .* fft( z +ϵ*Dphi.*M2 + ϵ/2 .*(Dphi.^2 -μ*M1.^2)./J - ϵ*q0*Dphi)))
+
+		end
 
 
-		new(label, f!, mapto, mapfro, param, kwargs )
+		new(label, f!, f1!, f2!, mapto, mapfro, param, kwargs )
     end
 end
