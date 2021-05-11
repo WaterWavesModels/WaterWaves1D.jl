@@ -1,3 +1,4 @@
+using ProgressMeter
 export Problem
 
 """
@@ -58,6 +59,13 @@ mutable struct Problem
 
         data  = Data(model.mapto(initial))
 
+        # A basic check
+        try
+            step!(solver, model, copy(last(data.U)), 1)
+        catch
+            @warn "The model and the solver are incompatible. solve! will not work."
+        end
+
         new(model, initial, param, solver, times, mesh, data)
 
     end
@@ -93,21 +101,21 @@ function solve!(problem :: Problem;verbose=true::Bool)
 
     if problem.times.tc == problem.times.ts
         @showprogress 1 for j in 1:problem.times.Ns-1
-            step!(solver, model.f!, U, dt)
+            step!(solver, model, U, dt)
             push!(data,copy(U))
         end
 
     elseif length(problem.times.ts) > 25
         @showprogress 1 for j in 1:problem.times.Ns-1
             for l in 1:problem.times.ns[j]
-                step!(solver, model.f!, U, dt)
+                step!(solver, model, U, dt)
             end
             push!(data,copy(U))
         end
     else
         for j in 1:problem.times.Ns-1
             @showprogress string("Step ",j,"/",problem.times.Ns-1,"...") 1 for l in 1:problem.times.ns[j]
-                step!(solver, model.f!, U, dt)
+                step!(solver, model, U, dt)
             end
             push!(data,copy(U))
             println()
@@ -143,7 +151,7 @@ function solve!(problems; verbose=true::Bool)
         if problems[i].times.ns == 1
 
             for j in 1:problems[i].times.Ns-1
-                step!(problems[i].solver, problems[i].model.f!, U[i], problems[i].times.dt)
+                step!(problems[i].solver, problems[i].model, U[i], problems[i].times.dt)
                 push!(problems[i].data.U,copy(U[i]))
                 next!(pg)
             end
@@ -151,7 +159,7 @@ function solve!(problems; verbose=true::Bool)
         else
             for j in 1:problems[i].times.Ns-1
                 for l in 1:problems[i].times.ns[j]
-                    step!(problems[i].solver, problems[i].model.f!, U[i], problems[i].times.dt)
+                    step!(problems[i].solver, problems[i].model, U[i], problems[i].times.dt)
                 end
                 push!(problems[i].data.U,copy(U[i]))
                 next!(pg)
