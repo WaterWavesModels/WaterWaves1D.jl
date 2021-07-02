@@ -117,7 +117,7 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		            hatu- 1/3 *Π⅔.*fft( 1 ./h .* ifft( F₀ .* Π⅔.*fft( h.^3 .* ifft( F₀ .* Π⅔.* hatu ) ) ) )
 				end
 				fftu .= gmres( LinearMap(LL, length(h); issymmetric=false, ismutating=false) , fftv ;
-						restart = restart, maxiter = maxiter, Pl = Precond, tol = gtol )
+						restart = restart, maxiter = maxiter, Pl = Precond, reltol = gtol )
 			end
 			u .= ifft(fftu)
 			hdu .= h .* ifft(Π⅔.*F₀.*fftu)
