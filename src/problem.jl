@@ -1,21 +1,30 @@
+using ProgressMeter
 export Problem
 
 """
-    Problem( model, initial, param; solver)
+    Problem( model, initial, param ; verbose=true)
+or
+    Problem( model, initial, param, solver ; verbose=true)
 
 Builds an initial-value problem which can then be solved (integrated in time) through `solve!( problem )`
 
 # Arguments
-- `model   :: AbstractModel`,  the system of equation solved. May be built, e.g., by `WhithamGreenNaghdi(param)`;
-- `initial :: InitialData`, the initial data. May be buit, e.g., by `Init(η,v)` where `η` is the surface deformation and `v` the derivative of the trace of the velocity potential at the surface
+- `model   :: AbstractModel`,  the system of equation solved.
+May be built, e.g., by `WaterWaves(param)`;
+- `initial :: InitialData`, the initial data.
+May be buit, e.g., by `Init(η,v)` where
+`η` is the surface deformation and `v` the derivative of the trace of the velocity potential at the surface;
 - `param   :: NamedTuple`, must contain values for
     - `N`, the number of collocation points of the spatial grid
     - `L`, the half-length of the spatial grid
     - `T`, the final time of integration
     - `dt`, the timestep
-    - `nr` (optional, default = `T/dt`) the number of stored data
-- `solver`  :: TimeSolver (optional, default = explicit Runge-Kutta fourth order solver), the solver for time integration. May be built, e.g., by `RK4(param)` or `RK4_naive()`
+    - additionally, it may contain `Ns` the number of computed data or `ns` for storing data every `ns` computation steps (by default, every computed data is stored).
 
+- `solver  :: TimeSolver`, the solver for time integration (optional, default is explicit Runge-Kutta fourth order solver).
+May be built, e.g., by `RK4(model)` or `RK4_naive()`.
+
+Information are not printed if keyword `verbose = false` (default is `true`).
 
 """
 mutable struct Problem
@@ -48,7 +57,14 @@ mutable struct Problem
 
         mesh  = Mesh(param)
 
-        data  = Data(mapto(model, initial))
+        data  = Data(model.mapto(initial))
+
+        # A basic check
+        try
+            step!(solver, model, copy(last(data.U)), 1)
+        catch
+            @warn "The model and the solver are incompatible. solve! will not work."
+        end
 
         new(model, initial, param, solver, times, mesh, data)
 
@@ -65,6 +81,8 @@ Solves (i.e. integrates in time) an initial-value problem
 
 The argument `problem` should be of type `Problem`.
 It may be buit, e.g., by `Problem(model, initial, param)`
+
+Information are not printed if keyword `verbose = false` (default is `true`).
 
 """
 function solve!(problem :: Problem;verbose=true::Bool)
@@ -108,6 +126,9 @@ function solve!(problem :: Problem;verbose=true::Bool)
     println()
 
 end
+
+
+
 using Base.Threads
 
 """

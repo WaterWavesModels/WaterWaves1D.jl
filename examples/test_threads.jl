@@ -3,11 +3,11 @@
 #md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/WWvsXX.ipynb)
 #
 using ShallowWaterModels;
+include("../src/models/WaterWaves.jl")
+include("../src/models/PseudoSpectral.jl")
 using Test
 using TimerOutputs
 import Base.Threads: @threads, @sync, @async, @spawn, nthreads, threadid
-# if there is an error at this step, try commenting the lines above and commenting out the line below
-#include("../src/dependencies.jl")
 
 function run_models()
 

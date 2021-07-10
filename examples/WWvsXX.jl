@@ -3,8 +3,9 @@
 #md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/WWvsXX.ipynb)
 #
 using ShallowWaterModels;
-using Plots
-gr()
+include("../src/models/WaterWaves.jl")
+include("../src/models/PseudoSpectral.jl")
+
 # if there is an error at this step, try commenting the lines above and commenting out the line below
 #include("../src/dependencies.jl")
 
@@ -38,6 +39,12 @@ for problem in problems
 end
 
 #---- visualization
-plot_solution(problems)
-savefig("WWvsXX.pdf"); nothing # hide
-create_animation(problems;name="WWvsXX")
+include("../src/Figures.jl")
+#using Plots
+#gr()
+
+plt = plot_solution(problems)
+display(plt)
+savefig("WWvsXX.pdf")
+anim = create_animation(problems)
+gif(anim, "WWvsXX.gif", fps=15)

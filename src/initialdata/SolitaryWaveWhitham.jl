@@ -1,4 +1,6 @@
 export SolitaryWaveWhitham
+using LinearMaps,IterativeSolvers,LinearAlgebra
+
 """
     `SolitaryWaveWhitham(param; kwargs...)`
 
