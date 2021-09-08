@@ -22,11 +22,12 @@ Arguments are all optional:
 - `c` the velocity,
 - `N` the number of collocation points,
 - `L` the half-length of the mesh,
+- `verbose` provides details on residuals if `true` (default is `false`)
 - `name`: a string used to save the figure as a name.pdf.
 
 Return `(η,u,v,mesh)`, where `mesh.x` are the collocation points.
 """
-function PlotSolitaryWaveWGN1(;c=2,N=2^10,L=10*π,name=nothing)
+function PlotSolitaryWaveWGN1(;c=2,N=2^10,L=10*π,verbose=false,name=nothing)
 	param = ( μ  = 1,
 			ϵ  = 1,
         	N  = N,
@@ -40,7 +41,7 @@ function PlotSolitaryWaveWGN1(;c=2,N=2^10,L=10*π,name=nothing)
 				tol =  1e-14, max_iter=10,
 				ktol =0*1e-11, gtol = 1e-16,
 				iterative = true, q=1,
-				verbose = false)
+				verbose = verbose)
 
 	(ηGN,uGN) = SolitaryWaveWhithamGreenNaghdi(
 				param; SGN = true, max_iter=0)
@@ -69,7 +70,7 @@ Second method to compute the WGN solitary wave. Same as `PlotSolitaryWaveWGN1`, 
 use non-iterative method for the inversion of the Jacobian.
 To be used with higher values of the velocity (default is `c=20`).
 """
-function PlotSolitaryWaveWGN2(;c=20,L=10*π,N=2^10,name=nothing)
+function PlotSolitaryWaveWGN2(;c=20,L=10*π,N=2^10,verbose=false,name=nothing)
 	param = ( μ  = 1,
 		ϵ  = 1,
       	N  = N,
@@ -81,7 +82,7 @@ function PlotSolitaryWaveWGN2(;c=20,L=10*π,N=2^10,name=nothing)
 				method=2, α = 1, #ici α = 1 évite des oscillations important si c = 3 ou c = 20
 				tol =  1e-14, max_iter=15,
 				iterative = false, q=1,
-				verbose = true)
+				verbose = verbose)
 
 	(ηGN,uGN) = SolitaryWaveWhithamGreenNaghdi(
 				param; SGN = true, max_iter=0)
@@ -109,7 +110,7 @@ Third method to compute the WGN solitary wave. Same as `PlotSolitaryWaveWGN1`, b
 - use a rescaled equation.
 To be used with highest values of the velocity (default is `c=100`).
 """
-function PlotSolitaryWaveWGN3(;c=100,L=10*π,N=2^10,name=nothing)
+function PlotSolitaryWaveWGN3(;c=100,L=10*π,N=2^10,verbose=false,name=nothing)
 	param = ( μ  = 1,
 		ϵ  = 1,
       	N  = N,
@@ -121,7 +122,7 @@ function PlotSolitaryWaveWGN3(;c=100,L=10*π,N=2^10,name=nothing)
 				method=3, α = 1,
 				tol =  1e-10, max_iter=10,
 				iterative = false, q=1,
-				verbose = true)
+				verbose = verbose)
 	(ηGN,uGN) = SolitaryWaveWhithamGreenNaghdi(
 				param; SGN = true, max_iter=0)
 
@@ -132,9 +133,9 @@ function PlotSolitaryWaveWGN3(;c=100,L=10*π,N=2^10,name=nothing)
 	  ylabel = "u/c",
 	  label=["WGN" "SGN"])
 	plot!(plt[1,2], fftshift(mesh.k),
-	  [log10.(abs.(fftshift(fft(u/c)))) log10.(abs.(fftshift(fft(uGN/c))))];
+	  [log10.(abs.(fftshift(fft(u/c)))) log10.(abs.(fftshift(fft(uGN/c)))) ];
 	  title="frequency",
-	  label="WGN")
+	  label=["WGN" "SGN"])
 	display(plt)
 	if name != nothing savefig(string(name,".pdf")); end
 	return (η,u,v,mesh)
@@ -154,7 +155,7 @@ Arguments are all optional:
 - `name`: a string used to save the figure as a name.pdf.
 
 """
-function PlotJacobianWGN(;c=20,L=10*π,N=2^10,SGN=false,name=nothing)
+function PlotJacobianWGN(;c=20,L=10*π,N=2^10,SGN=false,verbose=false,name=nothing)
 	ϵ,μ,α=1,1,0
 
 	(η,u,v,mesh) = SolitaryWaveWhithamGreenNaghdi(
@@ -162,7 +163,7 @@ function PlotJacobianWGN(;c=20,L=10*π,N=2^10,SGN=false,name=nothing)
 				method=2, α = 1, #ici α = 1 évite des oscillations important si c = 3 ou c = 20
 				tol =  1e-12, max_iter=15,
 				iterative = false, q=1,
-				verbose = true)
+				verbose = verbose)
 
 	k,x=mesh.k,mesh.x
 	if SGN == true
