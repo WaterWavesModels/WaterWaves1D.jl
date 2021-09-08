@@ -60,15 +60,6 @@ mutable struct IsobeKakinuma <: AbstractModel
 		x₀ = mesh.x[1]
 
 		∂ₓ	=  1im * mesh.k
-		if precond == true
-			Precond = Diagonal( [-1 .- 2*μ/5*k.^2 ; 1 .+ 2*μ/5*k.^2] ) #Diagonal( 1 ./  F₁ )
-			#Precond = [ Diagonal( -μ/2*k.^2)  Diagonal(1 .- μ/10 * k.^2 ) ;
-			#		 Diagonal( ones( size(k) ) ) Diagonal( ones( size(k) ) ) ]
-		elseif precond == false
-			Precond = Diagonal( ones( size( [k;k])) )
-		else
-			Precond = precond
-		end
 		K = mesh.kmax * (1-dealias/(2+dealias))
 		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
 		if dealias == 0
@@ -85,11 +76,21 @@ mutable struct IsobeKakinuma <: AbstractModel
 		FFT = exp.(-1im*k*(x.-x₀)');
         IFFT = exp.(1im*k*(x.-x₀)')/length(x);
         Id = Diagonal(ones(size(x)));
+
+		if precond == true
+			Precond = lu([  Id   μ*Id  ;
+					1/2*Diagonal( ∂ₓ.^2) (Id + μ/10 * Diagonal(∂ₓ.^2 .* Π⅔) ) ])
+		elseif precond == false
+			Precond = Diagonal( ones( size( [k;k])) )
+		else
+			Precond = precond
+		end
+
 		h = zeros(Complex{Float64}, mesh.N)
 		u, fftv, fftη, u, w, G = (similar(h),).*ones(6)
 		C = similar([h ; h])
-		CC = reshape(C,:,2)
-		fftϕ = similar(CC)
+		guess = 0*C
+		fftϕ = reshape(C,:,2)
 		L = similar([FFT FFT ; FFT FFT])
 		if maxiter == nothing maxiter = mesh.N end
 		if restart == nothing restart = min(20,mesh.N) end
@@ -100,28 +101,28 @@ mutable struct IsobeKakinuma <: AbstractModel
 			fftη .= U[:,1]
 			h .= 1 .+ ϵ*ifft(fftη)
 			fftv .= U[:,2]
-			C .= [-μ/2 * ∂ₓ.* fftv ; zero(fftv)]
+			C .= [ zero(fftv) ; -1/2 * ∂ₓ.* fftv]
 			if iterate == false
-				L .= [μ/2*Diagonal( ∂ₓ.^2 .* Π⅔) (Id + μ/10 * Diagonal(Π⅔) * FFT * Diagonal( h.^2 ) * IFFT * Diagonal( ∂ₓ.^2 .* Π⅔)) ;
-						Id (FFT * Diagonal( h.^2 ) * IFFT .* Π⅔) ]
+				L .= [Id    μ*(FFT * Diagonal( h.^2 ) * IFFT .* Π⅔)  ;
+						1/2*Diagonal( ∂ₓ.^2 .* Π⅔) (Id + μ/10 * Diagonal(Π⅔) * FFT * Diagonal( h.^2 ) * IFFT * Diagonal( ∂ₓ.^2 .* Π⅔)) ]
 
 				fftϕ .= reshape(L \ C,:,2)
 			elseif iterate == true # does not work yet
-				CC .= reshape(C,:,2)
+				guess .= fftϕ[:]  # bof, le guess n'ameliore pas tellement les performances
 		        function LL(fftϕ)
-		            [μ/2*∂ₓ.^2 .* Π⅔.* fftϕ[1:end÷2] .+ fftϕ[end÷2+1:end] .+ μ/10*Π⅔.*fft( (h.^2) .* ifft( ∂ₓ.^2 .* Π⅔ .* fftϕ[end÷2+1:end] ) ) ;
-					fftϕ[1:end÷2] + fft( (h.^2) .* ifft(  Π⅔ .* fftϕ[end÷2+1:end])) ]
+		            [fftϕ[1:end÷2] + μ*fft( (h.^2) .* ifft(  Π⅔ .* fftϕ[end÷2+1:end]))   ;
+					1/2*∂ₓ.^2 .* Π⅔.* fftϕ[1:end÷2] .+ fftϕ[end÷2+1:end] .+ μ/10*Π⅔.*fft( (h.^2) .* ifft( ∂ₓ.^2 .* Π⅔ .* fftϕ[end÷2+1:end] ) ) ]
 				end
-				fftϕ .= reshape( gmres( LinearMap(LL, 2*length(x); issymmetric=false, ismutating=false) , C ;
+				fftϕ .= reshape( gmres!( guess, LinearMap(LL, 2*length(x); issymmetric=false, ismutating=false) , C ;
 						restart = restart, maxiter = maxiter, Pl = Precond, reltol = gtol ) , : ,2)
 			end
-			u .= ifft( ∂ₓ.* fftϕ[:,1] .+ fftv) .+ (h.^2)  .* ifft(∂ₓ.* fftϕ[:,2])
-			w .= h.* ifft( fftϕ[:,2])
-			G .= -∂ₓ.*Π⅔.* fft( h.* ifft( ∂ₓ.* fftϕ[:,1] .+ fftv) .+ (h.^3)/3  .* ifft(∂ₓ.* fftϕ[:,2]) )
+			u .= ifft( ∂ₓ.* fftϕ[:,1] .+ fftv) .+ μ * (h.^2)  .* ifft(∂ₓ.* fftϕ[:,2])
+			w .= 2*h.* ifft( fftϕ[:,2])
+			G .= -∂ₓ.*Π⅔.* fft( h.* ifft( ∂ₓ.* fftϕ[:,1] .+ fftv) .+ μ*(h.^3)/3  .* ifft(∂ₓ.* fftϕ[:,2]) )
 
 		   	U[:,1] .= G
-			U[:,2] .= -∂ₓ.*Π⅔.*(fftη .+ ϵ * fft( h.* w .* ifft(-G)
-							.+ 1/2 * (u.^2 .+ 1/μ * w.^2 ) ) )
+			U[:,2] .= -∂ₓ .* (fftη .+ ϵ * Π⅔ .* fft( μ * w .* ifft(-G)
+								.+ 1/2 * (u.^2 .+ μ * w.^2 ) ) )
 			U[abs.(U).< ktol ].=0
 		end
 
