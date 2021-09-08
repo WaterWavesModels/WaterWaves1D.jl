@@ -44,7 +44,7 @@ mutable struct Problem
                      verbose = true :: Bool)
 
         if verbose == true
-            @info string("\nBuilds the initial-value problem for model ",model.label,"\n",
+            @info string("\nBuild the initial-value problem for model ",model.label,"\n",
                          "with parameters\n",param)
         end
         if in(:Ns,keys(param))
@@ -56,7 +56,6 @@ mutable struct Problem
         end
 
         mesh  = Mesh(param)
-
         data  = Data(model.mapto(initial))
 
         # A basic check
@@ -147,7 +146,7 @@ function solve!(problems; verbose=true::Bool)
     end
     pg=Progress(nsteps;dt=1)
     @threads for i in 1:length(problems)
-        #pg[i]=Progress(length(Jn[i]);dt=1)
+
         if problems[i].times.ns == 1
 
             for j in 1:problems[i].times.Ns-1
