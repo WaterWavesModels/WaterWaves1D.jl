@@ -16,7 +16,7 @@ Computes the Whitham-Green-Naghdi solitary wave with prescribed velocity.
 - `iterative :: Bool`: inverts Jacobian through GMRES if `true`, LU decomposition if `false` (default is `false`);
 - `verbose :: Bool`: prints numerical errors at each step if `true` (default is `false`);
 - `max_iter :: Int`: maximum number of iterations of the Newton algorithm (default is `20`);
-- `tol :: Real`: general tolerance (default is `1e-10`);
+- `tol :: Real`: relative tolerance measured in ℓ∞ norm (default is `1e-10`);
 - `ktol :: Real`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
 - `gtol :: Real`: relative tolerance of the GMRES algorithm (default is `1e-10`);
 - `dealias :: Int`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
@@ -236,15 +236,18 @@ function SolitaryWaveWhithamGreenNaghdi(
                 end
                 fu .= F(u,hu,Fu,F2u)
 
-                err = norm(fu,Inf)#/norm(Fabs(u,hu,Fu,F2u),Inf)
-    		if err < tol
-    			@info string("Converged : ",err,"\n")
+                relerr = norm(fu,Inf)/norm(Fabs(u,hu,Fu,F2u),Inf)
+                abserr = norm(fu,Inf)
+    		if relerr < tol
+    			@info string("Converged : relative error ",relerr,"\n")
     			break
     		elseif verbose == true
-                        print(string("error at step ",i,": ",err,"\n"))
+                        print(string("absolute error at step ",i,": ",abserr,"\n"))
+                        print(string("relative error at step ",i,": ",relerr,"\n"))
+
     		end
                 if i == max_iter
-                        @warn  string("The algorithm did not converge: final error is ",err,"\n")
+                        @warn  string("The algorithm did not converge: final relative error is ",relerr,"\n")
                 end
 
                 if iterative == false
@@ -259,7 +262,7 @@ function SolitaryWaveWhithamGreenNaghdi(
                         F₁ = 1 ./ (1 .+ μ*k.^2   )
                         #F₁ = ones(length(k))
                         Precond = Diagonal( 1 ./ F₁  )
-                        du .=  real.(ifft(gmres( JacFfast(Complex.(u),hu,Fu,F2u,Du,dxu) , fft(fu) ; Pl = Precond, tol = gtol, verbose=verbose )))
+                        du .=  real.(ifft(gmres( JacFfast(Complex.(u),hu,Fu,F2u,Du,dxu) , fft(fu) ; Pl = Precond, reltol = gtol, verbose=verbose )))
                 end
     		u .-= q*filter(du)
         end
