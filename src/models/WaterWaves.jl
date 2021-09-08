@@ -1,18 +1,9 @@
-export WaterWaves
+export WaterWaves2
 #using Statistics #only for function mean in WaterWaves.jl...
 using FFTW,LinearAlgebra
 
-function cotanh( x )
-	y=1 ./ tanh.(x+(x.==0))
-	y[x.==0].=0
-	return y
-end
-function mean(x)
-	sum(x)/length(x)
-end
-
 """
-    WaterWaves(params)
+    WaterWaves2(params)
 
 Define an object of type `AbstractModel` in view of solving the water waves system
 (via conformal mapping).
@@ -32,7 +23,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
     - `v` is the derivative of the trace of the velocity potential at points `x`.
 
 """
-mutable struct WaterWaves <: AbstractModel
+mutable struct WaterWaves2 <: AbstractModel
 
     label   :: String
 	f!		:: Function
@@ -44,21 +35,23 @@ mutable struct WaterWaves <: AbstractModel
 	kwargs  :: NamedTuple
 
 
-    function WaterWaves(param::NamedTuple;dealias=1,tol=1e-16,maxiter=1000,verbose=true)
+    function WaterWaves2(param::NamedTuple;dealias=0,method=1,tol=1e-16,maxiter=100,ktol=0,verbose=true)
 
+		# Preparation
 		label = "water waves"
 		kwargs = (dealias=dealias,tol=tol,maxiter=maxiter,verbose=verbose)
 
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		mesh = Mesh(param)
 
+		mesh = Mesh(param)
 		x 	= mesh.x
+		x₀ = x[1]
 		k 	= mesh.k
 
-    	∂ₓ	=  1im * mesh.k            # Differentiation
+    	∂ₓ	=  1im * mesh.k             # Differentiation Fourier multiplier
 		K = mesh.kmax * (1-dealias/(2+dealias))
-		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
+		Π⅔ 	= abs.(mesh.k) .<= K 		# Dealiasing low-pass filter
 		if dealias == 0
 			if verbose @info "no dealiasing" end
 			Π⅔ 	= ones(size(mesh.k))
@@ -66,6 +59,8 @@ mutable struct WaterWaves <: AbstractModel
 			@info string("dealiasing : spectral scheme for power ", dealias + 1," nonlinearity ")
 		end
 
+		# preallocate some variables for memory use
+		fz = zeros(Complex{Float64}, mesh.N)
         z = zeros(Float64, mesh.N)
         phi = zeros(Float64, mesh.N)
 		ξ = zeros(Float64, mesh.N)
@@ -78,101 +73,184 @@ mutable struct WaterWaves <: AbstractModel
 		M2 = zeros(Float64, mesh.N)
 		q0 = 0
 
-		# Constructs conformal variables in the flat strip
-		function mapto(data::InitialData)
+		# some useful functions
+		function cotanh( x )
+			y=1 ./ tanh.(x+(x.==0))
+			y[x.==0].=0
+			return y
+		end
+		function xdcotanh( x )
+			return -x ./ (sinh.(x+(x.==0)).^2)
+		end
+		function meanf(f) #computes the mean of a function, being given its FFT
+			real(f[1])/length(f)
+		end
+		function mean(f) #computes the mean of a function
+			sum(f)/length(f)
+		end
 
-			function iter( u )
-			    return real.(ifft(-sqrt(μ)*1im*Π⅔ .*cotanh(sqrt(μ)*(1+ϵ*mean(data.η(x+ϵ*u)))*k).*fft(data.η(x+ϵ*u))))
+
+		# Construct conformal variables in the flat strip from initial data
+		function mapto(data::InitialData)
+		  if data.η(x)==zero(x) && data.v(x)==zero(x)  #useful when defining the type of initial data in some solvers
+			  return zeros(Complex{Float64}, (mesh.N,2))
+		  else
+			# preallocate some variables to save memory use
+			fη = zeros(Complex{Float64}, mesh.N)
+			u0 = zeros(Complex{Float64}, mesh.N)
+			nu0 = zeros(Complex{Float64}, mesh.N)
+			z0 = zeros(Float64, mesh.N)
+			v0 = zeros(Float64, mesh.N)
+			dx = zeros(Float64, mesh.N)
+
+			# We will solve F(u)=0
+			function F( u )
+				dx.=real.(ifft(u))
+				fη .= fft(data.η(x+ϵ*dx))
+			    return u+sqrt(μ)*1im*Π⅔ .*cotanh(sqrt(μ)*(1+ϵ*meanf(fη))*k).*fη
 			end
 
-			# on démarre avec deux coefficients spécifiques:
-			δ = mean(data.η(x))
-			u0 = real.(ifft(-sqrt(μ)*1im*Π⅔ .*cotanh(sqrt(μ)*k).*fft(data.η(x))))
+			# The Newton alogorithm demands the Jacobian of F,
+			# which involves the derivative of η
+			hatdη=∂ₓ.*fft(data.η(x))  # Fourier coefficients of η'
+	        function dη( x :: Vector{Float64} )
+	            return real.(exp.(1im*(x.-x₀)*k')*hatdη/length(k))
+	        end
 
-			# détermination du point fixe de la fonction contractante:
-			norm0=norm(data.η(x))
+			# Define the Jacobian as a linear map
+			# to be used with GMRES iterative solver
+			function JacF( u )
+				dx.= real.(ifft(u))
+				fη .= fft(data.η(x+ϵ*dx))
+				δ  = meanf(fη)
+				dF(φ) = φ+ϵ*sqrt(μ)*1im*Π⅔ .* ( cotanh(sqrt(μ)*(1+ϵ*δ)*k).*fft(dη(x+ϵ*dx) .* ifft(φ))
+								+ϵ/(1+ϵ*δ)* (xdcotanh(sqrt(μ)*(1+ϵ*δ)*k).*fη ) * mean(dη(x+ϵ*dx) .* ifft(φ)) )
+				return LinearMap(dF, length(u); issymmetric=false, ismutating=false)
+			end
+
+			# Define the Jacobian as a matrix
+			# to be used with direct solver
+			if method ==3
+				FFT = exp.(-1im*k*(x.-x₀)');
+				IFFT = exp.(1im*k*(x.-x₀)')/length(x);
+				Id = Diagonal(ones(size(x)));
+				Mean = ones(size(x))'/length(x)
+				M(v) = Diagonal( v )
+
+				function JacFMat( u )
+					dx.=real.(ifft(u))
+					fη .= fft(data.η(x+ϵ*dx))
+					δ  = meanf(fη)
+		        	return Id + ϵ*sqrt(μ)*1im*Π⅔ .* (M(cotanh(sqrt(μ)*(1+ϵ*δ)*k)) * FFT * M(dη(x+ϵ*dx)) * IFFT
+								+ ϵ/(1+ϵ*δ)* (xdcotanh(sqrt(μ)*(1+ϵ*δ)*k).* fη )  * Mean * M(dη(x+ϵ*dx)) * IFFT )
+				end
+			end
+
+			# The iterative map to solve F(u)=u
+			function iterate( u )
+				if method==1  		# by contraction fix point algorithm
+			    	return -F(u)
+				elseif method==2	# by Newton algorithm with GMRES iterative solver to invert the Jacobian
+					return gmres( JacF(u) , -F(u) ; reltol = tol/100, verbose=verbose )
+				elseif method==3	# by Newton algorithm with direct solver to invert the Jacobian
+					return - JacFMat( u ) \ F(u)
+				else
+					@error("In the function `WaterWaves`, the argument `method` should be 1, 2 or 3.")
+				end
+
+			end
+
+
+			# initiate the iterative argument
+			fη.=fft(data.η(x))
+			δ = meanf(fη)
+			u0 .= -sqrt(μ)*1im*Π⅔ .*cotanh(sqrt(μ)*k*(1+ϵ*δ)).*fη
+
+			# perform the iterative loop
+			norm0=norm(fη)
+			normdiff=norm0
 			niter=0
-			nu0=u0 .+ 1
-			while  (norm(nu0-u0)>tol*norm0 && niter<maxiter)
-			    nu0=u0
-			    u0 = iter(nu0)
+			while  normdiff>tol*norm0 && niter<maxiter
+				nu0 = iterate(u0)
+				u0 += nu0
+				normdiff=norm(nu0)
 			    niter+=1
+				if verbose
+					@info string("Relative error ", normdiff/norm0, " at step ", niter)
+				end
 			end
 			if verbose
-				if niter==maxiter
-				    @warn "The fix point algorithm did not converge"
-				    @warn string("Estimated normalized error : ",norm(nu0-u0)/norm0)
+				if niter == maxiter
+				    @warn "The iterative solver did not converge. Maybe try a different method."
+				    @warn string("Estimated normalized error : ",normdiff/norm0)
 				else
-					@info string("The fix point algorithm converged in ",niter," iterations")
+					@info string("The iterative solver converged in ",niter," iterations.")
+					@info string("Estimated normalized error : ",normdiff/norm0)
 				end
-		end
-			δ = mean(data.η(x+ϵ*u0))
+			end
 
-			# Obtention des conditions initiales dans le domaine redressé:
-			z0 = data.η(x+ϵ*u0)
-			v0 = data.v(x+ϵ*u0) .* (1 .+ ϵ*real.(ifft(Π⅔.*∂ₓ.*fft(u0))) )
+			# Constructs relevant variables from u0 the solution to F(u)=0
+			z0 .= data.η(x+ϵ*real.(ifft(u0)))
+			v0 .= data.v(x+ϵ*real.(ifft(u0))) .* (1 .+ ϵ*real.(ifft(Π⅔.*∂ₓ.*u0)) )
 
-			[z0 v0] ######
+			U=[ Π⅔ .* fft(z0)   Π⅔ .* fft(v0) ]  # Π⅔ for dealiasing
+			U[ abs.(U).< ktol ].=0     # applies Krasny filter if ktol>0
+ 			return U
+		  end
 		end
 
 		# Reconstructs physical variables from conformal variables
 		function mapfro(U)
-			z  .= U[:,1]
+			z  .= real.(ifft(U[:,1]))
 		   	ξ  .= real.(sqrt(μ)*(1+ϵ*mean(z))*k)
-	       	xv .= real.(-1im*sqrt(μ)*ifft( cotanh(ξ) .* fft( z )))
+	       	xv .= real.(-1im*sqrt(μ)*ifft( Π⅔ .*cotanh(ξ) .*  U[:,1] ))
 
-		   return x + ϵ*xv, real.(z) , real.( U[:,2] )
+		   return x + ϵ*xv, z , real.( ifft(U[:,2]) )
 		end
 
 		# Water Waves equations are ∂t U = f!(U)
 		function f!(U)
-		   	z .= U[:,1]
-		   	Dphi .= U[:,2]
-			ξ .= sqrt(μ)*(1 .+ ϵ*mean(z))*k
-			#xv .=real.(ifft( Π⅔ .* cotanh(ξ) .* fft( z )))
-			Dxv .= real.(sqrt(μ)*ifft(-1im* Π⅔ .* ∂ₓ.* cotanh(ξ) .* fft(z)))
-			Dz .= real.(ifft(Π⅔ .* ∂ₓ.*fft(z)))
+		   	Dphi .= real.(ifft(U[:,2]))
+			ξ .= sqrt(μ)*(1 .+ ϵ*meanf(U[:,1]))*k
+			Dxv .= real.(sqrt(μ)*ifft( k .* cotanh(ξ) .* U[:,1]  ))
+			Dz .= real.(ifft( ∂ₓ.*  U[:,1] ))
 
-			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2 # Jacobien
-			M1 = real.(-1im/sqrt(μ)*ifft(Π⅔ .* tanh.(ξ).* fft(Dphi)))
-			M2 = real.( 1im*sqrt(μ)*ifft(Π⅔ .* cotanh(ξ) .* fft(M1./J )))
+			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2
+			M1 = real.(-1im/sqrt(μ)*ifft( tanh.(ξ).* U[:,2] ))
+			M2 = real.( 1im*sqrt(μ)*ifft( cotanh(ξ) .* fft(M1./J) ))
 			q0 = mean((1 .+ ϵ*Dxv).*M2 + ϵ*μ*Dz.*M1./J)
 
-			U[:,1] .= (1 .+ ϵ*Dxv).*M1./J - ϵ*Dz.*M2 + ϵ*q0*Dz
-			U[:,2] .= real.(-ifft(∂ₓ .* fft( z +ϵ*Dphi.*M2 + ϵ/2 .*(Dphi.^2 -μ*M1.^2)./J - ϵ*q0*Dphi)))
+			U[:,2] .= -∂ₓ .* U[:,1] - ϵ* Π⅔ .* ∂ₓ .* fft( Dphi.*M2 + 1/2 .*(Dphi.^2 -μ*M1.^2)./J - q0*Dphi )
+			U[:,1] .=  Π⅔ .* fft( (1 .+ ϵ*Dxv).*M1./J - ϵ*Dz.*M2 + ϵ*q0*Dz )
 
 		end
-		function f1!(U1,U2)
-		   	z .= U1
-		   	Dphi .= U2
-			ξ .= sqrt(μ)*(1 .+ ϵ*mean(z))*k
-			#xv .=real.(ifft( Π⅔ .* cotanh(ξ) .* fft( z )))
-			Dxv .= real.(sqrt(μ)*ifft(-1im* Π⅔ .* ∂ₓ.* cotanh(ξ) .* fft(z)))
-			Dz .= real.(ifft(Π⅔ .* ∂ₓ.*fft(z)))
 
-			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2 # Jacobien
-			M1 = real.(-1im/sqrt(μ)*ifft(Π⅔ .* tanh.(ξ).* fft(Dphi)))
-			M2 = real.( 1im*sqrt(μ)*ifft(Π⅔ .* cotanh(ξ) .* fft(M1./J )))
+		# Define (f1!,f2!) a splitting of the function f! used in symplectic schemes
+		function f1!(U1,U2)
+		   	Dphi .= real.(ifft(U2))
+			ξ .= sqrt(μ)*(1 .+ ϵ*meanf(U1))*k
+			Dxv .= real.(sqrt(μ)*ifft( k .* cotanh(ξ) .* U1 ))
+			Dz .= real.(ifft( ∂ₓ.* U1))
+
+			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2
+			M1 = real.(-1im/sqrt(μ)*ifft( tanh.(ξ).* U2 ))
+			M2 = real.( 1im*sqrt(μ)*ifft( cotanh(ξ) .* fft(M1./J) ))
 			q0 = mean((1 .+ ϵ*Dxv).*M2 + ϵ*μ*Dz.*M1./J)
 
-			U1 .= (1 .+ ϵ*Dxv).*M1./J - ϵ*Dz.*M2 + ϵ*q0*Dz
-
+			U1 .= Π⅔ .* fft( (1 .+ ϵ*Dxv).*M1./J - ϵ*Dz.*M2 + ϵ*q0*Dz )
 		end
 		function f2!(U1,U2)
-		   	z .= U1
-		   	Dphi .= U2
-			ξ .= sqrt(μ)*(1 .+ ϵ*mean(z))*k
-			#xv .=real.(ifft( Π⅔ .* cotanh(ξ) .* fft( z )))
-			Dxv .= real.(sqrt(μ)*ifft(-1im* Π⅔ .* ∂ₓ.* cotanh(ξ) .* fft(z)))
-			Dz .= real.(ifft(Π⅔ .* ∂ₓ.*fft(z)))
+		   	Dphi .= real.(ifft(U2))
+			ξ .= sqrt(μ)*(1 .+ ϵ*meanf(U1))*k
+			Dxv .= real.(sqrt(μ)*ifft( k .* cotanh(ξ) .* U1))
+			Dz .= real.(ifft( ∂ₓ.* U1))
 
-			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2 # Jacobien
-			M1 = real.(-1im/sqrt(μ)*ifft(Π⅔ .* tanh.(ξ).* fft(Dphi)))
-			M2 = real.( 1im*sqrt(μ)*ifft(Π⅔ .* cotanh(ξ) .* fft(M1./J )))
+			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2
+			M1 = real.(-1im/sqrt(μ)*ifft( tanh.(ξ).* U2 ))
+			M2 = real.( 1im*sqrt(μ)*ifft( cotanh(ξ) .* fft(M1./J) ))
 			q0 = mean((1 .+ ϵ*Dxv).*M2 + ϵ*μ*Dz.*M1./J)
 
-			U2 .= real.(-ifft(∂ₓ .* fft( z +ϵ*Dphi.*M2 + ϵ/2 .*(Dphi.^2 -μ*M1.^2)./J - ϵ*q0*Dphi)))
-
+			U2 .= -∂ₓ .* 1 - ϵ* Π⅔ .* ∂ₓ .* fft( Dphi.*M2 + 1/2 .*(Dphi.^2 -μ*M1.^2)./J - q0*Dphi )
 		end
 
 
