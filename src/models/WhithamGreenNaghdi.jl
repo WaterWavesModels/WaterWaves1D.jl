@@ -65,15 +65,17 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		x₀ = mesh.x[1]
 
 		∂ₓ	=  1im * mesh.k
-		F₁ 	= tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k))
-		F₁[1] 	= 1
-		if SGN == true
+        if SGN == true
+			F₁ = 1 ./(1 .+ μ/3*k.^2)
 			F₀ = sqrt(μ)*∂ₓ
 	    else
+			F₁ 	= tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k))
+			F₁[1] 	= 1
 			F₀ = 1im * sqrt.(3*(1 ./F₁ .- 1)).*sign.(k)
 		end
 		if precond == true
-			Precond = Diagonal( 1 .+ μ/3*k.^2 ) #Diagonal( 1 ./  F₁ )
+			#Precond = Diagonal( 1 .+ μ/3*k.^2 )
+			Precond = Diagonal( 1 ./  F₁ )
 		elseif precond == false
 			Precond = Diagonal( ones(size(k)) )
 		else
