@@ -118,6 +118,8 @@ end
 
 import JLD.load
 
+export loadpb
+
 """
     `loadpb(name::String)`
 

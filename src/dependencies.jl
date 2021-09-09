@@ -13,6 +13,10 @@ ENV["PLOTS_USE_ATOM_PLOTPANE"] = "false"
 include("types.jl")
 include("solvers/RK4.jl")
 include("tools.jl")
+include("initialdata/BellCurve.jl")
+include("models/WhithamGreenNaghdi.jl")
+include("models/PseudoSpectral.jl")
+include("LoadSave.jl")
 
 
 function include_all(dir=nothing)
