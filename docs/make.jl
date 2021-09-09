@@ -2,14 +2,14 @@ push!(LOAD_PATH,"../src/")
 
 ENV["GKSwstype"]="100"
 
-using Pkg
-Pkg.develop(PackageSpec(path=pwd()))
-Pkg.instantiate()
+# using Pkg
+# Pkg.develop(PackageSpec(path=pwd()))
+# Pkg.instantiate()
 
-using ShallowWaterModels
 using Documenter
 using Plots 
 using Literate
+using ShallowWaterModels
 
 # generate example
 
