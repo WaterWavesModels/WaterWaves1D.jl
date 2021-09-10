@@ -24,6 +24,13 @@ Elliptic = "1"
 FFTW = "^1"
 LinearMaps = "3"
 StatsPlots = "0.14"
+JLD = "0.12"
+TimerOutputs = "0.5"
+OhMyREPL = "0.5"
+Plots = "1"
+Literate = "2"
+IterativeSolvers = "0.9"
+ProgressMeter = "1"
 julia = "^1.1"
 
 [extras]
