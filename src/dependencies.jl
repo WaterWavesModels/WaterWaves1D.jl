@@ -16,7 +16,9 @@ include("tools.jl")
 include("initialdata/BellCurve.jl")
 include("models/WhithamGreenNaghdi.jl")
 include("models/PseudoSpectral.jl")
+include("models/Matsuno.jl")
 include("LoadSave.jl")
+include("Figures.jl")
 
 
 function include_all(dir=nothing)

@@ -50,7 +50,8 @@ function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
 
 	Ns=problems[1].times.Ns
 	L=range(1,stop=Ns,step=max(1,ceil(Int,Ns/Nframes)))
-	prog = Progress(length(L);dt=1,desc="Creating animation: ")
+    ci = get(ENV, "CI", nothing) == "true"
+	prog = Progress(length(L);dt=1,desc="Creating animation: ", enabled = !ci)
 	m = surface + fourier + velocity
     anim = @animate for l in L
 		plt = plot(layout=(m,1))

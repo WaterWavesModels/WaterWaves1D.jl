@@ -84,7 +84,9 @@ It may be buit, e.g., by `Problem(model, initial, param)`
 Information are not printed if keyword `verbose = false` (default is `true`).
 
 """
-function solve!(problem :: Problem;verbose=true::Bool)
+function solve!(problem :: Problem; verbose=true::Bool)
+
+    ci = get(ENV, "CI", nothing) == "true"
 
     if verbose == true
         @info string("\nNow solving the initial-value problem for model ",problem.model.label,"\n",
@@ -99,22 +101,28 @@ function solve!(problem :: Problem;verbose=true::Bool)
     data   = problem.data.U
 
     if problem.times.tc == problem.times.ts
-        @showprogress 1 for j in 1:problem.times.Ns-1
+        pbar = Progress(problem.times.Ns-1; enabled = !ci)
+        for j in 1:problem.times.Ns-1
             step!(solver, model, U, dt)
             push!(data,copy(U))
+            next!(pbar)
         end
 
     elseif length(problem.times.ts) > 25
-        @showprogress 1 for j in 1:problem.times.Ns-1
+        pbar = Progress(problem.times.Ns-1; enabled = !ci)
+        for j in 1:problem.times.Ns-1
             for l in 1:problem.times.ns[j]
                 step!(solver, model, U, dt)
             end
             push!(data,copy(U))
+            next!(pbar)
         end
     else
         for j in 1:problem.times.Ns-1
-            @showprogress string("Step ",j,"/",problem.times.Ns-1,"...") 1 for l in 1:problem.times.ns[j]
+            pbar = Progress(problem.times.Ns-1, 1, string("Step ",j,"/",problem.times.Ns-1,"...") ; enabled = !ci)
+            for l in 1:problem.times.ns[j]
                 step!(solver, model, U, dt)
+                next!(pbar)
             end
             push!(data,copy(U))
             println()

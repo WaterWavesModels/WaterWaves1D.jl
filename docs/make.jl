@@ -22,9 +22,10 @@ makedocs(modules=[WaterWaves1D],
          authors = "Vincent Duchene",
          format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
          sitename = "WaterWaves1D.jl",
-         pages = ["Documentation" => "index.md",
-                  "Code basics"   => "basics.md",
-                  "Contents"      => "contents.md"])
+         pages = [ "Quickstart" => "quickstart.md", 
+                   "Documentation" => "index.md",
+                   "Code basics"   => "basics.md",
+                   "Contents"      => "contents.md"])
 
 #                  "Animation"     => "examples/animation.md",
 #                 "Example"       => "examples/two_problems.md",
