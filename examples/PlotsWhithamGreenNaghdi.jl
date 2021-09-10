@@ -4,7 +4,7 @@
 # #
 @info "Defines functions PlotSolitaryWaveWGN1,PlotSolitaryWaveWGN2,PlotSolitaryWaveWGN3,PlotJacobianWGN,IntegrateSolitaryWaveWGN,StabilitySolitaryWaveWGN,IntegrateWGN"
 
-using ShallowWaterModels,FFTW,Plots,LinearAlgebra,ProgressMeter;
+using WaterModels1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
 include("../src/models/WhithamGreenNaghdi.jl")
 include("../src/initialdata/SolitaryWaveWhithamGreenNaghdi.jl")
 include("../src/Figures.jl")

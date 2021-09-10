@@ -2,7 +2,7 @@
 #
 #---- import libraries
 
-using ShallowWaterModels,Plots,FFTW,Statistics;gr()
+using WaterModels1D,Plots,FFTW,Statistics;gr()
 #include("../src/dependencies.jl")
 
 include("../src/models/WaterWaves.jl")

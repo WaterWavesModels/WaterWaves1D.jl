@@ -6,7 +6,7 @@
 # #
 @info "Define functions Integrate and Figures"
 
-using ShallowWaterModels,FFTW,Plots,LinearAlgebra,ProgressMeter;
+using WaterModels1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
 include("../src/models/WaterWaves.jl")
 include("../src/models/WhithamGreenNaghdi.jl")
 include("../src/models/IsobeKakinuma.jl")

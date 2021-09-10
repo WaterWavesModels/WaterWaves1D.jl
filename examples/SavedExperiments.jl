@@ -2,7 +2,7 @@
 #
 #md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two_problems.ipynb)
 #
-using ShallowWaterModels,Plots,FFTW,Statistics;gr()
+using WaterModels1D,Plots,FFTW,Statistics;gr()
 #include("../src/dependencies.jl")
 
 #---- Cold-Hot states transition for Serre-Green-Naghdi, discussed in the paper of Sergey Gavrilyuk, Boniface Nkonga, Keh-Ming Shyue and Lev Truskinovsky

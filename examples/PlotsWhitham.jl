@@ -1,6 +1,6 @@
 # # Compute the solitary wave of the Whitham equation with prescribed velocity
 @info "Defines functions PlotSolitaryWaveKdV,PlotSolitaryWaveWhitham"
-using ShallowWaterModels,FFTW,Plots;
+using WaterModels1D,FFTW,Plots;
 include("../src/initialdata/SolitaryWaveWhitham.jl")
 
 #---- KdV

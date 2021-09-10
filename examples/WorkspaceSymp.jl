@@ -2,7 +2,7 @@
 #
 #md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two_problems.ipynb)
 #
-#using ShallowWaterModels,ProgressMeter,Plots,FFTW,Statistics;gr()
+#using WaterModels1D,ProgressMeter,Plots,FFTW,Statistics;gr()
 include("../src/dependencies.jl")
 
 include("../src/models/PseudoSpectral.jl")

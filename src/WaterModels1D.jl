@@ -1,4 +1,4 @@
-module ShallowWaterModels
+module WaterModels1D
 
 include("dependencies.jl")
 

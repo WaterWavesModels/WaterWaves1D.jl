@@ -2,7 +2,7 @@
 #
 #md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/WWvsXX.ipynb)
 #
-using ShallowWaterModels;
+using WaterModels1D;
 include("../src/models/WaterWaves.jl")
 include("../src/models/PseudoSpectral.jl")
 using Test

@@ -3,7 +3,7 @@
 # #
 @info "Define functions Spectrum,figspecCW,figspecSW"
 
-using ShallowWaterModels,LinearAlgebra,FFTW,ProgressMeter,Plots;
+using WaterModels1D,LinearAlgebra,FFTW,ProgressMeter,Plots;
 include("../src/models/WhithamGreenNaghdi.jl")
 include("../src/initialdata/SolitaryWaveWhithamGreenNaghdi.jl")
 include("../src/initialdata/CnoidalWaveWhithamGreenNaghdi.jl")
