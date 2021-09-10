@@ -4,7 +4,7 @@
 # #
 @info "Defines function IntegrateWW2"
 
-using ShallowWaterModels,FFTW,Plots,LinearAlgebra,ProgressMeter;
+using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
 include("../src/models/PseudoSpectral.jl")
 include("../src/Figures.jl")
 include("../src/LoadSave.jl")

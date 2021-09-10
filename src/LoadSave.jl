@@ -54,14 +54,14 @@ function convert(::Type{Problem}, p :: ProblemSave)
 
     # Reconstructs the model
     model = try # try with set of parameters defined by the model
-        getfield(ShallowWaterModels, p.model)(param_m)
+        getfield(WaterWaves1D, p.model)(param_m)
     catch m
         if isa(m,AbstractModel) == false # if error, then use set of parameters defined by the problem
-            model = getfield(ShallowWaterModels, p.model)(param_p)
+            model = getfield(WaterWaves1D, p.model)(param_p)
         end
     end
     if :kwargs in fieldnames(typeof(model))
-        model = getfield(ShallowWaterModels, p.model)(param_m;param_m.kwargs...)
+        model = getfield(WaterWaves1D, p.model)(param_m;param_m.kwargs...)
     end
 
     # Reconstructs the initial data
@@ -71,15 +71,15 @@ function convert(::Type{Problem}, p :: ProblemSave)
 
     # Reconstructs the solver (may not work with other user-defined solvers)
     solver = try
-        getfield(ShallowWaterModels, p.solver)(param_s)
+        getfield(WaterWaves1D, p.solver)(param_s)
     catch s
         if isa(s,TimeSolver) == false
             solver = try
-                getfield(ShallowWaterModels, p.solver)(model)
+                getfield(WaterWaves1D, p.solver)(model)
             catch s
                 if isa(s,TimeSolver) == false
                     solver = try
-                        getfield(ShallowWaterModels, p.solver)()
+                        getfield(WaterWaves1D, p.solver)()
                     catch s
                         if isa(s,TimeSolver) == false
                             @warn "Cannot set up the solver. Choose RK4."

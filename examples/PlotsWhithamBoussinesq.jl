@@ -5,7 +5,7 @@
 # #
 @info "Define functions PlotSolitaryWaveWhithamBoussinesq(),IntegrateSolitaryWaveWhithamBoussinesq()"
 
-using ShallowWaterModels,FFTW,Plots;
+using WaterWaves1D,FFTW,Plots;
 include("../src/models/WhithamBoussinesq.jl")
 include("../src/initialdata/SolitaryWaveWhithamBoussinesq.jl")
 include("../src/Figures.jl")

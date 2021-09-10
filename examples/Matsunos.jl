@@ -1,5 +1,5 @@
 # # Comparison of Matsuno deep water problems
-using ShallowWaterModels,Plots;gr()
+using WaterWaves1D,Plots;gr()
 #include("../src/dependencies.jl")
 
 #----
