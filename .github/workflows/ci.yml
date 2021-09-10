@@ -44,7 +44,7 @@ jobs:
       - uses: codecov/codecov-action@v1
         with:
           file: lcov.info
-  Documeneter:
+  Documenter:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
