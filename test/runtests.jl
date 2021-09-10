@@ -1,7 +1,7 @@
 ENV["GKSwstype"]="100"
 
 using Test
-using WaterModels1D
+using WaterWaves1D
 
 param = ( ϵ  = 1/2, μ = 1, θ = 1)
 paramX= ( N  = 2^8, L  = 10)

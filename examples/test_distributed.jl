@@ -4,7 +4,7 @@
 #
 
 using Distributed
-using WaterModels1D
+using WaterWaves1D
 include("../src/models/WaterWaves.jl")
 include("../src/models/PseudoSpectral.jl")
 
@@ -14,7 +14,7 @@ addprocs(3)
 @everywhere begin
     using Pkg
     Pkg.activate(".")
-    using WaterModels1D
+    using WaterWaves1D
     include("../src/models/WaterWaves.jl")
     include("../src/models/PseudoSpectral.jl")
 
@@ -54,7 +54,7 @@ function run_simulation()
 
         function solve_problem(model)
             problem = Problem(model, init, param)
-            WaterModels1D.solve!(problem)
+            WaterWaves1D.solve!(problem)
             last(problem.data.U)
         end
 

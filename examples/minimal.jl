@@ -1,7 +1,7 @@
 """
 Minimal example for WhithamGreenNaghdi
 """
-#using WaterModels1D
+#using WaterWaves1D
 include("../src/dependencies.jl")
 
 """

@@ -1,4 +1,4 @@
-module WaterModels1D
+module WaterWaves1D
 
 include("dependencies.jl")
 

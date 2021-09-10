@@ -1,6 +1,6 @@
-# WaterModels1D.jl
+# WaterWaves1D.jl
 
 ```@autodocs
-Modules = [WaterModels1D]
+Modules = [WaterWaves1D]
 Order   = [:type, :function]
 ```

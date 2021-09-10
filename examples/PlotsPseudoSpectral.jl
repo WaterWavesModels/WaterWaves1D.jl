@@ -4,7 +4,7 @@
 # #
 @info "Defines functions RWW2, StabilityExperiments etc."
 
-using WaterModels1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
+using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
 include("../src/models/PseudoSpectral.jl")
 include("../src/models/WaterWaves.jl")
 include("../src/models/modifiedWW2.jl")

@@ -5,7 +5,7 @@ ENV["GKSwstype"]="100"
 using Documenter
 using Plots 
 using Literate
-using WaterModels1D
+using WaterWaves1D
 
 # generate example
 
@@ -17,11 +17,11 @@ NB_OUTPUT   = joinpath(@__DIR__, "src", "notebooks")
 # Literate.markdown(joinpath(@__DIR__, "..",  "examples","animation.jl"), DOC_OUTPUT, documenter=true)
 # Literate.notebook(joinpath(@__DIR__, "..",  "examples","animation.jl"), NB_OUTPUT, execute=false)
 
-makedocs(modules=[WaterModels1D],
+makedocs(modules=[WaterWaves1D],
          doctest = false,
          authors = "Vincent Duchene",
          format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
-         sitename = "WaterModels1D.jl",
+         sitename = "WaterWaves1D.jl",
          pages = ["Documentation" => "index.md",
                   "Code basics"   => "basics.md",
                   "Contents"      => "contents.md"])
@@ -30,5 +30,5 @@ makedocs(modules=[WaterModels1D],
 #                 "Example"       => "examples/two_problems.md",
 
 deploydocs(
-    repo   = "github.com/WaterWavesModels/WaterModels1D.jl.git"
+    repo   = "github.com/WaterWavesModels/WaterWaves1D.jl.git"
  )
