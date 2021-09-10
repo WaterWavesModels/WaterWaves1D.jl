@@ -14,3 +14,4 @@ examples/.ipynb_checkpoints/minimal_pierre-checkpoint.jl
 *.pdf
 *.svg
 examples/.ipynb_checkpoints/WorkspacePierre-checkpoint.jl
+testsave.jld
