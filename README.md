@@ -1,6 +1,6 @@
 # ShallowWaterModels.jl
 
-[![Build Status](https://travis-ci.org/WaterWavesModels/ShallowWaterModels.jl.svg?branch=master)](https://travis-ci.org/WaterWavesModels/ShallowWaterModels.jl)
+[![Build Status](https://github.com/WaterWavesModels/ShallowWaterModels.jl/workflows/CI/badge.svg)](https://github.com/WaterWavesModels/ShallowWaterModels.jl/actions)
 <!-- [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://waterwavesmodels.github.io/ShallowWaterModels.jl/stable) -->
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://waterwavesmodels.github.io/ShallowWaterModels.jl/dev)
 
