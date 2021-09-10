@@ -1,9 +1,9 @@
-export WaterWaves2
+export WaterWaves
 #using Statistics #only for function mean in WaterWaves.jl...
 using FFTW,LinearAlgebra
 
 """
-    WaterWaves2(params)
+    WaterWaves(params)
 
 Define an object of type `AbstractModel` in view of solving the water waves system
 (via conformal mapping).
@@ -23,7 +23,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
     - `v` is the derivative of the trace of the velocity potential at points `x`.
 
 """
-mutable struct WaterWaves2 <: AbstractModel
+mutable struct WaterWaves <: AbstractModel
 
     label   :: String
 	f!		:: Function
@@ -35,7 +35,7 @@ mutable struct WaterWaves2 <: AbstractModel
 	kwargs  :: NamedTuple
 
 
-    function WaterWaves2(param::NamedTuple;dealias=0,method=1,tol=1e-16,maxiter=100,ktol=0,verbose=true)
+    function WaterWaves(param::NamedTuple;dealias=0,method=1,tol=1e-16,maxiter=100,ktol=0,verbose=true)
 
 		# Preparation
 		label = "water waves"
