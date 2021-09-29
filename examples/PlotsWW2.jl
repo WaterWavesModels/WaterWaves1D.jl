@@ -2,139 +2,416 @@
 # Reproduces the figures in the work of V. Duchêne and B. Mélinand
 # on the quadratic pseudo-spectral method (WW2)
 # #
-@info "Defines function IntegrateWW2"
+@info "Define functions IntegrateWW2 and Figure"
 
-using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
+using ShallowWaterModels,FFTW,Plots,LinearAlgebra,ProgressMeter;
 include("../src/models/PseudoSpectral.jl")
+include("../src/models/WaterWaves.jl")
 include("../src/Figures.jl")
-include("../src/LoadSave.jl")
-using JLD
+#using JLD   # when using @save command
 
-#---- Figures 1 to 3
+#--- Integration
 
 """
-	`IntegrateWW2(scenario;kwargs)
+	`IntegrateWW2(init;kwargs)
 
-Integrates in time the WW2 or WGN with an initial data depending on a given `scenario`
-The scenario correspond to different plots in [DM]
+Integrates in time the WW2 system with an initial data depending on the provided `init`
+- if `init=1`, then surface deformation `η(t=0,x)=exp(-x^p)` and velocity `v(t=0,x)=0` (with `p` provided as an optional argument, by default `p=2`)
+- if `init=2`, then surface deformation `η(t=0,x)=exp(-x^2)` and velocity `v(t=0,x)=exp.(-x^2)*(sin(x)+sin(K*x)/K^2)` (with `K` provided as an optional argument, by default `K=100`)
 
 Other arguments are optional:
 - `μ` the shallowness parameter (default is `1`),
 - `ϵ` the nonlinearity parameter (default is `0.1`),
-- `L` the half-length of the mesh,
-- `N` the number of collocation points,
-- `T` the final time of integration,
-- `dt` the timestep,
+- `L` the half-length of the mesh (default is `20`),
+- `N` the number of collocation points (default is `2^10`),
+- `T` the final time of integration (default is `10`),
+- `dt` the timestep (default is `0.001`),
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `1`, i.e. 2/3 rule, `0` means no dealiasing);
-- `δ` the strength of the rectifier,
-- `reg` the order of the rectifier (as a regularizing operator),
-- `name`: a string used to save raw data and the figures.
+- `δ` the strength of the rectifier (default is `0.001`),
+- `reg` the order of the rectifier (as a regularizing operator, default is `1`),
+- `Ns` the number of stored computed times (default is all times).
 
-Return `(problem,plt)` where `problem` contains all the information and `plt` a plot of the final time solution.
+
+Return `(problem,blowup_time,blowup,error_energy)` where
+- `problem` contains all the information,
+- `blowup_time` is the first time with NaN values (final time if there is none)
+- `blowup` is a boolean indicating if NaN values occured
+- `error_energy` is the relative energy preservation between first and final time
 """
-function IntegrateWW2(scenario;μ=1,ϵ=0.1,L=20,N=2^10,T= 10,dt = 0.001,dealias=1,δ=0.001,reg=1,Tint=nothing,name=nothing)
-
-	if name != nothing ns=floor(Int,max(1,T/dt/100)) else ns=1 end
-
-	if scenario == 1
-		μ  = 1; ϵ = 0.1; L = 20; N = 2^9; T = 10; dt = 0.01;
-		dealias = 0 ; # no dealiasing
-		δ = 0 ; reg = 1; # no rectifier
-
-	elseif scenario == 2
-		μ  = 1; ϵ = 0.1; L = 20; N = 2^11; T = 1.2; dt = 0.01;
-		dealias = 0 ; # no dealiasing
-		δ = 0 ; reg = 1; # no rectifier
-
-	elseif scenario == 3
-		μ  = 1; ϵ = 0.1; L = 20; N = 2^12; T = 10; dt = 0.01;
-		dealias = 1 ; # dealiasing with 2/3 rule
-		δ = 0 ; reg = 1; # no rectifier
-
-	elseif scenario == 4
-		μ  = 1; ϵ = 0.1; L = 20; N = 2^14; T = 1.3; dt = 0.01;
-		dealias = 1 ; # dealiasing with 2/3 rule
-		δ = 0 ; reg = 1; # no rectifier
-
-	elseif scenario == 5
-		μ  = 1; ϵ = 0.1; L = 20; N = 2^14; T = 10; dt = 0.01;
-		dealias = 1 ; # dealiasing with 2/3 rule
-		δ = 0.01 ; reg = 2; # rectifier of order 2
-		Tint = 2; #to print an indermediate time
-
-	elseif scenario == 6
-		μ  = 1; ϵ = 0.1; L = 20; N = 2^14; T = 10; dt = 0.01;
-		dealias = 1 ; # dealiasing with 2/3 rule
-		δ = 0.002 ; reg = 1; # rectifier of order 2
-		Tint = 2; #to print an indermediate time
-
+function IntegrateWW2(;init=1,μ=1,ϵ=0.1,L=20,N=2^10,T=10,dt = 0.001,dealias=1,δ=0.001,reg=1,K=100,p=2,Ns=nothing)
+	if Ns == nothing
+		param = ( μ  = μ, ϵ  = ϵ,
+				N  = N, L  = L,
+	            T  = T, dt = dt )
 	else
-		error("the first argument must be between 1 and 6")
-
-	end
-	param = ( μ  = μ, ϵ  = ϵ,
+		param = ( μ  = μ, ϵ  = ϵ,
 				N  = N, L  = L,
 	            T  = T, dt = dt,
-				ns=ns )
+				Ns = Ns )
+	end
 
 	mesh=Mesh(param)
+	if init == 1
+		init = Init(x->exp.(-abs.(x).^p),x->zero(x))
+	elseif init == 2
+		init = Init(x->zero(x), x->exp.(-x.^2).*(sin.(x).+sin.(K*x)/K^2))
+	else
+		@error "argument init must be 1 or 2"
+	end
 
-	η(x)=exp.(-x.^2);v(x)=zero(x);
-	init     = Init(η,v)
 	model = PseudoSpectral(param;order = 2, δ = δ, reg = reg, dealias = dealias)
 	problem = Problem(model, init, param)
 	solve!( problem )
 
-	(ηfin,vfin)   =  model.mapfro(last(problem.data.U))
+	(ηfin,vfin)   =  solution(problem)
 
+	# check energy preservation
 	x=mesh.x;k=mesh.k;
 	Tmu = -1im*tanh.(sqrt(μ)*k)
 	tmu = tanh.(sqrt(μ)*k)./k;tmu[1]=sqrt(μ);
 	∂ₓ= 1im*k
 
+
 	e(η,v) = 1/2* ( η.^2 .+ v.*ifft(tmu.*fft(v)) +ϵ*η.*(v.^2-ifft(Tmu.*fft(v)).^2) );
-	print(string("normalized error: ",sum(e(ηfin,vfin)-e(η(x),v(x)))/sum(e(η(x),v(x))),"\n"))
+	e(η1,v1,η2,v2) = 1/2* ( (η1-η2).*(η1+η2) .+ (v1-v2).*ifft(tmu.*fft(v1+v2))
+						+ϵ*(η1-η2).*(v1.^2-ifft(Tmu.*fft(v1)).^2)
+						+ϵ*η2.*((v1-v2).*(v1+v2)-ifft(Tmu.*fft(v1-v2)).*ifft(Tmu.*fft(v1+v2))) );
+	η0=init.η(x);v0=init.v(x)
+	#error_energy_1 = abs(sum(e(ηfin,vfin)-e(η0,v0))/sum(e(η0,v0)))
+	error_energy = abs(sum(e(ηfin,vfin,η0,v0))/sum(e(η0,v0)))
+	@info string("normalized preservation of the total energy: \n",error_energy)
+
+	# compute blowup time (if any)
+	blowup_index=0;blowup=false;
+	for j in 1:problem.times.Ns
+		blowup_index+=1
+		if isnan(problem.data.U[j][1,1])
+			blowup=true
+			break
+		end
+	end
+	blowup_time=	problem.times.ts[blowup_index]
+	if blowup_time<T
+		@info string("solutions blowed at time t=",blowup_time,"\n")
+	end
+
+	#display(plt)
+	return problem,blowup_time,blowup,error_energy
+end
+
+#--- Figures
+
+"""
+	Figure(scenario;name,anim)
+
+Several numerical experiments,
+depending on the argument `scenario` (between 1 and 12)
+corresponding to different figures in [DM]
+
+- `scenario∈[1,7]`: spurious instability formation for smooth initial data.
+    - `scenario=1`: no instability even without dealiasing and rectification, if small number of modes.
+    - `scenario=2`: instabilities without dealiasing and rectification, if larger number of modes.
+    - `scenario=3`: no instability with dealiasing and without rectification, if small number of modes.
+    - `scenario=4`: instabilities with dealiasing and without rectification, if larger number of modes.
+    - `scenario=5`: no instability in the presence of sufficiently regularizing rectifiers.
+    - `scenario=6`: instabilities in the presence of insufficiently regularizing rectifiers.
+    - `scenario=7`: mild instabilities in the presence of insufficiently strong rectifiers (δ small).
+- `scenario∈[8,10]`: blowups for an initial data with a low-frequency and a high-frequency (with wavenumber K) component.
+    - `scenario=8`: dependency of blowup times with respect to K (also `scenario=8.5` with a cut-off proportional to K)
+    - `scenario=9`: dependency of blowup times with respect to ϵ.
+    - `scenario=10`: an example of blowup with two different blowups.
+- `scenario=11`: critical rectifier strength (δ) as a function of ϵ.
+- `scenario≈12`: error of the rectified model (WW2) with respect to the water waves system, depending on δ and ϵ.
+    - `scenario=12.1`: with initial data exp(-|x|)
+    - `scenario=12.2`: with initial data exp(-|x|^2)
+    - `scenario=12.3`: with initial data exp(-|x|^3)
 
 
+Optional arguments are
+- `name` (a string) used to save figures,
+- `anim` generate animations (when relevant) if set to `true`.
 
-	if Tint == nothing
-		plt = plot(layout=(2,1))
 
-		plot!(plt[2,1],fftshift(k),fftshift(abs.(fft(ηfin)));
-			title = "Fourier coefficients (log scale)",label="",yscale = :log10)
-		plot!(plt[1,1],x,ηfin;
-			title = string("surface deformation at time t=",problem.times.tfin),
-			label="")
+Return relevant plots and problems depending on the situation.
+"""
+function Figure(scenario;name=nothing,anim=false)
+
+	if scenario == 1
+		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^9,T=10,dt = 0.001,dealias=0,δ=0,reg=1)
+		plt=plot_solution(problem,label="")
+		if name != nothing
+			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			if anim
+				create_animation(problem;ylims=false,name=name)
+			end
+ 		end
+		return problem,plt
+
+	elseif scenario == 2
+		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^11,T=1.5,dt = 0.001,dealias=0,δ=0,reg=1)
+		plt=plot_solution(problem,t=1.2,label="")
+		if name != nothing
+			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			if anim
+				create_animation(problem;ylims=false,name=name)
+			end
+		end
+		return problem,plt
+
+	elseif scenario == 3
+		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^12,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+		plt=plot_solution(problem,label="")
+		if name != nothing
+			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			if anim
+				create_animation(problem;ylims=false,name=name)
+			end
+		end
+		return problem,plt
+
+	elseif scenario == 4
+		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^14,T=1.5,dt = 0.001,dealias=1,δ=0,reg=1)
+		plt=plot_solution(problem,t=1.3,label="")
+		if name != nothing
+			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			if anim
+				create_animation(problem;ylims=false,name=name)
+			end
+ 		end
+		return problem,plt
+
+	elseif scenario == 5
+		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1/2,Ns=1)
+		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1,Ns=1)
+		plt0=plot_solution(problem0,label="")
+		plt1=plot_solution(problem1,label="")
+		if name != nothing
+			savefig(plt0,string(name,"r12.pdf"));savefig(plt0,string(name,"r12.svg"));
+			savefig(plt1,string(name,"r1.pdf"));savefig(plt1,string(name,"r1.svg"));
+			if anim
+				create_animation(problem0;ylims=false,name=name)
+				create_animation(problem1;ylims=false,name=name)
+			end
+		end
+		return problem0,problem1,plt0,plt1
+
+	elseif scenario == 6
+		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=1,dt = 0.01,dealias=1,δ=0.01,reg=1/4)
+		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^16,T=1,dt = 0.01,dealias=1,δ=0.01,reg=1/4)
+		plt0=plot_solution(problem0,t=0.6,label="")
+		plt1=plot_solution(problem1,t=0.6,label="")
+		if name != nothing
+			savefig(plt0,string(name,"N18.pdf"));savefig(plt0,string(name,"N18.svg"));
+			savefig(plt1,string(name,"N16.pdf"));savefig(plt1,string(name,"N16.svg"));
+			if anim
+				create_animation(problem0;ylims=false,name=name)
+				create_animation(problem1;ylims=false,name=name)
+			end
+		end
+		return problem0,problem1,plt0,plt1
+
+	elseif scenario in [7,7.1,7.2,7.3]
+		p=round((scenario-7)*10);if p==0 p=2 end
+		problem0,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1,Ns=10)
+		problem1,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=10,dt = 0.01,dealias=1,δ=0.002,reg=1,Ns=10)
+		problem2,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=2,dt = 0.01,dealias=1,δ=0.001,reg=1)
+		plt0=plot_solution(problem0,label="t=10")
+		plot_solution!(plt0,problem0,t=2,label="t=2")
+		title!(plt0[1,1],"surface deformation")
+		plt1=plot_solution(problem1,label="t=10")
+		plot_solution!(plt1,problem1,t=2,label="t=2")
+		title!(plt1[1,1],"surface deformation")
+		if name != nothing
+			savefig(plt0,string(name,"d01.pdf"));savefig(plt0,string(name,"d01.svg"));
+			savefig(plt1,string(name,"d002.pdf"));savefig(plt1,string(name,"d002.svg"));
+			if anim
+				create_animation(problem0;ylims=false,name=name)
+				create_animation(problem1;ylims=false,name=name)
+			end
+		end
+		return problem0,problem1,problem2,plt0,plt1
+
+	elseif scenario == 8
+		blowups0=[];blowups1=[];
+		Ks=100:20:800
+		for K in Ks
+			problem0,blowup0=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.15,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+			problem1,blowup1=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+			push!(blowups0,blowup0);push!(blowups1,blowup1);
+		end
+		plt=scatter(Ks,[blowups0 blowups1],
+				label=["ϵ=0.15" "ϵ=0.2"],
+				marker=[:c :d],
+				xlabel="K (in log scale)",
+				ylabel="t (in log scale)",
+				xscale=:log10,yscale=:log10)
+		if name != nothing
+			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			#@save(name,Ks,blowups0,blowups1)
+		end
+		return Ks,blowups0,blowups1,plt
+
+	elseif scenario == 8.5
+		Ks=100:20:800
+		blowups0=[];blowups1=[];
+		for K in Ks
+			N=2^14
+			d=N*π/K/20 # useful to define truncation at frequency K
+			problem0,blowup0=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+			problem1,blowup1=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=3/4*d-2,δ=0,reg=1)
+			push!(blowups0,blowup0);push!(blowups1,blowup1);
+		end
+		plt=scatter(Ks,[blowups0 blowups1],
+				label=["usual dealiasing" "adapted dealiasing"],
+				marker=[:c :d],
+				xlabel="K (in log scale)",
+				ylabel="t (in log scale)",
+				xscale=:log10,yscale=:log10)
+		if name != nothing
+			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			#@save(name,Ks,blowups0,blowups1)
+		end
+		return Ks,blowups0,blowups1,plt
+
+	elseif scenario == 9
+		Eps=10 .^(-1:0.02:0)
+		blowups1=[];blowups2=[];
+		blowups3=[];blowups4=[];
+		for eps in Eps
+			problem1,blowup1=IntegrateWW2(init=2,K=100,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+			problem2,blowup2=IntegrateWW2(init=2,K=200,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+			problem3,blowup3=IntegrateWW2(init=2,K=400,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+			problem4,blowup4=IntegrateWW2(init=2,K=800,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+			push!(blowups1,blowup1);push!(blowups2,blowup2);
+			push!(blowups3,blowup3);push!(blowups4,blowup4);
+		end
+		plt=scatter(Eps,[blowups1 blowups2 blowups3 blowups4],
+				label=["K=100" "K=200" "K=400" "K=800"],
+				marker=[:c :d :ut :s],
+				xlabel="ϵ (in log scale)",
+				ylabel="t (in log scale)",
+				xscale=:log10,yscale=:log10)
+		if name != nothing
+			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			#@save(name,Eps,blowups1,blowups2,blowups3,blowups4,label)
+ 		end
+		return Eps,blowups1,blowups2,blowups3,blowups4,plt
+
+	elseif scenario == 10
+		K=400;N=2^14
+		d=N*π/K/20 # useful to define truncation at frequency K
+		problem0,=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=2,dt = 0.001,dealias=1,δ=0,reg=1)
+		problem1,=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=2,dt = 0.001,dealias=3/4*d-2,δ=0,reg=1)
+
+		plt0=plot_solution(problem0, t=0.1,label="t=0.1")
+		plot_solution!(plt0,problem0,t=0.3,label="t=0.3")
+		plot_solution!(plt0,problem0,t=0.5,label="t=0.5")
+		plot!(plt0[1,1],title="surface deformation")
+
+		plt1=plot_solution(problem1,t=0.1,label="t=0.1")
+		plot_solution!(plt1,problem1,t=0.3,label="t=0.3")
+		plot_solution!(plt1,problem1,t=0.5,label="t=0.5")
+		plot!(plt1[1,1],title="surface deformation")
+		if name != nothing
+			savefig(plt0,string(name,"0.pdf"));savefig(plt0,string(name,"0.svg"));
+			savefig(plt1,string(name,"1.pdf"));savefig(plt1,string(name,"1.svg"));
+			if anim
+				create_animation(problem0;ylims=false,name=name)
+				create_animation(problem1;ylims=false,name=name)
+			end
+		end
+		return problem0,problem1,plt0,plt1
+
+	elseif scenario == 11
+		Eps=[0.01 0.0125 0.015 0.02 0.025 0.03 0.04 0.05 0.06 0.08 0.1 0.125 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.8]
+		δc2=[];δc10=[];i=0;
+		for eps in Eps
+			i+=1
+			#T=2
+			δc_max=eps^2/2;δc_min=eps/500;
+			for n=1:6
+				@info string("iteration ",(i-1)*10+n,"/",10*length(Eps),"\n")
+				@info string("critical ratio interval: ",(δc_min,δc_max))
+				δc=sqrt(δc_max*δc_min)
+				problem,blowuptime,blowup=IntegrateWW2(init=1,μ=1,ϵ=eps,L=20,N=2^20,T=2,dt = 0.005,dealias=1,δ=δc,reg=1,Ns=1)
+				if blowup
+					δc_min=δc
+				else
+					δc_max=δc
+				end
+			end
+			push!(δc2,[δc_min,δc_max])
+			#T=10
+			δc_max=δc_min*1.5;
+			for n=1:4
+				@info string("iteration ",(i-1)*10+6+n,"/",10*length(Eps),"\n")
+				@info string("critical ratio interval: ",(δc_min,δc_max))
+				δc=sqrt(δc_max*δc_min)
+				problem,blowuptime,blowup=IntegrateWW2(init=1,μ=1,ϵ=eps,L=20,N=2^20,T=10,dt = 0.005,dealias=1,δ=δc,reg=1,Ns=1)
+				if blowup
+					δc_min=δc
+				else
+					δc_max=δc
+				end
+			end
+			push!(δc10,[δc_min,δc_max])
+			#@save(name,Eps,δc2,δc10)
+		end
+
+		plt=plot()
+		scatter!(plt,log10.(Eps[:]),[sqrt(δc10[i][2]*δc10[i][1]) for i in 1:length(Eps)],label="T=10",color=:1,marker=:c)
+		scatter!(plt,log10.(Eps[:]),[sqrt(δc2[i][2]*δc2[i][1]) for i in 1:length(Eps)],label="T=2",color=:2,marker=:d)
+		y2=OHLC[(δc2[i][1],δc2[i][1],δc2[i][2],δc2[i][2]) for i=1:length(Eps)]
+		y10=OHLC[(δc10[i][1],δc10[i][1],δc10[i][2],δc10[i][2]) for i=1:length(Eps)]
+		ohlc!(plt,log10.(Eps[:]),y10,label="",linecolor=:blue)
+		ohlc!(plt,log10.(Eps[:]),y2,label="",linecolor=:orange)
+		plot!(plt,log10.(Eps[:]),Eps[:].^2,label="δ=ϵ²",linecolor=:3)
+		plot!(yscale=:log10,legend=:topleft,ylabel="δ (in log scale)",xlabel="ϵ (in log scale)")
+		if name != nothing
+			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			#@save(name,Eps,δc2,δc10)
+		end
+		return Eps,δc2,δc10,plt
+
+	elseif scenario in [12.1,12.2,12.3]
+		p=round((scenario-12)*10)
+		Eps=[0.2,0.1,0.05]
+		Delta=10 .^ (-2:0.1:0)
+		Norms=[];j=0;
+		for eps in Eps
+			norms=[];i=0;j+=1;
+			for delta in Delta
+				i+=1
+				@info string("ϵ=",eps,", δ=",delta," (iteration ",(j-1)*length(Delta)+i,"/",length(Eps)*length(Delta),")")
+				problem,=IntegrateWW2(init=1,p=p,μ=1,ϵ=eps,L=20,N=2^12,T=10,dt = 0.01,dealias=1,δ=delta,reg=1)
+				model = WaterWaves(problem.param; dealias = 1,method=1,maxiter=20)
+				problem0 = Problem(model, problem.initial, problem.param)
+				solve!( problem0 )
+				(η0,v0,x0)=solution(problem0)
+				(η,v)=solution(problem,x=x0)
+				push!(norms,norm(η-η0,Inf))
+			end
+			push!(Norms,norms)
+		end
+
+		plt=plot()
+		markers=[:c :d :ut :s :r :lt :pent :hex :hep :oct :+ :x]
+		for i in 1:length(Eps)
+			scatter!(plt,Delta,Norms[i],label=string("ϵ=",Eps[i]),marker=markers[i])
+		end
+		plot!(plt,xlabel="δ",ylabel="error",legend=:topleft)
+		if name != nothing
+			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			plot!(plt,xscale=:log10,yscale=:log10)
+			plot!(plt,xlabel="δ (in log scale)",ylabel="error (in log scale)")
+			savefig(plt,string(name,"-log.pdf"));savefig(plt,string(name,"-log.svg"));
+			#@save(name,Eps,Delta,Norms)
+		end
+		return Eps,Delta,Norms,plt
 
 	else
-		plt = plot(layout=(2,1))
-
-		plot!(plt[1,1],x,ηfin;
-				label=string("T=",T) )
-
-		plot!(plt[2,1],fftshift(k),fftshift(abs.(fft(ηfin))).+eps();
-				title = "Fourier coefficients (log scale)",label="",yscale = :log10)
-
-		(ηint,vint)   =  solution(problem,t=Tint)
-
-		plot!(plt[1,1],x,ηint;
-				title = "surface deformation" ,
-				label=string("T=",Tint) )
-		plot!(plt[2,1],fftshift(k),fftshift(abs.(fft(ηint))).+eps();
-				title = "Fourier coefficients (log scale)",label="",yscale = :log10)
-
+		error("the first argument must be between 1 and 11")
 	end
-	display(plt)
 
-	if name != nothing
-		savefig(string(name,".pdf"));
-		save(problem,name);
-		create_animation(problem;ylims=false,name=name)
-
-	end
-	display(plt)
-	return problem,plt
 end
-#nothing
-
-IntegrateWW2(6)
+nothing
