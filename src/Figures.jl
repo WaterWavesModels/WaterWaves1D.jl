@@ -4,7 +4,7 @@ using ProgressMeter
 """
 	create_animation( problems; name::String, kwargs... )
 
-Creates an animation showing the evolution of initial-value problems.
+Create an animation showing the evolution of initial-value problems.
 
 Argument `problems` is either an element or a collection (vector, list, etc.) of elements of type `Problem`.
 
@@ -17,12 +17,13 @@ Other keyword arguments are as follows
 - `Nframes` gives the (maximal) number of frames in the animation.
 - other arguments of `plot_solution!`
 
-Return `anim` an animation, which can generate for instance a `gif` through `gif(anim, "my_name.gif", fps=15)`.
+Return `anim`, an animation, which can then generate (for instance) a `gif` through `gif(anim, "my_name.gif", fps=15)`.
 
 """
 function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
 							xlims=nothing, ylims=nothing,vlims=nothing,flims=nothing,
-							interpol=false, surface=true,fourier=true, velocity=false )
+							interpolation=false, compression=false,
+							surface=true,fourier=true,velocity=false )
 	label=nothing
 	if isa(problems,Problem) # if create_animation is called with a single problem
 		problems=[problems];  # A one-element array to allow `for pb in p`
@@ -43,8 +44,8 @@ function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
 	if flims == nothing
 		(η,v) = solution(problems[1];t=0)
 		f=(abs.(fft(η)))
-		y0 = minimum(f);y1 = maximum(f);
-		flims=(y0-(y1-y0)/10,y1+(y1-y0)/10)
+		y0 = minimum(f)+eps();y1 = maximum(f);
+		flims=(y0/(y1/y0)^0.1,y1*(y1/y0)^0.1)
 	end
 
 
@@ -57,7 +58,8 @@ function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
 		plt = plot(layout=(m,1))
 		for pb in problems
 			plot_solution!( plt, pb; t=pb.times.ts[l],x=x,
-					interpol=interpol,surface=surface,fourier=fourier, velocity=velocity )
+					interpolation=interpolation,compression=compression,
+					surface=surface, fourier=fourier, velocity=velocity )
 		end
 		n=1
 		if surface
@@ -81,7 +83,7 @@ function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
 end
 
 """
-	plot_solution!( plt; problems; t,x,interpol,surface,velocity,fourier )
+	plot_solution!( plt; problems; t,x,interpolation,compression,surface,velocity,fourier,label )
 
 Plots in `plt` the solution of initial-value problems at a given time.
 
@@ -91,49 +93,59 @@ Plots in `plt` the solution of initial-value problems at a given time.
 ## Keywords
 - `t` is the time. If not provided, then the last computed time is plotted.
 - if a vector `x` is provided and if possible, the solution is interpolated to the collocation points `x`.
-- if `interpol` is provided as an integer, the solution is interpolated on as many collocation points (if `true`, then the default value `2^3` is chosen).
+- if `interpolation` is provided as an integer, the solution is interpolated on as many collocation points (if `true`, then the value `2^3` is chosen, default is `false`).
+- if `compression` is provided as an integer `m`, only one in `m` points are plotted (if `true`, then the value `2^3` is chosen, default is `false`).
 - `surface`, `velocity` and `fourier` (booleans) determine respectively whether surface deformation, `η`, tangential velocity, `v`, and the Fourier coefficients of `η` (in log-scale) are plotted.
 
 """
-function plot_solution!( plt, problems; t=nothing,x=nothing,interpol=false,surface=true, fourier=true, velocity=false, label=nothing )
+function plot_solution!( plt, problems; t=nothing,x=nothing,interpolation=false,compression=false, surface=true, fourier=true, velocity=false, label=nothing)
 	if typeof(problems)==Problem problems=[problems]; label = [label] end
 	for i in 1:length(problems)
 		p = problems[i]
+		# retrieve the label
 		if label == nothing || label == [nothing]
 			lbl=p.model.label
 		else
 			lbl=label[i]
 		end
-		if x != nothing
+		# retrieve the solution to be plotted
+		if x != nothing  # interpoate the solution to collocation points x
 			(η,v) = solution(p)
 			fftη = fft(η)
 			fftv = fft(v)
 			(η,v,X,t) = solution(p;t=t,x=x)
 		else
-			(η,v,X,t) = solution(p;t=t,interpol=interpol)
+			(η,v,X,t) = solution(p;t=t,interpolation=interpolation)
 			fftη = fft(η)
 			fftv = fft(v)
 		end
-
+		# generate the indices to be plotted (all if compression = false)
+		if compression == false
+			compression = 1
+		elseif compression == true
+			compression = 2^3
+		end
+		indices=1:Int(compression):length(X)
 		n=1
+		# plot the surface deformation
 		if surface
-	    	plot!(plt[n,1], X, η;
+	    	plot!(plt[n,1], X[indices], η[indices];
 			  title=string("surface deformation at t=",t),
 		      label=lbl)
 			n+=1
 		end
-
+		# plot the velocity
 	  	if velocity
-	    	plot!(plt[n,1], X, v;
+	    	plot!(plt[n,1], X[indices], v[indices];
 			  title=string("tangential velocity at t=",t),
 		      label=lbl)
 			n+=1
 		end
-
+		# plot the discrete fourier coefficients (in log scale)
 		if fourier
 			if !all(isnan,fftη)
-	    		plot!(plt[n,1], fftshift(p.mesh.k),
-	          		eps(1.).+abs.(fftshift(fftη));
+	    		plot!(plt[n,1], fftshift(p.mesh.k)[indices],
+	          		eps(1.).+abs.(fftshift(fftη))[indices];
 			  		title="Fourier coefficients (log scale)",
 			  		#yaxis="log scale",
 			  		yscale=:log10,
@@ -145,28 +157,12 @@ function plot_solution!( plt, problems; t=nothing,x=nothing,interpol=false,surfa
 end
 
 """
-	plot_solution( problems; t,x, surface,velocity,fourier )
+	plot_solution( problems; t,x, interpolation,compression, surface,velocity,fourier, label )
 
 Same as `plot_solution!` but generates and returns the plot.
 """
-function plot_solution( problems; t=nothing,x=nothing, interpol=false, surface=true, velocity=false, fourier=true, label=nothing)
+function plot_solution( problems; t=nothing,x=nothing,interpolation=false,compression=false, surface=true, velocity=false, fourier=true, label=nothing)
 	plt = plot(layout=(surface+fourier+velocity,1))
-	plot_solution!( plt, problems; t=t,x=x, interpol=interpol, surface=surface,fourier=fourier, velocity=velocity, label=label )
+	plot_solution!( plt, problems; t=t,x=x, interpolation=interpolation, compression=compression, surface=surface,fourier=fourier, velocity=velocity, label=label )
 	return plt
-end
-
-function norm_problem!( plt, p::Problem, s::Real )
-	N=[];
-	Λ = sqrt.((p.mesh.k.^2).+1);
-	prog = Progress(div(p.times.Ns,10),1)
- 	for index in range(1,stop=p.times.Ns)
-    	(hr,ur) = mapfro(p.model,p.data.U[index])
-		push!(N,norm(ifft(Λ.^s.*fft(hr))))
-		next!(prog)
-	end
-
-    plot!(plt, p.times.ts, N;
-		  title=string("norm H^s avec s=",s),
-	          label=p.model.label)
-
 end
