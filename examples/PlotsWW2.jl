@@ -4,7 +4,7 @@
 # #
 @info "Define functions IntegrateWW2 and Figure"
 
-using ShallowWaterModels,FFTW,Plots,LinearAlgebra,ProgressMeter;
+using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
 include("../src/models/PseudoSpectral.jl")
 include("../src/models/WaterWaves.jl")
 include("../src/Figures.jl")
@@ -128,54 +128,55 @@ corresponding to different figures in [DM]
 
 
 Optional arguments are
+- `compression`, an integer `m` used to reduce the size of figures by plotting only one every `m` points (when relevant),
 - `name` (a string) used to save figures,
 - `anim` generate animations (when relevant) if set to `true`.
 
 
 Return relevant plots and problems depending on the situation.
 """
-function Figure(scenario;name=nothing,anim=false)
+function Figure(scenario;compression=false,name=nothing,anim=false)
 
 	if scenario == 1
 		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^9,T=10,dt = 0.001,dealias=0,δ=0,reg=1)
-		plt=plot_solution(problem,label="")
+		plt=plot_solution(problem;compression=compression,label="")
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			if anim
-				create_animation(problem;ylims=false,name=name)
+				create_animation(problem;compression=compression,name=name)
 			end
  		end
 		return problem,plt
 
 	elseif scenario == 2
 		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^11,T=1.5,dt = 0.001,dealias=0,δ=0,reg=1)
-		plt=plot_solution(problem,t=1.2,label="")
+		plt=plot_solution(problem,t=1.2;compression=compression,label="")
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			if anim
-				create_animation(problem;ylims=false,name=name)
+				create_animation(problem;compression=compression,name=name)
 			end
 		end
 		return problem,plt
 
 	elseif scenario == 3
 		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^12,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
-		plt=plot_solution(problem,label="")
+		plt=plot_solution(problem;compression=compression,label="")
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			if anim
-				create_animation(problem;ylims=false,name=name)
+				create_animation(problem;compression=compression,name=name)
 			end
 		end
 		return problem,plt
 
 	elseif scenario == 4
 		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^14,T=1.5,dt = 0.001,dealias=1,δ=0,reg=1)
-		plt=plot_solution(problem,t=1.3,label="")
+		plt=plot_solution(problem,t=1.3;compression=compression,label="")
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			if anim
-				create_animation(problem;ylims=false,name=name)
+				create_animation(problem;compression=compression,name=name)
 			end
  		end
 		return problem,plt
@@ -183,14 +184,14 @@ function Figure(scenario;name=nothing,anim=false)
 	elseif scenario == 5
 		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1/2,Ns=1)
 		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1,Ns=1)
-		plt0=plot_solution(problem0,label="")
-		plt1=plot_solution(problem1,label="")
+		plt0=plot_solution(problem0;compression=compression,label="")
+		plt1=plot_solution(problem1;compression=compression,label="")
 		if name != nothing
 			savefig(plt0,string(name,"r12.pdf"));savefig(plt0,string(name,"r12.svg"));
 			savefig(plt1,string(name,"r1.pdf"));savefig(plt1,string(name,"r1.svg"));
 			if anim
-				create_animation(problem0;ylims=false,name=name)
-				create_animation(problem1;ylims=false,name=name)
+				create_animation(problem0;compression=compression,name=name)
+				create_animation(problem1;compression=compression,name=name)
 			end
 		end
 		return problem0,problem1,plt0,plt1
@@ -198,14 +199,14 @@ function Figure(scenario;name=nothing,anim=false)
 	elseif scenario == 6
 		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=1,dt = 0.01,dealias=1,δ=0.01,reg=1/4)
 		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^16,T=1,dt = 0.01,dealias=1,δ=0.01,reg=1/4)
-		plt0=plot_solution(problem0,t=0.6,label="")
-		plt1=plot_solution(problem1,t=0.6,label="")
+		plt0=plot_solution(problem0,t=0.6;compression=compression,label="")
+		plt1=plot_solution(problem1,t=0.6;compression=compression,label="")
 		if name != nothing
 			savefig(plt0,string(name,"N18.pdf"));savefig(plt0,string(name,"N18.svg"));
 			savefig(plt1,string(name,"N16.pdf"));savefig(plt1,string(name,"N16.svg"));
 			if anim
-				create_animation(problem0;ylims=false,name=name)
-				create_animation(problem1;ylims=false,name=name)
+				create_animation(problem0;compression=compression,name=name)
+				create_animation(problem1;compression=compression,name=name)
 			end
 		end
 		return problem0,problem1,plt0,plt1
@@ -215,18 +216,18 @@ function Figure(scenario;name=nothing,anim=false)
 		problem0,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1,Ns=10)
 		problem1,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=10,dt = 0.01,dealias=1,δ=0.002,reg=1,Ns=10)
 		problem2,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=2,dt = 0.01,dealias=1,δ=0.001,reg=1)
-		plt0=plot_solution(problem0,label="t=10")
-		plot_solution!(plt0,problem0,t=2,label="t=2")
+		plt0=plot_solution(problem0;compression=compression,label="t=10")
+		plot_solution!(plt0,problem0,t=2;compression=compression,label="t=2")
 		title!(plt0[1,1],"surface deformation")
-		plt1=plot_solution(problem1,label="t=10")
-		plot_solution!(plt1,problem1,t=2,label="t=2")
+		plt1=plot_solution(problem1;compression=compression,label="t=10")
+		plot_solution!(plt1,problem1,t=2;compression=compression,label="t=2")
 		title!(plt1[1,1],"surface deformation")
 		if name != nothing
 			savefig(plt0,string(name,"d01.pdf"));savefig(plt0,string(name,"d01.svg"));
 			savefig(plt1,string(name,"d002.pdf"));savefig(plt1,string(name,"d002.svg"));
 			if anim
-				create_animation(problem0;ylims=false,name=name)
-				create_animation(problem1;ylims=false,name=name)
+				create_animation(problem0;compression=compression,name=name)
+				create_animation(problem1;compression=compression,name=name)
 			end
 		end
 		return problem0,problem1,problem2,plt0,plt1
@@ -303,21 +304,21 @@ function Figure(scenario;name=nothing,anim=false)
 		problem0,=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=2,dt = 0.001,dealias=1,δ=0,reg=1)
 		problem1,=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=2,dt = 0.001,dealias=3/4*d-2,δ=0,reg=1)
 
-		plt0=plot_solution(problem0, t=0.1,label="t=0.1")
-		plot_solution!(plt0,problem0,t=0.3,label="t=0.3")
-		plot_solution!(plt0,problem0,t=0.5,label="t=0.5")
+		plt0=plot_solution(problem0, t=0.1;compression=compression,label="t=0.1")
+		plot_solution!(plt0,problem0,t=0.3;compression=compression,label="t=0.3")
+		plot_solution!(plt0,problem0,t=0.5;compression=compression,label="t=0.5")
 		plot!(plt0[1,1],title="surface deformation")
 
-		plt1=plot_solution(problem1,t=0.1,label="t=0.1")
-		plot_solution!(plt1,problem1,t=0.3,label="t=0.3")
-		plot_solution!(plt1,problem1,t=0.5,label="t=0.5")
+		plt1=plot_solution(problem1, t=0.1;compression=compression,label="t=0.1")
+		plot_solution!(plt1,problem1,t=0.3;compression=compression,label="t=0.3")
+		plot_solution!(plt1,problem1,t=0.5;compression=compression,label="t=0.5")
 		plot!(plt1[1,1],title="surface deformation")
 		if name != nothing
 			savefig(plt0,string(name,"0.pdf"));savefig(plt0,string(name,"0.svg"));
 			savefig(plt1,string(name,"1.pdf"));savefig(plt1,string(name,"1.svg"));
 			if anim
-				create_animation(problem0;ylims=false,name=name)
-				create_animation(problem1;ylims=false,name=name)
+				create_animation(problem0;compression=compression,name=name)
+				create_animation(problem1;compression=compression,name=name)
 			end
 		end
 		return problem0,problem1,plt0,plt1
