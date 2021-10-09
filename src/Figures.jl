@@ -122,7 +122,7 @@ function plot_solution!( plt, problems; t=nothing,x=nothing,interpolation=false,
 		# generate the indices to be plotted (all if compression = false)
 		if compression == false
 			compression = 1
-		elseif compression == true
+		elseif compression === true
 			compression = 2^3
 		end
 		indices=1:Int(compression):length(X)
