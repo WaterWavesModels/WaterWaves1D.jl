@@ -14,8 +14,8 @@ the modified water waves expansion proposed by West et al., Craig-Sulem, etc.
 ## Optional keyword arguments
 - `ν`: shallow/deep water multiplication factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0` (or `μ=Inf`).
 - `order :: Int`: the order of the expansion; linear system if `1`, quadratic if `2`, cubic if `3`, quartic if `4` (default and other values yield `2`);
-- `δ`: parameter of smooth regularization operator (default is `0`, i.e. no regularization);
-- `reg`: order of the smooth regularization operator (default is `1`);
+- `δ` and `reg`: parameters of the rectifier operator, set as `k->min(1,|δ*k|^reg)` or `k->min(1,|δ*k|^reg[1]*exp(1-|δ*k|^reg[2]))` if `reg` is a couple
+(by default is `δ=0`, i.e. no regularization and `reg=1`. Notice `reg=Inf` and `δ>0` yields a cut-off filter);
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `verbose`: prints information if `true` (default is `true`).
@@ -67,9 +67,13 @@ mutable struct PseudoSpectral <: AbstractModel
 
 		x = mesh.x
 		k = copy(mesh.k)
-		#cutoff = k -> (1 + tanh(-abs(k)+1/abs(k)))/2
-		cutoff = k -> (1-exp(-1/abs(k)^2))^(reg/2)
-		Π = cutoff.(δ*k)   # regularisation cutoff
+
+		if length(reg) == 1
+			rectifier = k -> min(1,abs(k)^-reg)
+		else
+			rectifier = k->min(1,abs(k)^-reg[1]*exp(1-abs(k)^reg[2]))
+		end
+		Π = rectifier.(δ*k)   # regularizing rectifier
 		K = mesh.kmax * (1-dealias/(2+dealias))
 		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
 		if dealias == 0
@@ -95,7 +99,7 @@ mutable struct PseudoSpectral <: AbstractModel
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
 			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
-			U[abs.(U).< ktol ].=0
+			U[ abs.(U).< ktol ].=0
 			return U
 		end
 
@@ -104,7 +108,7 @@ mutable struct PseudoSpectral <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential.
 		# Inverse Fourier transform and takes the real part.
 		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2]))
+			real( ifft(U[:,1]) ),real( ifft(U[:,2]) )
 		end
 
 		# Evolution equations are ∂t U = f!(U)
@@ -115,7 +119,6 @@ mutable struct PseudoSpectral <: AbstractModel
 			Q .= -∂ₓF₀.*fftv
 			R .= -fftη*ν
 
-			# attention,  G₀=-L dans Choi
 			if n >= 2
 				η  .= ifft(Π.*U[:,1])
 				v  .= ifft(U[:,2])
