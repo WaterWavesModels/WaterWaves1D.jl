@@ -9,7 +9,8 @@ include("../src/models/PseudoSpectral.jl")
 include("../src/models/WaterWaves.jl")
 include("../src/Figures.jl")
 #using JLD   # when using @save command
-
+#ENV["GKSwstype"]="nul";
+#gr()
 #--- Integration
 
 """
@@ -92,9 +93,8 @@ function IntegrateWW2(;init=1,μ=1,ϵ=0.1,L=20,N=2^10,T=10,dt = 0.001,dealias=1,
 	end
 	blowup_time=	problem.times.ts[blowup_index]
 	if blowup_time<T
-		@info string("solutions blowed at time t=",blowup_time,"\n")
+		@info string("The solution blowed at time t=",blowup_time," (first NaN occurence)\n")
 	end
-
 	#display(plt)
 	return problem,blowup_time,blowup,error_energy
 end
@@ -119,7 +119,7 @@ corresponding to different figures in [DM]
 - `scenario∈[8,10]`: blowups for an initial data with a low-frequency and a high-frequency (with wavenumber K) component.
     - `scenario=8`: dependency of blowup times with respect to K (also `scenario=8.5` with a cut-off proportional to K)
     - `scenario=9`: dependency of blowup times with respect to ϵ.
-    - `scenario=10`: an example of blowup with two different blowups.
+    - `scenario=10`: an example of blowup with two different dealiasing.
 - `scenario=11`: critical rectifier strength (δ) as a function of ϵ.
 - `scenario≈12`: error of the rectified model (WW2) with respect to the water waves system, depending on δ and ϵ.
     - `scenario=12.1`: with initial data exp(-|x|)
@@ -143,7 +143,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			if anim
-				create_animation(problem;compression=compression,name=name)
+				create_animation(problem;ylims=(-0.5,1.1),compression=compression,name=name)
 			end
  		end
 		return problem,plt
@@ -154,7 +154,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			if anim
-				create_animation(problem;compression=compression,name=name)
+				create_animation(problem;ylims=(-0.5,1.1),compression=compression,name=name)
 			end
 		end
 		return problem,plt
@@ -165,7 +165,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			if anim
-				create_animation(problem;compression=compression,name=name)
+				create_animation(problem;ylims=(-0.5,1.1),compression=compression,name=name)
 			end
 		end
 		return problem,plt
@@ -176,37 +176,39 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			if anim
-				create_animation(problem;compression=compression,name=name)
+				create_animation(problem;ylims=(-0.5,1.1),compression=compression,name=name)
 			end
  		end
 		return problem,plt
 
 	elseif scenario == 5
-		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1/2,Ns=1)
-		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1,Ns=1)
+			if anim Ns=nothing else Ns=1 end
+		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1/2,Ns=Ns)
+		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1,Ns=Ns)
 		plt0=plot_solution(problem0;compression=compression,label="")
 		plt1=plot_solution(problem1;compression=compression,label="")
 		if name != nothing
 			savefig(plt0,string(name,"r12.pdf"));savefig(plt0,string(name,"r12.svg"));
 			savefig(plt1,string(name,"r1.pdf"));savefig(plt1,string(name,"r1.svg"));
 			if anim
-				create_animation(problem0;compression=compression,name=name)
-				create_animation(problem1;compression=compression,name=name)
+				create_animation(problem0;ylims=(-0.5,1.1),compression=compression,name=name)
+				create_animation(problem1;ylims=(-0.5,1.1),compression=compression,name=name)
 			end
 		end
 		return problem0,problem1,plt0,plt1
 
 	elseif scenario == 6
-		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=1,dt = 0.01,dealias=1,δ=0.01,reg=1/4)
-		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^16,T=1,dt = 0.01,dealias=1,δ=0.01,reg=1/4)
+		if anim Ns=nothing else Ns=10 end
+		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=1,dt = 0.01,dealias=1,δ=0.01,reg=1/4,Ns=Ns)
+		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^16,T=1,dt = 0.01,dealias=1,δ=0.01,reg=1/4,Ns=Ns)
 		plt0=plot_solution(problem0,t=0.6;compression=compression,label="")
 		plt1=plot_solution(problem1,t=0.6;compression=compression,label="")
 		if name != nothing
 			savefig(plt0,string(name,"N18.pdf"));savefig(plt0,string(name,"N18.svg"));
 			savefig(plt1,string(name,"N16.pdf"));savefig(plt1,string(name,"N16.svg"));
 			if anim
-				create_animation(problem0;compression=compression,name=name)
-				create_animation(problem1;compression=compression,name=name)
+				create_animation(problem0;ylims=(-0.5,1.1),compression=compression,name=name)
+				create_animation(problem1;ylims=(-0.5,1.1),compression=compression,name=name)
 			end
 		end
 		return problem0,problem1,plt0,plt1
@@ -226,21 +228,22 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 			savefig(plt0,string(name,"d01.pdf"));savefig(plt0,string(name,"d01.svg"));
 			savefig(plt1,string(name,"d002.pdf"));savefig(plt1,string(name,"d002.svg"));
 			if anim
-				create_animation(problem0;compression=compression,name=name)
-				create_animation(problem1;compression=compression,name=name)
+				create_animation(problem0;ylims=(-0.5,1.1),compression=compression,name=name)
+				create_animation(problem1;ylims=(-0.5,1.1),compression=compression,name=name)
 			end
 		end
 		return problem0,problem1,problem2,plt0,plt1
 
 	elseif scenario == 8
 		blowups0=[];blowups1=[];
-		Ks=100:20:800
-		for K in Ks
-			problem0,blowup0=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.15,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
-			problem1,blowup1=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+		K=100:20:800;iter=0;
+		for k in K
+			iter+=1;@info string("K=",k," (iteration ",iter,"/",length(K),")\n")
+			problem0,blowup0=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.15,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+			problem1,blowup1=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
 			push!(blowups0,blowup0);push!(blowups1,blowup1);
 		end
-		plt=scatter(Ks,[blowups0 blowups1],
+		plt=scatter(K,[blowups0 blowups1],
 				label=["ϵ=0.15" "ϵ=0.2"],
 				marker=[:c :d],
 				xlabel="K (in log scale)",
@@ -248,21 +251,21 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 				xscale=:log10,yscale=:log10)
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
-			#@save(name,Ks,blowups0,blowups1)
+			#@save(name,K,blowups0,blowups1)
 		end
-		return Ks,blowups0,blowups1,plt
+		return K,blowups0,blowups1,plt
 
 	elseif scenario == 8.5
-		Ks=100:20:800
-		blowups0=[];blowups1=[];
-		for K in Ks
-			N=2^14
-			d=N*π/K/20 # useful to define truncation at frequency K
-			problem0,blowup0=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
-			problem1,blowup1=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=3/4*d-2,δ=0,reg=1)
+		K=100:20:800;
+		blowups0=[];blowups1=[];iter=0;
+		for k in K
+			iter+=1;@info string("K=",k," (iteration ",iter,"/",length(K),")\n")
+			N=2^14;d=N*π/k/20 # useful to define truncation at frequency K
+			problem0,blowup0=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+			problem1,blowup1=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=3/4*d-2,δ=0,reg=1)
 			push!(blowups0,blowup0);push!(blowups1,blowup1);
 		end
-		plt=scatter(Ks,[blowups0 blowups1],
+		plt=scatter(K,[blowups0 blowups1],
 				label=["usual dealiasing" "adapted dealiasing"],
 				marker=[:c :d],
 				xlabel="K (in log scale)",
@@ -270,15 +273,15 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 				xscale=:log10,yscale=:log10)
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
-			#@save(name,Ks,blowups0,blowups1)
+			#@save(name,K,blowups0,blowups1)
 		end
-		return Ks,blowups0,blowups1,plt
+		return K,blowups0,blowups1,plt
 
 	elseif scenario == 9
 		Eps=10 .^(-1:0.02:0)
-		blowups1=[];blowups2=[];
-		blowups3=[];blowups4=[];
+		blowups1=[];blowups2=[];blowups3=[];blowups4=[];iter=0;
 		for eps in Eps
+			iter+=1;@info string("ϵ=",eps," (iteration ",iter,"/",length(Eps),")\n")
 			problem1,blowup1=IntegrateWW2(init=2,K=100,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
 			problem2,blowup2=IntegrateWW2(init=2,K=200,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
 			problem3,blowup3=IntegrateWW2(init=2,K=400,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
@@ -294,7 +297,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 				xscale=:log10,yscale=:log10)
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
-			#@save(name,Eps,blowups1,blowups2,blowups3,blowups4,label)
+			#@save(name,Eps,blowups1,blowups2,blowups3,blowups4)
  		end
 		return Eps,blowups1,blowups2,blowups3,blowups4,plt
 
@@ -314,11 +317,11 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		plot_solution!(plt1,problem1,t=0.5;compression=compression,label="t=0.5")
 		plot!(plt1[1,1],title="surface deformation")
 		if name != nothing
-			savefig(plt0,string(name,"0.pdf"));savefig(plt0,string(name,"0.svg"));
-			savefig(plt1,string(name,"1.pdf"));savefig(plt1,string(name,"1.svg"));
+			savefig(plt0,string(name,"a.pdf"));savefig(plt0,string(name,"a.svg"));
+			savefig(plt1,string(name,"b.pdf"));savefig(plt1,string(name,"b.svg"));
 			if anim
-				create_animation(problem0;compression=compression,name=name)
-				create_animation(problem1;compression=compression,name=name)
+				create_animation(problem0;ylims=false,compression=compression,name=name)
+				create_animation(problem1;ylims=false,compression=compression,name=name)
 			end
 		end
 		return problem0,problem1,plt0,plt1
