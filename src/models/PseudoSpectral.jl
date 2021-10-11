@@ -69,9 +69,9 @@ mutable struct PseudoSpectral <: AbstractModel
 		k = copy(mesh.k)
 
 		if length(reg) == 1
-			rectifier = k -> min(1,abs(k)^-reg)
+			rectifier = k -> min(1,abs(k)^(-reg))
 		else
-			rectifier = k->min(1,abs(k)^-reg[1]*exp(1-abs(k)^reg[2]))
+			rectifier = k -> min(1,abs(k)^(-reg[1])*exp(1-abs(k)^reg[2]))
 		end
 		Π = rectifier.(δ*k)   # regularizing rectifier
 		K = mesh.kmax * (1-dealias/(2+dealias))
