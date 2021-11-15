@@ -1,8 +1,9 @@
 # #
-# Reproduces the figures in the work of C. Klein and V. Duchêne
-# on the Serre-Green-Naghdi and Whitham-Green-Naghdi systems
+# Reproduce the figures in
+# Numerical study of the Serre–Green–Naghdi equations and a fully dispersive counterpart
+# V. Duchêne and C. Klein, arXiv 2005.13234, to appear in DCDS-B
 # #
-@info "Defines functions PlotSolitaryWaveWGN1,PlotSolitaryWaveWGN2,PlotSolitaryWaveWGN3,PlotJacobianWGN,IntegrateSolitaryWaveWGN,StabilitySolitaryWaveWGN,IntegrateWGN"
+@info "Define functions PlotSolitaryWaveWGN1,PlotSolitaryWaveWGN2,PlotSolitaryWaveWGN3,PlotJacobianWGN,IntegrateSolitaryWaveWGN,StabilitySolitaryWaveWGN,IntegrateWGN"
 
 using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
 include("../src/models/WhithamGreenNaghdi.jl")
