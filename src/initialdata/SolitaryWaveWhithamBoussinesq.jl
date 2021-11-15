@@ -93,6 +93,10 @@ function SolitaryWaveWhithamBoussinesq(
                 w = Four2(v)
                 return real.(-c^2*v .+ Four1(v) .+ c*ϵ/2*w.^2 .+ ϵ*Four2(c*w.*v .- ϵ/2*w.^3))
         end
+        function Fabs( v )
+                w = Four2(v)
+                return real.(c^2*abs.(v) .+ abs.(Four1(v)) .+ c*ϵ/2*w.^2 .+ ϵ*Four2(c*abs.(w.*v) .+ ϵ/2*abs.(w).^3))
+        end
 
         if iterative == false
                 k = mesh.k
@@ -116,26 +120,29 @@ function SolitaryWaveWhithamBoussinesq(
 
         flag=0
         iter = 0
-        err = 1
         u = filt(guess)
         du = similar(u)
         fu = similar(u)
         dxu = similar(u)
-        for i in range(1, length=max_iter)
+        for i in range(0, stop=max_iter)
                 dxu .= real.(ifft(Dx.*fft(u)))
                 dxu ./= norm(dxu,2)
                 fu .= FF(u)
-    	        err = norm(fu,Inf)
-    		if err < tol
-    			@info string("Converged : ",err,"\n")
+                relerr = norm(fu,Inf)/norm(Fabs(u,hu,Fu,F2u),Inf)
+                abserr = norm(fu,Inf)
+                if relerr < tol
+    			@info string("Converged : relative error ",relerr," in ",i," steps\n")
     			break
     		elseif verbose == true
-                        print(string("error at step ",i,": ",err,"\n"))
+                        print(string("absolute error at step ",i,": ",abserr,"\n"))
+                        print(string("relative error at step ",i,": ",relerr,"\n"))
+
     		end
                 if i == max_iter
-                        flag=1
-                        @warn  string("The algorithm did not converge : ",err,"\n")
+                        @warn string("The algorithm did not converge after ",i," steps: final relative error is ",relerr,"\n")
+                        break
                 end
+
                 if iterative == false
                         du .= JacF(u,dxu) \ fu
                 else

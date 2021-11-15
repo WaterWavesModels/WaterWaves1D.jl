@@ -83,6 +83,9 @@ function SolitaryWaveWhitham(
         function F( u :: Vector{Float64} )
             -c*u+real.(ifft(F₁.*fft(u)))+3*ϵ/4*u.^2
         end
+        function Fabs( u :: Vector{Float64} )
+            c*abs.(u)+abs.(ifft(F₁.*fft(u)))+3*ϵ/4*u.^2
+        end
 
         if iterative == false
                 k = mesh.k
@@ -103,25 +106,29 @@ function SolitaryWaveWhitham(
 
         flag=0
         iter = 0
-        err = 1
         u = filter(guess)
         du = similar(u)
         fu = similar(u)
         dxu = similar(u)
-        for i in range(1, length=max_iter)
+        for i in range(0, stop=max_iter)
                 dxu .= real.(ifft(Dx.*fft(u)))
                 dxu ./= norm(dxu,2)
                 fu .= F(u)
-    	        err = norm(fu,Inf)
-    		if err < tol
-    			@info string("Converged : ",err,"\n")
+                relerr = norm(fu,Inf)/norm(Fabs(u,hu,Fu,F2u),Inf)
+                abserr = norm(fu,Inf)
+                if relerr < tol
+    			@info string("Converged : relative error ",relerr," in ",i," steps\n")
     			break
     		elseif verbose == true
-                        print(string("error at step ",i,": ",err,"\n"))
+                        print(string("absolute error at step ",i,": ",abserr,"\n"))
+                        print(string("relative error at step ",i,": ",relerr,"\n"))
+
     		end
                 if i == max_iter
-                        @warn  string("The algorithm did not converge: ",err,"\n")
+                        @warn string("The algorithm did not converge after ",i," steps: final relative error is ",relerr,"\n")
+                        break
                 end
+
                 if iterative == false
                         du .= JacF(u,dxu) \ fu
                 else

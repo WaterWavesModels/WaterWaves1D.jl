@@ -210,7 +210,7 @@ function SolitaryWaveWhithamGreenNaghdi(
 
         du,fu,dxu,hu,Fu,F2u,Du = (similar(u),).*ones(7)
 
-        for i in range(1, length=max_iter)
+        for i in range(0, stop=max_iter)
                 dxu .= real.(ifft(Dx.*fft(u)))
                 dxu ./= norm(dxu,2)
                 if method == 1
@@ -239,7 +239,7 @@ function SolitaryWaveWhithamGreenNaghdi(
                 relerr = norm(fu,Inf)/norm(Fabs(u,hu,Fu,F2u),Inf)
                 abserr = norm(fu,Inf)
     		if relerr < tol
-    			@info string("Converged : relative error ",relerr,"\n")
+    			@info string("Converged : relative error ",relerr," in ",i," steps\n")
     			break
     		elseif verbose == true
                         print(string("absolute error at step ",i,": ",abserr,"\n"))
@@ -247,7 +247,8 @@ function SolitaryWaveWhithamGreenNaghdi(
 
     		end
                 if i == max_iter
-                        @warn  string("The algorithm did not converge: final relative error is ",relerr,"\n")
+                        @warn string("The algorithm did not converge after ",i," steps: final relative error is ",relerr,"\n")
+                        break
                 end
 
                 if iterative == false

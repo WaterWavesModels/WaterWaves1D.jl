@@ -243,7 +243,7 @@ function CnoidalWaveWhithamGreenNaghdi(
 
         du,fu,dxu,hu,Fu,F2u,Du = (similar(u),).*ones(7)
 
-        for i in range(1, length=max_iter)
+        for i in range(0, stop=max_iter)
                 dxu .= real.(ifft(Dx.*fft(u)))
                 dxu ./= norm(dxu,2)
                 if method == 1
@@ -269,16 +269,21 @@ function CnoidalWaveWhithamGreenNaghdi(
                 end
                 fu .= F(u,hu,Fu,F2u)
 
-                err = norm(fu,Inf)#/norm(Fabs(u,hu,Fu,F2u),Inf)
-    		if err < tol
-    			@info string("Converged : ",err,"\n")
+                relerr = norm(fu,Inf)/norm(Fabs(u,hu,Fu,F2u),Inf)
+                abserr = norm(fu,Inf)
+    		if relerr < tol
+    			@info string("Converged : relative error ",relerr," in ",i," steps\n")
     			break
     		elseif verbose == true
-                        print(string("error at step ",i,": ",err,"\n"))
+                        print(string("absolute error at step ",i,": ",abserr,"\n"))
+                        print(string("relative error at step ",i,": ",relerr,"\n"))
+
     		end
                 if i == max_iter
-                        @warn  string("The algorithm did not converge: final error is ",err,"\n")
+                        @warn string("The algorithm did not converge after ",i," steps: final relative error is ",relerr,"\n")
+                        break
                 end
+
 
                 if iterative == false
                         du .=  JacF(u,hu,Fu,F2u,Du,dxu)  \ fu
