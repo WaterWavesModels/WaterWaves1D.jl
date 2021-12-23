@@ -5,7 +5,7 @@ using LinearMaps,IterativeSolvers,LinearAlgebra
 """
     `CnoidalWaveWhithamGreenNaghdi(param; kwargs...)`
 
-Computes the Serre-Green-Naghdi cnoidal wave with prescribed `h₀<h₁<h₂`.
+Computes the Whitham-Green-Naghdi cnoidal wave with prescribed `h₀<h₁<h₂`.
 `h_1` is the minimum, `h_2` is the maximum.
 As `h₀ -> h₁`, the cnoidal wave converges towards the solitary wave.
 

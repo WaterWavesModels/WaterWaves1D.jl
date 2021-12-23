@@ -11,12 +11,13 @@ a Boussinesq-type model with full-dispersion property.
 
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
+
+
+## Optional keyword arguments
 - a parameter `α` which determines the model solved:
-    - If `α = 1`, then the model has been introduced and studied by E. Dinvay and collaborators;
+    - If `α = 1` (default), then the model has been introduced and studied by E. Dinvay and collaborators;
     - If `α = 1/2`, then the model is a quasilinear version;
     - If `α < 1/2`, then expect instabilities stemming from ill-posedness of the model.
-
-## Keywords
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing).
 - `verbose`: prints information if `true` (default is `true`).
@@ -40,22 +41,29 @@ mutable struct WhithamBoussinesq <: AbstractModel
 	param	:: NamedTuple
 	kwargs	:: NamedTuple
 
-    function WhithamBoussinesq(param::NamedTuple;
+    function WhithamBoussinesq(param::NamedTuple;Boussinesq=false,
+								α=1,a=-1/3,b=1/3,
 								dealias=0,ktol=0,verbose=true)
 
-		label = string("Whitham-Boussinesq")
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		α	= param.α
 		mesh = Mesh(param)
-		param = ( ϵ = ϵ, μ = μ, α = α, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
-		kwargs = (dealias=dealias,ktol=ktol,verbose=verbose)
+		param = ( ϵ = ϵ, μ = μ, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
+		kwargs = (Boussinesq=Boussinesq,α=α,a=a,b=b,dealias=dealias,ktol=ktol,verbose=verbose)
+
+		if Boussinesq==false
+			label = string("Whitham-Boussinesq")
+			F₁ 	= tanh.(sqrt(μ)*abs.(mesh.k))./(sqrt(μ)*abs.(mesh.k))
+			F₁[1] 	= 1
+			F₂ = F₁.^α
+		else
+			label = string("Boussinesq")
+			F₂ = 1 ./(1 .+μ*b*abs.(mesh.k).^2)
+			F₁ 	= (1 .-μ*a*abs.(mesh.k).^2).*(F₂.^2)
+		end
 
 		x 	= mesh.x
-        F₁ 	= tanh.(sqrt(μ)*abs.(mesh.k))./(sqrt(μ)*abs.(mesh.k))
-		F₁[1] 	= 1
-		F₂ = F₁.^α
-    	∂ₓ	=  1im * mesh.k
+		∂ₓ	=  1im * mesh.k
 		K = mesh.kmax * (1-dealias/(2+dealias))
 		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
 		if dealias == 0
