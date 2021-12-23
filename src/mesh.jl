@@ -9,7 +9,8 @@ Constructs a mesh of collocation points and associated Fourier modes.
 Can be either
 - `xmin , xmax , N `; or
 - `L , N ` (same as above with `xmin=-L` and `xmax=L`); or
-- `param :: NamedTuple`, param contains `N` and `L`, then same as above.
+- `param :: NamedTuple`, param contains `N` and `L`, then same as above; or
+- `x` a vector of regularly spaced collocation points`.
 
 The mesh as `N` collocation points regularly spaced between `xmin` (included) and `xmax` (excluded)
 
@@ -48,7 +49,7 @@ struct Mesh
         kmin = -N/2*dk
         kmax = (N/2-1)*dk
         k    = zeros(Float64, N)
-        k   .= dk .* vcat(0:N÷2-1, -N÷2:-1)
+        k   .= dk .* vcat(0:(N-1)÷2, -N÷2:-1)
 
         new( N, xmin, xmax, dx, x, kmin, kmax, dk, k)
 
@@ -59,6 +60,17 @@ struct Mesh
         xmin = - L
         xmax =   L
         N    =   N
+
+        Mesh( xmin, xmax, N)
+
+    end
+
+    function Mesh( x )
+
+        N    =   length(x)
+        dx   =   (x[end]-x[1])/(N-1)
+        xmin = x[1]
+        xmax = x[end]+dx
 
         Mesh( xmin, xmax, N)
 
