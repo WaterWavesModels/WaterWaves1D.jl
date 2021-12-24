@@ -1,7 +1,7 @@
 # #
 # Reproduce the figures in
 # Numerical study of the Serre–Green–Naghdi equations and a fully dispersive counterpart
-# V. Duchêne and C. Klein, arXiv 2005.13234, to appear in DCDS-B
+# V. Duchêne and C. Klein, arXiv 2005.13234, to appear in DCDS-B (doi:10.3934/dcdsb.2021300)
 # #
 @info "Define functions PlotSolitaryWaveWGN1,PlotSolitaryWaveWGN2,PlotSolitaryWaveWGN3,PlotJacobianWGN,IntegrateSolitaryWaveWGN,StabilitySolitaryWaveWGN,IntegrateWGN"
 
@@ -14,7 +14,7 @@ using JLD
 
 #---- Figures 1 and 2
 """
-	`PlotSolitaryWaveWGN1(;kwargs)`
+	PlotSolitaryWaveWGN1(;kwargs)
 
 First method to compute the WGN solitary wave.
 Use GMRES-iterative method for the inversion of the Jacobian.
@@ -37,15 +37,14 @@ function PlotSolitaryWaveWGN1(;c=2,N=2^10,L=10*π,verbose=false,name=nothing)
 				)
 
 	(η,u,v,mesh) = SolitaryWaveWhithamGreenNaghdi(
-				param; SGN = false,
+				param;
 				method=2, α = 0,
 				tol =  1e-14, max_iter=10,
 				ktol =0*1e-11, gtol = 1e-16,
 				iterative = true, q=1,
 				verbose = verbose)
 
-	(ηGN,uGN) = SolitaryWaveWhithamGreenNaghdi(
-				param; SGN = true, max_iter=0)
+	(ηGN,uGN) = SolitaryWaveSerreGreenNaghdi(param)
 
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [u uGN];
@@ -79,14 +78,13 @@ function PlotSolitaryWaveWGN2(;c=20,L=10*π,N=2^10,verbose=false,name=nothing)
 		c = c )
 
 	(η,u,v,mesh) = SolitaryWaveWhithamGreenNaghdi(
-				param; SGN = false,
+				param;
 				method=2, α = 1, #ici α = 1 évite des oscillations important si c = 3 ou c = 20
 				tol =  1e-14, max_iter=15,
 				iterative = false, q=1,
 				verbose = verbose)
 
-	(ηGN,uGN) = SolitaryWaveWhithamGreenNaghdi(
-				param; SGN = true, max_iter=0)
+	(ηGN,uGN) = SolitaryWaveSerreGreenNaghdi(param)
 
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [u uGN];
@@ -119,13 +117,12 @@ function PlotSolitaryWaveWGN3(;c=100,L=10*π,N=2^10,verbose=false,name=nothing)
 		c = c )
 
 	(η,u,v,mesh) = SolitaryWaveWhithamGreenNaghdi(
-				param; SGN = false,
+				param;
 				method=3, α = 1,
 				tol =  1e-10, max_iter=10,
 				iterative = false, q=1,
 				verbose = verbose)
-	(ηGN,uGN) = SolitaryWaveWhithamGreenNaghdi(
-				param; SGN = true, max_iter=0)
+	(ηGN,uGN) = SolitaryWaveSerreGreenNaghdi(param)
 
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [u/c uGN/c];
@@ -144,9 +141,9 @@ end
 
 #------ Figure 6
 """
-	`PlotJacobianWGN(;kwargs)`
+	PlotJacobianWGN(;kwargs)
 
-Computes the Jacobian matrix to be inverted in SGN or WGN equation.
+Compute the Jacobian matrix to be inverted in SGN or WGN equation.
 
 Arguments are all optional:
 - `c` the velocity,
@@ -207,9 +204,9 @@ end
 
 #---- Figures 7 and 8
 """
-	`IntegrateSolitaryWaveWGN(;kwargs)`
+	IntegrateSolitaryWaveWGN(;kwargs)
 
-Integrates in time the SGN or WGN solitary wave.
+Integrate in time the SGN or WGN solitary wave.
 
 Arguments are all optional:
 - `c` the velocity,
@@ -231,15 +228,13 @@ function IntegrateSolitaryWaveWGN(;SGN=false,c=2,N=2^10,L=10*π,T=1,dt=1/2000,na
 	            T  = T,
 	            dt = dt, ns=ns)
 	if SGN == true
-		(ηinit,uinit,vinit,mesh) = SolitaryWaveWhithamGreenNaghdi(
-				param; SGN = true, max_iter=0)
-		(ηfin,ufin,vfin) = SolitaryWaveWhithamGreenNaghdi(
-				param; x₀ = c*T, SGN = true, max_iter=0)
+		(ηinit,uinit,vinit,mesh) = SolitaryWaveSerreGreenNaghdi(param)
+		(ηfin,ufin,vfin) = SolitaryWaveSerreGreenNaghdi(param; x₀ = c*T)
 	else
 		(ηinit,uinit,vinit,mesh) = SolitaryWaveWhithamGreenNaghdi(
-				param; method = 3, SGN = false, max_iter=10,α=1,verbose=true, tol=1e-12)
+				param; method = 3, max_iter=10,α=1,verbose=true, tol=1e-12)
 	  	(ηfin,ufin,vfin) = SolitaryWaveWhithamGreenNaghdi(
-				param; x₀ = c*T, method = 3, SGN = false, max_iter=10,α=1,verbose=true, tol=1e-12)
+				param; x₀ = c*T, method = 3, max_iter=10,α=1,verbose=true, tol=1e-12)
 	end
 	init     = Init(mesh,ηinit,vinit)
 	model = WhithamGreenNaghdi(param;SGN=SGN, ktol=0, iterate=true, precond = true)
@@ -282,9 +277,9 @@ end
 #------ Figures 9 to 15
 
 """
-	`StabilitySolitaryWaveWGN(;kwargs)`
+	StabilitySolitaryWaveWGN(;kwargs)
 
-Integrates in time a pertubed SGN or WGN solitary wave.
+Integrate in time a pertubed SGN or WGN solitary wave.
 
 Arguments are all optional:
 - `p` (1,2, or a real) is the type of perturbation:
@@ -326,11 +321,10 @@ function StabilitySolitaryWaveWGN(;p=2,c=2,N=2^10,L=10*π,T=10,dt=10/10^4,SGN=fa
 				iterate=iterate)
 
 	if SGN == true
-		(η,u,v,mesh) = SolitaryWaveWhithamGreenNaghdi(
-				param; SGN = true, max_iter=0)
+		(η,u,v,mesh) = SolitaryWaveSerreGreenNaghdi(param)
 	else
 		(η,u,v,mesh) = SolitaryWaveWhithamGreenNaghdi(
-				param; method = 3, tol=1e-14, SGN = false, max_iter=10,α=1,verbose=true)
+				param; method = 3, tol=1e-14, max_iter=10,α=1,verbose=true)
 	end
 	k = mesh.k
 
@@ -429,9 +423,9 @@ end
 
 #---- Figures 16 to end
 """
-	`IntegrateWGN(scenario;kwargs)
+	IntegrateWGN(scenario;kwargs)
 
-Integrates in time SGN or WGN with an initial data depending on a given `scenario`
+Integrate in time SGN or WGN with an initial data depending on a given `scenario`
 - If `scenario = 1`, produces a dispersive shock wave for a unidirectional wave constructed from the Saint-Venant model.
 - If `scenario = 2`, produces a dispersive shock wave for a unidirectional wave constructed from the Camassa-Holm model.
 - If `scenario = 3`, the initial data challenges the non-cavitation assumption.
