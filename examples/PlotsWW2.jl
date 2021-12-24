@@ -5,7 +5,7 @@
 @info "Define functions IntegrateWW2 and Figure"
 
 using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
-include("../src/models/PseudoSpectral.jl")
+include("../src/models/WWn.jl")
 include("../src/models/WaterWaves.jl")
 include("../src/Figures.jl")
 #using JLD   # when using @save command
@@ -14,7 +14,7 @@ include("../src/Figures.jl")
 #--- Integration
 
 """
-	`IntegrateWW2(init;kwargs)
+	IntegrateWW2(;init,args)
 
 Integrates in time the WW2 system with an initial data depending on the provided `init`
 - if `init=1`, then surface deformation `η(t=0,x)=exp(-x^p)` and velocity `v(t=0,x)=0` (with `p` provided as an optional argument, by default `p=2`)
@@ -29,7 +29,7 @@ Other arguments are optional:
 - `dt` the timestep (default is `0.001`),
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `1`, i.e. 2/3 rule, `0` means no dealiasing);
 - `δ` the strength of the rectifier (default is `0.001`),
-- `reg` the order of the rectifier (as a regularizing operator, default is `1`),
+- `m` the order of the rectifier (as a regularizing operator, default is `-1`),
 - `Ns` the number of stored computed times (default is all times).
 
 
@@ -39,7 +39,7 @@ Return `(problem,blowup_time,blowup,error_energy)` where
 - `blowup` is a boolean indicating if NaN values occured
 - `error_energy` is the relative energy preservation between first and final time
 """
-function IntegrateWW2(;init=1,μ=1,ϵ=0.1,L=20,N=2^10,T=10,dt = 0.001,dealias=1,δ=0.001,reg=1,K=100,p=2,Ns=nothing)
+function IntegrateWW2(;init=1,μ=1,ϵ=0.1,L=20,N=2^10,T=10,dt = 0.001,dealias=1,δ=0.001,m=-1,K=100,p=2,Ns=nothing)
 	if Ns == nothing
 		param = ( μ  = μ, ϵ  = ϵ,
 				N  = N, L  = L,
@@ -60,7 +60,7 @@ function IntegrateWW2(;init=1,μ=1,ϵ=0.1,L=20,N=2^10,T=10,dt = 0.001,dealias=1,
 		@error "argument init must be 1 or 2"
 	end
 
-	model = PseudoSpectral(param;order = 2, δ = δ, reg = reg, dealias = dealias)
+	model = WWn(param;n = 2, δ = δ, m = m, dealias = dealias)
 	problem = Problem(model, init, param)
 	solve!( problem )
 
@@ -138,7 +138,7 @@ Return relevant plots and problems depending on the situation.
 function Figure(scenario;compression=false,name=nothing,anim=false)
 
 	if scenario == 1
-		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^9,T=10,dt = 0.001,dealias=0,δ=0,reg=1)
+		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^9,T=10,dt = 0.001,dealias=0,δ=0,m=-1)
 		plt=plot_solution(problem;compression=compression,label="")
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
@@ -149,7 +149,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		return problem,plt
 
 	elseif scenario == 2
-		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^11,T=1.5,dt = 0.001,dealias=0,δ=0,reg=1)
+		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^11,T=1.5,dt = 0.001,dealias=0,δ=0,m=-1)
 		plt=plot_solution(problem,t=1.2;compression=compression,label="")
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
@@ -160,7 +160,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		return problem,plt
 
 	elseif scenario == 3
-		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^12,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^12,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
 		plt=plot_solution(problem;compression=compression,label="")
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
@@ -171,7 +171,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		return problem,plt
 
 	elseif scenario == 4
-		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^14,T=1.5,dt = 0.001,dealias=1,δ=0,reg=1)
+		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^14,T=1.5,dt = 0.001,dealias=1,δ=0,m=-1)
 		plt=plot_solution(problem,t=1.3;compression=compression,label="")
 		if name != nothing
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
@@ -183,8 +183,8 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 
 	elseif scenario == 5
 			if anim Ns=nothing else Ns=1 end
-		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1/2,Ns=Ns)
-		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1,Ns=Ns)
+		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,m=-1/2,Ns=Ns)
+		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,m=-1,Ns=Ns)
 		plt0=plot_solution(problem0;compression=compression,label="")
 		plt1=plot_solution(problem1;compression=compression,label="")
 		if name != nothing
@@ -199,8 +199,8 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 
 	elseif scenario == 6
 		if anim Ns=nothing else Ns=10 end
-		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=1,dt = 0.01,dealias=1,δ=0.01,reg=1/4,Ns=Ns)
-		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^16,T=1,dt = 0.01,dealias=1,δ=0.01,reg=1/4,Ns=Ns)
+		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=1,dt = 0.01,dealias=1,δ=0.01,m=-1/4,Ns=Ns)
+		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^16,T=1,dt = 0.01,dealias=1,δ=0.01,m=-1/4,Ns=Ns)
 		plt0=plot_solution(problem0,t=0.6;compression=compression,label="")
 		plt1=plot_solution(problem1,t=0.6;compression=compression,label="")
 		if name != nothing
@@ -215,9 +215,9 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 
 	elseif scenario in [7,7.1,7.2,7.3]
 		p=round((scenario-7)*10);if p==0 p=2 end
-		problem0,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=10,dt = 0.01,dealias=1,δ=0.01,reg=1,Ns=10)
-		problem1,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=10,dt = 0.01,dealias=1,δ=0.002,reg=1,Ns=10)
-		problem2,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=2,dt = 0.01,dealias=1,δ=0.001,reg=1)
+		problem0,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=10,dt = 0.01,dealias=1,δ=0.01,m=-1,Ns=10)
+		problem1,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=10,dt = 0.01,dealias=1,δ=0.002,m=-1,Ns=10)
+		problem2,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=2,dt = 0.01,dealias=1,δ=0.001,m=-1)
 		plt0=plot_solution(problem0;compression=compression,label="t=10")
 		plot_solution!(plt0,problem0,t=2;compression=compression,label="t=2")
 		title!(plt0[1,1],"surface deformation")
@@ -239,8 +239,8 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		K=100:20:800;iter=0;
 		for k in K
 			iter+=1;@info string("K=",k," (iteration ",iter,"/",length(K),")\n")
-			problem0,blowup0=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.15,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
-			problem1,blowup1=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+			problem0,blowup0=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.15,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
+			problem1,blowup1=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
 			push!(blowups0,blowup0);push!(blowups1,blowup1);
 		end
 		plt=scatter(K,[blowups0 blowups1],
@@ -261,8 +261,8 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		for k in K
 			iter+=1;@info string("K=",k," (iteration ",iter,"/",length(K),")\n")
 			N=2^14;d=N*π/k/20 # useful to define truncation at frequency K
-			problem0,blowup0=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
-			problem1,blowup1=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=3/4*d-2,δ=0,reg=1)
+			problem0,blowup0=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
+			problem1,blowup1=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=3/4*d-2,δ=0,m=-1)
 			push!(blowups0,blowup0);push!(blowups1,blowup1);
 		end
 		plt=scatter(K,[blowups0 blowups1],
@@ -282,10 +282,10 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		blowups1=[];blowups2=[];blowups3=[];blowups4=[];iter=0;
 		for eps in Eps
 			iter+=1;@info string("ϵ=",eps," (iteration ",iter,"/",length(Eps),")\n")
-			problem1,blowup1=IntegrateWW2(init=2,K=100,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
-			problem2,blowup2=IntegrateWW2(init=2,K=200,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
-			problem3,blowup3=IntegrateWW2(init=2,K=400,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
-			problem4,blowup4=IntegrateWW2(init=2,K=800,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,reg=1)
+			problem1,blowup1=IntegrateWW2(init=2,K=100,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
+			problem2,blowup2=IntegrateWW2(init=2,K=200,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
+			problem3,blowup3=IntegrateWW2(init=2,K=400,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
+			problem4,blowup4=IntegrateWW2(init=2,K=800,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
 			push!(blowups1,blowup1);push!(blowups2,blowup2);
 			push!(blowups3,blowup3);push!(blowups4,blowup4);
 		end
@@ -304,8 +304,8 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 	elseif scenario == 10
 		K=400;N=2^14
 		d=N*π/K/20 # useful to define truncation at frequency K
-		problem0,=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=2,dt = 0.001,dealias=1,δ=0,reg=1)
-		problem1,=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=2,dt = 0.001,dealias=3/4*d-2,δ=0,reg=1)
+		problem0,=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=2,dt = 0.001,dealias=1,δ=0,m=-1)
+		problem1,=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=2,dt = 0.001,dealias=3/4*d-2,δ=0,m=-1)
 
 		plt0=plot_solution(problem0, t=0.1;compression=compression,label="t=0.1")
 		plot_solution!(plt0,problem0,t=0.3;compression=compression,label="t=0.3")
@@ -337,7 +337,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 				@info string("iteration ",(i-1)*10+n,"/",10*length(Eps),"\n")
 				@info string("critical ratio interval: ",(δc_min,δc_max))
 				δc=sqrt(δc_max*δc_min)
-				problem,blowuptime,blowup=IntegrateWW2(init=1,μ=1,ϵ=eps,L=20,N=2^20,T=2,dt = 0.005,dealias=1,δ=δc,reg=1,Ns=1)
+				problem,blowuptime,blowup=IntegrateWW2(init=1,μ=1,ϵ=eps,L=20,N=2^20,T=2,dt = 0.005,dealias=1,δ=δc,m=-1,Ns=1)
 				if blowup
 					δc_min=δc
 				else
@@ -351,7 +351,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 				@info string("iteration ",(i-1)*10+6+n,"/",10*length(Eps),"\n")
 				@info string("critical ratio interval: ",(δc_min,δc_max))
 				δc=sqrt(δc_max*δc_min)
-				problem,blowuptime,blowup=IntegrateWW2(init=1,μ=1,ϵ=eps,L=20,N=2^20,T=10,dt = 0.005,dealias=1,δ=δc,reg=1,Ns=1)
+				problem,blowuptime,blowup=IntegrateWW2(init=1,μ=1,ϵ=eps,L=20,N=2^20,T=10,dt = 0.005,dealias=1,δ=δc,m=-1,Ns=1)
 				if blowup
 					δc_min=δc
 				else
@@ -387,7 +387,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 			for delta in Delta
 				i+=1
 				@info string("ϵ=",eps,", δ=",delta," (iteration ",(j-1)*length(Delta)+i,"/",length(Eps)*length(Delta),")")
-				problem,=IntegrateWW2(init=1,p=p,μ=1,ϵ=eps,L=20,N=2^12,T=10,dt = 0.01,dealias=1,δ=delta,reg=1)
+				problem,=IntegrateWW2(init=1,p=p,μ=1,ϵ=eps,L=20,N=2^12,T=10,dt = 0.01,dealias=1,δ=delta,m=-1)
 				model = WaterWaves(problem.param; dealias = 1,method=1,maxiter=20)
 				problem0 = Problem(model, problem.initial, problem.param)
 				solve!( problem0 )

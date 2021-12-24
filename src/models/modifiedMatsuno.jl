@@ -1,10 +1,10 @@
-export modifiedWW2
+export modifiedMatsuno
 using FFTW
 """
-    modifiedWW2(param;kwargs)
+    modifiedMatsuno(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the modified WW2 model
+the modified Matsuno model
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -19,14 +19,14 @@ the modified WW2 model
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
-1. a function `modifiedWW2.f!` to be called in the time-integration solver;
-2. a function `modifiedWW2.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
-3. a function `modifiedWW2.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
+1. a function `modifiedMatsuno.f!` to be called in the time-integration solver;
+2. a function `modifiedMatsuno.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
+3. a function `modifiedMatsuno.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
     - `η` is the surface deformation;
     - `v` is the derivative of the trace of the velocity potential.
 
 """
-mutable struct modifiedWW2 <: AbstractModel
+mutable struct modifiedMatsuno <: AbstractModel
 
     label   :: String
 	f!		:: Function
@@ -35,10 +35,10 @@ mutable struct modifiedWW2 <: AbstractModel
 	param	:: NamedTuple
 	kwargs	:: NamedTuple
 
-    function modifiedWW2(param::NamedTuple;
+    function modifiedMatsuno(param::NamedTuple;
 							ν=nothing,ktol=0,dealias=0, verbose=true)
 
-		label = "mWW2"
+		label = "modified Matsuno"
 
 		μ 	= param.μ
 		ϵ 	= param.ϵ
