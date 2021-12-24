@@ -1,12 +1,14 @@
 # # Workspace
 #
-#---- import libraries
-
+#md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two_problems.ipynb)
+#
 using WaterWaves1D,Plots,FFTW,Statistics;gr()
 #include("../src/dependencies.jl")
 
 include("../src/models/WaterWaves.jl")
-include("../src/models/WhithamGreenNaghdi.jl")
+include("../src/models/SerreGreenNaghdi.jl")
+include("../src/models/Nonhydrostatic.jl")
+
 include("../src/Figures.jl")
 
 
@@ -31,9 +33,9 @@ init = Init(ζ,v);
 
 #---- models to compare
 models=[]
+push!(models,Nonhydrostatic(param;dealias=0,iterate=true,precond=true))# SGN=false=> Whitham-Green-Naghdi
 push!(models,WaterWaves(param;dealias=0))  # dealias = 1 pour dealiasing
-push!(models,WhithamGreenNaghdi(param;SGN=true,dealias=0,iterate=true,precond=true)) # SGN=true => Green-Naghdi
-push!(models,WhithamGreenNaghdi(param;SGN=false,dealias=0,iterate=true,precond=true))# SGN=false=> Whitham-Green-Naghdi
+push!(models,SerreGreenNaghdi(param;dealias=0,iterate=true,precond=true)) # SGN=true => Green-Naghdi
 # ?WhithamGreenNaghdi ou ?WaterWaves pour voir les options disponibles
 
 problems = []
@@ -60,7 +62,7 @@ plot!(plt,x1,η1-η3,label="diff 2")
 plot!(xlims=(0,10))
 plot!(ylims=(-0.1,0.1))
 
-
+plot_solution(problems;fourier=false)
 # pour faire un film
 anim = create_animation(problems;fourier=false,ylims=(-0.5,1.1))
 gif(anim, "SGNvsWGN.gif", fps=15)
