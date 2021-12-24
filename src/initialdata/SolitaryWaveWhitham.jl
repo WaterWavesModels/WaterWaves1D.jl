@@ -9,7 +9,7 @@ Computes the Whitham solitary wave with prescribed velocity.
 # Argument
 - `param :: NamedTuple`: parameters of the problem containing velocity `c` and dimensionless parameters `ϵ` and `μ`, and mesh size `L` and number of collocation points `N`;
 
-## Keywords
+## Keywords (optional)
 - `guess :: Vector{Real}`: initial guess for the surface deformation (if not provided, the exact formula for KdV is used);
 - `x₀ :: Real`: center of solitary wave (if guess is not provided);
 - `iterative :: Bool`: inverts Jacobian through GMRES if `true`, LU decomposition if `false`;
@@ -114,7 +114,7 @@ function SolitaryWaveWhitham(
                 dxu .= real.(ifft(Dx.*fft(u)))
                 dxu ./= norm(dxu,2)
                 fu .= F(u)
-                relerr = norm(fu,Inf)/norm(Fabs(u,hu,Fu,F2u),Inf)
+                relerr = norm(fu,Inf)/norm(Fabs(u),Inf)
                 abserr = norm(fu,Inf)
                 if relerr < tol
     			@info string("Converged : relative error ",relerr," in ",i," steps\n")

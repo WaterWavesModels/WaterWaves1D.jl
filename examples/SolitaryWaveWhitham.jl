@@ -1,12 +1,15 @@
 # # Compute the solitary wave of the Whitham equation with prescribed velocity
-@info "Defines functions PlotSolitaryWaveKdV,PlotSolitaryWaveWhitham"
+@info "Define functions PlotSolitaryWaveKdV,PlotSolitaryWaveWhitham"
 using WaterWaves1D,FFTW,Plots;
 include("../src/initialdata/SolitaryWaveWhitham.jl")
 
 #---- KdV
 """
-	`PlotSolitaryWaveKdV()`
-A proof of concept: numerically computes the solitary wave of the KdV equation with prescribed velocity c=5
+	PlotSolitaryWaveKdV()
+
+A proof of concept: numerically computes the solitary wave of the KdV equation with prescribed velocity `c=5`
+(augmenting progressively the velocity to generate initial guesses for the iterative scheme)
+and then computes the difference with the exact solution.
 """
 function PlotSolitaryWaveKdV()
 	param = ( μ  = 1,
@@ -43,7 +46,7 @@ function PlotSolitaryWaveKdV()
 
 	ucomp = u₂
 	uexact = sol(mesh.x,4)
-
+	@info(string("Final error : ",maximum(abs.(ucomp-uexact))))
 	plt = plot(layout=(2,2))
 
     plot!(plt[1,1], mesh.x, [ucomp uexact];
@@ -63,6 +66,7 @@ function PlotSolitaryWaveKdV()
       log10.(abs.(fftshift(fft(ucomp-uexact))));
       title="frequency",
 	  label="difference")
+	  display(plt)
 end
 
 
@@ -176,4 +180,3 @@ function PlotSolitaryWaveWhitham(c)
   title="frequency",
   label="Whitham")
 end
-nothing
