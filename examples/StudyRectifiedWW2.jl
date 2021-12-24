@@ -414,7 +414,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		return Eps,Delta,Norms,plt
 
 	else
-		error("the first argument must be between 1 and 11")
+		error("The first argument must be as specified in the documentation (basically between 1 and 12)")
 	end
 
 end
