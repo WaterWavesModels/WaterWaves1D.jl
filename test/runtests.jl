@@ -3,6 +3,9 @@ ENV["GKSwstype"]="100"
 using Test
 using WaterWaves1D
 
+include("../src/models/WaterWaves.jl")
+include("../src/models/PseudoSpectral.jl")
+
 param = ( ϵ  = 1/2, μ = 1)
 paramX= ( N  = 2^8, L  = 10)
 paramT= ( T  = 5, dt = 0.1)
