@@ -4,7 +4,7 @@ using Test
 using WaterWaves1D
 
 include("../src/models/WaterWaves.jl")
-include("../src/models/PseudoSpectral.jl")
+include("../src/models/WWn.jl")
 
 param = ( ϵ  = 1/2, μ = 1)
 paramX= ( N  = 2^8, L  = 10)
@@ -45,7 +45,7 @@ solve!(problem1)
     @test !any(isnan,problem1.data.U[end][2])
 end
 
-WW2  = PseudoSpectral(merge(param,paramX);δ=0.01,order=2,dealias=1,verbose=false)
+WW2  = WWn(merge(param,paramX);δ=0.01,n=2,dealias=1,verbose=false)
 problem2 = Problem(WW2, init, merge(paramX,paramT) )
 
 solve!( problem2 )

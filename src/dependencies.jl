@@ -13,8 +13,6 @@ ENV["PLOTS_USE_ATOM_PLOTPANE"] = "false"
 include("types.jl")
 include("solvers/RK4.jl")
 include("tools.jl")
-#include("models/WaterWaves.jl")
-#include("models/PseudoSpectral.jl")
 #include("LoadSave.jl")
 include("Figures.jl")
 
