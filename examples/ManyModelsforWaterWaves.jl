@@ -1,6 +1,6 @@
 # #
-# Reproduces the figures in the Appendix of
-# Many Models for Water Waves, by V. Duchêne
+# Reproduce the figures in the Appendix of Many Models for Water Waves, by V. Duchêne
+# (https://www.ams.org/open-math-notes/omn-view-listing?listingId=111309)
 # comparing solutions to the water waves system with predictions of
 # the Serre-Green-Naghdi and Whitham-Green-Naghdi systems
 # #
@@ -9,6 +9,7 @@
 using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
 include("../src/models/WaterWaves.jl")
 include("../src/models/WhithamGreenNaghdi.jl")
+include("../src/models/SerreGreenNaghdi.jl")
 include("../src/models/IsobeKakinuma.jl")
 include("../src/Figures.jl")
 gr()
@@ -72,7 +73,7 @@ function Integrate(scenario;μ=.1,ϵ=.1,p=2,N=2^10,L=15,T=10,dt=0.001,dealias=0,
 
 	# construct the models to be solved
 	modelWW	 = WaterWaves(param;dealias=dealias[1],method=method,maxiter=maxiter)
-	modelSGN = WhithamGreenNaghdi(param;SGN=true, ktol=0, gtol=1e-14, iterate=iterate, precond = precond, dealias = dealias[2])
+	modelSGN = SerreGreenNaghdi(param;ktol=0, gtol=1e-14, iterate=iterate, precond = precond, dealias = dealias[2])
 	modelWGN = WhithamGreenNaghdi(param;SGN=false, ktol=0, gtol=1e-14, iterate=iterate, precond = precond, dealias = dealias[3])
 	modelIK2 = IsobeKakinuma(param; ktol=0, gtol=1e-14, iterate=iterate, precond = precond, dealias = dealias[4])
 
@@ -108,7 +109,7 @@ function Integrate(scenario;μ=.1,ϵ=.1,p=2,N=2^10,L=15,T=10,dt=0.001,dealias=0,
 
 	if name != nothing
 		#save(problem,name);
-		@save(name,xww,ηww,ηSGN,ηWGN,ηIK2,scenario,μ,ϵ,p,N,L,T,dt,dealias,iterate,precond,name)
+		#@save(name,xww,ηww,ηSGN,ηWGN,ηIK2,scenario,μ,ϵ,p,N,L,T,dt,dealias,iterate,precond,name)
 
 		if scenario == 1
 			xlims=(0,last(xww))
@@ -145,9 +146,8 @@ end
 """
 	Figures()
 
-Reproduces the figures in Section I.5
-of the monograph "Many Models for Water Waves"
-by V. Duchêne
+Reproduce the figures in Section I.5 of the monograph "Many Models for Water Waves"
+(https://www.ams.org/open-math-notes/omn-view-listing?listingId=111309)
 """
 function Figures()
 	MU=[1 0.1 0.01]
