@@ -12,7 +12,7 @@ include("../src/Figures.jl")
 
 #----
 """
-	`PlotSolitaryWaveWhithamBoussinesq(;kwargs)`
+	PlotSolitaryWaveWhithamBoussinesq(;kwargs)
 
 Constructs and plots a solitary wave of the Whitham-Boussinesq equation.
 
@@ -45,32 +45,34 @@ function PlotSolitaryWaveWhithamBoussinesq(;c=1.05,α=1/2,L=20,N=2^9,μ=0.1,ϵ=0
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [η v];
      title=string("initial data"),
-     label=["ζ" "v"])
+     label=["η" "v"])
 	plot!(plt[1,1], mesh.x, [ηSGN vSGN];
       title=string("initial data"),
-      label=["ζSGN" "vSGN"])
+      label=["ηSGN" "vSGN"])
 
 
     plot!(plt[1,2], fftshift(mesh.k),
-     [log10.(abs.(fftshift(fft(η)))) log10.(abs.(fftshift(fft(v))))];
-     title="frequency",
-	 label=["η" "u"])
+     [abs.(fftshift(fft(η))).+eps() abs.(fftshift(fft(v))).+eps()];
+     yscale=:log10,
+	 title="frequency",
+	 label=["|η̂|" "|v̂|"])
 	plot!(plt[1,2], fftshift(mesh.k),
-      [log10.(abs.(fftshift(fft(ηSGN)))) log10.(abs.(fftshift(fft(vSGN))))];
-      title="frequency",
- 	 label=["η" "u"])
+      [abs.(fftshift(fft(ηSGN))).+eps() abs.(fftshift(fft(vSGN))).+eps()];
+	  yscale=:log10,
+	  title="frequency",
+ 	 label=["|η̂SGN|" "|v̂SGN|"])
 
 	 display(plt)
 end
 
 """
-	`IntegrateSolitaryWaveWhithamBoussinesq()`
+	IntegrateSolitaryWaveWhithamBoussinesq()
 
 Integrates in time a Whitham-Boussinesq equation with a solitary wave initial data
 """
 function IntegrateSolitaryWaveWhithamBoussinesq()
-	param = ( μ  = .1,
-			ϵ  = .1,
+	param = ( μ  = 1,
+			ϵ  = 1,
         	N  = 2^9,
             L  = 20,
 			c  = 1.05,

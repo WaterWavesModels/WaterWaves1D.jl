@@ -128,7 +128,7 @@ function SolitaryWaveWhithamBoussinesq(
                 dxu .= real.(ifft(Dx.*fft(u)))
                 dxu ./= norm(dxu,2)
                 fu .= FF(u)
-                relerr = norm(fu,Inf)/norm(Fabs(u,hu,Fu,F2u),Inf)
+                relerr = norm(fu,Inf)/norm(Fabs(u),Inf)
                 abserr = norm(fu,Inf)
                 if relerr < tol
     			@info string("Converged : relative error ",relerr," in ",i," steps\n")
