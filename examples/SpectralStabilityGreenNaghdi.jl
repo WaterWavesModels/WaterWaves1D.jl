@@ -1,22 +1,21 @@
 # #
 # Study of the spectral stability of the Serre-Green-Naghdi equations.
 # #
-@info "Define functions Spectrum,figspecCW,figspecSW"
+@info "Define functions Spectrum,figspecCW,figspecSW,Experiments"
 
 using WaterWaves1D,LinearAlgebra,FFTW,ProgressMeter,Plots;
-include("../src/models/WhithamGreenNaghdi.jl")
 include("../src/initialdata/SolitaryWaveWhithamGreenNaghdi.jl")
-include("../src/initialdata/CnoidalWaveWhithamGreenNaghdi.jl")
+include("../src/initialdata/SolitaryWaveSerreGreenNaghdi.jl")
+include("../src/initialdata/CnoidalWaveSerreGreenNaghdi.jl")
 
 """
-    `Spectrum(model,η,u,c,ν;kwargs)`
+    `Spectrum(param,η,u,c,ν;kwargs)`
 
 Computes the spectrum about a specified travelling solution of the
 the linearized Green-Naghdi model.
 
 # Argument
-- `model` should be of type `WhithamGreenNaghdi`,
-	constructed e.g. with `model = WhithamGreenNaghdi(param;SGN=true)` where
+- `param` should be a NamedTuple
 	e.g. `param = ( μ  = 0.1, ϵ  = 1, N  = 2^9, L  = 10*π)`
 
 - `(η,u)` are real vectors of the aforementioned solution where
@@ -37,23 +36,38 @@ eigenvectors in the columns of the matrix `L.vectors`.
 (The `k`th eigenvector can be obtained from the slice `F.vectors[:, k]``.)
 
 """
-function Spectrum(m::WhithamGreenNaghdi,η,u,c,ν)
-	h = 1 .+ m.ϵ*η
-	DxF(v) = ifft(m.Π⅔.* m.F₀ .* fft(v))
+function Spectrum(param,η,u,c,ν)
+
+	μ 	= param.μ
+	ϵ 	= param.ϵ
+	mesh = Mesh(param)
+	k = mesh.k
+	x 	= mesh.x
+	x₀ = mesh.x[1]
+	∂ₓ	=  1im * mesh.k
+	F₁ = 1 ./(1 .+ μ/3*k.^2)
+	F₀ = sqrt(μ)*∂ₓ
+	FFT = exp.(-1im*k*(x.-x₀)');
+	IFFT = exp.(1im*k*(x.-x₀)')/length(x);
+	Id = Diagonal(ones(size(x)));
+
+
+	h = 1 .+ ϵ*η
+	DxF(v) = ifft(F₀ .* fft(v))
 	v= u - 1/3 ./h .* (DxF(h.^3 .*DxF(u)))
 
-	Dx = m.IFFT*Diagonal(m.Π⅔.*m.∂ₓ)*m.FFT + ν*m.Id#Diagonal(m.x./sqrt.(1 .+ m.x.^2))
-	DxF₀ = m.IFFT*Diagonal(m.Π⅔.*m.F₀)*m.FFT + ν*m.Id#Diagonal(m.x./sqrt.(1 .+ m.x.^2))
+	Dx = IFFT*Diagonal(∂ₓ)*FFT + ν*Id#Diagonal(m.x./sqrt.(1 .+ m.x.^2))
+	DxF₀ = IFFT*Diagonal(F₀)*FFT + ν*Id#Diagonal(m.x./sqrt.(1 .+ m.x.^2))
 
-	A11 = -Dx*Diagonal(m.ϵ*u)
+	A11 = -Dx*Diagonal(ϵ*u)
 	A12 = -Dx*Diagonal(h)
 	A13 = zeros(size(A11))
-	A21 = -Dx* ( m.Id - Diagonal( h.*(DxF(m.ϵ*u).^2) ) )
-	A22 = -Dx*( m.ϵ*Diagonal( v - u ) - Diagonal( (h.^2).*DxF(m.ϵ*u)) *DxF₀ )
-	A23 = -Dx*Diagonal(m.ϵ*u)
+	A21 = -Dx* ( Id - Diagonal( h.*(DxF(ϵ*u).^2) ) )
+	A22 = -Dx*( ϵ*Diagonal( v - u ) - Diagonal( (h.^2).*DxF(ϵ*u)) *DxF₀ )
+	A23 = -Dx*Diagonal(ϵ*u)
 
-	B1 = -Diagonal(1 ./h)*DxF₀*Diagonal( (h.^2).*DxF(m.ϵ*u) ) + 1/3*Diagonal(DxF(h.^3 .* DxF(m.ϵ*u))./h.^2)
-	B2 = m.Id - 1/3*Diagonal(1 ./h)*DxF₀*Diagonal(h.^3)*DxF₀
+	B1 = -Diagonal(1 ./h)*DxF₀*Diagonal( (h.^2).*DxF(ϵ*u) ) + 1/3*Diagonal(DxF(h.^3 .* DxF(ϵ*u))./h.^2)
+	B2 = Id - 1/3*Diagonal(1 ./h)*DxF₀*Diagonal(h.^3)*DxF₀
 
 	C2 = inv(B2)
 	C1 = -C2*B1
@@ -88,26 +102,26 @@ Spectrum of the linearized SGN equations about a cnoidal wave.
 function figspecCW(p;N=2^6,P=1,M=2^6,SGN=true::Bool)
 	param = merge( p,( μ  = 1, ϵ  = 1, N  = N, P = P ))
 
-	(η,u,v,parc,mesh)=CnoidalWaveWhithamGreenNaghdi(param,[0.];exact=true,SGN=true,P=P)
+	(η,u,v,mesh,parc)=CnoidalWaveSerreGreenNaghdi(param;P=P)
 	@show parc
 
 	plt = plot(layout=(2,1))
-	plot!(plt[1,1], mesh.x, [η u])
+	plot!(plt[1,1], mesh.x, [η u],label=["η" "u"])
 	plot!(plt[2,1], fftshift(mesh.k),
-	  [log10.(abs.(fftshift(fft(η)))) log10.(abs.(fftshift(fft(u))))])
+	  [abs.(fftshift(fft(η))).+eps() abs.(fftshift(fft(u))).+eps()],
+	  label=["|η̂|" "|û|"],yscale=:log10)
 	display(plt)
 
 	param2=merge(param,(L=P*parc.λ,))
-	model = WhithamGreenNaghdi(param2;SGN=true)
 
-	σ = Spectrum(model,η,u,parc.c,1im*0.).values
+	σ = Spectrum(param2,η,u,parc.c,1im*0.).values
 	val = σ#[Int(7*end/8):end]
 	@showprogress 1 for ν=-π/parc.λ/P/2:π/parc.λ/P/M:π/parc.λ/P/2
-		σ = Spectrum(model,η,u,parc.c,1im*ν).values
+		σ = Spectrum(param2,η,u,parc.c,1im*ν).values
 		val=[val;σ]
 		# uncomment the following lines to stop when a unstable mode has been found
 		# if maximum(real.(σ))>0.1
-		# 	return Spectrum(model,η,u,parc.c,1im*ν),merge(parc,(ν=ν,)),η,u,v,mesh
+		# 	return Spectrum(param,η,u,parc.c,1im*ν),merge(parc,(ν=ν,)),η,u,v,mesh
 		# 	break
 		# end
 	end
@@ -132,25 +146,27 @@ Spectrum of the linearized SGN equations about a cnoidal wave.
 function figspecSW(c;N=2^6,L=10*π,M=2^6,SGN=true::Bool)
 	param = ( c=c, μ  = 1, ϵ  = 1, N  = N, L = L )
 
-	(η,u,v)=SolitaryWaveWhithamGreenNaghdi(param;SGN=SGN,method=3,verbose=true)
-	mesh=Mesh(param)
-
+	if SGN == true
+		(η,u,v,mesh)=SolitaryWaveSerreGreenNaghdi(param)
+	else
+		(η,u,v,mesh)=SolitaryWaveWhithamGreenNaghdi(param;method=3,verbose=true)
+	end
 	plt = plot(layout=(2,1))
-	plot!(plt[1,1], mesh.x, [η u])
+	plot!(plt[1,1], mesh.x, [η u],label=["η" "u"])
 	plot!(plt[2,1], fftshift(mesh.k),
-	  [log10.(abs.(fftshift(fft(η)))) log10.(abs.(fftshift(fft(u))))])
+	  [abs.(fftshift(fft(η))).+eps() abs.(fftshift(fft(u))).+eps()],
+	  label=["|η̂|" "|û|"],yscale=:log10)
 	display(plt)
 
-	model = WhithamGreenNaghdi(param;SGN=SGN)
 
-	σ = Spectrum(model,η,u,c,1im*0.).values
+	σ = Spectrum(param,η,u,c,1im*0.).values
 	val = σ#[Int(7*end/8):end]
 	@showprogress 1 for ν=-π/L/2:π/L/M:π/L/2
-		σ = Spectrum(model,η,u,c,1im*ν).values
+		σ = Spectrum(param,η,u,c,1im*ν).values
 		val=[val;σ]
 		# uncomment the following lines to stop when a unstable mode has been found
 		# if maximum(real.(σ))>0.1
-		# 	return Spectrum(model,η,u,c,1im*ν),η,u,v,mesh
+		# 	return Spectrum(param,η,u,c,1im*ν),η,u,v,mesh
 		# 	break
 		# end
 	end
@@ -160,33 +176,49 @@ function figspecSW(c;N=2^6,L=10*π,M=2^6,SGN=true::Bool)
 
 end
 
+"""
+	Experiments(exp)
 
-# experiment 1: very small amplitude
-σ,param,η,u,v,mesh=figspecCW(ell(0.3,0.005,0.75);P=1,N=2^5)
-scatter(σ)
-ylims!(0,0.1)
-σ,param,η,u,v,mesh=figspecCW(ell(0.3,0.005,0.75);P=1,N=2^5,M=2^19) # on peut limiter les Floquet dans (-π/parc.λ/P/20,π/parc.λ/P/20)
-scatter(σ[abs.(real.(σ)) .> 1e-10])
-#ylims!(0.03158,0.0316)
-ylims!(0.0113725,0.011375)
+Some numerical experiments, plotting the spectrum of the linearized SGN equations about various travelling waves
+- `exp=1` : a cnoidal wave with very small amplitude
+- `exp=2` : a cnoidal wave with very large period
+- `exp=3` : several cnoidal waves with increasing periods
+- `exp=4` : a solitary wave
 
-# experiment 2: very large period
-σ,param,η,u,v,mesh=figspecCW(ell(0.3,0.1,0.999999999999999);P=1,N=2^8,M=2^8)
-scatter(σ)
-ylims!(0.2,0.25)
-ylims!(0.23,0.235)
+Return the plot.
+"""
+function Experiments(exp)
 
-# experiment 3 : growing period
-v1,param,η,u,v,mesh=figspecCW((h₀=0.99,h₁=1,h₂=11);P=1,N=2^7)
-v2,param,η,u,v,mesh=figspecCW((h₀=0.999999,h₁=1,h₂=11);P=1,N=2^7)
-v3,param,η,u,v,mesh=figspecCW((h₀=0.9999999999,h₁=1,h₂=11);P=1,N=2^7)
-v4,param,η,u,v,mesh=figspecCW((h₀=0.99999999999999,h₁=1,h₂=11);P=1,N=2^7)
+if exp == 1 # experiment 1: very small amplitude
+	σ,param,η,u,v,mesh=figspecCW(ell(0.3,0.005,0.75);P=1,N=2^5)
+	plt=scatter(σ)
+	ylims!(0,0.1)
+	σ,param,η,u,v,mesh=figspecCW(ell(0.3,0.005,0.75);P=1,N=2^5,M=2^19) # on peut limiter les Floquet dans (-π/parc.λ/P/20,π/parc.λ/P/20)
+	scatter(σ[abs.(real.(σ)) .> 1e-10])
+	#ylims!(0.03158,0.0316)
+	ylims!(0.0113725,0.011375)
 
-scatter(v1[abs.(v1).<15],label="a=10,L=6")
-scatter!(v2[abs.(v2).<15],label="a=10,L=12")
-scatter!(v3[abs.(v3).<15],label="a=10,L=18")
-scatter!(v4[abs.(v4).<15],label="a=10,L=22")
+elseif exp == 2 # experiment 2: very large period
+	σ,param,η,u,v,mesh=figspecCW(ell(0.3,0.1,0.999999999999999);P=1,N=2^8,M=2^8)
+	plt=scatter(σ)
+	ylims!(0.2,0.25)
+	ylims!(0.23,0.235)
 
-# experiment 4 : solitary wave
-σ,η,u,v,mesh=figspecSW(3;L=10*π,N=2^8)
-scatter(σ)
+elseif exp == 3 # experiment 3 : growing period
+	v1,param,η,u,v,mesh=figspecCW((h₀=0.99,h₁=1,h₂=11);P=1,N=2^7)
+	v2,param,η,u,v,mesh=figspecCW((h₀=0.999999,h₁=1,h₂=11);P=1,N=2^7)
+	v3,param,η,u,v,mesh=figspecCW((h₀=0.9999999999,h₁=1,h₂=11);P=1,N=2^7)
+	v4,param,η,u,v,mesh=figspecCW((h₀=0.99999999999999,h₁=1,h₂=11);P=1,N=2^7)
+
+	plt=scatter(v1[abs.(v1).<15],label="a=10,L=6")
+	scatter!(plt,v2[abs.(v2).<15],label="a=10,L=12")
+	scatter!(plt,v3[abs.(v3).<15],label="a=10,L=18")
+	scatter!(plt,v4[abs.(v4).<15],label="a=10,L=22")
+
+elseif exp == 4# experiment 4 : solitary wave
+	σ,η,u,v,mesh=figspecSW(3;L=10*π,N=2^8)
+	plt=scatter(σ)
+end
+display(plt)
+return plt
+end

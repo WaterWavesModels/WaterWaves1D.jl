@@ -8,7 +8,7 @@ Computes the Whitham-Boussinesq solitary wave with prescribed velocity.
 # Argument
 - `param :: NamedTuple`: parameters of the problem containing velocity `c` and dimensionless parameters `ϵ` and `μ`, and mesh size `L` and number of collocation points `N`;
 
-## Keywords
+## Keywords (optional)
 - `guess :: Vector{Real}`: initial guess for the surface deformation (if not provided, the exact formula for SGN is used);
 - `x₀ :: Real`: center of solitary wave (if guess is not provided);
 - `model :: Real`: determines the model used (typically `1` or `1/2`, default is 1);

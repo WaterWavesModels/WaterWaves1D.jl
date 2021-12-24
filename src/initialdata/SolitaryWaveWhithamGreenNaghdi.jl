@@ -2,16 +2,16 @@ export SolitaryWaveWhithamGreenNaghdi
 using LinearMaps,IterativeSolvers,LinearAlgebra
 
 """
-    `SolitaryWaveWhithamGreenNaghdi(param; kwargs...)`
+    SolitaryWaveWhithamGreenNaghdi(param; kwargs...)
 
-Computes the Whitham-Green-Naghdi solitary wave with prescribed velocity.
+Compute the Whitham-Green-Naghdi solitary wave with prescribed velocity.
 
 # Arguments
 - `param :: NamedTuple`: parameters of the problem containing velocity `c` and dimensionless parameters `ϵ` and `μ`, and mesh size `L` and number of collocation points `N`;
-## Keywords
+## Keywords (optional)
 - `guess :: Vector{Real}`: initial guess for the surface deformation (if not provided, the exact formula for SGN is used);
 - `x₀ :: Real`: center of solitary wave (if guess is not provided);
-- `SGN :: Bool`: if `true` computes the Serre-Green-Naghdi (instead of Whitham-Green-Naghdi) solitary wave;
+- `SGN :: Bool`: if `true` computes the Serre-Green-Naghdi (instead of Whitham-Green-Naghdi) solitary wave (consider `SolitaryWaveSerreGreenNaghdi` instead);
 - `method :: Int`: equation used (between `1` and `4`);
 - `iterative :: Bool`: inverts Jacobian through GMRES if `true`, LU decomposition if `false` (default is `false`);
 - `verbose :: Bool`: prints numerical errors at each step if `true` (default is `false`);
@@ -27,7 +27,7 @@ Computes the Whitham-Green-Naghdi solitary wave with prescribed velocity.
 - `η :: Vector{Float64}`: surface deformation;
 - `u :: Vector{Float64}`: layer-averaged velocity;
 - `v :: Vector{Float64}`: tangential velocity;
-- `mesh :: Vector{Float64}` collocation points.
+- `mesh :: Mesh`: mesh collocation points.
 
 
 """
