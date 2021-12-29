@@ -201,11 +201,10 @@ mutable struct WaterWaves <: AbstractModel
 
 		# Reconstructs physical variables from conformal variables
 		function mapfro(U)
-			z  .= real.(ifft(U[:,1]))
-		   	ξ  .= real.(sqrt(μ)*(1+ϵ*mean(z))*k)
+		   	ξ  .= real.(sqrt(μ)*(1+ϵ*meanf(U[:,1]))*k)
 	       	xv .= real.(-1im*sqrt(μ)*ifft( Π⅔ .*cotanh(ξ) .*  U[:,1] ))
 
-		   return x + ϵ*xv, z , real.( ifft(U[:,2]) )
+		   return x + ϵ*xv, real.( ifft(U[:,1]) ) , real.( ifft(U[:,2]) )
 		end
 
 		# Water Waves equations are ∂t U = f!(U)

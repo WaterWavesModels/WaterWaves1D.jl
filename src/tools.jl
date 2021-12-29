@@ -71,7 +71,7 @@ function solution(p::Problem; t=nothing, x=nothing, interpolation = false)
 	t=min(max(t,0),p.times.tfin)
 	index = indexin(false,p.times.ts.<t)[1]
 	t=p.times.ts[index]
-	if p.model.label=="water waves"
+	if Symbol(typeof(p.model)) == :WaterWaves
 		if x != nothing
 			@error "cannot interpolate non-regularly spaced mesh."
 		end
@@ -96,5 +96,5 @@ function solution(p::Problem; t=nothing, x=nothing, interpolation = false)
 			x = new_mesh.x
 		end
 	end
-	return (η,v,x,t)
+	return η,v,x,t
 end

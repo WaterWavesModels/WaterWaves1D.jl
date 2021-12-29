@@ -7,7 +7,9 @@
 
 using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
 include("../src/models/WhithamGreenNaghdi.jl")
+include("../src/models/SerreGreenNaghdi.jl")
 include("../src/initialdata/SolitaryWaveWhithamGreenNaghdi.jl")
+include("../src/initialdata/SolitaryWaveSerreGreenNaghdi.jl")
 include("../src/Figures.jl")
 include("../src/LoadSave.jl")
 using JLD
