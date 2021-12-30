@@ -72,8 +72,8 @@ function solution(p::Problem; t=nothing, x=nothing, interpolation = false)
 	index = indexin(false,p.times.ts.<t)[1]
 	t=p.times.ts[index]
 	if Symbol(typeof(p.model)) == :WaterWaves
-		if x != nothing
-			@error "cannot interpolate non-regularly spaced mesh."
+		if x != nothing || interpolation != false
+			@warn "cannot interpolate non-regularly spaced mesh."
 		end
 		(x,η,v) = (p.model.mapfro)(p.data.U[index])
 
