@@ -9,7 +9,7 @@ Randomly generated initial data, based on provided (optional arguments) :
 - `λ` is the length of spatial localization (default is none)
 
 The initial data `(η,v)` are generated through randomly chosen Fourier coefficients,
-multiplied with weigth `w=min(1,|k/L|^(s+1/2))` or `w=min(1,exp(-|k/L|)` if `s=∞`.
+multiplied with weigth `w=10^(-|k|L/(2π))` if `s=∞`, or `w=1/(1+9(|k|L/(2π))^(s+1/2))` otherwise.
 If `λ` is provided, the function in spatial variables is multiplied by `exp(-|x/λ|^2)`,
 and in any case normalized to have maximum absolute value 1.
 
@@ -20,7 +20,7 @@ struct Random <: InitialData
     η
     v
 
-    function Random(;L=1,s=Inf,λ=2)
+    function Random(;L=1,s=Inf,λ=nothing)
 
 
         function generate( x )
@@ -28,7 +28,7 @@ struct Random <: InitialData
 
             k = Mesh( x ).k
             if s == Inf
-                w = 1 ./ exp.(log(10)*abs.(k*L/(2*π)))
+                w = 10 .^(-abs.(k*L/(2*π)))
             else
                 w = 1 ./( 1 .+ 9*abs.(k*L/(2*π)).^(s+1/2) )
             end
