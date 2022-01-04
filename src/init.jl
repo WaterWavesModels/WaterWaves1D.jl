@@ -2,11 +2,17 @@ export Init
 
 """
     Init(data)
-    data should contain either
-    - a function η and a function v (in this order)
-    - a Namedtuple with a function η and a function v
-    - a mesh and two vectors Vector{Complex{Float64}} or Vector{Float64} representing η(mesh.x) and v(mesh.x) (in this order)
-    - a mesh and a Namedtuple with a vector η and a vector v as above
+
+Generate an initial data to be used in the function `Problem`.
+
+`data` should contain either
+
+- a function `η` and a function `v` (in this order)
+- a Namedtuple with a function `η` and a function `v`
+- a mesh and two vectors representing η(mesh.x) and v(mesh.x) (in this order)
+- a mesh and a Namedtuple with a vector `η` and a vector `v` as above
+- an array of collocation points and two vectors representing `η(x)` and `v(x)` (in this order)
+- a mesh and a Namedtuple with a vector `η` and a vector `v` as above
 
 """
 struct Init <: InitialData
@@ -50,6 +56,19 @@ struct Init <: InitialData
         end
 
         new( x->η(x) , x->v(x) )
-        end
+    end
+
+    function Init(x :: Array, η0 , v0)
+        @warn("Collocation points must be equally spaced.")
+        mesh=Mesh(x)
+        Init(mesh, η0 , v0 )
+    end
+
+    function Init(x :: Array, p :: NamedTuple)
+        @warn("Collocation points must be equally spaced.")
+        mesh=Mesh(x)
+        Init(mesh, p )
+    end
+
 
 end
