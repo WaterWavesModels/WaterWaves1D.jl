@@ -1,5 +1,6 @@
 export SerreGreenNaghdi
 using FFTW,LinearAlgebra,LinearMaps,IterativeSolvers
+include("./WhithamGreenNaghdi.jl")
 
 """
     SerreGreenNaghdi(param;kwargs)
