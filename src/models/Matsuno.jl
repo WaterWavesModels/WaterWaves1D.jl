@@ -1,27 +1,38 @@
-export Matsuno
+export Matsuno_fast,Matsuno
 using FFTW,LinearAlgebra
 
 """
-    Matsuno(params)
+	Matsuno_fast(param;label,dealias)
+
+Same as `Matsuno`, but faster.
 
 """
-mutable struct Matsuno <: AbstractModel
+mutable struct Matsuno_fast <: AbstractModel
 
     label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	param	:: NamedTuple
+	kwargs	:: NamedTuple
 
-    function Matsuno(param::NamedTuple)
+    function Matsuno_fast(param::NamedTuple; label="Matsuno", dealias=true)
 
-        label    = "Matsuno"
-        ϵ        = param.ϵ
+		@warn("The velocity is consistent with the tangential velocity used for water waves
+		only when they are null.")
+		ϵ        = param.ϵ
         mesh     = Mesh(param)
+		param = ( ϵ = ϵ, μ=Inf, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
+		kwargs = (label=label, )
         x        = mesh.x
         Γ        = abs.(mesh.k)
         Dx       =  1im * mesh.k        # Differentiation
         H        = -1im * sign.(mesh.k) # Hilbert transform
-        Π⅔       = Γ .< mesh.kmax * 2/3 # Dealiasing low-pass filter
+		if dealias == true || dealias == 1
+			Π⅔    = Γ .< mesh.kmax * 2/3     # Dealiasing low-pass filter
+		else
+			Π⅔    = zero(Γ) .+ 1     # Dealiasing low-pass filter
+		end
 
         hnew = zeros(Complex{Float64}, mesh.N)
         unew = zeros(Complex{Float64}, mesh.N)
@@ -96,19 +107,105 @@ mutable struct Matsuno <: AbstractModel
 
 		end
 
-		"""
-		    mapto(Matsuno, data)
-		    the velocity should be zero
-
-		"""
+		# This function is correct only when the initial data for v is zero.
 		function mapto(data::InitialData)
 
 		    [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
 
 		end
 
+		# This function is correct only when the initial data for v is zero.
 		function mapfro(U)
 		    real(ifft(view(U,:,1))),real(ifft(view(U,:,2)))
+		end
+
+		new(label, f!, mapto, mapfro )
+    end
+end
+
+"""
+	Matsuno(param;label,dealias)
+
+Define an object of type `AbstractModel` in view of solving the initial-value problem for
+the quadratic deep-water model proposed by [Matsuno](https://dx.doi.org/10.1103/PhysRevLett.69.609).
+
+# Arguments
+`param` is of type `NamedTuple` and must contain
+- the dimensionless parameters `ϵ` (nonlinearity);
+- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
+
+`label` is optional and provides a label for future plottings ("Matsuno" is used if not provided).
+
+`dealias`: dealiasing with `1/3` Orlicz rule if `true` (by default) or no dealiasing if `false`.
+
+# Return values
+Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
+1. a function `DeepQuadratic.f!` to be called in the time-integration solver;
+2. a function `DeepQuadratic.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
+3. a function `DeepQuadratic.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
+- `η` is the surface deformation;
+- `v` is a velocity variable which is *not* the tangential velocity (if not null).
+
+"""
+mutable struct Matsuno <: AbstractModel
+
+	label   :: String
+	f!		:: Function
+	mapto	:: Function
+	mapfro	:: Function
+	param	:: NamedTuple
+	kwargs	:: NamedTuple
+
+
+    function Matsuno(param::NamedTuple ; label="Matsuno", dealias=true)
+
+		@warn("The velocity is consistent with the tangential velocity used for water waves
+		only when they are null.")
+		ϵ 	= param.ϵ
+		mesh = Mesh(param)
+		param = ( ϵ = ϵ, μ=Inf, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
+		kwargs = (label=label, )
+		x   = mesh.x
+        Γ 	= abs.(mesh.k)
+    	∂ₓ	=  1im * mesh.k            # Differentiation
+        H 	= -1im * sign.(mesh.k)     # Hilbert transform
+		if dealias == true || dealias == 1
+			Π⅔    = Γ .< mesh.kmax * 2/3     # Dealiasing low-pass filter
+		else
+			Π⅔    = zero(Γ) .+ 1     # Dealiasing low-pass filter
+		end
+
+        hnew = zeros(Complex{Float64}, mesh.N)
+        unew = zeros(Complex{Float64}, mesh.N)
+
+        I₁ = zeros(Complex{Float64}, mesh.N)
+        I₂ = zeros(Complex{Float64}, mesh.N)
+        I₃ = zeros(Complex{Float64}, mesh.N)
+
+
+		function f!(U)
+
+		   hnew .= ifft(U[:,1])
+		   unew .= ifft(U[:,2])
+		   I₃ .= fft(ifft((∂ₓ).*U[:,1]).*ifft((Γ).*U[:,1]))
+		   I₁ .= H.*U[:,2].-ϵ*Π⅔.*(H.*fft(hnew.*ifft(Γ.*U[:,2])).+∂ₓ.*fft(hnew.*unew))
+		   I₂ .= -(∂ₓ.*U[:,1])+ϵ*Π⅔.*(I₃-∂ₓ.*fft(unew.^2)/2)
+		   #
+		   U[:,1] .= I₁
+		   U[:,2] .= I₂
+
+		end
+
+		# This function is correct only when the initial data for v is zero.
+		function mapto(data::InitialData)
+
+			[Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
+
+		end
+
+		# This function is correct only when the initial data for v is zero.
+		function mapfro(U)
+			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
 
 		new(label, f!, mapto, mapfro )
