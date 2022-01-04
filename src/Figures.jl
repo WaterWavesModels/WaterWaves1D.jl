@@ -168,12 +168,14 @@ function plot_solution( problems; t=nothing,x=nothing,interpolation=false,compre
 end
 
 """
-	plot_difference!( plt, pairs ; t,x,interpolation,compression,fast,surface,velocity,fourier,label )
+	plot_difference!( plt, problems ; t,x,interpolation,compression,fast,surface,velocity,fourier,label )
 
 Plots in `plt` the difference between solutions of initial-value problems at a given time.
 
 # Argument
-`pairs` is a either a pair or a collection (vector, list, etc.) of pairs of type `Problem`.
+`pairs` is a either a collection (vector, list, etc.) of elements of type `Problem`, or of pairs of such elements.
+If pairs are provided, then solutions of such problems are compared.
+If a collection of problems are provided, then all possible pairs are compared.
 
 ## Keyword arguments (all optional)
 - `t` is the time. If not provided, then the last computed time is plotted.
@@ -185,8 +187,16 @@ Plots in `plt` the difference between solutions of initial-value problems at a g
 - `label` defines the label(s) if provided (otherwise labels are inferred from the models)
 
 """
-function plot_difference!( plt, pairs; t=nothing,x=nothing,interpolation=false,compression=false, fast=false, surface=true, fourier=false, velocity=false, label=nothing)
-	if typeof(pairs[1])==Problem pairs=[pairs] end
+function plot_difference!( plt, problems; t=nothing,x=nothing,interpolation=false,compression=false, fast=false, surface=true, fourier=false, velocity=false, label=nothing)
+	if typeof(problems[1])==Problem
+		pairs=[]
+		for i in 1:length(problems)
+			for j in i+1:length(problems)
+				push!(pairs,(problems[i],problems[j]))
+			end
+		end
+ 	else pairs = problems
+	end
 	for i in 1:length(pairs)
 		p1 = pairs[i][1]
 		p2 = pairs[i][2]
@@ -227,14 +237,14 @@ function plot_difference!( plt, pairs; t=nothing,x=nothing,interpolation=false,c
 		# plot the surface deformation
 		if surface
 	    	plot!(plt[n,1], X1[indices], (η1-η2)[indices];
-			  title=string("surface deformation at t=",t),
+			  title=string("difference (surface deformation) at t=",t),
 		      label=lbl)
 			n+=1
 		end
 		# plot the velocity
 	  	if velocity
 	    	plot!(plt[n,1], X1[indices], (v1-v2)[indices];
-			  title=string("tangential velocity at t=",t),
+			  title=string("difference (tangential velocity) at t=",t),
 		      label=lbl)
 			n+=1
 		end
@@ -258,8 +268,8 @@ end
 
 Same as `plot_difference!` but generates and returns the plot.
 """
-function plot_difference( pairs; t=nothing,x=nothing,interpolation=false,compression=false, fast=false, surface=true, velocity=false, fourier=false, label=nothing)
+function plot_difference( problems; t=nothing,x=nothing,interpolation=false,compression=false, fast=false, surface=true, velocity=false, fourier=false, label=nothing)
 	plt = plot(layout=(surface+fourier+velocity,1))
-	plot_difference!( plt, pairs; t=t,x=x, interpolation=interpolation, compression=compression, fast=fast, surface=surface,fourier=fourier, velocity=velocity, label=label )
+	plot_difference!( plt, problems; t=t,x=x, interpolation=interpolation, compression=compression, fast=fast, surface=surface,fourier=fourier, velocity=velocity, label=label )
 	return plt
 end
