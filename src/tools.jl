@@ -65,7 +65,6 @@ Provides `(η,v,x,t)` where
 - `t` the time (first computed time greater or equal to provided `t`).
 
 """
-
 function solution(p::Problem; t=nothing, x=nothing, interpolation = false)
 	if t == nothing t = p.times.tfin end
 	t=min(max(t,0),p.times.tfin)
