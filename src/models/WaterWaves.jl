@@ -1,24 +1,36 @@
 export WaterWaves
-#using Statistics #only for function mean in WaterWaves.jl...
 using FFTW,LinearAlgebra
 
 """
-    WaterWaves(params)
+    WaterWaves(param; kwargs...)
 
-Define an object of type `AbstractModel` in view of solving the water waves system
-(via conformal mapping).
+Define an object of type `AbstractModel` in view of solving the initial-value problem for
+the water waves system (via conformal mapping).
 
 # Argument
 `param` is of type `NamedTuple` and must contain
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
 
+## Optional keyword arguments
+- `ν`: shallow/deep water multiplication factor (see [Lannes, The water waves problem](https://bookstore.ams.org/surv-188)). By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise.
+- `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter.
+- `method ∈ {1,2,3}`: method used to initialize the conformal mapping, as a fix-point problem `F(u)=u`
+    - if `method == 1`, use standard contraction fix-point iteration;
+    - if `method == 2`, use Newton algorithm with GMRES iterative solver to invert the Jacobian;
+    - if `method == 3`, use Newton algorithm with direct solver to invert the Jacobian;
+- `tol`: (relative) tolerance of the fix-point algorithm (default is `1e-16`);
+- `maxiter`: the maximal number of iteration in the fix-point algorithm (default is `100`);
+- `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
+- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `verbose`: prints information if `true` (default is `true`).
+
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
 1. a function `WaterWaves.f!` to be called in the time-integration solver;
 2. a function `WaterWaves.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `WaterWaves.mapfro` which from such data matrix returns the Tuple of real vectors `(x,η,v)`, where
-	- `x` is a vector of collocation points (non-regularly spaced);
+    - `x` is a vector of collocation points (non-regularly spaced);
     - `η` is the surface deformation at points `x`;
     - `v` is the derivative of the trace of the velocity potential at points `x`.
 
@@ -35,16 +47,31 @@ mutable struct WaterWaves <: AbstractModel
 	kwargs  :: NamedTuple
 
 
-    function WaterWaves(param::NamedTuple;dealias=0,method=1,tol=1e-16,maxiter=100,ktol=0,verbose=true)
+    function WaterWaves(param::NamedTuple;
+				ν=nothing,IL=false,method=1,tol=1e-16,maxiter=100,dealias=0,ktol=0,verbose=true)
 
 		# Preparation
 		label = "water waves"
-		kwargs = (dealias=dealias,tol=tol,maxiter=maxiter,verbose=verbose)
 
 		μ 	= param.μ
 		ϵ 	= param.ϵ
+		if ν == nothing
+			if μ > 1
+				ν = 1/sqrt(μ)
+			else
+				ν = 1
+			end
+		end
 
+		if μ == Inf || ν==0 # infinite layer case
+			IL = true;  # IL (=Infinite layer) is a flag to be used in functions tanh,cotanh,xdcotanh
+			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
+		end
 		mesh = Mesh(param)
+
+		param = ( ϵ = ϵ, μ = μ, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
+		kwargs = (ν=ν,dealias=dealias,tol=tol,maxiter=maxiter,verbose=verbose)
+
 		x 	= mesh.x
 		x₀ = x[1]
 		k 	= mesh.k
@@ -71,24 +98,25 @@ mutable struct WaterWaves <: AbstractModel
 		J = zeros(Float64, mesh.N)
 		M1 = zeros(Float64, mesh.N)
 		M2 = zeros(Float64, mesh.N)
-		q0 = 0
+		q0 = 0.
 
 		# some useful functions
-		function cotanh( x )
-			y=1 ./ tanh.(x+(x.==0))
-			y[x.==0].=0
-			return y
+		if IL == true
+			cotanh   = x -> sign.(x)
+			xdcotanh = x -> zero(x)
+			mytanh   = x -> sign.(x)
+		else
+			cotanh   = x -> (x.!=0) ./ tanh.(x+(x.==0))
+			xdcotanh = x -> -x ./ (sinh.(x+(x.==0)).^2)
+			mytanh 	 = x -> tanh.(x)
 		end
-		function xdcotanh( x )
-			return -x ./ (sinh.(x+(x.==0)).^2)
-		end
+
 		function meanf(f) #computes the mean of a function, being given its FFT
 			real(f[1])/length(f)
 		end
 		function mean(f) #computes the mean of a function
 			sum(f)/length(f)
 		end
-
 
 		# Construct conformal variables in the flat strip from initial data
 		function mapto(data::InitialData)
@@ -106,8 +134,8 @@ mutable struct WaterWaves <: AbstractModel
 			# We will solve F(u)=0
 			function F( u )
 				dx.=real.(ifft(u))
-				fη .= fft(data.η(x+ϵ*dx))
-			    return u+sqrt(μ)*1im*Π⅔ .*cotanh(sqrt(μ)*(1+ϵ*meanf(fη))*k).*fη
+				fη .= fft(data.η(x+ϵ/ν*dx))
+			    return u+ν*sqrt(μ)*1im*Π⅔ .*cotanh(sqrt(μ)*(1+ϵ*meanf(fη))*k).*fη
 			end
 
 			# The Newton alogorithm demands the Jacobian of F,
@@ -121,10 +149,10 @@ mutable struct WaterWaves <: AbstractModel
 			# to be used with GMRES iterative solver
 			function JacF( u )
 				dx.= real.(ifft(u))
-				fη .= fft(data.η(x+ϵ*dx))
+				fη .= fft(data.η(x+ϵ/ν*dx))
 				δ  = meanf(fη)
-				dF(φ) = φ+ϵ*sqrt(μ)*1im*Π⅔ .* ( cotanh(sqrt(μ)*(1+ϵ*δ)*k).*fft(dη(x+ϵ*dx) .* ifft(φ))
-								+ϵ/(1+ϵ*δ)* (xdcotanh(sqrt(μ)*(1+ϵ*δ)*k).*fη ) * mean(dη(x+ϵ*dx) .* ifft(φ)) )
+				dF(φ) = φ+ϵ*sqrt(μ)*1im*Π⅔ .* ( cotanh(sqrt(μ)*(1+ϵ*δ)*k).*fft(dη(x+ϵ/ν*dx) .* ifft(φ))
+								+ϵ/(1+ϵ*δ)* (xdcotanh(sqrt(μ)*(1+ϵ*δ)*k).*fη ) * mean(dη(x+ϵ/ν*dx) .* ifft(φ)) )
 				return LinearMap(dF, length(u); issymmetric=false, ismutating=false)
 			end
 
@@ -139,10 +167,10 @@ mutable struct WaterWaves <: AbstractModel
 
 				function JacFMat( u )
 					dx.=real.(ifft(u))
-					fη .= fft(data.η(x+ϵ*dx))
+					fη .= fft(data.η(x+ϵ/ν*dx))
 					δ  = meanf(fη)
-		        	return Id + ϵ*sqrt(μ)*1im*Π⅔ .* (M(cotanh(sqrt(μ)*(1+ϵ*δ)*k)) * FFT * M(dη(x+ϵ*dx)) * IFFT
-								+ ϵ/(1+ϵ*δ)* (xdcotanh(sqrt(μ)*(1+ϵ*δ)*k).* fη )  * Mean * M(dη(x+ϵ*dx)) * IFFT )
+		        	return Id + ϵ*sqrt(μ)*1im*Π⅔ .* (M(cotanh(sqrt(μ)*(1+ϵ*δ)*k)) * FFT * M(dη(x+ϵ/ν*dx)) * IFFT
+								+ ϵ/(1+ϵ*δ)* (xdcotanh(sqrt(μ)*(1+ϵ*δ)*k).* fη )  * Mean * M(dη(x+ϵ/ν*dx)) * IFFT )
 				end
 			end
 
@@ -164,7 +192,7 @@ mutable struct WaterWaves <: AbstractModel
 			# initiate the iterative argument
 			fη.=fft(data.η(x))
 			δ = meanf(fη)
-			u0 .= -sqrt(μ)*1im*Π⅔ .*cotanh(sqrt(μ)*k*(1+ϵ*δ)).*fη
+			u0 .= -ν*sqrt(μ)*1im*Π⅔ .*cotanh(sqrt(μ)*k*(1+ϵ*δ)).*fη
 
 			# perform the iterative loop
 			norm0=norm(fη)
@@ -190,8 +218,8 @@ mutable struct WaterWaves <: AbstractModel
 			end
 
 			# Constructs relevant variables from u0 the solution to F(u)=0
-			z0 .= data.η(x+ϵ*real.(ifft(u0)))
-			v0 .= data.v(x+ϵ*real.(ifft(u0))) .* (1 .+ ϵ*real.(ifft(Π⅔.*∂ₓ.*u0)) )
+			z0 .= data.η(x+ϵ/ν*real.(ifft(u0)))
+			v0 .= data.v(x+ϵ/ν*real.(ifft(u0))) .* (1 .+ ϵ/ν*real.(ifft(Π⅔.*∂ₓ.*u0)) )
 
 			U=[ Π⅔ .* fft(z0)   Π⅔ .* fft(v0) ]  # Π⅔ for dealiasing
 			U[ abs.(U).< ktol ].=0     # applies Krasny filter if ktol>0
@@ -215,12 +243,12 @@ mutable struct WaterWaves <: AbstractModel
 			Dz .= real.(ifft( ∂ₓ.*  U[:,1] ))
 
 			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2
-			M1 = real.(-1im/sqrt(μ)*ifft( tanh.(ξ).* U[:,2] ))
-			M2 = real.( 1im*sqrt(μ)*ifft( cotanh(ξ) .* fft(M1./J) ))
+			M1 .= real.(-1im/sqrt(μ)*ifft( mytanh(ξ).* U[:,2] ))
+			M2 .= real.( 1im*sqrt(μ)*ifft( cotanh(ξ) .* fft(M1./J) ))
 			q0 = mean((1 .+ ϵ*Dxv).*M2 + ϵ*μ*Dz.*M1./J)
 
-			U[:,2] .= -∂ₓ .* U[:,1] - ϵ* Π⅔ .* ∂ₓ .* fft( Dphi.*M2 + 1/2 .*(Dphi.^2 -μ*M1.^2)./J - q0*Dphi )
-			U[:,1] .=  Π⅔ .* fft( (1 .+ ϵ*Dxv).*M1./J - ϵ*Dz.*M2 + ϵ*q0*Dz )
+			U[:,2] .= -∂ₓ .* U[:,1] - ϵ* Π⅔ .* ∂ₓ .* fft( Dphi.*M2 + 1/2 .*(Dphi.^2 -μ*M1.^2)./J - q0*Dphi )/ν
+			U[:,1] .=  Π⅔ .* fft( (1 .+ ϵ*Dxv).*M1./J - ϵ*Dz.*M2 + ϵ*q0*Dz )/ν
 
 		end
 
@@ -232,11 +260,11 @@ mutable struct WaterWaves <: AbstractModel
 			Dz .= real.(ifft( ∂ₓ.* U1))
 
 			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2
-			M1 = real.(-1im/sqrt(μ)*ifft( tanh.(ξ).* U2 ))
+			M1 = real.(-1im/sqrt(μ)*ifft( mytanh(ξ).* U2 ))
 			M2 = real.( 1im*sqrt(μ)*ifft( cotanh(ξ) .* fft(M1./J) ))
 			q0 = mean((1 .+ ϵ*Dxv).*M2 + ϵ*μ*Dz.*M1./J)
 
-			U1 .= Π⅔ .* fft( (1 .+ ϵ*Dxv).*M1./J - ϵ*Dz.*M2 + ϵ*q0*Dz )
+			U1 .= Π⅔ .* fft( (1 .+ ϵ*Dxv).*M1./J - ϵ*Dz.*M2 + ϵ*q0*Dz )/ν
 		end
 		function f2!(U1,U2)
 		   	Dphi .= real.(ifft(U2))
@@ -245,11 +273,11 @@ mutable struct WaterWaves <: AbstractModel
 			Dz .= real.(ifft( ∂ₓ.* U1))
 
 			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2
-			M1 = real.(-1im/sqrt(μ)*ifft( tanh.(ξ).* U2 ))
+			M1 = real.(-1im/sqrt(μ)*ifft( mytanh(ξ).* U2 ))
 			M2 = real.( 1im*sqrt(μ)*ifft( cotanh(ξ) .* fft(M1./J) ))
 			q0 = mean((1 .+ ϵ*Dxv).*M2 + ϵ*μ*Dz.*M1./J)
 
-			U2 .= -∂ₓ .* 1 - ϵ* Π⅔ .* ∂ₓ .* fft( Dphi.*M2 + 1/2 .*(Dphi.^2 -μ*M1.^2)./J - q0*Dphi )
+			U2 .= -∂ₓ .* U1 - ϵ* Π⅔ .* ∂ₓ .* fft( Dphi.*M2 + 1/2 .*(Dphi.^2 -μ*M1.^2)./J - q0*Dphi )/ν
 		end
 
 
