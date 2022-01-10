@@ -29,7 +29,8 @@ end
 
 Interpolate a vector `vector` defined on a uniform collocation grid defined by `mesh`, on collocation points given by `x`.
 
-If the collocation points `x` are regularly spaced and the optional keyword argument `fast` is set to `true` (default is `false`), then the algorithm is faster and uses less allocations, but is less precise.
+If the collocation points `x` are regularly spaced and the optional keyword argument `fast` is set to `true` (default is `false`),
+then the algorithm is faster and uses less allocations, but is less precise.
 
 Returns the vector of values on collocation points.
 
@@ -41,10 +42,10 @@ function interpolate(mesh::Mesh,vector,x;fast=false)
 	x₀ = mesh.xmin
 	if fast == false
 		#same as new_vector=exp.(1im*(x.-x₀)*k')*fourier/length(k)
-		new_vector = complex.(zero(x)); z = complex.(zero(k));
+		new_vector = similar(x,Complex); z = complex.(zero(k));
 		for i in 1:length(x)
 			z .= exp.(-1im*(x[i].-x₀)*k)
-			new_vector[i] = dot(z,fourier)
+			new_vector[i] = real(dot(z,fourier))
 		end
 		new_vector ./= length(k)
 	else
@@ -52,9 +53,9 @@ function interpolate(mesh::Mesh,vector,x;fast=false)
         if maximum(abs.(y))>8*eps(maximum(x))
             @error("Collocation points must be equally spaced.")
         end
-		new_vector = complex.(zero(x)); z = exp.(-1im*(x[1].-x₀)*k);eidk=exp.(-1im*(x[2]-x[1])*k);
+		new_vector = similar(x,Complex); z = exp.(-1im*(x[1].-x₀)*k);eidk=exp.(-1im*(x[2]-x[1])*k);
 		for i in 1:length(x)
-			new_vector[i] = dot(z,fourier)
+			new_vector[i] = real(dot(z,fourier))
 			z .*= eidk
 		end
 		new_vector ./= length(k)

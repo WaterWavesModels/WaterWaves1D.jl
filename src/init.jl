@@ -33,7 +33,7 @@ struct Init <: InitialData
     end
 
     function Init(mesh :: Mesh, η0 , v0 ; fast = false)
-        new( x->interpolate(mesh,p.η,x;fast=fast) , x->interpolate(mesh,p.v,x;fast=fast) )
+        new( x->interpolate(mesh,η0,x;fast=fast) , x->interpolate(mesh,v0,x;fast=fast) )
     end
 
     function Init(mesh :: Mesh, p :: NamedTuple ; fast = false)
