@@ -2,16 +2,3 @@
 *.jl.*.cov
 *.jl.mem
 deps/deps.jl
-notebooks/.ipynb_checkpoints/
-Manifest.toml
-*.swp
-docs/build/
-docs/src/examples/
-docs/src/notebooks/
-examples/.ipynb_checkpoints/minimal_pierre-checkpoint.jl
-*.jld
-*.gif
-*.pdf
-*.svg
-examples/.ipynb_checkpoints/WorkspacePierre-checkpoint.jl
-testsave.jld
