@@ -13,8 +13,18 @@
 using WaterWaves1D
 ~~~
 
-Define parameters of your problem
+## Overview
 
+`WaterWaves1D` provides a framework to compare several models for the propagation of unidimensional surface gravity waves.
+
+Several models are already implemented, included (but not limited to) the water waves system, its truncated spectral expansion, the Green-Naghdi system, the Matsuno system...
+
+An example of a possible usage of the code can be found below. More examples are available at the [examples](examples/) and [notebooks](notebooks/) repertories.
+
+
+## Example
+
+Define parameters of your problem
 ~~~
 param = (
     # Physical parameters. Variables are non-dimensionalized as in Lannes, The water waves problem, isbn:978-0-8218-9470-5
@@ -36,7 +46,6 @@ init = Init(z,v);         # generate the initial data with correct type
 ~~~
 
 Set up initial-value problems for different models to compare
-
 ~~~
 model1=WaterWaves(param,verbose=false) # The water waves system
 model2=WWn(param;n=2,dealias=1,δ=1/10,verbose=false) # The quadratic model (WW2)
@@ -46,14 +55,12 @@ problem2=Problem(model2, init, param, solver=RK4(model2)) ;
 ~~~
 
 Solve numerical time integration
-
 ~~~
-solve!(problem1)
-solve!(problem2)
+solve!(problem1);
+solve!(problem2);
 ~~~
 
 Plot solutions at final time
-
 ~~~
 plot_solution(problems;fourier=false)
 ~~~
