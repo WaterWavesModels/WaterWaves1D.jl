@@ -1,5 +1,4 @@
 export DeepQuadratic_fast,DeepQuadratic
-using FFTW
 
 """
     DeepQuadratic_fast(param;label,dealias)
@@ -20,7 +19,7 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 
 		@warn("You should provide the initial value for v by ∂t η = - ∂x v.
 		It equals the tangential velocity only when they are null.")
-		
+
         ϵ = param.ϵ
         mesh  = Mesh(param)
 		param = ( ϵ = ϵ, μ=Inf, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )

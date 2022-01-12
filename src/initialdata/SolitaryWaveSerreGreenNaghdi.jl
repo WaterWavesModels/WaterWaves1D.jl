@@ -1,5 +1,4 @@
 export SolitaryWaveSerreGreenNaghdi
-using LinearMaps,IterativeSolvers,LinearAlgebra
 
 """
     SolitaryWaveSerreGreenNaghdi(param; kwargs...)

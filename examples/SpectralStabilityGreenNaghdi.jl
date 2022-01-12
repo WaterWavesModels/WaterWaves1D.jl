@@ -1,17 +1,13 @@
 # #
 # Study of the spectral stability of the Serre-Green-Naghdi equations.
 # #
-@info "Define functions Spectrum,figspecCW,figspecSW,Experiments"
-
+export Spectrum,figspecCW,figspecSW,Experiments
 using WaterWaves1D,LinearAlgebra,FFTW,ProgressMeter,Plots;
-include("../src/initialdata/SolitaryWaveWhithamGreenNaghdi.jl")
-include("../src/initialdata/SolitaryWaveSerreGreenNaghdi.jl")
-include("../src/initialdata/CnoidalWaveSerreGreenNaghdi.jl")
 
 """
-    `Spectrum(param,η,u,c,ν;kwargs)`
+    Spectrum(param,η,u,c,ν;kwargs)
 
-Computes the spectrum about a specified travelling solution of the
+Compute the spectrum about a specified travelling solution of the
 the linearized Green-Naghdi model.
 
 # Argument
@@ -88,7 +84,7 @@ function ell(a₀,a₁,k)
 end
 
 """
-	`figspecCW(p;N,P,SGN)`
+	figspecCW(p;N,P,SGN)
 
 Spectrum of the linearized SGN equations about a cnoidal wave.
 
@@ -180,10 +176,10 @@ end
 	Experiments(exp)
 
 Some numerical experiments, plotting the spectrum of the linearized SGN equations about various travelling waves
-- `exp=1` : a cnoidal wave with very small amplitude
-- `exp=2` : a cnoidal wave with very large period
-- `exp=3` : several cnoidal waves with increasing periods
-- `exp=4` : a solitary wave
+- `exp==1`: a cnoidal wave with very small amplitude
+- `exp==2`: a cnoidal wave with very large period
+- `exp==3`: several cnoidal waves with increasing periods
+- `exp==4`: a solitary wave
 
 Return the plot.
 """

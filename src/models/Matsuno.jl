@@ -1,5 +1,4 @@
 export Matsuno_fast,Matsuno
-using FFTW,LinearAlgebra
 
 """
 	Matsuno_fast(param;label,dealias)

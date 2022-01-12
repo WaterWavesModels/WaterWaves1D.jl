@@ -1,22 +1,18 @@
 # #
 # A proof of concept:
 # 1) PlotSolitaryWaveWhithamBoussinesq() numerically computes the solitary wave of a Whitham-Boussinesq equation with prescribed velocity
-# 2) IntegrateSolitaryWaveWhithamBoussinesq() integrates the equation with time
+# 2) IntegrateSolitaryWaveWhithamBoussinesq() integrates the equation in time
 # #
-@info "Define functions PlotSolitaryWaveWhithamBoussinesq(),IntegrateSolitaryWaveWhithamBoussinesq()"
-
+export PlotSolitaryWaveWhithamBoussinesq,IntegrateSolitaryWaveWhithamBoussinesq
 using WaterWaves1D,FFTW,Plots;
-include("../src/models/WhithamBoussinesq.jl")
-include("../src/initialdata/SolitaryWaveWhithamBoussinesq.jl")
-include("../src/Figures.jl")
 
 #----
 """
-	PlotSolitaryWaveWhithamBoussinesq(;kwargs)
+	PlotSolitaryWaveWhithamBoussinesq(;kwargs...)
 
-Constructs and plots a solitary wave of the Whitham-Boussinesq equation.
+Construct and plot a solitary wave of the Whitham-Boussinesq equation.
 
-All arguments are optional.
+All keyword arguments are optional.
 - `c` the velocity of the wave,
 - `α` defines the model used,
 - `L` the half-length of the mesh,
@@ -25,7 +21,7 @@ All arguments are optional.
 - `ϵ` the nonlinearity parameter.
 
 """
-function PlotSolitaryWaveWhithamBoussinesq(;c=1.05,α=1/2,L=20,N=2^9,μ=0.1,ϵ=0.1)
+function PlotSolitaryWaveWhithamBoussinesq(;c=1.05,α=1,L=20,N=2^9,μ=0.1,ϵ=0.1)
 	param = ( μ  = μ, ϵ = ϵ,
 			N = N, L = L,
 			c = c, α = α)
@@ -68,22 +64,22 @@ end
 """
 	IntegrateSolitaryWaveWhithamBoussinesq()
 
-Integrates in time a Whitham-Boussinesq equation with a solitary wave initial data
+Integrate in time a Whitham-Boussinesq equation with a solitary wave initial data
 """
 function IntegrateSolitaryWaveWhithamBoussinesq()
 	param = ( μ  = 1,
 			ϵ  = 1,
+			c = 1.05,
         	N  = 2^9,
             L  = 20,
-			c  = 1.05,
 			T  = 40/1.05,
             dt = 0.001/1.05,
-			ns = 200,
-			α	= 1/2,
+			ns = 200
 			)
+	α = 1/2 # determines the model
 
 	(η,v,mesh) = SolitaryWaveWhithamBoussinesq( param;
-										α = 1, model  = 1/2, iterative = false, max_iter=30)
+										α = 1, model  = α, iterative = false, max_iter=30)
 
 	init=Init(mesh,η,v)
 
@@ -98,7 +94,7 @@ function IntegrateSolitaryWaveWhithamBoussinesq()
 	 label=["η" "u"])
 	 display(plt)
 
-	model  = WhithamBoussinesq(param)
+	model  = WhithamBoussinesq(param;α=α)
 	problem = Problem(model, init, param);
 
 	solve!( problem )

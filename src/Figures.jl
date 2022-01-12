@@ -1,6 +1,6 @@
 export create_animation,plot_solution!,plot_solution,plot_difference!,plot_difference
-using Plots;
-using ProgressMeter
+using Plots
+
 """
 	create_animation( problems; name::String, kwargs... )
 

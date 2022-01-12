@@ -1,5 +1,4 @@
 export interpolate,solution
-using LinearAlgebra,FFTW
 
 """
     interpolate(mesh,vector;n=2^3)

@@ -1,18 +1,11 @@
 # #
 # Reproduce the figures in
-# Numerical study of the Serre–Green–Naghdi equations and a fully dispersive counterpart
-# V. Duchêne and C. Klein, arXiv 2005.13234, to appear in DCDS-B (doi:10.3934/dcdsb.2021300)
+# [V. Duchêne and C. Klein](http://dx.doi.org/10.3934/dcdsb.2021300)
+# on the Serre-Green-Naghdi and its fully dispersive counterpart.
 # #
-@info "Define functions PlotSolitaryWaveWGN1,PlotSolitaryWaveWGN2,PlotSolitaryWaveWGN3,PlotJacobianWGN,IntegrateSolitaryWaveWGN,StabilitySolitaryWaveWGN,IntegrateWGN"
-
+export PlotSolitaryWaveWGN1,PlotSolitaryWaveWGN2,PlotSolitaryWaveWGN3,PlotJacobianWGN,IntegrateSolitaryWaveWGN,StabilitySolitaryWaveWGN,IntegrateWGN
 using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
-include("../src/models/WhithamGreenNaghdi.jl")
-include("../src/models/SerreGreenNaghdi.jl")
-include("../src/initialdata/SolitaryWaveWhithamGreenNaghdi.jl")
-include("../src/initialdata/SolitaryWaveSerreGreenNaghdi.jl")
-include("../src/Figures.jl")
-include("../src/LoadSave.jl")
-using JLD
+#using JLD #(uncomment if using function save)
 
 #---- Figures 1 and 2
 """
@@ -271,7 +264,7 @@ function IntegrateSolitaryWaveWGN(;SGN=false,c=2,N=2^10,L=10*π,T=1,dt=1/2000,na
 		create_animation(problem;name=string(name,"-anim.pdf"))
 		plot_solution(problem)
 		savefig(string(name,"-final.pdf"));
-		save(problem,name);
+		#save(problem,name);
 	end
 	return problem
 end
@@ -356,7 +349,7 @@ function StabilitySolitaryWaveWGN(;p=2,c=2,N=2^10,L=10*π,T=10,dt=10/10^4,SGN=fa
 	problem = Problem(model, init, param)
 	solve!( problem )
 
-	if name != nothing save(problem,name); end
+	#if name != nothing save(problem,name); end
 
 	(ηfin,vfin,ufin)   =  model.mapfrofull(last(problem.data.U))
 
@@ -524,7 +517,7 @@ function IntegrateWGN(scenario;δ=0.1,N=2^11,L=3*π,x₀=-3,T= 5,dt = 5/10^4,SGN
 
 	if name != nothing
 		savefig(string(name,".pdf"));
-		save(problem,name);
+		#save(problem,name);
 		ts = problem.times.ts
 		x = mesh.x
 		k = mesh.k

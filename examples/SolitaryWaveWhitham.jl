@@ -1,13 +1,12 @@
 # # Compute the solitary wave of the Whitham equation with prescribed velocity
-@info "Define functions PlotSolitaryWaveKdV,PlotSolitaryWaveWhitham"
+export PlotSolitaryWaveKdV,PlotSolitaryWaveWhitham
 using WaterWaves1D,FFTW,Plots;
-include("../src/initialdata/SolitaryWaveWhitham.jl")
 
 #---- KdV
 """
 	PlotSolitaryWaveKdV()
 
-A proof of concept: numerically computes the solitary wave of the KdV equation with prescribed velocity `c=5`
+A proof of concept: numerically compute the solitary wave of the KdV equation with prescribed velocity `c=5`
 (augmenting progressively the velocity to generate initial guesses for the iterative scheme)
 and then computes the difference with the exact solution.
 """
@@ -74,7 +73,7 @@ end
 """
 	`PlotSolitaryWaveWhitham(c)`
 
-Computes the solitary wave of the Whitham equation with prescribed velocity.
+Compute the solitary wave of the Whitham equation with prescribed velocity.
 
 `c` is the velocity, and should be more between `1` and `1.2290408`.
 """

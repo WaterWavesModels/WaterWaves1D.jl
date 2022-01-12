@@ -1,5 +1,4 @@
 export IsobeKakinuma
-using FFTW,LinearAlgebra,LinearMaps,IterativeSolvers
 
 """
     IsobeKakinuma(param;kwargs)

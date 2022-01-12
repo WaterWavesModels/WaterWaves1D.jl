@@ -1,5 +1,4 @@
 export WaterWaves
-using FFTW,LinearAlgebra
 
 """
     WaterWaves(param; kwargs...)

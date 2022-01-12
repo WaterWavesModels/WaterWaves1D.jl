@@ -1,5 +1,5 @@
 export WWn
-using FFTW
+
 """
     WWn(param;kwargs)
 

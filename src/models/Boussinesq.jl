@@ -1,6 +1,4 @@
 export Boussinesq
-using FFTW
-include("./WhithamBoussinesq.jl")
 
 """
     Boussinesq(params;kwargs)

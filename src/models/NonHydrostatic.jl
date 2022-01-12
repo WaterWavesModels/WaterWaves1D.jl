@@ -1,5 +1,4 @@
 export NonHydrostatic
-using FFTW,LinearAlgebra,LinearMaps,IterativeSolvers
 
 """
     NonHydrostatic(param;kwargs)

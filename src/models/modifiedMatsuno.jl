@@ -1,5 +1,5 @@
 export modifiedMatsuno
-using FFTW
+
 """
     modifiedMatsuno(param;kwargs)
 

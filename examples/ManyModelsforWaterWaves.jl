@@ -1,27 +1,18 @@
 # #
-# Reproduce the figures in the Appendix of Many Models for Water Waves, by V. Duchêne
-# (https://www.ams.org/open-math-notes/omn-view-listing?listingId=111309)
+# Reproduce the figures in the Appendix of
+# [Duchêne](https://www.ams.org/open-math-notes/omn-view-listing?listingId=111309)
 # comparing solutions to the water waves system with predictions of
 # the Serre-Green-Naghdi and Whitham-Green-Naghdi systems
 # #
-@info "Define functions Integrate and Figures"
-
-using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
-include("../src/models/WaterWaves.jl")
-include("../src/models/WhithamGreenNaghdi.jl")
-include("../src/models/SerreGreenNaghdi.jl")
-include("../src/models/IsobeKakinuma.jl")
-include("../src/Figures.jl")
-gr()
-#ENV["GKSwstype"]="nul"
-#using JLD
-
+export Integrate,Figures
+using WaterWaves1D,Plots,LinearAlgebra;
+#using JLD #(uncomment if using @save)
 
 #----
 """
 	Integrate(scenario;kwargs)
 
-Integrates in time the water waves system as well as
+Integrate in time the water waves system as well as
 the Serre-Green-Naghdi, Whitham-Green-Naghdi and Isobe-Kakinuma models
 with an initial datum depending on the argument (`scenario`).
 If `scenario==1`, the initial datum is a heap of water with zero velocity.
@@ -146,8 +137,8 @@ end
 """
 	Figures()
 
-Reproduce the figures in Section I.5 of the monograph "Many Models for Water Waves"
-(https://www.ams.org/open-math-notes/omn-view-listing?listingId=111309)
+Reproduce the figures in Section I.5 of the monograph
+[Many Models for Water Waves](https://www.ams.org/open-math-notes/omn-view-listing?listingId=111309)
 """
 function Figures()
 	MU=[1 0.1 0.01]

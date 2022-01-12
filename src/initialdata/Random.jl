@@ -1,5 +1,5 @@
 export Random
-using FFTW
+
 """
     Random(;args)
 

@@ -1,5 +1,4 @@
 export SquareRootDepth
-using FFTW,LinearAlgebra,LinearMaps,IterativeSolvers
 
 """
     SquareRootDepth(param;kwargs)

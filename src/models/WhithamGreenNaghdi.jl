@@ -1,5 +1,4 @@
 export WhithamGreenNaghdi
-using FFTW,LinearAlgebra,LinearMaps,IterativeSolvers
 
 """
     WhithamGreenNaghdi(param;kwargs)

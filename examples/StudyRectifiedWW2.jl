@@ -1,22 +1,18 @@
 # #
-# Reproduces the figures in the work of V. Duchêne and B. Mélinand
+# Reproduces the figures in
+# the work of V. Duchêne and B. Mélinand
 # on the quadratic pseudo-spectral method (WW2)
 # #
-@info "Define functions IntegrateWW2 and Figure"
-
+export IntegrateWW2,Figure
 using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
-include("../src/models/WWn.jl")
-include("../src/models/WaterWaves.jl")
-include("../src/Figures.jl")
-#using JLD   # when using @save command
-#ENV["GKSwstype"]="nul";
-#gr()
+#using JLD #(uncomment if using @save)
+
 #--- Integration
 
 """
 	IntegrateWW2(;init,args)
 
-Integrates in time the WW2 system with an initial data depending on the provided `init`
+Integrate in time the WW2 system with an initial data depending on the provided `init`
 - if `init=1`, then surface deformation `η(t=0,x)=exp(-x^p)` and velocity `v(t=0,x)=0` (with `p` provided as an optional argument, by default `p=2`)
 - if `init=2`, then surface deformation `η(t=0,x)=exp(-x^2)` and velocity `v(t=0,x)=exp.(-x^2)*(sin(x)+sin(K*x)/K^2)` (with `K` provided as an optional argument, by default `K=100`)
 
