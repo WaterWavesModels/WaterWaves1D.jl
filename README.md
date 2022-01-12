@@ -13,4 +13,56 @@
 using WaterWaves1D
 ~~~
 
-![](anim.gif)
+Define parameters of your problem
+
+~~~
+param = (
+    # Physical parameters. Variables are non-dimensionalized as in Lannes, The water waves problem, isbn:978-0-8218-9470-5
+    μ  = 1,     # shallow-water dimensionless parameter
+    ϵ  = 1/4,   # nonlinearity dimensionless parameter
+    # Numerical parameters
+    N  = 2^11,  # number of collocation points
+    L  = 10,    # half-length of the numerical tank (-L,L)
+    T  = 5,     # final time of computation
+    dt = 0.01, # timestep
+                );
+~~~
+
+Define initial data
+~~~
+z(x) = exp.(-abs.(x).^4); # surface deformation
+v(x) = 0*exp.(-x.^2);     # zero initial velocity
+init = Init(z,v);         # generate the initial data with correct type
+~~~
+
+Set up initial-value problems for different models to compare
+
+~~~
+model1=WaterWaves(param,verbose=false) # The water waves system
+model2=WWn(param;n=2,dealias=1,δ=1/10,verbose=false) # The quadratic model (WW2)
+# type `?WaterWaves` or `?WWn` to see details and signification of arguments
+problem1=Problem(model1, init, param, solver=RK4(model1)) ;
+problem2=Problem(model2, init, param, solver=RK4(model2)) ;
+~~~
+
+Solve numerical time integration
+
+~~~
+solve!(problem1)
+solve!(problem2)
+~~~
+
+Plot solutions at final time
+
+~~~
+plot_solution(problems;fourier=false)
+~~~
+![](./notebooks/Example.pdf)
+
+Generate animation
+~~~
+anim = create_animation(problems;fourier=false,ylims=(-0.25,1))
+import Plots.gif
+gif(anim, "Example.gif", fps=15)
+~~~
+![](./notebooks/Example.gif)
