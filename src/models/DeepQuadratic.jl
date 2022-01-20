@@ -1,29 +1,27 @@
 export DeepQuadratic_fast,DeepQuadratic
 
 """
-    DeepQuadratic_fast(param;label,dealias)
+    DeepQuadratic_fast(param;dealias,verbose)
 
 Same as `DeepQuadratic`, but faster.
 """
 mutable struct DeepQuadratic_fast <: AbstractModel
 
-    label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	param	:: NamedTuple
-	kwargs	:: NamedTuple
 
+    function DeepQuadratic_fast( param::NamedTuple; dealias=true, verbose=true)
 
-    function DeepQuadratic_fast( param::NamedTuple; label="Deep quadratic", dealias=true)
-
-		@warn("You should provide the initial value for v by ∂t η = - ∂x v.
-		It equals the tangential velocity only when they are null.")
+		if verbose
+			@info "Build the deep quadratic model."
+			@warn "You should provide the initial value for v by ∂t η = - ∂x v.
+			It equals the derivative of the trace of the velocity potential
+			used for water waves only when they are null."
+		end
 
         ϵ = param.ϵ
         mesh  = Mesh(param)
-		param = ( ϵ = ϵ, μ=Inf, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
-		kwargs = (label=label, )
 
         x = mesh.x
         Γ = abs.(mesh.k)
@@ -90,30 +88,30 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
 
-		new(label, f!, mapto, mapfro, param, kwargs )
+		new(f!, mapto, mapfro )
 
     end
 end
 
 """
-    DeepQuadratic(param;label,dealias)
+    DeepQuadratic(param;dealias,verbose)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the quadratic deep-water model proposed by [Akers and Milewski](https://doi.org/10.1137/090758386)
-and [Cheng, Granero-Belinchón, Shkoller and Milewski](https://dx.doi.org/10.1007/s42286-019-00005-w)
+and [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s42286-019-00005-w)
 
 # Arguments
 `param` is of type `NamedTuple` and must contain
 - the dimensionless parameters `ϵ` (nonlinearity);
-- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
+- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
 
-`label` is optional and provides a label for future plottings ("Deep quadratic" is used if not provided).
-
-`dealias`: dealiasing with `1/3` Orlicz rule if `true` (by default) or no dealiasing if `false`.
+## Optional keyword arguments
+- `dealias`: dealiasing with `1/3` Orlicz rule if `true` (by default) or no dealiasing if `false`;
+- `verbose`: prints information if `true` (default is `true`).
 
 # Return values
-Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
-1. a function `DeepQuadratic.f!` to be called in the time-integration solver;
+Generate necessary ingredients for solving an initial-value problem via `solve!`:
+1. a function `DeepQuadratic.f!` to be called in explicit time-integration solvers;
 2. a function `DeepQuadratic.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `DeepQuadratic.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
     - `η` is the surface deformation;
@@ -122,22 +120,21 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct DeepQuadratic <: AbstractModel
 
-	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	param	:: NamedTuple
-	kwargs	:: NamedTuple
 
-    function DeepQuadratic( param::NamedTuple; label="Deep quadratic", dealias=true)
+    function DeepQuadratic( param::NamedTuple; dealias=true,verbose=true)
 
-		@warn("You should provide the initial value for v by ∂t η = - ∂x v.
-		It equals the tangential velocity only when they are null.")
+		if verbose
+			@info "Build the deep quadratic model."
+			@warn "You should provide the initial value for v by ∂t η = - ∂x v.
+			It equals the derivative of the trace of the velocity potential
+			used for water waves only when they are null."
+		end
 
 		ϵ = param.ϵ
 		mesh  = Mesh(param)
-		param = ( ϵ = ϵ, μ=Inf, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
-		kwargs = (label=label, )
 
 		x = mesh.x
         Γ = abs.(mesh.k)
@@ -181,7 +178,7 @@ mutable struct DeepQuadratic <: AbstractModel
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
 
-		new(label, f!, mapto, mapfro, param, kwargs )
+		new(f!, mapto, mapfro )
 
     end
 end

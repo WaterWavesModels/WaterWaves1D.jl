@@ -23,8 +23,8 @@ with the "rectification" method proposed by Duchêne and Melinand.
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
-Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
-1. a function `WWn.f!` to be called in the time-integration solver;
+Generate necessary ingredients for solving an initial-value problem via `solve!`:
+1. a function `WWn.f!` to be called in explicit time-integration solvers (also `WWn.f1!` and `WWn.f2!` for the symplectic Euler solver);
 2. a function `WWn.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `WWn.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
     - `η` is the surface deformation;
@@ -33,25 +33,17 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct WWn <: AbstractModel
 
-    label   :: String
 	f!		:: Function
 	f1!		:: Function
 	f2!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	param	:: NamedTuple
-	kwargs	:: NamedTuple
 
     function WWn(param::NamedTuple;
 							ν=nothing,n=2,δ=0,m=-1,ktol=0,dealias=0, verbose=true)
 
-		if n in [1,2,3,4] && verbose
-			@info string("Spectral model with nonlinearity of order ", n)
-		elseif verbose
-			n = 2
-			@info string("Spectral model with nonlinearity of order ", n)
-		end
-		label = string("WW",n)
+		if !(n in [1,2,3,4]) n=2 end
+		if verbose @info "Build the spectral model with nonlinearity of order $n" end
 
 		μ 	= param.μ
 		ϵ 	= param.ϵ
@@ -63,11 +55,7 @@ mutable struct WWn <: AbstractModel
 			end
 		end
 
-		n 	= n
 		mesh = Mesh(param)
-
-		param = ( ϵ = ϵ, μ = μ, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
-		kwargs = (ν=ν,n=n,δ=δ,m=m,dealias=dealias,ktol=ktol,verbose=verbose)
 
 		x = mesh.x
 		k = copy(mesh.k)
@@ -84,7 +72,7 @@ mutable struct WWn <: AbstractModel
 			if verbose @info "no dealiasing" end
 			Π⅔ 	= ones(size(mesh.k))
 		elseif verbose
-			@info string("dealiasing : spectral scheme for power ", dealias + 1," nonlinearity ")
+			@info "dealiasing : spectral scheme for power  $(dealias + 1) nonlinearity"
 		end
 		if μ == Inf || ν==0
 			∂ₓF₀ 	= 1im * sign.(mesh.k)
@@ -217,6 +205,6 @@ mutable struct WWn <: AbstractModel
 
 
 
-        new(label, f!, f1!, f2! , mapto, mapfro, param, kwargs )
+        new( f!, f1!, f2! , mapto, mapfro )
     end
 end

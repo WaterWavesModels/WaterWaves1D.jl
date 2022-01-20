@@ -18,8 +18,8 @@ the modified Matsuno model
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
-Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
-1. a function `modifiedMatsuno.f!` to be called in the time-integration solver;
+Generate necessary ingredients for solving an initial-value problem via `solve!`:
+1. a function `modifiedMatsuno.f!` to be called in explicit time-integration solvers;
 2. a function `modifiedMatsuno.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `modifiedMatsuno.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
     - `η` is the surface deformation;
@@ -28,17 +28,14 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct modifiedMatsuno <: AbstractModel
 
-    label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	param	:: NamedTuple
-	kwargs	:: NamedTuple
 
     function modifiedMatsuno(param::NamedTuple;
 							ν=nothing,ktol=0,dealias=0, verbose=true)
 
-		label = "modified Matsuno"
+		if verbose @info "Build the modified Matsuno model." end
 
 		μ 	= param.μ
 		ϵ 	= param.ϵ
@@ -51,10 +48,6 @@ mutable struct modifiedMatsuno <: AbstractModel
 		end
 
 		mesh = Mesh(param)
-
-		param = ( ϵ = ϵ, μ = μ, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
-		kwargs = (ν=ν,dealias=dealias,ktol=ktol,verbose=verbose)
-
 		x = mesh.x
 		k = copy(mesh.k)
 		K = mesh.kmax * (1-dealias/(2+dealias))
@@ -63,7 +56,7 @@ mutable struct modifiedMatsuno <: AbstractModel
 			if verbose @info "no dealiasing" end
 			Π⅔ 	= ones(size(mesh.k))
 		elseif verbose
-			@info string("dealiasing : spectral scheme for power ", dealias + 1," nonlinearity ")
+			@info "dealiasing : spectral scheme for power  $(dealias + 1) nonlinearity"
 		end
 		if μ == Inf || ν==0
 			∂ₓF₀ 	= 1im * sign.(mesh.k)
@@ -114,6 +107,6 @@ mutable struct modifiedMatsuno <: AbstractModel
 		end
 
 
-        new(label, f!, mapto, mapfro, param, kwargs )
+        new(f!, mapto, mapfro )
     end
 end

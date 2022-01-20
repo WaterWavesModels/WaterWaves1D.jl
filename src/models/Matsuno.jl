@@ -1,28 +1,26 @@
 export Matsuno_fast,Matsuno
 
 """
-	Matsuno_fast(param;label,dealias)
+	Matsuno_fast(param;dealias,verbose)
 
 Same as `Matsuno`, but faster.
-
 """
 mutable struct Matsuno_fast <: AbstractModel
 
-    label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	param	:: NamedTuple
-	kwargs	:: NamedTuple
 
-    function Matsuno_fast(param::NamedTuple; label="Matsuno", dealias=true)
+    function Matsuno_fast(param::NamedTuple; dealias=true, verbose=true)
+		if verbose
+			@info "Build the Matsuno model."
+			@warn "The velocity is consistent with the tangential velocity used for water waves
+			only when they are null."
+		end
 
-		@warn("The velocity is consistent with the tangential velocity used for water waves
-		only when they are null.")
+
 		ϵ        = param.ϵ
         mesh     = Mesh(param)
-		param = ( ϵ = ϵ, μ=Inf, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
-		kwargs = (label=label, )
         x        = mesh.x
         Γ        = abs.(mesh.k)
         Dx       =  1im * mesh.k        # Differentiation
@@ -118,52 +116,51 @@ mutable struct Matsuno_fast <: AbstractModel
 		    real(ifft(view(U,:,1))),real(ifft(view(U,:,2)))
 		end
 
-		new(label, f!, mapto, mapfro )
+		new(f!, mapto, mapfro )
     end
 end
 
 """
-	Matsuno(param;label,dealias)
+	Matsuno(param;dealias,verbose)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the quadratic deep-water model proposed by [Matsuno](https://dx.doi.org/10.1103/PhysRevLett.69.609).
+the quadratic deep-water model proposed by [Matsuno](https://doi.org/10.1103/PhysRevLett.69.609).
 
 # Arguments
 `param` is of type `NamedTuple` and must contain
 - the dimensionless parameters `ϵ` (nonlinearity);
-- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
+- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
 
-`label` is optional and provides a label for future plottings ("Matsuno" is used if not provided).
+## Optional keyword arguments
+- `dealias`: dealiasing with `1/3` Orlicz rule if `true` (by default) or no dealiasing if `false`;
+- `verbose`: prints information if `true` (default is `true`).
 
-`dealias`: dealiasing with `1/3` Orlicz rule if `true` (by default) or no dealiasing if `false`.
 
 # Return values
-Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
-1. a function `DeepQuadratic.f!` to be called in the time-integration solver;
+Generate necessary ingredients for solving an initial-value problem via `solve!`:
+1. a function `DeepQuadratic.f!` to be called in explicit time-integration solvers;
 2. a function `DeepQuadratic.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `DeepQuadratic.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
-- `η` is the surface deformation;
-- `v` is a velocity variable which is *not* the tangential velocity (if not null).
+    - `η` is the surface deformation;
+    - `v` is a velocity variable which is *not* the derivative of the trace of the velocity potential (if not null).
 
 """
 mutable struct Matsuno <: AbstractModel
 
-	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	param	:: NamedTuple
-	kwargs	:: NamedTuple
 
 
-    function Matsuno(param::NamedTuple ; label="Matsuno", dealias=true)
+    function Matsuno(param::NamedTuple ; dealias=true, verbose=true)
+		if verbose
+			@info "Build the Matsuno model."
+			@warn "The velocity is consistent with the tangential velocity used for water waves
+			only when they are null."
+		end
 
-		@warn("The velocity is consistent with the tangential velocity used for water waves
-		only when they are null.")
 		ϵ 	= param.ϵ
 		mesh = Mesh(param)
-		param = ( ϵ = ϵ, μ=Inf, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
-		kwargs = (label=label, )
 		x   = mesh.x
         Γ 	= abs.(mesh.k)
     	∂ₓ	=  1im * mesh.k            # Differentiation
@@ -207,6 +204,6 @@ mutable struct Matsuno <: AbstractModel
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
 
-		new(label, f!, mapto, mapfro )
+		new(f!, mapto, mapfro )
     end
 end

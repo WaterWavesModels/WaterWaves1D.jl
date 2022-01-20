@@ -11,7 +11,7 @@ the Isobe-Kakinuma model.
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
 
-## Keywords
+## Optional keyword arguments
 - `iterative`: solve the elliptic problem through GMRES if `true`, LU decomposition if `false` (default is `true`);
 - `precond`: use a (left) preconditioner for GMRES if `true` (default), choose `precond` as the preconditioner if provided;
 - `gtol`: relative tolerance of the GMRES algorithm (default is `1e-14`);
@@ -22,37 +22,29 @@ the Isobe-Kakinuma model.
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
-Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
-1. a function `IsobeKakinuma.f!` to be called in the time-integration solver;
+Generate necessary ingredients for solving an initial-value problem via `solve!`:
+1. a function `IsobeKakinuma.f!` to be called in explicit time-integration solvers;
 2. a function `IsobeKakinuma.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `IsobeKakinuma.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
-
     - `η` is the surface deformation;
     - `v` is the derivative of the trace of the velocity potential;
 4. additionally, a handy function `IsobeKakinuma.mapfrofull` which from data matrix returns the Tuple of real vectors `(η,v,Φ)`, where
-
-	- `Φ` is the Vector of the basis functions `ϕi` (`i∈{0,...,N}`).
+    - `Φ` is the Vector of the basis functions `ϕi` (`i∈{0,...,N}`).
 
 """
 mutable struct IsobeKakinuma <: AbstractModel
 
-	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
-	param	:: NamedTuple
-	kwargs  :: NamedTuple
 
     function IsobeKakinuma(param::NamedTuple;dealias=0,ktol=0,iterate=true,gtol=1e-14,precond=false,restart=nothing,maxiter=nothing,verbose=true)
-		label = string("Isobe-Kakinuma")
-		if verbose @info string("model ",label) end
+		if verbose @info "Build the Isobe-Kakinuma model." end
 
-		kwargs = (iterate=iterate,dealias=dealias,ktol=ktol,gtol=gtol,precond=precond,verbose=verbose)
 		μ 	= param.μ
 		ϵ 	= param.ϵ
 		mesh = Mesh(param)
-		param = ( ϵ = ϵ, μ = μ, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
 
 		k = mesh.k
 		x 	= mesh.x
@@ -65,7 +57,7 @@ mutable struct IsobeKakinuma <: AbstractModel
 			if verbose @info "no dealiasing" end
 			Π⅔ 	= ones(size(mesh.k))
 		elseif verbose
-			@info string("dealiasing : spectral scheme for power ", dealias + 1," nonlinearity ")
+			@info "dealiasing : spectral scheme for power  $(dealias + 1) nonlinearity"
 		end
 		if iterate == true && verbose
 			@info "elliptic problem solved with GMRES method"
@@ -152,6 +144,6 @@ mutable struct IsobeKakinuma <: AbstractModel
 				   real(ifft(U[:,1])),real(ifft(U[:,2])),real(ifft(L \ U[:,2]))
 		end
 
-        new(label, f!, mapto, mapfro, mapfrofull, param, kwargs)
+        new(f!, mapto, mapfro, mapfrofull)
     end
 end

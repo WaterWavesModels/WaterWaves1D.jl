@@ -4,14 +4,14 @@ export WhithamGreenNaghdi
     WhithamGreenNaghdi(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the modified Green-Naghdi model proposed by V. Duchêne, S. Israwi and R. Talhouk.
+the fully dispersive Green-Naghdi model proposed by [Duchêne, Israwi and Talhouk](https://doi.org/10.1137/130947064).
 
 # Argument
 `param` is of type `NamedTuple` and must contain
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
 
-## Keywords
+## Optional keyword arguments
 - `SGN`: if `true` computes the Serre-Green-Naghdi (SGN) instead of Whitham-Green-Naghdi (WGN) system (default is `false`);
 - `iterative`: solve the elliptic problem through GMRES if `true`, LU decomposition if `false` (default is `true`);
 - `precond`: use a (left) preconditioner for GMRES if `true` (default), choose `precond` as the preconditioner if provided;
@@ -23,41 +23,35 @@ the modified Green-Naghdi model proposed by V. Duchêne, S. Israwi and R. Talhou
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
-Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
-1. a function `WhithamGreenNaghdi.f!` to be called in the time-integration solver;
+Generate necessary ingredients for solving an initial-value problem via `solve!`:
+1. a function `WhithamGreenNaghdi.f!` to be called in explicit time-integration solvers;
 2. a function `WhithamGreenNaghdi.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `WhithamGreenNaghdi.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
-
     - `η` is the surface deformation;
     - `v` is the derivative of the trace of the velocity potential;
 4. additionally, a handy function `WhithamGreenNaghdi.mapfrofull` which from data matrix returns the Tuple of real vectors `(η,v,u)`, where
-
-	- `u` corresponds to the layer-averaged velocity.
+    - `u` corresponds to the layer-averaged velocity.
 
 """
 mutable struct WhithamGreenNaghdi <: AbstractModel
 
-	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
-	param	:: NamedTuple
-	kwargs  :: NamedTuple
 
     function WhithamGreenNaghdi(param::NamedTuple;SGN=false,dealias=0,ktol=0,iterate=true,gtol=1e-14,precond=true,restart=nothing,maxiter=nothing,verbose=true)
-		if SGN == true
-			label = string("Serre-Green-Naghdi")
-		else
-			label = string("Whitham-Green-Naghdi")
+		if verbose
+			if SGN == true
+				@info "Build the Serre-Green-Naghdi model."
+			else
+				@info "Build the Whitham-Green-Naghdi model."
+			end
 		end
-		if verbose @info string("model ",label) end
 
-		kwargs = (iterate=iterate,SGN=SGN,dealias=dealias,ktol=ktol,gtol=gtol,precond=precond,verbose=verbose)
 		μ 	= param.μ
 		ϵ 	= param.ϵ
 		mesh = Mesh(param)
-		param = ( ϵ = ϵ, μ = μ, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
 
 		k = mesh.k
 		x 	= mesh.x
@@ -86,7 +80,7 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 			if verbose @info "no dealiasing" end
 			Π⅔ 	= ones(size(mesh.k))
 		elseif verbose
-			@info string("dealiasing : spectral scheme for power ", dealias + 1," nonlinearity ")
+			@info "dealiasing : spectral scheme for power  $(dealias + 1) nonlinearity"
 		end
 		if iterate == true && verbose
 			@info "elliptic problem solved with GMRES method"
@@ -155,6 +149,6 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 				   real(ifft(U[:,1])),real(ifft(U[:,2])),real(ifft(L \ U[:,2]))
 		end
 
-        new(label, f!, mapto, mapfro, mapfrofull, param, kwargs)
+        new(f!, mapto, mapfro, mapfrofull)
     end
 end

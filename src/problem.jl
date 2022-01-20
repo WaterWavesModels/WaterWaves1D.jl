@@ -1,9 +1,9 @@
 export Problem
 
 """
-    Problem( model, initial, param ; verbose=true)
+    Problem( model, initial, param ; label, verbose=true)
 or
-    Problem( model, initial, param, solver ; verbose=true)
+    Problem( model, initial, param, solver ; label, verbose=true)
 
 Builds an initial-value problem which can then be solved (integrated in time) through `solve!( problem )`
 
@@ -23,6 +23,8 @@ May be buit, e.g., by `Init(η,v)` where
 - `solver  :: TimeSolver`, the solver for time integration (optional, default is explicit Runge-Kutta fourth order solver).
 May be built, e.g., by `RK4(model)` or `RK4_naive()`.
 
+The keyword argument `label` is used in future references (e.g. `plot_solution`).
+
 Information are not printed if keyword `verbose = false` (default is `true`).
 
 """
@@ -35,16 +37,17 @@ mutable struct Problem
     times   :: Times
     mesh    :: Mesh
     data    :: Data
+    label   :: String
 
     function Problem(model   :: AbstractModel,
                      initial :: InitialData,
                      param   :: NamedTuple;
                      solver = RK4(model)  :: TimeSolver,
+                     label = "",
                      verbose = true :: Bool)
 
         if verbose == true
-            @info string("\nBuild the initial-value problem for model ",model.label,"\n",
-                         "with parameters\n",param)
+            @info "Build the initial-value problem $label."
         end
         if in(:Ns,keys(param))
             times = Times(param.dt, param.T; Ns = param.Ns)
@@ -61,10 +64,10 @@ mutable struct Problem
         try
             step!(solver, model, copy(last(data.U)), 1)
         catch
-            @warn "The model and the solver are incompatible. solve! will not work."
+            @warn "The model and the solver are incompatible. `solve!` will not work."
         end
 
-        new(model, initial, param, solver, times, mesh, data)
+        new(model, initial, param, solver, times, mesh, data, label)
 
     end
 
@@ -88,8 +91,9 @@ function solve!(problem :: Problem; verbose=true::Bool)
     ci = get(ENV, "CI", nothing) == "true"
 
     if verbose == true
-        @info string("\nNow solving the initial-value problem for model ",problem.model.label,"\n",
-            "with parameters\n",problem.param)
+        @info "Now solving the initial-value problem $(problem.label)
+            with timestep dt=$(problem.times.dt), final time T=$(problem.times.tfin),
+            and N=$(problem.mesh.N) collocation points."
     end
 
     U = copy(last(problem.data.U))
@@ -153,6 +157,11 @@ function solve!(problems; verbose=true::Bool)
     end
     pg=Progress(nsteps;dt=1)
     @threads for i in 1:length(problems)
+        if verbose == true
+            @info "Now solving the initial-value problem $(problems[i].label)
+                with timestep dt=$(problems[i].times.dt), final time T=$(problems[i].times.tfin),
+                and N=$(problems[i].mesh.N) collocation points."
+        end
 
         if problems[i].times.ns == 1
 
@@ -172,8 +181,7 @@ function solve!(problems; verbose=true::Bool)
             end
         end
         if verbose == true
-            @info string("\nDone solving the model ",problems[i].model.label,"\n",
-                "with parameters\n",problems[i].param)
+            @info "Done solving the problem $(problems[i].label)."
         end
 
     end

@@ -1,10 +1,10 @@
 export WaterWaves
 
 """
-    WaterWaves(param; kwargs...)
+    WaterWaves(param; kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the water waves system (via conformal mapping).
+the water waves system (via conformal mapping, see [Zakharov, Dyachenko and Vasilyev](https://doi.org/10.1016/S0997-7546(02)01189-5)).
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -25,8 +25,8 @@ the water waves system (via conformal mapping).
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
-Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
-1. a function `WaterWaves.f!` to be called in the time-integration solver;
+Generate necessary ingredients for solving an initial-value problem via `solve!`:
+1. a function `WaterWaves.f!` to be called in the explicit time-integration solver (also `WaterWaves.f1!` and `WaterWaves.f2!` for the symplectic Euler solver);
 2. a function `WaterWaves.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `WaterWaves.mapfro` which from such data matrix returns the Tuple of real vectors `(x,η,v)`, where
     - `x` is a vector of collocation points (non-regularly spaced);
@@ -36,21 +36,17 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct WaterWaves <: AbstractModel
 
-    label   :: String
 	f!		:: Function
 	f1!		:: Function
 	f2!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	param	:: NamedTuple
-	kwargs  :: NamedTuple
-
 
     function WaterWaves(param::NamedTuple;
 				ν=nothing,IL=false,method=1,tol=1e-16,maxiter=100,dealias=0,ktol=0,verbose=true)
 
 		# Preparation
-		label = "water waves"
+		if verbose @info "Build the water waves system." end
 
 		μ 	= param.μ
 		ϵ 	= param.ϵ
@@ -68,9 +64,6 @@ mutable struct WaterWaves <: AbstractModel
 		end
 		mesh = Mesh(param)
 
-		param = ( ϵ = ϵ, μ = μ, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
-		kwargs = (ν=ν,dealias=dealias,tol=tol,maxiter=maxiter,verbose=verbose)
-
 		x 	= mesh.x
 		x₀ = x[1]
 		k 	= mesh.k
@@ -82,7 +75,7 @@ mutable struct WaterWaves <: AbstractModel
 			if verbose @info "no dealiasing" end
 			Π⅔ 	= ones(size(mesh.k))
 		elseif verbose
-			@info string("dealiasing : spectral scheme for power ", dealias + 1," nonlinearity ")
+			@info "dealiasing : spectral scheme for power  $(dealias + 1) nonlinearity"
 		end
 
 		# preallocate some variables for memory use
@@ -203,16 +196,16 @@ mutable struct WaterWaves <: AbstractModel
 				normdiff=norm(nu0)
 			    niter+=1
 				if verbose
-					@info string("Relative error ", normdiff/norm0, " at step ", niter)
+					@info "Relative error  $(normdiff/norm0)  at step  $niter"
 				end
 			end
 			if verbose
 				if niter == maxiter
 				    @warn "The iterative solver did not converge. Maybe try a different method."
-				    @warn string("Estimated normalized error : ",normdiff/norm0)
+				    @warn "Estimated normalized error : $(normdiff/norm0)"
 				else
-					@info string("The iterative solver converged in ",niter," iterations.")
-					@info string("Estimated normalized error : ",normdiff/norm0)
+					@info "The iterative solver converged in $niter iterations."
+					@info "Estimated normalized error : $(normdiff/norm0)"
 				end
 			end
 
@@ -280,6 +273,6 @@ mutable struct WaterWaves <: AbstractModel
 		end
 
 
-		new(label, f!, f1!, f2!, mapto, mapfro, param, kwargs )
+		new(f!, f1!, f2!, mapto, mapfro )
     end
 end

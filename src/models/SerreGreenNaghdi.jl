@@ -11,7 +11,7 @@ the Serre-Green-Naghdi model
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
 
-## Keywords
+## Optional keyword arguments
 - `iterative`: solve the elliptic problem through GMRES if `true`, LU decomposition if `false` (default is `true`);
 - `precond`: use a (left) preconditioner for GMRES if `true` (default), choose `precond` as the preconditioner if provided;
 - `gtol`: relative tolerance of the GMRES algorithm (default is `1e-14`);
@@ -22,30 +22,25 @@ the Serre-Green-Naghdi model
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
-Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
-1. a function `SerreGreenNaghdi.f!` to be called in the time-integration solver;
+Generate necessary ingredients for solving an initial-value problem via `solve!`:
+1. a function `SerreGreenNaghdi.f!` to be called in explicit time-integration solvers;
 2. a function `SerreGreenNaghdi.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `SerreGreenNaghdi.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
-
     - `η` is the surface deformation;
     - `v` is the derivative of the trace of the velocity potential;
 4. additionally, a handy function `SerreGreenNaghdi.mapfrofull` which from data matrix returns the Tuple of real vectors `(η,v,u)`, where
-
-	- `u` corresponds to the layer-averaged velocity.
+    - `u` corresponds to the layer-averaged velocity.
 
 """
 mutable struct SerreGreenNaghdi <: AbstractModel
 
-	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
-	param	:: NamedTuple
-	kwargs  :: NamedTuple
 
     function SerreGreenNaghdi(param::NamedTuple;dealias=0,ktol=0,iterate=true,gtol=1e-14,precond=true,restart=nothing,maxiter=nothing,verbose=true)
 		m=WhithamGreenNaghdi(param;SGN=true,dealias=dealias,ktol=ktol,iterate=iterate,gtol=gtol,precond=precond,restart=restart,maxiter=maxiter,verbose=verbose)
-        new(m.label, m.f!, m.mapto, m.mapfro, m.mapfrofull, m.param, m.kwargs)
+        new(m.f!, m.mapto, m.mapfro, m.mapfrofull)
     end
 end

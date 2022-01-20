@@ -27,8 +27,8 @@ function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
 	label=nothing
 	if isa(problems,Problem) # if create_animation is called with a single problem
 		problems=[problems];  # A one-element array to allow `for pb in p`
-		label=problems[1].model.label; # saves the model's name
-		problems[1].model.label=""; 	# replace it with blank so that it does not appear in the plots
+		label=problems[1].label; # saves the model's name
+		problems[1].label=""; 	# replace it with blank so that it does not appear in the plots
 	end
 
 	if ylims == nothing
@@ -77,7 +77,7 @@ function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
 		end
         next!(prog)
     end
-	if label!=nothing problems[1].model.label=label end # puts back the model's name
+	if label!=nothing problems[1].label=label end # puts back the model's name
 	if name != nothing gif(anim, string(name,".gif"), fps=15); end
 	return anim
 end
@@ -96,7 +96,7 @@ Plots in `plt` the solution of initial-value problems at a given time.
 - if `interpolation` is provided as an integer, the solution is interpolated on as many collocation points (if `true`, then the value `2^3` is chosen, default is `false`).
 - if `compression` is provided as an integer `m`, only one in `m` points are plotted (if `true`, then the value `2^3` is chosen, default is `false`).
 - `surface`, `velocity` and `fourier` (booleans) determine respectively whether surface deformation, `η`, tangential velocity, `v`, and the Fourier coefficients of `η` (in log-scale) are plotted.
-- `label` defines the label(s) if provided (otherwise labels are inferred from the models)
+- `label` defines the label(s) if provided (otherwise labels are inferred from the problems)
 
 """
 function plot_solution!( plt, problems; t=nothing,x=nothing,interpolation=false,compression=false, surface=true, fourier=true, velocity=false, label=nothing)
@@ -105,7 +105,7 @@ function plot_solution!( plt, problems; t=nothing,x=nothing,interpolation=false,
 		p = problems[i]
 		# retrieve the label
 		if label == nothing || label == [nothing]
-			lbl=p.model.label
+			lbl=p.label
 		else
 			lbl=label[i]
 		end
@@ -184,7 +184,7 @@ If a collection of problems are provided, then all possible pairs are compared.
 - if `fast = false` (default is `false`), then the second problem is interpolated to the collocation points of the first problem.
 - if `compression` is provided as an integer `m`, only one in `m` points are plotted (if `true`, then the value `2^3` is chosen, default is `false`).
 - `surface`, `velocity` and `fourier` (booleans) determine respectively whether surface deformation, `η`, tangential velocity, `v`, and the Fourier coefficients of `η` (in log-scale) are plotted.
-- `label` defines the label(s) if provided (otherwise labels are inferred from the models)
+- `label` defines the label(s) if provided (otherwise labels are inferred from the problems).
 
 """
 function plot_difference!( plt, problems; t=nothing,x=nothing,interpolation=false,compression=false, fast=false, surface=true, fourier=false, velocity=false, label=nothing)
@@ -202,7 +202,7 @@ function plot_difference!( plt, problems; t=nothing,x=nothing,interpolation=fals
 		p2 = pairs[i][2]
 		# retrieve the label
 		if label == nothing || label == [nothing]
-			lbl=string(p1.model.label,"-",p2.model.label)
+			lbl=string(p1.label,"-",p2.label)
 		else
 			lbl=label[i]
 		end

@@ -1,31 +1,30 @@
 export WhithamBoussinesq
 
 """
-    WhithamBoussinesq(params;kwargs)
+    WhithamBoussinesq(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 a Boussinesq-type model with full-dispersion property.
 
 # Argument
 `param` is of type `NamedTuple` and must contain
-
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
 
 
 ## Optional keyword arguments
 - a parameter `α` which determines the model solved:
-    - If `α = 1` (default), then the model has been introduced and studied by E. Dinvay and collaborators;
+    - If `α = 1` (default), then the model has been introduced in [Dinvay, Dutykh and Kalisch](https://doi.org/10.1016/j.apnum.2018.09.016);
     - If `α = 1/2`, then the model is a quasilinear version;
     - If `α < 1/2`, then expect instabilities stemming from ill-posedness of the model.
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
-- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing).
+- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `verbose`: prints information if `true` (default is `true`).
 
 
 # Return values
-Generate necessary ingredients for solving an initial-value problem via `solve!` and in particular
-1. a function `WhithamBoussinesq.f!` to be called in the time-integration solver;
+Generate necessary ingredients for solving an initial-value problem via `solve!`:
+1. a function `WhithamBoussinesq.f!` to be called in explicit time-integration solvers;
 2. a function `WhithamBoussinesq.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed.
 3. a function `WhithamBoussinesq.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
     - `η` is the surface deformation;
@@ -34,12 +33,9 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct WhithamBoussinesq <: AbstractModel
 
-	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	param	:: NamedTuple
-	kwargs	:: NamedTuple
 
     function WhithamBoussinesq(param::NamedTuple;Boussinesq=false,
 								α=1,a=-1/3,b=1/3,
@@ -48,16 +44,14 @@ mutable struct WhithamBoussinesq <: AbstractModel
 		μ 	= param.μ
 		ϵ 	= param.ϵ
 		mesh = Mesh(param)
-		param = ( ϵ = ϵ, μ = μ, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
-		kwargs = (Boussinesq=Boussinesq,α=α,a=a,b=b,dealias=dealias,ktol=ktol,verbose=verbose)
 
 		if Boussinesq==false
-			label = string("Whitham-Boussinesq")
+			if verbose @info "Build the Whitham-Boussinesq model." end
 			F₁ 	= tanh.(sqrt(μ)*abs.(mesh.k))./(sqrt(μ)*abs.(mesh.k))
 			F₁[1] 	= 1
 			F₂ = F₁.^α
 		else
-			label = string("Boussinesq")
+			if verbose @info "Build the Boussinesq model." end
 			F₂ = 1 ./(1 .+μ*b*abs.(mesh.k).^2)
 			F₁ 	= (1 .-μ*a*abs.(mesh.k).^2).*(F₂.^2)
 		end
@@ -70,7 +64,7 @@ mutable struct WhithamBoussinesq <: AbstractModel
 			if verbose @info "no dealiasing" end
 			Π⅔ 	= ones(size(mesh.k))
 		elseif verbose
-			@info string("dealiasing : spectral scheme for power ", dealias + 1," nonlinearity ")
+			@info "dealiasing : spectral scheme for power  $(dealias + 1) nonlinearity"
 		end
         η = zeros(Float64, mesh.N)
         v = zeros(Float64, mesh.N)
@@ -107,6 +101,6 @@ mutable struct WhithamBoussinesq <: AbstractModel
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
 
-        new(label, f!, mapto, mapfro, param, kwargs)
+        new( f!, mapto, mapfro)
     end
 end
