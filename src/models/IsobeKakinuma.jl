@@ -46,7 +46,7 @@ mutable struct IsobeKakinuma <: AbstractModel
 				ktol	= 0,
 				iterate = true,
 				gtol	= 1e-14,
-				precond = false,
+				precond = true,
 				restart	= nothing,
 				maxiter	= nothing,
 				label	= "Isobe-Kakinuma",

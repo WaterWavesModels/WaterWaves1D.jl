@@ -13,7 +13,7 @@ mutable struct Matsuno_fast <: AbstractModel
 	mapfro	:: Function
 
     function Matsuno_fast(param::NamedTuple;
-							dealias=true, label = "Matsuno", verbose=true)
+							dealias=false, label = "Matsuno", verbose=true )
 
 		if verbose
 			@info "Build the Matsuno model."
@@ -135,7 +135,7 @@ the quadratic deep-water model proposed by [Matsuno](https://doi.org/10.1103/Phy
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
 
 ## Optional keyword arguments
-- `dealias`: dealiasing with `1/3` Orlicz rule if `true` (by default) or no dealiasing if `false`;
+- `dealias`: dealiasing with `1/3` Orlicz rule if `true` or no dealiasing if `false` (by default);
 - `label`: a label for future references (default is `"Matsuno"`);
 - `verbose`: prints information if `true` (default is `true`).
 
@@ -157,7 +157,7 @@ mutable struct Matsuno <: AbstractModel
 
 
     function Matsuno(param::NamedTuple ;
-						dealias=true, label = "Matsuno", verbose=true)
+						dealias=false, label = "Matsuno", verbose=true )
 
 		if verbose
 			@info "Build the Matsuno model."

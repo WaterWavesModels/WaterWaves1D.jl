@@ -35,9 +35,11 @@ mutable struct modifiedMatsuno <: AbstractModel
 	mapfro	:: Function
 
     function modifiedMatsuno(param::NamedTuple;
-							ν=nothing,ktol=0,dealias=0,
-							verbose=true,
-							label="modified Matsuno")
+							ν		=nothing,
+							ktol	=0,
+							dealias	=0,
+							label	="modified Matsuno",
+							verbose	=true )
 
 		if verbose @info "Build the modified Matsuno model." end
 

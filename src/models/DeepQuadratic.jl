@@ -13,7 +13,7 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 	mapfro	:: Function
 
     function DeepQuadratic_fast( param::NamedTuple;
-						dealias=true, verbose=true, label="deep quadratic")
+						dealias=false, label="deep quadratic", verbose=true )
 
 		info = "Build the deep quadratic model.\n"
 		ϵ = param.ϵ
@@ -110,7 +110,7 @@ and [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
 
 ## Optional keyword arguments
-- `dealias`: dealiasing with `1/3` Orlicz rule if `true` (by default) or no dealiasing if `false`;
+- `dealias`: dealiasing with `1/3` Orlicz rule if `true` or no dealiasing if `false` (by default);
 - `label`: a label for future references (default is `"deep quadratic"`);
 - `verbose`: prints information if `true` (default is `true`).
 
@@ -131,7 +131,7 @@ mutable struct DeepQuadratic <: AbstractModel
 	mapfro	:: Function
 
     function DeepQuadratic( param::NamedTuple;
-							dealias=true,verbose=true, label="deep quadratic")
+							dealias=false, label="deep quadratic", verbose=true )
 
 		info = "Build the deep quadratic model.\n"
 		ϵ = param.ϵ
