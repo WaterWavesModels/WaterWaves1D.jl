@@ -22,6 +22,7 @@ the water waves system (via conformal mapping, see [Zakharov, Dyachenko and Vasi
 - `maxiter`: the maximal number of iteration in the fix-point algorithm (default is `100`);
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `label`: a label for future references (default is `"water waves"`);
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
@@ -36,6 +37,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct WaterWaves <: AbstractModel
 
+	label   :: String
 	f!		:: Function
 	f1!		:: Function
 	f2!		:: Function
@@ -43,7 +45,15 @@ mutable struct WaterWaves <: AbstractModel
 	mapfro	:: Function
 
     function WaterWaves(param::NamedTuple;
-				ν=nothing,IL=false,method=1,tol=1e-16,maxiter=100,dealias=0,ktol=0,verbose=true)
+						ν	    = nothing,
+						IL	    = false,
+						method  = 1,
+						tol	    = 1e-16,
+						maxiter = 100,
+						dealias	= 0,
+						ktol	= 0,
+						label	= "water waves",
+						verbose	= true)
 
 		# Preparation
 		if verbose @info "Build the water waves system." end
@@ -273,6 +283,6 @@ mutable struct WaterWaves <: AbstractModel
 		end
 
 
-		new(f!, f1!, f2!, mapto, mapfro )
+		new(label, f!, f1!, f2!, mapto, mapfro )
     end
 end

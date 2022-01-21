@@ -16,6 +16,7 @@ See [Bona, Chen, and Saut](https://doi.org/10.1007/s00332-002-0466-4)
 - two parameters `a` (default is `-1/3`) and `b` (default is `+1/3`) which determine the model solved. You need `a+2*b=1/3` for validity as a long wave model (without surface tension).
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `label`: a label for future references (default is `"Boussinesq"`);
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
@@ -29,17 +30,22 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct Boussinesq <: AbstractModel
 
+	label 	:: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 
     function Boussinesq(param::NamedTuple;
-						a=-1/3,b=1/3,α=1, #α plays no role, but must be provided to WhithamBoussinesq
-						dealias=0,ktol=0,verbose=true)
+						a=-1/3,b=1/3,
+						dealias=0,ktol=0,
+						label="Boussinesq",
+						verbose=true)
 
-		m=WhithamBoussinesq(param;Boussinesq=true,a=a,b=b,
-							dealias=dealias,ktol=ktol,verbose=verbose)
+		m=WhithamBoussinesq(param;Boussinesq=true,
+							a=a,b=b,
+							dealias=dealias,ktol=ktol,
+							verbose=verbose,label=label)
 
-		new(m.f!, m.mapto, m.mapfro)
+		new(m.label, m.f!, m.mapto, m.mapfro)
     end
 end

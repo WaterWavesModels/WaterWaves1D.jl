@@ -23,12 +23,17 @@ Return `anim`, an animation, which can then generate (for instance) a `gif` thro
 function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
 							xlims=nothing, ylims=nothing,vlims=nothing,flims=nothing,
 							interpolation=false, compression=false,
-							surface=true,fourier=true,velocity=false )
-	label=nothing
+							surface=true,fourier=true,velocity=false,
+							label=nothing )
+
 	if isa(problems,Problem) # if create_animation is called with a single problem
-		problems=[problems];  # A one-element array to allow `for pb in p`
-		label=problems[1].label; # saves the model's name
-		problems[1].label=""; 	# replace it with blank so that it does not appear in the plots
+		problems=[problems];  # A one-element array to allow `problems[1]`
+		if label == nothing label = [""]
+		else label = [label]
+		end
+	end
+	if label == nothing
+		label = Array{Nothing}(nothing,length(problems))
 	end
 
 	if ylims == nothing
@@ -56,10 +61,11 @@ function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
 	m = surface + fourier + velocity
     anim = @animate for l in L
 		plt = plot(layout=(m,1))
-		for pb in problems
-			plot_solution!( plt, pb; t=pb.times.ts[l],x=x,
+		for i in 1:length(problems)
+			plot_solution!( plt, problems[i]; t=problems[i].times.ts[l],x=x,
 					interpolation=interpolation,compression=compression,
-					surface=surface, fourier=fourier, velocity=velocity )
+					surface=surface, fourier=fourier, velocity=velocity,
+					label = label[i] )
 		end
 		n=1
 		if surface
@@ -77,7 +83,6 @@ function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
 		end
         next!(prog)
     end
-	if label!=nothing problems[1].label=label end # puts back the model's name
 	if name != nothing gif(anim, string(name,".gif"), fps=15); end
 	return anim
 end

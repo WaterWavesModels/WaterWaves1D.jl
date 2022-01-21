@@ -19,6 +19,7 @@ the Serre-Green-Naghdi model
 - `maxiter`: the corresponding option of GMRES (default is `nothing`);
 - `ktol`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `label`: a label for future references (default is `"Green-Naghdi"`);
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
@@ -34,13 +35,35 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct SerreGreenNaghdi <: AbstractModel
 
+	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
 
-    function SerreGreenNaghdi(param::NamedTuple;dealias=0,ktol=0,iterate=true,gtol=1e-14,precond=true,restart=nothing,maxiter=nothing,verbose=true)
-		m=WhithamGreenNaghdi(param;SGN=true,dealias=dealias,ktol=ktol,iterate=iterate,gtol=gtol,precond=precond,restart=restart,maxiter=maxiter,verbose=verbose)
-        new(m.f!, m.mapto, m.mapfro, m.mapfrofull)
+    function SerreGreenNaghdi(param::NamedTuple;
+							dealias = 0,
+							ktol	= 0,
+							iterate	= true,
+							gtol	= 1e-14,
+							precond	= true,
+							restart	= nothing,
+							maxiter	= nothing,
+							label	= "Green-Naghdi",
+							verbose	= true)
+
+		m=WhithamGreenNaghdi(param;
+							SGN=true,
+							dealias=dealias,
+							ktol=ktol,
+							iterate=iterate,
+							gtol=gtol,
+							precond=precond,
+							restart=restart,
+							maxiter=maxiter,
+							label=label,
+							verbose=verbose)
+
+		new(m.label, m.f!, m.mapto, m.mapfro, m.mapfrofull)
     end
 end

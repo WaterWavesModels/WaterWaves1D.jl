@@ -13,12 +13,14 @@ a Boussinesq-type model with full-dispersion property.
 
 
 ## Optional keyword arguments
+- `Boussinesq`: if `true` (default is `false`), compute the standard Boussinesq system instead (see `Boussinesq(param;kwargs)`);
 - a parameter `α` which determines the model solved:
     - If `α = 1` (default), then the model has been introduced in [Dinvay, Dutykh and Kalisch](https://doi.org/10.1016/j.apnum.2018.09.016);
     - If `α = 1/2`, then the model is a quasilinear version;
     - If `α < 1/2`, then expect instabilities stemming from ill-posedness of the model.
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `label`: a label for future references (default is `"Whitham-Boussinesq"`);
 - `verbose`: prints information if `true` (default is `true`).
 
 
@@ -33,13 +35,17 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct WhithamBoussinesq <: AbstractModel
 
+	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 
     function WhithamBoussinesq(param::NamedTuple;Boussinesq=false,
-								α=1,a=-1/3,b=1/3,
-								dealias=0,ktol=0,verbose=true)
+								α = 1, a = -1/3, b = 1/3,
+								dealias = 0,
+								ktol	= 0,
+								label 	= "Whitham-Boussinesq",
+								verbose	=true)
 
 		μ 	= param.μ
 		ϵ 	= param.ϵ
@@ -101,6 +107,6 @@ mutable struct WhithamBoussinesq <: AbstractModel
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
 
-        new( f!, mapto, mapfro)
+        new(label, f!, mapto, mapfro)
     end
 end

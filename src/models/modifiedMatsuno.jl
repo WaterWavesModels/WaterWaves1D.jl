@@ -15,6 +15,7 @@ the modified Matsuno model
 - `ν`: shallow/deep water multiplication factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0` (or `μ=Inf`).
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `label`: a label for future references (default is `"modified Matsuno"`);
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
@@ -28,12 +29,15 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct modifiedMatsuno <: AbstractModel
 
+	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 
     function modifiedMatsuno(param::NamedTuple;
-							ν=nothing,ktol=0,dealias=0, verbose=true)
+							ν=nothing,ktol=0,dealias=0,
+							verbose=true,
+							label="modified Matsuno")
 
 		if verbose @info "Build the modified Matsuno model." end
 
@@ -107,6 +111,6 @@ mutable struct modifiedMatsuno <: AbstractModel
 		end
 
 
-        new(f!, mapto, mapfro )
+        new(label, f!, mapto, mapfro )
     end
 end

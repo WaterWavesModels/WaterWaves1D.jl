@@ -1,35 +1,34 @@
 export DeepQuadratic_fast,DeepQuadratic
 
 """
-    DeepQuadratic_fast(param;dealias,verbose)
+    DeepQuadratic_fast(param;dealias,label,verbose)
 
 Same as `DeepQuadratic`, but faster.
 """
 mutable struct DeepQuadratic_fast <: AbstractModel
 
+	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 
-    function DeepQuadratic_fast( param::NamedTuple; dealias=true, verbose=true)
+    function DeepQuadratic_fast( param::NamedTuple;
+						dealias=true, verbose=true, label="deep quadratic")
 
-		if verbose
-			@info "Build the deep quadratic model."
-			@warn "You should provide the initial value for v by ∂t η = - ∂x v.
-			It equals the derivative of the trace of the velocity potential
-			used for water waves only when they are null."
-		end
+		info = "Build the deep quadratic model.\n"
+		ϵ = param.ϵ
+		info *= "Steepness parameter ϵ=$ϵ (infinite depth).\n"
 
-        ϵ = param.ϵ
-        mesh  = Mesh(param)
-
+		mesh  = Mesh(param)
         x = mesh.x
         Γ = abs.(mesh.k)
         Dx    =  1im * mesh.k            # Differentiation
         H     = -1im * sign.(mesh.k)     # Hilbert transform
 		if dealias == true || dealias == 1
+			info *= "Dealiasing with Orszag’s 3/2 rule. "
 			Π⅔    = Γ .< mesh.kmax * 2/3     # Dealiasing low-pass filter
 		else
+			info *= "No dealiasing. "
 			Π⅔    = zero(Γ) .+ 1     # Dealiasing low-pass filter
 		end
 
@@ -87,14 +86,19 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 		function mapfro(U)
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
-
-		new(f!, mapto, mapfro )
+		if verbose
+			@info info
+			@warn "You should provide the initial value for v by ∂t η = - ∂x v.\n\
+		It equals the derivative of the trace of the velocity potential\
+		used for water waves only when they are null."
+		end
+		new(label, f!, mapto, mapfro )
 
     end
 end
 
 """
-    DeepQuadratic(param;dealias,verbose)
+    DeepQuadratic(param;dealias,label,verbose)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the quadratic deep-water model proposed by [Akers and Milewski](https://doi.org/10.1137/090758386)
@@ -107,6 +111,7 @@ and [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s
 
 ## Optional keyword arguments
 - `dealias`: dealiasing with `1/3` Orlicz rule if `true` (by default) or no dealiasing if `false`;
+- `label`: a label for future references (default is `"deep quadratic"`);
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
@@ -120,30 +125,29 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct DeepQuadratic <: AbstractModel
 
+	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 
-    function DeepQuadratic( param::NamedTuple; dealias=true,verbose=true)
+    function DeepQuadratic( param::NamedTuple;
+							dealias=true,verbose=true, label="deep quadratic")
 
-		if verbose
-			@info "Build the deep quadratic model."
-			@warn "You should provide the initial value for v by ∂t η = - ∂x v.
-			It equals the derivative of the trace of the velocity potential
-			used for water waves only when they are null."
-		end
-
+		info = "Build the deep quadratic model.\n"
 		ϵ = param.ϵ
-		mesh  = Mesh(param)
+		info *= "Steepness parameter ϵ=$ϵ (infinite depth).\n"
 
+		mesh  = Mesh(param)
 		x = mesh.x
         Γ = abs.(mesh.k)
         Dx    =  1im * mesh.k           # Differentiation
         H     = -1im * sign.(mesh.k)    # Hilbert transform
 		if dealias == true || dealias == 1
 			Π⅔    = Γ .< mesh.kmax * 2/3     # Dealiasing low-pass filter
+			info *= "Dealiasing with Orszag’s 3/2 rule. "
 		else
 			Π⅔    = zero(Γ) .+ 1     # Dealiasing low-pass filter
+			info *= "No dealiasing. "
 		end
 
         hnew = zeros(Complex{Float64}, mesh.N)
@@ -177,8 +181,13 @@ mutable struct DeepQuadratic <: AbstractModel
 		function mapfro(U)
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
-
-		new(f!, mapto, mapfro )
+		if verbose
+			@info info
+			@warn "You should provide the initial value for v by ∂t η = - ∂x v.\n\
+				It equals the derivative of the trace of the velocity potential\
+				used for water waves only when they are null."
+		end
+		new(label, f!, mapto, mapfro )
 
     end
 end

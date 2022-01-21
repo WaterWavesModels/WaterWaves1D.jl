@@ -20,6 +20,7 @@ with the "rectification" method proposed by Duchêne and Melinand.
 (by default is `δ=0`, i.e. no regularization and `m=-1`. Notice `m=-Inf` and `δ>0` yields a cut-off filter);
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `label`: a label for future references (default is `"WWn"` with `n` the order of the expansion);
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
@@ -33,6 +34,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct WWn <: AbstractModel
 
+	label   :: String
 	f!		:: Function
 	f1!		:: Function
 	f2!		:: Function
@@ -40,9 +42,17 @@ mutable struct WWn <: AbstractModel
 	mapfro	:: Function
 
     function WWn(param::NamedTuple;
-							ν=nothing,n=2,δ=0,m=-1,ktol=0,dealias=0, verbose=true)
+							ν		= nothing,
+							n		= 2,
+							δ		= 0,
+							m		= -1,
+							ktol	= 0,
+							dealias	= 0,
+							label	= nothing,
+							verbose	= true)
 
 		if !(n in [1,2,3,4]) n=2 end
+		if label == nothing  label = "WW$n" end
 		if verbose @info "Build the spectral model with nonlinearity of order $n" end
 
 		μ 	= param.μ
@@ -205,6 +215,6 @@ mutable struct WWn <: AbstractModel
 
 
 
-        new( f!, f1!, f2! , mapto, mapfro )
+        new(label, f!, f1!, f2! , mapto, mapfro )
     end
 end

@@ -19,6 +19,7 @@ the "√D" model proposed by [Cotter, Holm and Percival](https://doi.org/10.1098
 - `maxiter`: the corresponding option of GMRES (default is `nothing`);
 - `ktol`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `label`: a label for future references (default is `"square-root depth"`);
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
@@ -34,12 +35,23 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct SquareRootDepth <: AbstractModel
 
+	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
 
-    function SquareRootDepth(param::NamedTuple;dealias=0,ktol=0,iterate=true,gtol=1e-14,precond=true,restart=nothing,maxiter=nothing,verbose=true)
+    function SquareRootDepth(param::NamedTuple;
+							dealias = 0,
+							ktol	= 0,
+							iterate	= true,
+							gtol	= 1e-14,
+							precond	= true,
+							restart	= nothing,
+							maxiter	= nothing,
+							label	= "square-root depth",
+							verbose	= true)
+
 		if verbose @info "Build the √D model of Cotter, Holm and Percival." end
 
 		μ 	= param.μ
@@ -134,6 +146,6 @@ mutable struct SquareRootDepth <: AbstractModel
 				   real(ifft(U[:,1])),real(ifft(U[:,2])),real(ifft(L \ U[:,2]))
 		end
 
-        new(f!, mapto, mapfro, mapfrofull)
+        new(label, f!, mapto, mapfro, mapfrofull)
     end
 end

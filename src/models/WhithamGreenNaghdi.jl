@@ -12,7 +12,7 @@ the fully dispersive Green-Naghdi model proposed by [Duchêne, Israwi and Talhou
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
 
 ## Optional keyword arguments
-- `SGN`: if `true` computes the Serre-Green-Naghdi (SGN) instead of Whitham-Green-Naghdi (WGN) system (default is `false`);
+- `SGN`: if `true` (default is `false`), compute the Serre-Green-Naghdi (SGN) instead of Whitham-Green-Naghdi (WGN) system (see `SerreGreenNaghdi(param;kwargs)`);
 - `iterative`: solve the elliptic problem through GMRES if `true`, LU decomposition if `false` (default is `true`);
 - `precond`: use a (left) preconditioner for GMRES if `true` (default), choose `precond` as the preconditioner if provided;
 - `gtol`: relative tolerance of the GMRES algorithm (default is `1e-14`);
@@ -20,6 +20,7 @@ the fully dispersive Green-Naghdi model proposed by [Duchêne, Israwi and Talhou
 - `maxiter`: the corresponding option of GMRES (default is `nothing`);
 - `ktol`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `label`: a label for future references (default is `"Whitham-Green-Naghdi"`);
 - `verbose`: prints information if `true` (default is `true`).
 
 # Return values
@@ -35,12 +36,23 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct WhithamGreenNaghdi <: AbstractModel
 
+	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
 
-    function WhithamGreenNaghdi(param::NamedTuple;SGN=false,dealias=0,ktol=0,iterate=true,gtol=1e-14,precond=true,restart=nothing,maxiter=nothing,verbose=true)
+    function WhithamGreenNaghdi(param::NamedTuple;
+								SGN		= false,
+								dealias	= 0,
+								ktol	= 0,
+								iterate	= true,
+								gtol	= 1e-14,
+								precond	= true,
+								restart	= nothing,
+								maxiter	= nothing,
+								label	= "Whitham-Green-Naghdi",
+								verbose	= true)
 		if verbose
 			if SGN == true
 				@info "Build the Serre-Green-Naghdi model."
@@ -149,6 +161,6 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 				   real(ifft(U[:,1])),real(ifft(U[:,2])),real(ifft(L \ U[:,2]))
 		end
 
-        new(f!, mapto, mapfro, mapfrofull)
+        new(label, f!, mapto, mapfro, mapfrofull)
     end
 end

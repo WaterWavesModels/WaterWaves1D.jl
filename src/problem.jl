@@ -1,11 +1,9 @@
 export Problem
 
 """
-    Problem( model, initial, param ; label, verbose=true)
-or
-    Problem( model, initial, param, solver ; label, verbose=true)
+    Problem( model, initial, param ; solver, label, verbose=true)
 
-Builds an initial-value problem which can then be solved (integrated in time) through `solve!( problem )`
+Build an initial-value problem which can then be solved (i.e. integrated in time) through `solve!( problem )`
 
 # Arguments
 - `model   :: AbstractModel`,  the system of equation solved.
@@ -20,12 +18,11 @@ May be buit, e.g., by `Init(η,v)` where
     - `dt`, the timestep
     - additionally, it may contain `Ns` the number of computed data or `ns` for storing data every `ns` computation steps (by default, every computed data is stored).
 
-- `solver  :: TimeSolver`, the solver for time integration (optional, default is explicit Runge-Kutta fourth order solver).
+## Optional keyword arguments
+- `solver :: TimeSolver`, the solver for time integration (default is explicit Runge-Kutta fourth order solver).
 May be built, e.g., by `RK4(model)` or `RK4_naive()`.
-
-The keyword argument `label` is used in future references (e.g. `plot_solution`).
-
-Information are not printed if keyword `verbose = false` (default is `true`).
+- label   :: String ` is used in future references (e.g. `plot_solution`).
+- Information are not printed if `verbose = false` (default is `true`).
 
 """
 mutable struct Problem
@@ -43,9 +40,16 @@ mutable struct Problem
                      initial :: InitialData,
                      param   :: NamedTuple;
                      solver = RK4(model)  :: TimeSolver,
-                     label = "",
+                     label = nothing,
                      verbose = true :: Bool)
 
+        if label == nothing # try to retrieve label from the model (if not provided by the user)
+            try
+                label = model.label
+            catch
+                label = ""
+            end
+        end
         if verbose == true
             @info "Build the initial-value problem $label."
         end
@@ -76,14 +80,14 @@ end
 export solve!
 
 """
-    solve!( problem; verbose=true )
+    solve!( problem :: Problem; verbose=true )
 
-Solves (i.e. integrates in time) an initial-value problem
+Solve (i.e. integrate in time) an initial-value problem
 
 The argument `problem` should be of type `Problem`.
 It may be buit, e.g., by `Problem(model, initial, param)`
 
-Information are not printed if keyword `verbose = false` (default is `true`).
+Information are not printed if keyword argument `verbose = false` (default is `true`).
 
 """
 function solve!(problem :: Problem; verbose=true::Bool)
@@ -91,9 +95,9 @@ function solve!(problem :: Problem; verbose=true::Bool)
     ci = get(ENV, "CI", nothing) == "true"
 
     if verbose == true
-        @info "Now solving the initial-value problem $(problem.label)
-            with timestep dt=$(problem.times.dt), final time T=$(problem.times.tfin),
-            and N=$(problem.mesh.N) collocation points."
+        @info "Now solving the initial-value problem $(problem.label)\n\
+            with timestep dt=$(problem.times.dt), final time T=$(problem.times.tfin),\n\
+            and N=$(problem.mesh.N) collocation points on [$(problem.mesh.xmin),$(problem.mesh.xmax)]."
     end
 
     U = copy(last(problem.data.U))
@@ -144,10 +148,11 @@ using Base.Threads
 """
     solve!( problems; verbose=true )
 
-Solves (i.e. integrates in time) a collection of initial-value problems.
+Solve (i.e. integrate in time) a collection of initial-value problems.
 
 The argument `problems` should be a collection (list, array...) of elements of type `Problem`.
 
+Information are not printed if keyword argument `verbose = false` (default is `true`).
 """
 function solve!(problems; verbose=true::Bool)
     U=[];nsteps=0
@@ -158,9 +163,9 @@ function solve!(problems; verbose=true::Bool)
     pg=Progress(nsteps;dt=1)
     @threads for i in 1:length(problems)
         if verbose == true
-            @info "Now solving the initial-value problem $(problems[i].label)
-                with timestep dt=$(problems[i].times.dt), final time T=$(problems[i].times.tfin),
-                and N=$(problems[i].mesh.N) collocation points."
+            @info "Now solving the initial-value problem $(problems[i].label)\n\
+                with timestep dt=$(problems[i].times.dt), final time T=$(problems[i].times.tfin),\n\
+                and N=$(problems[i].mesh.N) collocation points on [$(problems[i].mesh.xmin),$(problems[i].mesh.xmax)]."
         end
 
         if problems[i].times.ns == 1

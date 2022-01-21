@@ -1,17 +1,20 @@
 export Matsuno_fast,Matsuno
 
 """
-	Matsuno_fast(param;dealias,verbose)
+	Matsuno_fast(param;dealias,label,verbose)
 
 Same as `Matsuno`, but faster.
 """
 mutable struct Matsuno_fast <: AbstractModel
 
+	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 
-    function Matsuno_fast(param::NamedTuple; dealias=true, verbose=true)
+    function Matsuno_fast(param::NamedTuple;
+							dealias=true, label = "Matsuno", verbose=true)
+
 		if verbose
 			@info "Build the Matsuno model."
 			@warn "The velocity is consistent with the tangential velocity used for water waves
@@ -116,12 +119,12 @@ mutable struct Matsuno_fast <: AbstractModel
 		    real(ifft(view(U,:,1))),real(ifft(view(U,:,2)))
 		end
 
-		new(f!, mapto, mapfro )
+		new(label, f!, mapto, mapfro )
     end
 end
 
 """
-	Matsuno(param;dealias,verbose)
+	Matsuno(param;dealias,label,verbose)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the quadratic deep-water model proposed by [Matsuno](https://doi.org/10.1103/PhysRevLett.69.609).
@@ -133,8 +136,8 @@ the quadratic deep-water model proposed by [Matsuno](https://doi.org/10.1103/Phy
 
 ## Optional keyword arguments
 - `dealias`: dealiasing with `1/3` Orlicz rule if `true` (by default) or no dealiasing if `false`;
+- `label`: a label for future references (default is `"Matsuno"`);
 - `verbose`: prints information if `true` (default is `true`).
-
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
@@ -147,12 +150,15 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct Matsuno <: AbstractModel
 
+	label   :: String
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 
 
-    function Matsuno(param::NamedTuple ; dealias=true, verbose=true)
+    function Matsuno(param::NamedTuple ;
+						dealias=true, label = "Matsuno", verbose=true)
+
 		if verbose
 			@info "Build the Matsuno model."
 			@warn "The velocity is consistent with the tangential velocity used for water waves
@@ -204,6 +210,6 @@ mutable struct Matsuno <: AbstractModel
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
 
-		new(f!, mapto, mapfro )
+		new(label, f!, mapto, mapfro )
     end
 end
