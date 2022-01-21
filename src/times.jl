@@ -1,12 +1,15 @@
 export Times
 """
-    `Times(dt, tfin; ns, Ns)`
+    `Times(param; ns, Ns)`
 
 Constructs a mesh of times.
 
 # Arguments
-- `dt`  : timestep;
-- `tfin`: final time;
+`param` is either
+- `dt,T` with `dt` the timestep and `T` the final time of comuptation; or
+- a `NamedTuple` containing `dt` and `T`
+
+## Optional keyword arguments
 - `ns`  : data are stored every `ns` computations (optional, default = 1).
 - `Ns`  : `Ns` data (in addition to the initial datum) are stored (optional, by default `floor( tfin/dt)).
 If both `Ns` and `ns` are given, `Ns` overrules `ns`.
@@ -45,5 +48,10 @@ struct Times
         ns = ind_stored[2:end]-ind_stored[1:end-1]
         new( Nc, Ns, ns, tfin, dt, tc, ts)
     end
+
+    function Times( param :: NamedTuple ; ns = 1, Ns=nothing)
+        Times(param.dt,param.T;ns=ns,Ns=Ns)
+    end
+
 
 end
