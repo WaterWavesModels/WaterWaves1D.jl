@@ -9,7 +9,7 @@ Constructs a mesh of collocation points and associated Fourier modes.
 Can be either
 - `xmin , xmax , N `; or
 - `L , N ` (same as above with `xmin=-L` and `xmax=L`); or
-- `param :: NamedTuple`, param contains `N` and `L`, then same as above; or
+- `param :: NamedTuple`, a `NamedTuple` containing `N` and `L`, then same as above; or
 - `x` a vector of regularly spaced collocation points`.
 
 The mesh as `N` collocation points regularly spaced between `xmin` (included) and `xmax` (excluded)
