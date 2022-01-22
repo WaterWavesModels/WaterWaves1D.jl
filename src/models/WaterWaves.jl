@@ -13,7 +13,7 @@ the water waves system (via conformal mapping, see [Zakharov, Dyachenko and Vasi
 
 ## Optional keyword arguments
 - `ν`: shallow/deep water multiplication factor (see [Lannes, The water waves problem](https://bookstore.ams.org/surv-188)). By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise.
-- `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter.
+- `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
 - `method ∈ {1,2,3}`: method used to initialize the conformal mapping, as a fix-point problem `F(u)=u`
     - if `method == 1`, use standard contraction fix-point iteration;
     - if `method == 2`, use Newton algorithm with GMRES iterative solver to invert the Jacobian;
@@ -55,40 +55,68 @@ mutable struct WaterWaves <: AbstractModel
 						label	= "water waves",
 						verbose	= true)
 
-		# Preparation
-		if verbose @info "Build the water waves system." end
-
+		# Set up
 		μ 	= param.μ
 		ϵ 	= param.ϵ
 		if ν == nothing
 			if μ > 1
 				ν = 1/sqrt(μ)
+				nu = "1/√μ (deep water case)"
 			else
 				ν = 1
+				nu = "1 (shallow water case)"
 			end
+		else
+			nu = "$ν"
 		end
-
 		if μ == Inf || ν==0 # infinite layer case
 			IL = true;  # IL (=Infinite layer) is a flag to be used in functions tanh,cotanh,xdcotanh
 			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		end
+
+
+		if verbose # Print information
+			info = "Build the water waves system.\n"
+			if IL == true
+				info *= "Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+			else
+				info *= "Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
+						scaling parameter ν=$nu.\n"
+			end
+			info *= "Build initial data with method $method: "
+			if method == 1 info *= "standard contraction fix-point iteration." end
+			if method == 2 info *= "Newton algorithm with GMRES iterative solver to invert the Jacobian." end
+			if method == 3 info *= "Newton algorithm with direct solver to invert the Jacobian." end
+			info *= " Relative tolerance $tol and maximum $maxiter iterations.\n"
+			if dealias == 0
+				info *= "No dealiasing. "
+			else
+				info *= "Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
+			end
+			if ktol == 0
+				info *= "No Krasny filter. "
+			else
+				info *= "Krasny filter with tolerance $ktol."
+			end
+			info *= "\nShut me up with keyword argument `verbose = false`."
+			@info info
+		end
+
+		# Pre-allocate useful data
 		mesh = Mesh(param)
 
 		x 	= mesh.x
 		x₀ = x[1]
 		k 	= mesh.k
 
-    	∂ₓ	=  1im * mesh.k             # Differentiation Fourier multiplier
-		K = mesh.kmax * (1-dealias/(2+dealias))
-		Π⅔ 	= abs.(mesh.k) .<= K 		# Dealiasing low-pass filter
+    	∂ₓ	=  1im * k             # Differentiation Fourier multiplier
 		if dealias == 0
-			if verbose @info "no dealiasing" end
-			Π⅔ 	= ones(size(mesh.k))
-		elseif verbose
-			@info "dealiasing : spectral scheme for power  $(dealias + 1) nonlinearity"
+			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
+		else
+			K = mesh.kmax * (1-dealias/(2+dealias))
+			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
 		end
 
-		# preallocate some variables for memory use
 		fz = zeros(Complex{Float64}, mesh.N)
         z = zeros(Float64, mesh.N)
         phi = zeros(Float64, mesh.N)
@@ -120,7 +148,8 @@ mutable struct WaterWaves <: AbstractModel
 			sum(f)/length(f)
 		end
 
-		# Construct conformal variables in the flat strip from initial data
+		# Build raw data from physical data.
+		# Use a conformal change of coordinate
 		function mapto(data::InitialData)
 		  if data.η(x)==zero(x) && data.v(x)==zero(x)  #useful when defining the type of initial data in some solvers
 			  return zeros(Complex{Float64}, (mesh.N,2))
@@ -229,7 +258,10 @@ mutable struct WaterWaves <: AbstractModel
 		  end
 		end
 
-		# Reconstructs physical variables from conformal variables
+		# Reconstruct physical variables from raw data
+		# Return `(η,v)`, where
+		# - `η` is the surface deformation;
+		# - `v` is the derivative of the trace of the velocity potential.
 		function mapfro(U)
 		   	ξ  .= real.(sqrt(μ)*(1+ϵ*meanf(U[:,1]))*k)
 	       	xv .= real.(-1im*sqrt(μ)*ifft( Π⅔ .*cotanh(ξ) .*  U[:,1] ))
@@ -237,7 +269,7 @@ mutable struct WaterWaves <: AbstractModel
 		   return x + ϵ*xv, real.( ifft(U[:,1]) ) , real.( ifft(U[:,2]) )
 		end
 
-		# Water Waves equations are ∂t U = f!(U)
+		# Water Waves equations are ∂t U = f(U)
 		function f!(U)
 		   	Dphi .= real.(ifft(U[:,2]))
 			ξ .= sqrt(μ)*(1 .+ ϵ*meanf(U[:,1]))*k
@@ -254,7 +286,7 @@ mutable struct WaterWaves <: AbstractModel
 
 		end
 
-		# Define (f1!,f2!) a splitting of the function f! used in symplectic schemes
+		# Water waves equations are ∂t (U1,U2) = (f1(U1,U2) , f2(U1,U2))
 		function f1!(U1,U2)
 		   	Dphi .= real.(ifft(U2))
 			ξ .= sqrt(μ)*(1 .+ ϵ*meanf(U1))*k

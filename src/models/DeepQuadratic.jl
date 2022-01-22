@@ -15,21 +15,35 @@ mutable struct DeepQuadratic_fast <: AbstractModel
     function DeepQuadratic_fast( param::NamedTuple;
 						dealias=false, label="deep quadratic", verbose=true )
 
-		info = "Build the deep quadratic model.\n"
+		# Set up
 		ϵ = param.ϵ
-		info *= "Steepness parameter ϵ=$ϵ (infinite depth).\n"
 
+		if verbose  # Print information
+			info = "Build the deep quadratic model.\n"
+			info *= "Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+			if dealias == true || dealias == 1
+				info *= "Dealiasing with Orszag’s 3/2 rule. "
+			else
+				info *= "No dealiasing. "
+			end
+			info *= "\nShut me up with keyword argument `verbose = false`."
+			@info info
+			@warn "You should provide the initial value for v by ∂t η = - ∂x v.\n\
+		It equals the derivative of the trace of the velocity potential \
+		used for water waves only when they are null."
+		end
+
+		# Pre-allocate useful data
 		mesh  = Mesh(param)
         x = mesh.x
-        Γ = abs.(mesh.k)
-        Dx    =  1im * mesh.k            # Differentiation
-        H     = -1im * sign.(mesh.k)     # Hilbert transform
+		k = mesh.k
+        Γ = abs.(k)
+        Dx    =  1im * k            	# Differentiation
+        H     = -1im * sign.(k)     	# Hilbert transform
 		if dealias == true || dealias == 1
-			info *= "Dealiasing with Orszag’s 3/2 rule. "
-			Π⅔    = Γ .< mesh.kmax * 2/3     # Dealiasing low-pass filter
+			Π⅔    = Γ .< mesh.kmax * 2/3 	# Dealiasing low-pass filter
 		else
-			info *= "No dealiasing. "
-			Π⅔    = zero(Γ) .+ 1     # Dealiasing low-pass filter
+			Π⅔    = zero(Γ) .+ 1     	 	# No dealiasing (Π⅔=Id)
 		end
 
         hnew = zeros(Complex{Float64}, mesh.N)
@@ -41,6 +55,7 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 
         Px  = plan_fft(hnew; flags = FFTW.MEASURE)
 
+		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
 		    ldiv!(hnew, Px , view(U,:,1))
@@ -74,6 +89,8 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 
 		end
 
+		# Build raw data from physical data.
+		# Discrete Fourier transform with, possibly, dealiasing.
 		# This function is correct only when the initial data for v is zero.
 		function mapto(data::InitialData)
 		    [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
@@ -85,12 +102,6 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 		# Inverse Fourier transform and takes the real part.
 		function mapfro(U)
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
-		end
-		if verbose
-			@info info
-			@warn "You should provide the initial value for v by ∂t η = - ∂x v.\n\
-		It equals the derivative of the trace of the velocity potential\
-		used for water waves only when they are null."
 		end
 		new(label, f!, mapto, mapfro )
 
@@ -133,21 +144,35 @@ mutable struct DeepQuadratic <: AbstractModel
     function DeepQuadratic( param::NamedTuple;
 							dealias=false, label="deep quadratic", verbose=true )
 
-		info = "Build the deep quadratic model.\n"
+		# Set up
 		ϵ = param.ϵ
-		info *= "Steepness parameter ϵ=$ϵ (infinite depth).\n"
 
+		if verbose   # Print information
+			info = "Build the deep quadratic model.\n"
+			info *= "Steepness parameter ϵ=$(param.ϵ) (infinite depth case).\n"
+			if dealias == true || dealias == 1
+				info *= "Dealiasing with Orszag’s 3/2 rule. "
+			else
+				info *= "No dealiasing. "
+			end
+			info *= "\nShut me up with keyword argument `verbose = false`."
+			@info info
+			@warn "You should provide the initial value for v by ∂t η = - ∂x v.\n\
+		It equals the derivative of the trace of the velocity potential \
+		used for water waves only when they are null."
+		end
+
+		# Pre-allocate useful data
 		mesh  = Mesh(param)
 		x = mesh.x
-        Γ = abs.(mesh.k)
-        Dx    =  1im * mesh.k           # Differentiation
-        H     = -1im * sign.(mesh.k)    # Hilbert transform
+		k = mesh.k
+        Γ = abs.(k)
+        Dx    =  1im * k           	# Differentiation
+        H     = -1im * sign.(k)    	# Hilbert transform
 		if dealias == true || dealias == 1
-			Π⅔    = Γ .< mesh.kmax * 2/3     # Dealiasing low-pass filter
-			info *= "Dealiasing with Orszag’s 3/2 rule. "
+			Π⅔    = Γ .< mesh.kmax * 2/3 	# Dealiasing low-pass filter
 		else
-			Π⅔    = zero(Γ) .+ 1     # Dealiasing low-pass filter
-			info *= "No dealiasing. "
+			Π⅔    = zero(Γ) .+ 1     		# No dealiasing (Π⅔=Id)
 		end
 
         hnew = zeros(Complex{Float64}, mesh.N)
@@ -157,6 +182,7 @@ mutable struct DeepQuadratic <: AbstractModel
         I₂ = zeros(Complex{Float64}, mesh.N)
         I₃ = zeros(Complex{Float64}, mesh.N)
 
+		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
 			hnew .=ifft(U[:,1]);
@@ -169,6 +195,8 @@ mutable struct DeepQuadratic <: AbstractModel
 
 		end
 
+		# Build raw data from physical data.
+		# Discrete Fourier transform with, possibly, dealiasing.
 		# This function is correct only when the initial data for v is zero.
 		function mapto(data::InitialData)
 			[Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
@@ -181,12 +209,7 @@ mutable struct DeepQuadratic <: AbstractModel
 		function mapfro(U)
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
-		if verbose
-			@info info
-			@warn "You should provide the initial value for v by ∂t η = - ∂x v.\n\
-				It equals the derivative of the trace of the velocity potential\
-				used for water waves only when they are null."
-		end
+
 		new(label, f!, mapto, mapfro )
 
     end

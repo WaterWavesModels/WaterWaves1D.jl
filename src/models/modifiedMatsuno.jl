@@ -13,6 +13,7 @@ the modified Matsuno model
 
 ## Optional keyword arguments
 - `ν`: shallow/deep water multiplication factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0` (or `μ=Inf`).
+- `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"modified Matsuno"`);
@@ -35,50 +36,83 @@ mutable struct modifiedMatsuno <: AbstractModel
 	mapfro	:: Function
 
     function modifiedMatsuno(param::NamedTuple;
-							ν		=nothing,
-							ktol	=0,
-							dealias	=0,
-							label	="modified Matsuno",
-							verbose	=true )
+							ν		= nothing,
+							IL	    = false,
+							ktol	= 0,
+							dealias	= 0,
+							label	= "modified Matsuno",
+							verbose	= true )
 
-		if verbose @info "Build the modified Matsuno model." end
-
+		# Set up
 		μ 	= param.μ
 		ϵ 	= param.ϵ
 		if ν == nothing
 			if μ > 1
 				ν = 1/sqrt(μ)
+				nu = "1/√μ (deep water case)"
 			else
 				ν = 1
+				nu = "1 (shallow water case)"
 			end
+		else
+			nu = "$ν"
+		end
+		if μ == Inf || ν==0 # infinite layer case
+			IL = true;  # IL (=Infinite layer) is a flag to be used therefafter
+			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
+		else IL = false
 		end
 
+		if verbose  # Print information
+			info = "Build the modified 'exponential' Matsuno model of Duchêne and Melinand.\n"
+			if IL == true
+				info *= "Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+			else
+				info *= "Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
+						scaling parameter ν=$nu.\n"
+			end
+			if dealias == true || dealias == 1
+				info *= "Dealiasing with Orszag’s 3/2 rule. "
+			else
+				info *= "No dealiasing. "
+			end
+			if ktol == 0
+				info *= "No Krasny filter. "
+			else
+				info *= "Krasny filter with tolerance $ktol."
+			end
+			info *= "\nShut me up with keyword argument `verbose = false`."
+			@info info
+			@warn "The velocity is consistent with the \
+			derivative of the trace of the velocity potential \
+			used for water waves only when they are null."
+		end
+
+		# Pre-allocate useful data
 		mesh = Mesh(param)
 		x = mesh.x
-		k = copy(mesh.k)
-		K = mesh.kmax * (1-dealias/(2+dealias))
-		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
+		k = mesh.k
 		if dealias == 0
-			if verbose @info "no dealiasing" end
-			Π⅔ 	= ones(size(mesh.k))
-		elseif verbose
-			@info "dealiasing : spectral scheme for power  $(dealias + 1) nonlinearity"
-		end
-		if μ == Inf || ν==0
-			∂ₓF₀ 	= 1im * sign.(mesh.k)
-			G₀ 	= abs.(mesh.k)
-			μ = 1
-			ν = 1
+			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
 		else
-        	∂ₓF₀ 	= 1im* sign.(mesh.k) .* tanh.(sqrt(μ)*abs.(mesh.k))
-			G₀ 	= sqrt(μ)*abs.(mesh.k).*tanh.(sqrt(μ)*abs.(mesh.k))
+			K = mesh.kmax * (1-dealias/(2+dealias))
+			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
 		end
-		∂ₓ	=  1im * sqrt(μ)* mesh.k            # Differentiation
+		if IL == true
+			∂ₓF₀ 	= 1im * sign.(k)
+			G₀ 	= abs.(k)
+		else
+        	∂ₓF₀ 	= 1im* sign.(k) .* tanh.(sqrt(μ)*abs.(k))
+			G₀ 	= sqrt(μ)*abs.(k).*tanh.(sqrt(μ)*abs.(k))
+		end
+		∂ₓ	=  1im * sqrt(μ)* k            # Differentiation
 		z = zeros(Complex{Float64}, mesh.N)
 		η = copy(z) ; v = copy(z) ; F = copy(z) ;
 		fftη = copy(z) ; fftv = copy(z) ; Q = copy(z) ; R = copy(z) ;
 
+		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
+		# This function is correct only when the initial data for v is zero.
 		function mapto(data::InitialData)
 			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
 			U[abs.(U).< ktol ].=0
@@ -87,13 +121,13 @@ mutable struct modifiedMatsuno <: AbstractModel
 
 		# Return `(η,v)`, where
 		# - `η` is the surface deformation;
-		# - `v` is the derivative of the trace of the velocity potential.
+		# - `v` is the velocity variable.
 		# Inverse Fourier transform and takes the real part.
 		function mapfro(U)
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
 
-		# Evolution equations are ∂t U = f!(U)
+		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
 			fftη .= U[:,1]

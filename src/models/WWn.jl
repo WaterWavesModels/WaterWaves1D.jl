@@ -15,6 +15,7 @@ with the "rectification" method proposed by Duchêne and Melinand.
 
 ## Optional keyword arguments
 - `ν`: shallow/deep water multiplication factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0` (or `μ=Inf`).
+- `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
 - `n :: Int`: the order of the expansion; linear system if `1`, quadratic if `2`, cubic if `3`, quartic if `4` (default and other values yield `2`);
 - `δ` and `m`: parameters of the rectifier operator, set as `k->min(1,|δ*k|^m)` or `k->min(1,|δ*k|^m[1]*exp(1-|δ*k|^m[2]))` if `m` is a couple
 (by default is `δ=0`, i.e. no regularization and `m=-1`. Notice `m=-Inf` and `δ>0` yields a cut-off filter);
@@ -43,6 +44,7 @@ mutable struct WWn <: AbstractModel
 
     function WWn(param::NamedTuple;
 							ν		= nothing,
+							IL	    = false,
 							n		= 2,
 							δ		= 0,
 							m		= -1,
@@ -51,24 +53,56 @@ mutable struct WWn <: AbstractModel
 							label	= nothing,
 							verbose	= true)
 
+		# Set up
 		if !(n in [1,2,3,4]) n=2 end
 		if label == nothing  label = "WW$n" end
-		if verbose @info "Build the spectral model with nonlinearity of order $n" end
-
 		μ 	= param.μ
 		ϵ 	= param.ϵ
 		if ν == nothing
 			if μ > 1
 				ν = 1/sqrt(μ)
+				nu = "1/√μ (deep water case)"
 			else
 				ν = 1
+				nu = "1 (shallow water case)"
 			end
+		else
+			nu = "$ν"
+		end
+		if μ == Inf || ν==0 # infinite layer case
+			IL = true;  # IL (=Infinite layer) is a flag to be used thereafter
+			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		end
 
-		mesh = Mesh(param)
+		if verbose # Print information
+			info = "Build the spectral model of order $n.\n"
+			if IL == true
+				info *= "Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+			else
+				info *= "Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
+						scaling parameter ν=$nu.\n"
+			end
+			if δ != 0
+				info *= "Rectifier with strength δ=$δ and order m=$m.\n"
+			end
+			if dealias == 0
+				info *= "No dealiasing. "
+			else
+				info *= "Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
+			end
+			if ktol == 0
+				info *= "No Krasny filter. "
+			else
+				info *= "Krasny filter with tolerance $ktol."
+			end
+			info *= "\nShut me up with keyword argument `verbose = false`."
+			@info info
+		end
 
+		# Pre-allocate useful data
+		mesh = Mesh(param)
+		k = mesh.k
 		x = mesh.x
-		k = copy(mesh.k)
 
 		if length(m) == 1
 			rectifier = k -> min(1,abs(k)^m)
@@ -76,28 +110,25 @@ mutable struct WWn <: AbstractModel
 			rectifier = k -> min(1,abs(k)^(m[1])*exp(1-abs(k)^m[2]))
 		end
 		Π = rectifier.(δ*k)   # regularizing rectifier
-		K = mesh.kmax * (1-dealias/(2+dealias))
-		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
 		if dealias == 0
-			if verbose @info "no dealiasing" end
-			Π⅔ 	= ones(size(mesh.k))
-		elseif verbose
-			@info "dealiasing : spectral scheme for power  $(dealias + 1) nonlinearity"
-		end
-		if μ == Inf || ν==0
-			∂ₓF₀ 	= 1im * sign.(mesh.k)
-			G₀ 	= abs.(mesh.k)
-			μ = 1
-			ν = 1
+			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
 		else
-        	∂ₓF₀ 	= 1im* sign.(mesh.k) .* tanh.(sqrt(μ)*abs.(mesh.k))
-			G₀ 	= sqrt(μ)*abs.(mesh.k).*tanh.(sqrt(μ)*abs.(mesh.k))
+			K = mesh.kmax * (1-dealias/(2+dealias))
+			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
 		end
-		∂ₓ	=  1im * sqrt(μ)* mesh.k            # Differentiation
+		if IL == true
+			∂ₓF₀ 	= 1im * sign.(k)
+			G₀ 	= abs.(k)
+		else
+        	∂ₓF₀ 	= 1im* sign.(k) .* tanh.(sqrt(μ)*abs.(k))
+			G₀ 	= sqrt(μ)*abs.(k).*tanh.(sqrt(μ)*abs.(k))
+		end
+		∂ₓ	=  1im * sqrt(μ)* k            # Differentiation
 		z = zeros(Complex{Float64}, mesh.N)
 		η = copy(z) ; v = copy(z) ; Lphi = copy(z) ; LzLphi = copy(z) ; dxv = copy(z) ;
 		fftη = copy(z) ; fftv = copy(z) ; Q = copy(z) ; R = copy(z) ;
 
+		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
 			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
@@ -113,7 +144,7 @@ mutable struct WWn <: AbstractModel
 			real( ifft(U[:,1]) ),real( ifft(U[:,2]) )
 		end
 
-		# Evolution equations are ∂t U = f!(U)
+		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
 			fftη .= U[:,1]
@@ -151,7 +182,7 @@ mutable struct WWn <: AbstractModel
 
 		end
 
-		# Evolution equations are ∂t U = (f1!(U) f2!(U))
+		# Evolution equations are ∂t (U1,U2) = (f1(U1,U2) , f2(U1,U2))
 		function f1!(U1,U2)
 
 			fftη .= U1

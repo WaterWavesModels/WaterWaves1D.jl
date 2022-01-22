@@ -15,23 +15,37 @@ mutable struct Matsuno_fast <: AbstractModel
     function Matsuno_fast(param::NamedTuple;
 							dealias=false, label = "Matsuno", verbose=true )
 
-		if verbose
-			@info "Build the Matsuno model."
-			@warn "The velocity is consistent with the tangential velocity used for water waves
-			only when they are null."
-		end
+			# Set up
+			ϵ 	= param.ϵ
+
+			if verbose  # Print information
+				info = "Build the Matsuno model.\n"
+				info *= "Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+				if dealias == true || dealias == 1
+					info *= "Dealiasing with Orszag’s 3/2 rule. "
+				else
+					info *= "No dealiasing. "
+				end
+				info *= "\nShut me up with keyword argument `verbose = false`."
+				@info info
+				@warn "The velocity is consistent with the \
+				derivative of the trace of the velocity potential \
+				used for water waves only when they are null."
+			end
 
 
+		# Pre-allocate useful data
 		ϵ        = param.ϵ
         mesh     = Mesh(param)
         x        = mesh.x
-        Γ        = abs.(mesh.k)
-        Dx       =  1im * mesh.k        # Differentiation
-        H        = -1im * sign.(mesh.k) # Hilbert transform
+		k 		 = mesh.k
+        Γ        = abs.(k)
+        Dx       =  1im * k        	# Differentiation
+        H        = -1im * sign.(k) 	# Hilbert transform
 		if dealias == true || dealias == 1
-			Π⅔    = Γ .< mesh.kmax * 2/3     # Dealiasing low-pass filter
+			Π⅔    = Γ .< mesh.kmax * 2/3    # Dealiasing low-pass filter
 		else
-			Π⅔    = zero(Γ) .+ 1     # Dealiasing low-pass filter
+			Π⅔    = zero(Γ) .+ 1     		# No dealiasing (Π⅔=Id)
 		end
 
         hnew = zeros(Complex{Float64}, mesh.N)
@@ -44,6 +58,7 @@ mutable struct Matsuno_fast <: AbstractModel
 
         Px  = plan_fft(hnew; flags = FFTW.MEASURE)
 
+		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
 		    for i in eachindex(hnew)
@@ -107,6 +122,8 @@ mutable struct Matsuno_fast <: AbstractModel
 
 		end
 
+		# Build raw data from physical data.
+		# Discrete Fourier transform with, possibly, dealiasing.
 		# This function is correct only when the initial data for v is zero.
 		function mapto(data::InitialData)
 
@@ -114,7 +131,10 @@ mutable struct Matsuno_fast <: AbstractModel
 
 		end
 
-		# This function is correct only when the initial data for v is zero.
+		# Return `(η,v)`, where
+		# - `η` is the surface deformation;
+		# - `v` is the velocity variable.
+		# Inverse Fourier transform and takes the real part.
 		function mapfro(U)
 		    real(ifft(view(U,:,1))),real(ifft(view(U,:,2)))
 		end
@@ -159,18 +179,31 @@ mutable struct Matsuno <: AbstractModel
     function Matsuno(param::NamedTuple ;
 						dealias=false, label = "Matsuno", verbose=true )
 
-		if verbose
-			@info "Build the Matsuno model."
-			@warn "The velocity is consistent with the tangential velocity used for water waves
-			only when they are null."
+		# Set up
+		ϵ 	= param.ϵ
+
+		if verbose  # Print information
+			info = "Build the Matsuno model.\n"
+			info *= "Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+			if dealias == true || dealias == 1
+				info *= "Dealiasing with Orszag’s 3/2 rule. "
+			else
+				info *= "No dealiasing. "
+			end
+			info *= "\nShut me up with keyword argument `verbose = false`."
+			@info info
+			@warn "The velocity is consistent with the \
+			derivative of the trace of the velocity potential \
+			used for water waves only when they are null."
 		end
 
-		ϵ 	= param.ϵ
+		# Pre-allocate useful data
 		mesh = Mesh(param)
 		x   = mesh.x
-        Γ 	= abs.(mesh.k)
-    	∂ₓ	=  1im * mesh.k            # Differentiation
-        H 	= -1im * sign.(mesh.k)     # Hilbert transform
+		k 	= mesh.k
+        Γ 	= abs.(k)
+    	∂ₓ	=  1im * k            # Differentiation
+        H 	= -1im * sign.(k)     # Hilbert transform
 		if dealias == true || dealias == 1
 			Π⅔    = Γ .< mesh.kmax * 2/3     # Dealiasing low-pass filter
 		else
@@ -184,7 +217,7 @@ mutable struct Matsuno <: AbstractModel
         I₂ = zeros(Complex{Float64}, mesh.N)
         I₃ = zeros(Complex{Float64}, mesh.N)
 
-
+		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
 		   hnew .= ifft(U[:,1])
@@ -198,16 +231,21 @@ mutable struct Matsuno <: AbstractModel
 
 		end
 
+		# Build raw data from physical data.
+		# Discrete Fourier transform with, possibly, dealiasing.
 		# This function is correct only when the initial data for v is zero.
 		function mapto(data::InitialData)
 
-			[Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
+		    [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
 
 		end
 
-		# This function is correct only when the initial data for v is zero.
+		# Return `(η,v)`, where
+		# - `η` is the surface deformation;
+		# - `v` is the velocity variable.
+		# Inverse Fourier transform and takes the real part.
 		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2]))
+		    real(ifft(view(U,:,1))),real(ifft(view(U,:,2)))
 		end
 
 		new(label, f!, mapto, mapfro )

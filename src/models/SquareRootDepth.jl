@@ -52,17 +52,45 @@ mutable struct SquareRootDepth <: AbstractModel
 							label	= "square-root depth",
 							verbose	= true)
 
-		if verbose @info "Build the √D model of Cotter, Holm and Percival." end
-
+        # Set up
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		mesh = Mesh(param)
+		if maxiter == nothing maxiter = Mesh(param).N end
+		if restart == nothing restart = min(20,Mesh(param).N) end
 
+		if verbose # Print information
+			info = "Build the √D model of Cotter, Holm and Percival.\n"
+			info *= "Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ.\n"
+			if dealias == 0
+				info *= "No dealiasing. "
+			else
+				info *= "Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
+			end
+			if ktol == 0
+				info *= "No Krasny filter. "
+			else
+				info *= "Krasny filter with tolerance $ktol."
+			end
+			if iterate == true
+				if precond == false out="out" else out="" end
+				info *= "\nElliptic problem solved with GMRES method with$out preconditioning, \
+				tolerance $gtol, maximal number of iterations $maxiter, restart after $restart iterations \
+				(consider `iterate=false` for non-iterative method). "
+			else 
+				info *= "\nElliptic problem solved with standard LU factorization \
+				(consider `iterate=true` for faster results). "
+			end
+			info *= "\nShut me up with keyword argument `verbose = false`."
+			@info info
+		end
+
+		# Pre-allocate useful data
+		mesh = Mesh(param)
 		k = mesh.k
 		x 	= mesh.x
 		x₀ = mesh.x[1]
 
-		∂ₓ	=  1im * mesh.k
+		∂ₓ	=  1im * k
 		F₁ = 1 ./(1 .+ μ/3*k.^2)
 	    if precond == true
 			Precond = Diagonal( 1 ./  F₁ )
@@ -71,18 +99,11 @@ mutable struct SquareRootDepth <: AbstractModel
 		else
 			Precond = precond
 		end
-		K = mesh.kmax * (1-dealias/(2+dealias))
-		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
 		if dealias == 0
-			if verbose @info "no dealiasing" end
-			Π⅔ 	= ones(size(mesh.k))
-		elseif verbose
-			@info "dealiasing : spectral scheme for power  $(dealias + 1) nonlinearity"
-		end
-		if iterate == true && verbose
-			@info "elliptic problem solved with GMRES method"
-		elseif verbose
-			@info "elliptic problem solved with LU decomposition"
+			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
+		else
+			K = mesh.kmax * (1-dealias/(2+dealias))
+			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
 		end
 		FFT = exp.(-1im*k*(x.-x₀)');
         IFFT = exp.(1im*k*(x.-x₀)')/length(x);
@@ -92,11 +113,9 @@ mutable struct SquareRootDepth <: AbstractModel
 		h = zeros(Complex{Float64}, mesh.N)
 		m, u, fftv, fftη, fftu, w = (similar(h),).*ones(6)
 		L = similar(FFT)
-		if maxiter == nothing maxiter = mesh.N end
-		if restart == nothing restart = min(20,mesh.N) end
 
 
-		# Evolution equations are ∂t U = f!(U)
+		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 			fftη .= U[:,1]
 			h .= 1 .+ ϵ*ifft(fftη)
@@ -119,6 +138,7 @@ mutable struct SquareRootDepth <: AbstractModel
 			U[abs.(U).< ktol ].=0
 		end
 
+		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
 			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]

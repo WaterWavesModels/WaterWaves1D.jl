@@ -44,40 +44,64 @@ mutable struct WhithamBoussinesq <: AbstractModel
 								α = 1, a = -1/3, b = 1/3,
 								dealias = 0,
 								ktol	= 0,
-								label 	= "Whitham-Boussinesq",
+								label 	= nothing,
 								verbose	=true)
 
+		# Set up
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		mesh = Mesh(param)
 
+		if Boussinesq == true
+			if label == nothing label = "Boussinesq" end
+			info_param = "a=$a, b=$b, c=0 and d=$b"
+		else
+			if label == nothing label = "Whitham-Boussinesq" end
+			info_param = "α=$α"
+		end
+
+		if verbose # Print information
+			info = "Build the $label model with $info_param.\n"
+			info *= "Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ.\n"
+			if dealias == 0
+				info *= "No dealiasing. "
+			else
+				info *= "Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
+			end
+			if ktol == 0
+				info *= "No Krasny filter. "
+			else
+				info *= "Krasny filter with tolerance $ktol."
+			end
+			info *= "\nShut me up with keyword argument `verbose = false`."
+			@info info
+		end
+
+		# Pre-allocate data
+		mesh = Mesh(param)
+		x 	= mesh.x
+		k = mesh.k
+		∂ₓ	=  1im * k
 		if Boussinesq==false
-			if verbose @info "Build the Whitham-Boussinesq model." end
-			F₁ 	= tanh.(sqrt(μ)*abs.(mesh.k))./(sqrt(μ)*abs.(mesh.k))
+			F₁ 	= tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k))
 			F₁[1] 	= 1
 			F₂ = F₁.^α
 		else
-			if verbose @info "Build the Boussinesq model." end
-			F₂ = 1 ./(1 .+μ*b*abs.(mesh.k).^2)
-			F₁ 	= (1 .-μ*a*abs.(mesh.k).^2).*(F₂.^2)
+			F₂ = 1 ./(1 .+μ*b*abs.(k).^2)
+			F₁ 	= (1 .-μ*a*abs.(k).^2).*(F₂.^2)
 		end
 
-		x 	= mesh.x
-		∂ₓ	=  1im * mesh.k
-		K = mesh.kmax * (1-dealias/(2+dealias))
-		Π⅔ 	= abs.(mesh.k) .<= K # Dealiasing low-pass filter
 		if dealias == 0
-			if verbose @info "no dealiasing" end
-			Π⅔ 	= ones(size(mesh.k))
-		elseif verbose
-			@info "dealiasing : spectral scheme for power  $(dealias + 1) nonlinearity"
+			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
+		else
+			K = mesh.kmax * (1-dealias/(2+dealias))
+			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
 		end
-        η = zeros(Float64, mesh.N)
+		η = zeros(Float64, mesh.N)
         v = zeros(Float64, mesh.N)
 		fftη = zeros(Complex{Float64}, mesh.N)
         fftv = zeros(Complex{Float64}, mesh.N)
 
-		# Evolution equations are ∂t U = f!(U)
+		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
 		    fftv .= U[:,2]
@@ -92,6 +116,7 @@ mutable struct WhithamBoussinesq <: AbstractModel
 
 		end
 
+		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
 			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
