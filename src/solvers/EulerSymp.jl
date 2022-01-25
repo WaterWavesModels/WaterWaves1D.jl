@@ -5,12 +5,15 @@ export step!
     EulerSymp(arguments;Niter,implicit,realdata)
 
 Symplectic Euler solver.
+The implicit Euler method is first used on one equation,
+then the explicit Euler method is used on the second one.
+The implicit equation is solved via Neumann iteration
 
-Constructs an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
+Construct an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
 
 Arguments can be either
 0. an object of type `AbstractModel`;
-1. an `Array` of size `(N,m)` where `N` is the number of collocation points, and `m` is irrelevant;
+1. an `Array` of size `(N,2)` where `N` is the number of collocation points;
 2. an integer `N` being the number of collocation points;
 3. a `NamedTuple` containing a key `N`.
 
@@ -51,7 +54,7 @@ struct EulerSymp <: TimeSolver
         U = zeros(Float64, (N,2))
         EulerSymp(U; Niter = Niter, realdata=realdata,implicit=implicit)
     end
-    function EulerSymp( param::NamedTuple, datasize=2::Int; Niter = 10, implicit = 1, realdata=false )
+    function EulerSymp( param::NamedTuple; Niter = 10, implicit = 1, realdata=false )
         EulerSymp(param.N; Niter = Niter, realdata=realdata,implicit=implicit)
     end
 end

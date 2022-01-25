@@ -44,7 +44,6 @@ include("models/WWn.jl")
 
 include("solvers/Euler.jl")
 include("solvers/EulerSymp.jl")
-include("solvers/RK4_naive.jl")
 include("solvers/RK4.jl")
 
 

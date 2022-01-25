@@ -4,6 +4,8 @@ using Test
 using WaterWaves1D
 
 include("./testmodels.jl")
+include("./testsolvers.jl")
+
 
 # @testset "LoadSave" begin
 #
