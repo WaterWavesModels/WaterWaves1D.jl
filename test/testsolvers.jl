@@ -3,7 +3,7 @@ using Test
 #--- parameters
 para = ( ϵ  = 0.1, μ = 0.1)  # physical parameters
 paraX= ( N  = 4, L  = π)   # mesh with 6 collocation points: x=[-π, -π/2, 0.0, π/2]
-paraT= ( T  = 1e-2, dt = 1e-3) # timegrid with ten instants: t=[0.0:1.0:10.0]/10^4
+paraT= ( T  = 1e-2, dt = 1e-3) # timegrid with ten instants: t=[0.0:1.0:10.0]/10^3
 param = merge(para,paraX)  # used to construct models
 parap = merge(paraX,paraT) # used to construct problems
 
