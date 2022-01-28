@@ -1,7 +1,7 @@
 export Mesh
 
 """
-    `Mesh(args)`
+    Mesh(args)
 
 Constructs a mesh of collocation points and associated Fourier modes.
 
