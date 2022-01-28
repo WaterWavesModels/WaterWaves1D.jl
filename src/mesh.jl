@@ -7,9 +7,9 @@ Constructs a mesh of collocation points and associated Fourier modes.
 
 # Arguments
 Can be either
-- `xmin , xmax , N `; or
-- `L , N ` (same as above with `xmin=-L` and `xmax=L`); or
-- `param :: NamedTuple`, a `NamedTuple` containing `N` and `L`, then same as above; or
+- `xmin`, `xmax`, and `N`; or
+- `L`, `N` (same as above with `xmin=-L` and `xmax=L`); or
+- `param :: NamedTuple`, a `NamedTuple` containing `N` and `L` or `xmin` and `xmax`, then same as above; or
 - `x` a vector of regularly spaced collocation points`.
 
 The mesh as `N` collocation points regularly spaced between `xmin` (included) and `xmax` (excluded)
@@ -18,12 +18,12 @@ The mesh as `N` collocation points regularly spaced between `xmin` (included) an
 `m=Mesh(args)` is of parametric type and offers
 with
 - `m.N `: number of collocation points and Fourier modes;
-- `m.xmin`: minimum of the mesh;
-- `m.xmax`: maximum of the mesh;
+- `m.xmin`: minimum of the mesh (included in the vector of collocation points);
+- `m.xmax`: maximum of the mesh (excluded in the vector of collocation points);
 - `m.dx`: distance between two collocation points;
 - `m.x`: the vector of collocation points;
-- `m.kmin`: minimum of Fourier modes;
-- `m.kmax`: maximum of Fourier modes;
+- `m.kmin`: minimum of Fourier modes (included in the vector of Fourier modes);
+- `m.kmax`: maximum of Fourier modes (included in the vector of Fourier modes);;
 - `m.dk`: distance between two Fourier modes;
 - `m.k`: the vector of Fourier modes.
 
@@ -46,8 +46,8 @@ struct Mesh
         x    = zeros(Float64, N)
         x   .= range(xmin, stop=xmax, length=N+1)[1:end-1]
         dk   = 2π/(N*dx)
-        kmin = -N/2*dk
-        kmax = (N/2-1)*dk
+        kmin = -N÷2*dk
+        kmax = (N-1)÷2*dk
         k    = zeros(Float64, N)
         k   .= dk .* vcat(0:(N-1)÷2, -N÷2:-1)
 
@@ -81,9 +81,11 @@ struct Mesh
         if :xmin in keys(param) && :xmax in keys(param)
             xmin = param.xmin
             xmax = param.xmax
-        else
+        elseif :L in keys(param)
             xmin = - param.L
             xmax =   param.L
+        else
+            @error("the NamedTuple must contain the field `L`, or `xmin` and `xmax`, when defining a mesh.")
         end
         N    =   param.N
 

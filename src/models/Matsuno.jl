@@ -43,7 +43,7 @@ mutable struct Matsuno_fast <: AbstractModel
         Dx       =  1im * k        	# Differentiation
         H        = -1im * sign.(k) 	# Hilbert transform
 		if dealias == true || dealias == 1
-			Π⅔    = Γ .< mesh.kmax * 2/3    # Dealiasing low-pass filter
+			Π⅔    = Γ .< (mesh.kmax-mesh.kmin)/3    # Dealiasing low-pass filter
 		else
 			Π⅔    = zero(Γ) .+ 1     		# No dealiasing (Π⅔=Id)
 		end
@@ -205,7 +205,7 @@ mutable struct Matsuno <: AbstractModel
     	∂ₓ	=  1im * k            # Differentiation
         H 	= -1im * sign.(k)     # Hilbert transform
 		if dealias == true || dealias == 1
-			Π⅔    = Γ .< mesh.kmax * 2/3     # Dealiasing low-pass filter
+			Π⅔    = Γ .< (mesh.kmax-mesh.kmin)/3     # Dealiasing low-pass filter
 		else
 			Π⅔    = zero(Γ) .+ 1     # Dealiasing low-pass filter
 		end

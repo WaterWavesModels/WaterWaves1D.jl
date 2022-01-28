@@ -76,7 +76,7 @@ mutable struct IsobeKakinuma <: AbstractModel
 				info *= "\nElliptic problem solved with GMRES method with$out preconditioning, \
 				tolerance $gtol, maximal number of iterations $maxiter, restart after $restart iterations \
 				(consider `iterate=false` for non-iterative method). "
-			else 
+			else
 				info *= "\nElliptic problem solved with standard LU factorization \
 				(consider `iterate=true` for faster results). "
 			end
@@ -94,7 +94,7 @@ mutable struct IsobeKakinuma <: AbstractModel
 		if dealias == 0
 			Π⅔ 	= ones(size(k)) # No dealiasing (Π⅔=Id)
 		else verbose
-			K = mesh.kmax * (1-dealias/(2+dealias))
+			K = (mesh.kmax-mesh.kmin)/(2+dealias)
 			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
 		end
 		FFT = exp.(-1im*k*(x.-x₀)');
