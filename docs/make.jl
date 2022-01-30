@@ -3,7 +3,7 @@ push!(LOAD_PATH,"../src/")
 ENV["GKSwstype"]="100"
 
 using Documenter
-using Plots 
+using Plots
 using Literate
 using WaterWaves1D
 
@@ -22,9 +22,10 @@ makedocs(modules=[WaterWaves1D],
          authors = "Vincent Duchene",
          format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
          sitename = "WaterWaves1D.jl",
-         pages = [ "Quickstart" => "quickstart.md", 
-                   "Documentation" => "index.md",
+         pages = [ "Quickstart" => "quickstart.md",
                    "Code basics"   => "basics.md",
+                   "How-to..."   => "howto.md",
+                   "Documentation" => "index.md",
                    "Contents"      => "contents.md"])
 
 #                  "Animation"     => "examples/animation.md",

@@ -1,6 +1,6 @@
 # Quickstart
 
-
+# Notre premier exemple
 ```@example 1
 using WaterWaves1D
 
@@ -19,4 +19,11 @@ solve!( problem )
 
 plot_solution(problem)
 
+```
+```@example 2
+using WaterWaves1D
+```
+```@example 1
+
+plot_solution(problem)
 ```

@@ -1,6 +1,15 @@
-# Code basics
+# How-to guides
 
-## Abstract types
+## Add your model
+
+## Add your initial data
+
+## Add your solver
+
+
+
+
+
 
   - `TimeSolver` (`RK4`, `Euler`, etc),
   - `AbstractModel` (`Cheng`, `Matsuno`, etc),
@@ -25,7 +34,7 @@ Problem
 Bump
 ```
 
-## models
+## Shallow water models
 
 ```@docs
 Cheng
