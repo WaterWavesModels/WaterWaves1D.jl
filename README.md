@@ -17,11 +17,11 @@ using WaterWaves1D
 
 `WaterWaves1D` provides a framework to study and compare several models for the propagation of unidimensional surface gravity waves (a.k.a. "water waves").
 
-Several models are already implemented, included ([but not limited to](dev/basics/#models)) the so-called water waves system, its truncated spectral expansion, the Green-Naghdi system, the Matsuno system, and so on. You may easily add your favorite one to the gang: see the [how-to guide](dev/howto).
+Several models are already implemented, included ([but not limited to](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/basics/#models)) the so-called water waves system, its truncated spectral expansion, the Green-Naghdi system, the Matsuno system, and so on. You may easily add your favorite one to the gang: see the [how-to guide](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/howto) .
 
 ## Documentation
 
-See [here](dev/quickstart/).
+See [here](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/quickstart/).
 
 
 ## Example
@@ -68,13 +68,13 @@ solve!(problem2);
 
 Plot solutions at final time
 ~~~
-plot_solution(problems;fourier=false)
+plot_solution([problem1 problem2];fourier=false)
 ~~~
-![](./notebooks/Example.pdf)
+![](./notebooks/Example.png)
 
 Generate an animation
 ~~~
-anim = create_animation(problems;fourier=false,ylims=(-0.25,1))
+anim = create_animation([problem1 problem2];fourier=false,ylims=(-0.5,1))
 import Plots.gif
 gif(anim, "Example.gif", fps=15)
 ~~~
