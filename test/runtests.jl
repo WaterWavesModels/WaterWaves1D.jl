@@ -3,7 +3,10 @@ ENV["GKSwstype"]="100"
 using Test
 using WaterWaves1D
 
+include("./testtypes.jl")
 include("./testmodels.jl")
+include("./testsolvers.jl")
+
 
 # @testset "LoadSave" begin
 #

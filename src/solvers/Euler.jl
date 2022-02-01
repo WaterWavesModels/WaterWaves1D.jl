@@ -1,4 +1,4 @@
-export Euler
+export Euler, Euler_naive
 export step!
 
 """
@@ -6,7 +6,7 @@ export step!
 
 Explicit Euler solver.
 
-Constructs an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
+Construct an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
 
 Arguments can be either
 0. an object of type `AbstractModel`;
@@ -22,18 +22,16 @@ By default, they are either determined by the model or the type of the array in 
 struct Euler <: TimeSolver
 
     U1 :: Array
-    U2 :: Array
 
     function Euler( U :: Array; realdata=nothing )
         U1 = copy(U)
-        U2 = copy(U)
         if realdata==true
-            U1 = real.(U1);U2 = real.(U2)
+            U1 = real.(U1);
         end
         if realdata==false
-            U1 = complex.(U1);U2 = complex.(U2)
+            U1 = complex.(U1);
         end
-        new( U1, U2)
+        new( U1 )
     end
 
     function Euler( model :: AbstractModel; realdata=nothing )
@@ -64,5 +62,27 @@ function step!(solver :: Euler,
     solver.U1 .= U
     model.f!( solver.U1 )
     U .+= dt .* solver.U1
+
+end
+
+"""
+    Euler_naive()
+
+Runge-Kutta fourth order solver.
+
+A naive version of `Euler`, without argument since no pre-allocation is performed.
+
+"""
+struct Euler_naive <: TimeSolver end
+
+function step!(s  :: Euler_naive,
+               model :: AbstractModel ,
+               U  ,
+               dt )
+
+
+    U0 = copy(U)
+    model.f!( U0 )
+    U .+= dt * U0
 
 end

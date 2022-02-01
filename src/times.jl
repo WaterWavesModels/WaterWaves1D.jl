@@ -1,8 +1,8 @@
 export Times
 """
-    `Times(param; ns, Ns)`
+    Times(param; ns, Ns)
 
-Constructs a mesh of times.
+Constructs a mesh of times, to be used in initial-value problems (see `Problem`).
 
 # Arguments
 `param` is either
@@ -16,8 +16,8 @@ If both `Ns` and `ns` are given, `Ns` overrules `ns`.
 
 # Return values
 `t=Times(args)` is of parametric type and offers
-- `t.Nc`: number of computed times;
-- `t.Ns`: number of stored times;
+- `t.Nc`: number of computed times (including initial datum);
+- `t.Ns`: number of stored times (including initial datum);
 - `t.ns`: number of computed times between two stored times;
 - `t.tfin`: the final time;
 - `t.dt`: the timestep;

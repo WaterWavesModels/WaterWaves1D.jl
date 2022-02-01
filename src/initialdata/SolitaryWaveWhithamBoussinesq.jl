@@ -70,9 +70,10 @@ function SolitaryWaveWhithamBoussinesq(
         Dx       =  1im * sqrt(μ)*k
 
         if dealias == 0
-                Π = ones(size(k))
+                Π = ones(size(k)) # no dealiasing (Π=Id)
         else
-                Π = abs.(k) .< maximum(k) * (1-dealias/(dealias+2))
+                K = (mesh.kmax-mesh.kmin)/(2+dealias)
+                Π = abs.(k) .<= K # Dealiasing low-pass filter
         end
         krasny(k) = (abs.(k).>= ktol ).*k
         krasny!(k) = k[abs.(k).< ktol ].=0

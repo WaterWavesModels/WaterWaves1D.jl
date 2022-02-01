@@ -1,135 +1,34 @@
 using Test
 
-#--- parameters
-para = ( ϵ  = 0.1, μ = 0.1)  # physical parameters
-paraX= ( N  = 6, L  = 3)   # mesh with 6 collocation points: x=[-3.0, -2.0, -1.0, 0.0, 1.0, 2.0]
-paraT= ( T  = 2.5, dt = 1) # timegrid with three instants: t=[0.0, 1.0, 2.0]
+
+#--- initial data (smooth, support compact). Zero velocity for compatibility between models.
+init     = Init(x->exp.(-1/8*x.^4),x-> 0. * x )
+
+#--- Tests on shallow water models
+
+para = ( ϵ  = 0.01, μ = 0.01)  # physical parameters
+paraX= ( N  = 2^6, L  = 4)   # mesh with 64 collocation points on [-4,4]
+paraT= ( T  = 1e-1, dt = 1e-2) # timegrid with 10 instants: t=[0.0:1.0:10.0]/100
 param = merge(para,paraX)  # used to construct models
 parap = merge(paraX,paraT) # used to construct problems
 
-#--- initial data
-init     = Init(x->exp.(-x.^2),x-> x )
+models=[];precisions=[]
 
-#--- models
-models=[]
-push!(models,Boussinesq(param;
-                    a=-1,b=3,
-                    dealias=2,ktol=1e-12,
-                    label="Boussinesq",
-                    verbose=false) )
-
-push!(models,WhithamBoussinesq(param;
-				α = 1.5, a = -1, b = 3,
-				dealias = 2,
-				ktol	= 1e-12,
-				label 	= "Whitham-Boussinesq",
-				verbose	=false) )
-
-push!(models,WhithamBoussinesq(param;
-				Boussinesq=true,
-				α = 1.5, a = -1, b = 3,
-				dealias = 2,
-				ktol	= 1e-12,
-				label 	= "(Whitham-)Boussinesq",
-				verbose	=false) )
-
-push!(models,DeepQuadratic_fast( param;
-                    dealias=true, verbose=false, label="fast deep quadratic") )
-
-push!(models,DeepQuadratic( param;
-                    dealias=false, verbose=false, label="naive deep quadratic") )
-
-push!(models,Matsuno_fast( param;
-                    dealias=true, verbose=false, label="fast Matsuno") )
-
-push!(models,Matsuno( param;
-                    dealias=false, verbose=false, label="naive Matsuno") )
-
-
-push!(models,IsobeKakinuma(param;
-            dealias = 2,
-            ktol	= 1e-10,
-            iterate = true,
-            gtol	= 1e-14,
-            precond = false,
-            restart	= 1,
-            maxiter	= 2,
-            label	= "Isobe-Kakinuma with GMRES",
-            verbose	= false) )
-
-push!(models, modifiedMatsuno(param;
-			ν=2,ktol=01e-10,dealias=2,
-			verbose=false,
-			label="modified Matsuno") )
-
-push!(models,IsobeKakinuma(param::NamedTuple;
-			dealias = 0,
-			ktol	= 0,
-			iterate = false,
-			gtol	= 0,
-			precond = false,
-			restart	= nothing,
-			maxiter	= nothing,
-			label	= "Isobe-Kakinuma with LU",
-			verbose	= false) )
-
-push!(models,NonHydrostatic(param;
-            dealias = 2,
-            ktol	= 1e-10,
-            iterate = true,
-            gtol	= 1e-14,
-            precond = false,
-            restart	= 1,
-            maxiter	= 2,
-            label	= "non-hydrostatic with GMRES",
-            verbose	= false) )
-
-push!(models,NonHydrostatic(param::NamedTuple;
-			dealias = 0,
-			ktol	= 0,
-			iterate = false,
-			gtol	= 0,
-			precond = false,
-			restart	= nothing,
-			maxiter	= nothing,
-			label	= "non-hydrostatic with LU",
-			verbose	= false) )
-
-push!(models,SquareRootDepth(param;
-            dealias = 2,
-            ktol	= 1e-10,
-            iterate = true,
-            gtol	= 1e-14,
-            precond = false,
-            restart	= 1,
-            maxiter	= 2,
-            label	= "square-root depth with GMRES",
-            verbose	= false) )
-
-push!(models,SquareRootDepth(param::NamedTuple;
-			dealias = 0,
-			ktol	= 0,
-			iterate = false,
-			gtol	= 0,
-			precond = false,
-			restart	= nothing,
-			maxiter	= nothing,
-			label	= "square-root depth with LU",
-			verbose	= false) )
-
+# Build shallow water models
 push!(models,SerreGreenNaghdi(param;
-            dealias = 2,
+            dealias = 0,
             ktol	= 1e-10,
             iterate = true,
             gtol	= 1e-14,
-            precond = false,
-            restart	= 1,
-            maxiter	= 2,
+            precond = true,
+            restart	= 15,
+            maxiter	= 25,
             label	= "Green-Naghdi with GMRES",
             verbose	= false) )
+push!(precisions,para.μ^2)
 
 push!(models,SerreGreenNaghdi(param::NamedTuple;
-			dealias = 0,
+			dealias = 1,
 			ktol	= 0,
 			iterate = false,
 			gtol	= 0,
@@ -138,42 +37,7 @@ push!(models,SerreGreenNaghdi(param::NamedTuple;
 			maxiter	= nothing,
 			label	= "Green-Naghdi with LU",
 			verbose	= false) )
-
-WhithamGreenNaghdi
-
-push!(models,WhithamGreenNaghdi(param;
-            dealias = 2,
-            ktol	= 1e-10,
-            iterate = true,
-            gtol	= 1e-14,
-            precond = false,
-            restart	= 1,
-            maxiter	= 2,
-            label	= "Whitham-Green-Naghdi with GMRES",
-            verbose	= false) )
-
-push!(models,WhithamGreenNaghdi(param::NamedTuple;
-			dealias = 0,
-			ktol	= 0,
-			iterate = false,
-			gtol	= 0,
-			precond = false,
-			restart	= nothing,
-			maxiter	= nothing,
-			label	= "Whitham-Green-Naghdi with LU",
-			verbose	= false) )
-
-push!(models,WhithamGreenNaghdi(param;
-			SGN=true,
-            dealias = 2,
-            ktol	= 1e-10,
-            iterate = true,
-            gtol	= 1e-14,
-            precond = false,
-            restart	= 1,
-            maxiter	= 2,
-            label	= "(Whitham-)Green-Naghdi with GMRES",
-            verbose	= false) )
+push!(precisions,para.μ^2)
 
 push!(models,WhithamGreenNaghdi(param::NamedTuple;
 			SGN=true,
@@ -186,84 +50,348 @@ push!(models,WhithamGreenNaghdi(param::NamedTuple;
 			maxiter	= nothing,
 			label	= "(Whitham-)Green-Naghdi with LU",
 			verbose	= false) )
+push!(precisions,para.μ^2)
 
-push!(models, WWn(param;
-			ν		= 2,
-			n		= 1,
-			δ		= 0.1,
-			m		= -12,
-			ktol	= 1e-12,
-			dealias	= 2,
-			label	= "WW1",
+
+push!(models,WhithamGreenNaghdi(param;
+			SGN=true,
+            dealias = false,
+            ktol	= 1e-10,
+            iterate = true,
+            gtol	= 1e-14,
+            precond = false,
+            restart	= 15,
+            maxiter	= 25,
+            label	= "(Whitham-)Green-Naghdi with GMRES",
+            verbose	= false) )
+push!(precisions,para.μ^2)
+
+
+push!(models,WhithamGreenNaghdi(param;
+            dealias = 0,
+            ktol	= 1e-10,
+            iterate = true,
+            gtol	= 1e-14,
+            precond = false,
+            restart	= 5,
+            maxiter	= 15,
+            label	= "Whitham-Green-Naghdi with GMRES",
+            verbose	= false) )
+push!(precisions,para.μ^2*param.ϵ)
+
+
+push!(models,WhithamGreenNaghdi(param::NamedTuple;
+			dealias = 0,
+			ktol	= 0,
+			iterate = false,
+			gtol	= 0,
+			precond = false,
+			restart	= nothing,
+			maxiter	= nothing,
+			label	= "Whitham-Green-Naghdi with LU",
 			verbose	= false) )
+push!(precisions,para.μ^2*param.ϵ)
 
-push!(models, WWn(param;
-			ν		= 1/2,
-			n		= 7,
-			δ		= 0.1,
-			m		= -Inf,
-			ktol	= 1e-12,
-			dealias	= 2,
-			label	= "WW2",
+
+push!(models,IsobeKakinuma(param::NamedTuple;
+			dealias = 0,
+			ktol	= 0,
+			iterate = false,
+			gtol	= 0,
+			precond = false,
+			restart	= nothing,
+			maxiter	= nothing,
+			label	= "Isobe-Kakinuma with LU",
 			verbose	= false) )
+push!(precisions,para.μ^3)
 
-push!(models, WWn(param;
-			ν		= 0,
-			n		= 3,
-			δ		= 0.1,
-			m		= (-1,2),
-			ktol	= 1e-12,
-			dealias	= 2,
-			label	= "WW3",
+push!(models,IsobeKakinuma(param;
+            dealias = 0,
+            ktol	= 1e-14,
+            iterate = true,
+            gtol	= 1e-14,
+            precond = true,
+            restart	= 10,
+            maxiter	= 20,
+            label	= "Isobe-Kakinuma with GMRES",
+            verbose	= false) )
+push!(precisions,para.μ^3)
+
+
+push!(models,NonHydrostatic(param;
+            dealias = 2,
+            ktol	= 1e-14,
+            iterate = true,
+            gtol	= 1e-14,
+            precond = false,
+            restart	= 1,
+            maxiter	= 2,
+            label	= "non-hydrostatic with GMRES",
+            verbose	= false) )
+push!(precisions,para.μ/5)
+
+push!(models,NonHydrostatic(param::NamedTuple;
+			dealias = 0,
+			ktol	= 0,
+			iterate = false,
+			gtol	= 0,
+			precond = false,
+			restart	= nothing,
+			maxiter	= nothing,
+			label	= "non-hydrostatic with LU",
 			verbose	= false) )
+push!(precisions,para.μ/5)
 
-push!(models, WaterWaves(param;
+push!(models,SquareRootDepth(param;
+            dealias = 2,
+            ktol	= 1e-10,
+            iterate = true,
+            gtol	= 1e-14,
+            precond = false,
+            restart	= 15,
+            maxiter	= 20,
+            label	= "square-root depth with GMRES",
+            verbose	= false) )
+push!(precisions,max(para.μ*para.ϵ,para.μ^2))
+
+
+push!(models,SquareRootDepth(param::NamedTuple;
+			dealias = 0,
+			ktol	= 0,
+			iterate = false,
+			gtol	= 0,
+			precond = false,
+			restart	= nothing,
+			maxiter	= nothing,
+			label	= "square-root depth with LU",
+			verbose	= false) )
+push!(precisions,max(para.μ*para.ϵ,para.μ^2))
+
+
+
+
+push!(models,Boussinesq(param;
+                    a=-1//2,b=5//12,
+                    dealias=0,ktol=1e-12,
+                    label="Boussinesq",
+                    verbose=false) )
+push!(precisions,max(para.μ*para.ϵ/4,para.μ^2))
+
+
+push!(models,WhithamBoussinesq(param;
+				Boussinesq=true,
+				α = 1, a = -1/2, b = 5/12,
+				dealias = 0,
+				ktol	= 1e-14,
+				label 	= "(Whitham-)Boussinesq",
+				verbose	=false) )
+push!(precisions,max(para.μ*para.ϵ/4,para.μ^2))
+
+push!(models,WhithamBoussinesq(param;
+				α = 1.5, a = -1, b = 3,
+				dealias = 0,
+				ktol	= 1e-12,
+				label 	= "Whitham-Boussinesq",
+				verbose	=false) )
+push!(precisions,para.μ*para.ϵ/4)
+
+# Build reference problem (water waves)
+modelWW =  WaterWaves(param;
 					ν	    = 1,
-					IL	    = true,
-					method  = 1,
-					tol	    = 1e-8,
-					maxiter = 5,
-					dealias	= 2,
-					ktol	= 1e-10,
-					label	= "water waves 1",
-					verbose	= false) )
-
-
-push!(models, WaterWaves(param;
-					ν	    = 2,
-					IL	    = false,
-					method  = 2,
-					tol	    = 1e-8,
-					maxiter = 5,
-					dealias	= 1,
-					ktol	= 1e-10,
-					label	= "water waves 2",
-					verbose	= false) )
-
-
-push!(models, WaterWaves(param;
-					ν	    = 1/2,
 					IL	    = false,
 					method  = 3,
 					tol	    = 1e-8,
 					maxiter = 5,
 					dealias	= 0,
 					ktol	= 1e-10,
-					label	= "water waves 3",
-					verbose	= false) )
+					label	= "water waves (shallow water)",
+					verbose	= false)
+pbWW = Problem( modelWW, init, parap; verbose = false )
+solve!(pbWW;verbose=false)
+ηWW,vWW,xWW=solution(pbWW)
 
-
-#--- tests
-for model in models
+realp=[]
+for i in 1:length(models)
     # build the initial-value problem
-    problem = Problem( model, init, parap; verbose = false )
+    problem = Problem( models[i], init, parap; verbose = false )
     # solve the initial-value problem
     solve!(problem ; verbose=false)
-    # check everything went well
-    @testset "Initial value problem with the model $(model.label)" begin
-        @test length(problem.data.U)==length(Times(paraT).tc)
-        @test size(problem.data.U[end])==(length(Mesh(paraX).x),2)
-        @test !any(isnan,problem.data.U[end][1])
-        @test !any(isnan,problem.data.U[end][2])
+    # check the order of magnitude of the precision is correct (from above and from below)
+    @testset "Initial value problem with the model $(models[i].label)" begin
+		@test isapprox(solution(problem,x=xWW)[1] , ηWW, rtol = precisions[i]*paraT.T )
+		@test !isapprox(solution(problem,x=xWW)[1] , ηWW, rtol = precisions[i]*paraT.T/10 )
+    end
+end
+
+
+#--- Tests on deep water models
+models=[];precisions=[]
+
+para = ( ϵ  = 0.1, μ = 100)  # physical parameters
+paraX= ( N  = 2^6, L  = 4)   # mesh with 64 collocation points on [-4,4]
+paraT= ( T  = 1e-1, dt = 1e-2) # timegrid with 10 instants: t=[0.0:1.0:10.0]/100
+param = merge(para,paraX)  # used to construct models
+parap = merge(paraX,paraT) # used to construct problems
+
+# Build deep layer models
+push!(models, modifiedMatsuno(param;
+			ν=1/√para.μ,ktol=01e-14,dealias=0,
+			verbose=false,
+			label="modified Matsuno") )
+push!(precisions, para.ϵ.^2*para.μ)
+
+push!(models, WWn(param;
+			n		= 1,
+			δ		= 0.1,
+			m		= (-1,2),
+			ktol	= 1e-12,
+			dealias	= 1,
+			label	= "WW1",
+			verbose	= false) )
+push!(precisions, para.ϵ*√para.μ)
+
+push!(models, WWn(param;
+			ν		=1/√para.μ,
+			n		= 7,
+			δ		= 0.1,
+			m		= -Inf,
+			ktol	= 1e-12,
+			dealias	= 0,
+			label	= "WW2",
+			verbose	= false) )
+push!(precisions, para.ϵ.^2*para.μ)
+
+
+push!(models, WWn(param;
+			ν		= 1/sqrt(para.μ),
+			n		= 3,
+			δ		= 0.01,
+			ktol	= 1e-14,
+			dealias	= 0,
+			label	= "WW3",
+			verbose	= false) )
+push!(precisions, para.ϵ.^3*para.μ^(3/2))
+
+# Build reference problem (water waves)
+modelWW = WaterWaves(param;
+					ν	    = 1/sqrt(para.μ),
+					IL	    = false,
+					method  = 2,
+					tol	    = 1e-12,
+					maxiter = 25,
+					dealias	= 0,
+					ktol	= 1e-10,
+					label	= "water waves (deep water)",
+					verbose	= false)
+pbWW = Problem( modelWW, init, parap; verbose = false )
+solve!(pbWW;verbose=false)
+ηWW,vWW,xWW=solution(pbWW)
+
+
+for i in 1:length(models)
+    # build the initial-value problem
+    problem = Problem( models[i], init, parap; verbose = false )
+    # solve the initial-value problem
+    solve!(problem ; verbose=false)
+    # check the order of magnitude of the precision is correct (from above and from below)
+    @testset "Initial value problem with the model $(models[i].label)" begin
+		@test isapprox(solution(problem,x=xWW)[1] , ηWW, rtol = precisions[i]*paraT.T/50 )
+		@test !isapprox(solution(problem,x=xWW)[1] , ηWW, rtol = precisions[i]*paraT.T/500 )
+
+    end
+end
+
+#--- Tests on infinite layer models
+models=[];precisions=[]
+
+para = ( ϵ  = 0.1, μ = Inf)  # physical parameters
+paraX= ( N  = 2^6, L  = 4)   # mesh with 64 collocation points on [-4,4]
+paraT= ( T  = 1e-1, dt = 1e-2) # timegrid with 10 instants: t=[0.0:1.0:10.0]/100
+param = merge(para,paraX)  # used to construct models
+parap = merge(paraX,paraT) # used to construct problems
+
+
+# Build infinite layer models
+push!(models, modifiedMatsuno(param;
+			ktol=01e-14,dealias=0,
+			verbose=false,
+			label="modified Matsuno") )
+push!(precisions, para.ϵ.^2)
+
+push!(models, WWn(param;
+			n		= 1,
+			δ		= 0.1,
+			m		= (-1,2),
+			ktol	= 1e-12,
+			dealias	= 1,
+			label	= "WW1",
+			verbose	= false) )
+push!(precisions, para.ϵ)
+
+push!(models, WWn(param;
+			ν		=0,
+			n		= 7,
+			δ		= 0.1,
+			m		= -Inf,
+			ktol	= 1e-12,
+			dealias	= 0,
+			label	= "WW2",
+			verbose	= false) )
+push!(precisions, para.ϵ.^2)
+
+
+push!(models, WWn(param;
+			ν		= 0,
+			n		= 3,
+			δ		= 0.01,
+			ktol	= 0,
+			dealias	= 0,
+			label	= "WW3",
+			verbose	= false) )
+push!(precisions, para.ϵ.^3)
+
+
+
+push!(models,DeepQuadratic_fast( param;
+                    dealias=true, verbose=false, label="fast deep quadratic") )
+push!(precisions, para.ϵ.^2)
+
+push!(models,DeepQuadratic( param;
+                    dealias=false, verbose=false, label="naive deep quadratic") )
+push!(precisions, para.ϵ.^2)
+
+push!(models,Matsuno_fast( param;
+                    dealias=true, verbose=false, label="fast Matsuno") )
+push!(precisions, para.ϵ.^2)
+
+push!(models,Matsuno( param;
+                    dealias=false, verbose=false, label="naive Matsuno") )
+push!(precisions, para.ϵ.^2)
+
+
+# Build reference problem (water waves)
+modelWW =  WaterWaves(param;
+					IL	    = true,
+					method  = 1,
+					tol	    = 1e-12,
+					maxiter = 5,
+					dealias	= 0,
+					ktol	= 1e-14,
+					label	= "water waves (infinite layer)",
+					verbose	= false)
+pbWW = Problem( modelWW, init, parap; verbose = false )
+solve!(pbWW;verbose=false)
+ηWW,vWW,xWW=solution(pbWW)
+
+for i in 1:length(models)
+    # build the initial-value problem
+    problem = Problem( models[i], init, parap; verbose = false )
+    # solve the initial-value problem
+    solve!(problem ; verbose=false)
+    # check the order of magnitude of the precision is correct (from above and from below)
+    @testset "Initial value problem with the model $(models[i].label)" begin
+		@test isapprox(solution(problem,x=xWW)[1] , ηWW, rtol = precisions[i]*paraT.T/50 )
+		@test !isapprox(solution(problem,x=xWW)[1] , ηWW, rtol = precisions[i]*paraT.T/500 )
+
     end
 end

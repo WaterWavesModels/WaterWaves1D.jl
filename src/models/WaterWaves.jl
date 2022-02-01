@@ -113,7 +113,7 @@ mutable struct WaterWaves <: AbstractModel
 		if dealias == 0
 			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
 		else
-			K = mesh.kmax * (1-dealias/(2+dealias))
+			K = (mesh.kmax-mesh.kmin)/(2+dealias)
 			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
 		end
 

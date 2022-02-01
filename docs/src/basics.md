@@ -2,8 +2,8 @@
 
 ## Abstract types
 
-  - `TimeSolver` (`RK4`, `Euler`, etc), 
-  - `AbstractModel` (`Cheng`, `Matsuno`, etc), 
+  - `TimeSolver` (`RK4`, `Euler`, etc),
+  - `AbstractModel` (`Cheng`, `Matsuno`, etc),
   - `InitialData` (`Bump`, `SolitaryWave`, etc)
 
 Instances are created from `Parameters` type.
@@ -25,7 +25,7 @@ Problem
 Bump
 ```
 
-## Shallow water models
+## models
 
 ```@docs
 Cheng
