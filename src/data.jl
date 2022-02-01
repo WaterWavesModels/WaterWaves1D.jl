@@ -35,10 +35,9 @@ length( data :: Data ) = length( data.U )
 
 function dump( h5file :: String, data :: Data )
 
-    h5write(h5file * ".h5", "/data/size", size(first(data)))
-    h5write(h5file * ".h5", "/data/length", length(data))
+    h5write(h5file * ".h5", "/data/size", collect(size(first(data.U))))
+    h5write(h5file * ".h5", "/data/length", length(data.U))
 
-    @show size(data.U)
     for (i,u) in enumerate(data.U)
        h5write(h5file * ".h5", "/data/U$i", u)
     end
@@ -47,28 +46,32 @@ end
 
 function load!( data :: Data, h5file :: String )
 
-    n = h5read(h5file * ".h5", "data/size")
+    nsteps = h5read(h5file * ".h5", "/data/length")
+    np, nv = h5read(h5file * ".h5", "/data/size")
 
-    @assert n == length(data.U)
-
-    for i in 1:n
-       U = h5read(h5file * ".h5", "data/U$i")
-       @show size(U)
+    @assert nsteps == length(data.U)
+    @assert np == size(first(data.U))[1]
+    @assert nv == size(first(data.U))[2]
+    
+    data.U[1] .= h5read(h5file * ".h5", "/data/U1")
+    for i in 2:nsteps
+       push!(data.U, h5read(h5file * ".h5", "/data/U$i"))
     end
 
 end
 
 function load_data( h5file :: String )
 
-    datasize = h5read(h5file * ".h5", "data/size")
-    datalength = h5read(h5file * ".h5", "data/length")
+    nsteps = h5read(h5file * ".h5", "/data/length")
+    np, nv = h5read(h5file * ".h5", "/data/size")
 
-    v = zeros(ComplexF64, datalength, datasize)
+    v = zeros(ComplexF64, np, nv)
 
     data = Data(v)
 
-    for i in 1:size
-       push!(data.U, h5read(h5file * ".h5", "data/U$i"))
+    data.U[1] .= h5read(h5file * ".h5", "/data/U1")
+    for i in 2:nsteps
+       push!(data.U, h5read(h5file * ".h5", "/data/U$i"))
     end
 
     return data

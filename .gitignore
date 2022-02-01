@@ -7,3 +7,4 @@ Manifest.toml
 Project.toml
 .vscode/extensions.json
 docs/build/
+*.swp
