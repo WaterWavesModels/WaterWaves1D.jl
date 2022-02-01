@@ -3,7 +3,7 @@ module WaterWaves1D
 # external modules
 using ProgressMeter,FFTW
 using LinearMaps,IterativeSolvers,LinearAlgebra
-import Base.show
+using HDF5
 
 # abstract types
 export AbstractModel,TimeSolver,InitialData

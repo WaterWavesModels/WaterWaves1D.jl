@@ -3,23 +3,10 @@ ENV["GKSwstype"]="100"
 using Test
 using WaterWaves1D
 
+include("./test_loadsave.jl")
 include("./testtypes.jl")
 include("./testmodels.jl")
 include("./testsolvers.jl")
-
-
-# @testset "LoadSave" begin
-#
-#     dump  = convert( ProblemSave, problem1 )
-#     pload = convert( Problem, dump )
-#
-#     save(problem1, "testsave")
-#     pload = loadpb("testsave")
-#
-#     @test pload.model.kwargs == problem1.model.kwargs
-#     @test pload.solver.Uhat == problem1.solver.Uhat
-#
-# end
 
 param = ( ϵ  = 1/2, μ = 1)
 paramX= ( N  = 2^8, L  = 10)

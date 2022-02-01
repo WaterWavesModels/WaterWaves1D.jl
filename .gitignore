@@ -1,6 +1,10 @@
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
+*.h5
 deps/deps.jl
 Manifest.toml
 Project.toml
+.vscode/extensions.json
+docs/build/
+*.swp
