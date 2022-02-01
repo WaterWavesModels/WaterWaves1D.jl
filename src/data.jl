@@ -32,6 +32,9 @@ import Base.length
 
 length( data :: Data ) = length( data.U )
 
+import Base.size
+
+size( data :: Data ) = size( first(data.U) )
 
 function dump( h5file :: String, data :: Data )
 
@@ -44,22 +47,8 @@ function dump( h5file :: String, data :: Data )
 
 end
 
-function load!( data :: Data, h5file :: String )
-
-    nsteps = h5read(h5file * ".h5", "/data/length")
-    np, nv = h5read(h5file * ".h5", "/data/size")
-
-    @assert nsteps == length(data.U)
-    @assert np == size(first(data.U))[1]
-    @assert nv == size(first(data.U))[2]
-    
-    data.U[1] .= h5read(h5file * ".h5", "/data/U1")
-    for i in 2:nsteps
-       push!(data.U, h5read(h5file * ".h5", "/data/U$i"))
-    end
-
-end
-
+ 
+ 
 function load_data( h5file :: String )
 
     nsteps = h5read(h5file * ".h5", "/data/length")
@@ -69,9 +58,13 @@ function load_data( h5file :: String )
 
     data = Data(v)
 
+    @assert length( data ) == 1
+    @assert np == size(first(data.U))[1]
+    @assert nv == size(first(data.U))[2]
+     
     data.U[1] .= h5read(h5file * ".h5", "/data/U1")
     for i in 2:nsteps
-       push!(data.U, h5read(h5file * ".h5", "/data/U$i"))
+        push!(data.U, h5read(h5file * ".h5", "/data/U$i"))
     end
 
     return data

@@ -27,15 +27,25 @@ import WaterWaves1D: dump, load!, load_data
 
     problem = Problem( model, init, parap; verbose = false )
     solve!(problem; verbose=false)
+
+    # model   :: AbstractModel
+    # initial :: InitialData
+    # param   :: NamedTuple
+    # solver  :: TimeSolver
+    # times   :: Times
+    # mesh    :: Mesh
+    # data    :: Data
+
+    @show size(problem.data)
+    @show length(problem.data)
     
-    @show typeof(problem.data.U)
     rm("testsave.h5", force=true)
     dump("testsave", problem.data)
 
-    #load!(problem.data, "testsave")
+    data = load_data("testsave")
 
-    #data = load_data("testsave")
+    @test length(data) == length(problem.data)
+    @show size(data)
 
-    # @test data .≈ problem.data
  
 end
