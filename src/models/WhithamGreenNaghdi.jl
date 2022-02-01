@@ -21,7 +21,6 @@ the fully dispersive Green-Naghdi model proposed by [Duchêne, Israwi and Talhou
 - `ktol`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"Whitham-Green-Naghdi"`);
-- `verbose`: prints information if `true` (default is `true`).
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
@@ -41,6 +40,7 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
+	info    :: String
 
     function WhithamGreenNaghdi(param::NamedTuple;
 								SGN		= false,
@@ -51,13 +51,14 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 								precond	= true,
 								restart	= nothing,
 								maxiter	= nothing,
-								label	= nothing,
-								verbose	= true)
+								label	= nothing
+								)
 		# Set up
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		if maxiter == nothing maxiter = Mesh(param).N end
-		if restart == nothing restart = min(20,Mesh(param).N) end
+		mesh = Mesh(param)
+		if maxiter == nothing maxiter = mesh.N end
+		if restart == nothing restart = min(20,mesh.N) end
 		if label == nothing
 			if SGN == true
 				label = "Serre-Green-Naghdi"
@@ -67,34 +68,31 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		end
 
 
-		if verbose # Print information
-			info = "Build the $label model.\n"
-			info *= "Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ.\n"
-			if dealias == 0
-				info *= "No dealiasing. "
-			else
-				info *= "Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
-			end
-			if ktol == 0
-				info *= "No Krasny filter. "
-			else
-				info *= "Krasny filter with tolerance $ktol."
-			end
-			if iterate == true
-				if precond == false out="out" else out="" end
-				info *= "\nElliptic problem solved with GMRES method with$out preconditioning, \
-				tolerance $gtol, maximal number of iterations $maxiter, restart after $restart iterations \
-				(consider `iterate=false` for non-iterative method). "
-			else
-				info *= "\nElliptic problem solved with standard LU factorization \
-				(consider `iterate=true` for faster results). "
-			end
-			info *= "\nShut me up with keyword argument `verbose = false`."
-			@info info
+		# Print information
+		info = "$label model.\n"
+		info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ.\n"
+		if dealias == 0
+			info *= "├─No dealiasing. "
+		else
+			info *= "├─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
 		end
+		if ktol == 0
+			info *= "No Krasny filter. "
+		else
+			info *= "Krasny filter with tolerance $ktol."
+		end
+		if iterate == true
+			if precond == false out="out" else out="" end
+			info *= "\n└─Elliptic problem solved with GMRES method with$out preconditioning, \
+			tolerance $gtol, maximal number of iterations $maxiter, restart after $restart iterations \
+			(consider `iterate=false` for non-iterative method). "
+		else
+			info *= "\n└─Elliptic problem solved with standard LU factorization \
+			(consider `iterate=true` for faster results). "
+		end
+		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
 		# Pre-allocate useful data
-		mesh = Mesh(param)
 		k = mesh.k
 		x 	= mesh.x
 		x₀ = mesh.x[1]
@@ -183,6 +181,6 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 				   real(ifft(U[:,1])),real(ifft(U[:,2])),real(ifft(L \ U[:,2]))
 		end
 
-        new(label, f!, mapto, mapfro, mapfrofull)
+        new(label, f!, mapto, mapfro, mapfrofull, info )
     end
 end

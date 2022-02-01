@@ -11,10 +11,10 @@ parap = merge(paraX,paraT) # used to construct problems
 init     = Init(x->cos.(x),x-> sin.(x) )
 
 #--- model
-model=WWn(param;verbose=false)
+model=WWn(param)
 
 #--- reference problem
-pb0 = Problem( model, init, parap; verbose = false )
+pb0 = Problem( model, init, parap )
 solve!(pb0,verbose=false)
 
 #--- tests on Runge-Kutta 4 solvers
@@ -31,7 +31,7 @@ solve!(pb0,verbose=false)
     # check all RK4 solvers generate the same data
     for solver in solvers
         pb = Problem( model, init, parap;
-                    solver = solver, verbose = false );
+                    solver = solver );
         solve!(pb,verbose=false)
         @test pb.data.U == pb0.data.U
     end
@@ -41,7 +41,7 @@ end
 @testset "explicit Euler solver" begin
     # build explicit Euler solver
     pb1 = Problem( model, init, parap;
-                solver = Euler(model), verbose = false )
+                solver = Euler(model) )
     solve!(pb1,verbose=false)
     # check explicit Euler is of order ≈ dt*T
     order = paraT.dt*paraT.T
@@ -60,7 +60,7 @@ end
     # check all Euler solvers generate the same data
     for solver in solvers
         pb = Problem( model, init, parap;
-                    solver = solver, verbose = false );
+                    solver = solver );
         solve!(pb,verbose=false)
         @test pb.data.U == pb1.data.U
     end
@@ -70,7 +70,7 @@ end
 @testset "symplectic Euler solver" begin
     # build symplectic Euler solver
     pb1 = Problem( model, init, parap;
-                solver = EulerSymp(model), verbose = false )
+                solver = EulerSymp(model) )
     solve!(pb1,verbose=false)
     # check symplectic Euler is of order ≈ dt*T
     order = paraT.dt*paraT.T
@@ -87,7 +87,7 @@ end
     # check all symplectic Euler solvers generate the same data
     for solver in solvers
         pb = Problem( model, init, parap;
-                    solver = solver, verbose = false );
+                    solver = solver );
         solve!(pb,verbose=false)
         @test pb.data.U == pb1.data.U
     end
@@ -95,7 +95,7 @@ end
     # change number of iterations in the implicit step
     N=5
     pb2 = Problem( model, init, parap;
-                solver = EulerSymp(model, Niter=N), verbose = false )
+                solver = EulerSymp(model, Niter=N) )
     solve!(pb2,verbose=false)
 
     # check the difference is of order ≈ (dt)^(N+1)*T
@@ -105,7 +105,7 @@ end
     # change the equations solved by implicit method
     N=5
     pb3 = Problem( model, init, parap;
-                solver = EulerSymp(model, implicit=2), verbose = false )
+                solver = EulerSymp(model, implicit=2) )
     solve!(pb3,verbose=false)
 
     # check the difference is of order ≈ dt*T

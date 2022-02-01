@@ -1,7 +1,7 @@
 export Matsuno_fast,Matsuno
 
 """
-	Matsuno_fast(param;dealias,label,verbose)
+	Matsuno_fast(param;dealias,label)
 
 Same as `Matsuno`, but faster.
 """
@@ -11,32 +11,29 @@ mutable struct Matsuno_fast <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	info	:: String
 
     function Matsuno_fast(param::NamedTuple;
-							dealias=false, label = "Matsuno", verbose=true )
+							dealias=false, label = "Matsuno" )
 
 			# Set up
 			ϵ 	= param.ϵ
+			mesh = Mesh(param)
 
-			if verbose  # Print information
-				info = "Build the Matsuno model.\n"
-				info *= "Steepness parameter ϵ=$ϵ (infinite depth case).\n"
-				if dealias == true || dealias == 1
-					info *= "Dealiasing with Orszag’s 3/2 rule. "
-				else
-					info *= "No dealiasing. "
-				end
-				info *= "\nShut me up with keyword argument `verbose = false`."
-				@info info
-				@warn "The velocity is consistent with the \
-				derivative of the trace of the velocity potential \
-				used for water waves only when they are null."
+			# Print information
+			info = "Matsuno model.\n"
+			info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+			if dealias == true || dealias == 1
+				info *= "└─Dealiasing with Orszag’s 3/2 rule. "
+			else
+				info *= "└─No dealiasing. "
 			end
-
+			info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
+			@warn "The velocity is consistent with the \
+			derivative of the trace of the velocity potential \
+			used for water waves only when they are null."
 
 		# Pre-allocate useful data
-		ϵ        = param.ϵ
-        mesh     = Mesh(param)
         x        = mesh.x
 		k 		 = mesh.k
         Γ        = abs.(k)
@@ -139,12 +136,12 @@ mutable struct Matsuno_fast <: AbstractModel
 		    real(ifft(view(U,:,1))),real(ifft(view(U,:,2)))
 		end
 
-		new(label, f!, mapto, mapfro )
+		new(label, f!, mapto, mapfro, info )
     end
 end
 
 """
-	Matsuno(param;dealias,label,verbose)
+	Matsuno(param;dealias,label)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the quadratic deep-water model proposed by [Matsuno](https://doi.org/10.1103/PhysRevLett.69.609).
@@ -157,7 +154,6 @@ the quadratic deep-water model proposed by [Matsuno](https://doi.org/10.1103/Phy
 ## Optional keyword arguments
 - `dealias`: dealiasing with `1/3` Orlicz rule if `true` or no dealiasing if `false` (by default);
 - `label`: a label for future references (default is `"Matsuno"`);
-- `verbose`: prints information if `true` (default is `true`).
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
@@ -174,31 +170,30 @@ mutable struct Matsuno <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	info 	:: String
 
 
     function Matsuno(param::NamedTuple ;
-						dealias=false, label = "Matsuno", verbose=true )
+						dealias=false, label = "Matsuno" )
 
 		# Set up
 		ϵ 	= param.ϵ
+		mesh = Mesh(param)
 
-		if verbose  # Print information
-			info = "Build the Matsuno model.\n"
-			info *= "Steepness parameter ϵ=$ϵ (infinite depth case).\n"
-			if dealias == true || dealias == 1
-				info *= "Dealiasing with Orszag’s 3/2 rule. "
-			else
-				info *= "No dealiasing. "
-			end
-			info *= "\nShut me up with keyword argument `verbose = false`."
-			@info info
-			@warn "The velocity is consistent with the \
-			derivative of the trace of the velocity potential \
-			used for water waves only when they are null."
+		# Print information
+		info = "Matsuno model.\n"
+		info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+		if dealias == true || dealias == 1
+			info *= "└─Dealiasing with Orszag’s 3/2 rule. "
+		else
+			info *= "└─No dealiasing. "
 		end
+		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
+		@warn "The velocity is consistent with the \
+		derivative of the trace of the velocity potential \
+		used for water waves only when they are null."
 
 		# Pre-allocate useful data
-		mesh = Mesh(param)
 		x   = mesh.x
 		k 	= mesh.k
         Γ 	= abs.(k)
@@ -248,6 +243,6 @@ mutable struct Matsuno <: AbstractModel
 		    real(ifft(view(U,:,1))),real(ifft(view(U,:,2)))
 		end
 
-		new(label, f!, mapto, mapfro )
+		new(label, f!, mapto, mapfro, info )
     end
 end

@@ -55,3 +55,8 @@ struct Times
 
 
 end
+
+show(io::IO, t::Times) =
+    print(io,"Mesh of times on [0, $(t.tfin)], with timestep dt=$(t.dt).\n\
+    There will be $(t.Nc) computed times (including initial data),\n\
+    among which $(t.Ns) will be stored.")

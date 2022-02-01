@@ -1,7 +1,7 @@
 export DeepQuadratic_fast,DeepQuadratic
 
 """
-    DeepQuadratic_fast(param;dealias,label,verbose)
+    DeepQuadratic_fast(param;dealias,label)
 
 Same as `DeepQuadratic`, but faster.
 """
@@ -11,30 +11,30 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	info    :: String
 
     function DeepQuadratic_fast( param::NamedTuple;
-						dealias=false, label="deep quadratic", verbose=true )
+						dealias=false, label="deep quadratic" )
 
 		# Set up
 		ϵ = param.ϵ
+		mesh  = Mesh(param)
 
-		if verbose  # Print information
-			info = "Build the deep quadratic model.\n"
-			info *= "Steepness parameter ϵ=$ϵ (infinite depth case).\n"
-			if dealias == true || dealias == 1
-				info *= "Dealiasing with Orszag’s 3/2 rule. "
-			else
-				info *= "No dealiasing. "
-			end
-			info *= "\nShut me up with keyword argument `verbose = false`."
-			@info info
-			@warn "You should provide the initial value for v by ∂t η = - ∂x v.\n\
+		# Print information
+		info = "Deep quadratic model.\n"
+		info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+		if dealias == true || dealias == 1
+			info *= "└─Dealiasing with Orszag’s 3/2 rule. "
+		else
+			info *= "└─No dealiasing. "
+		end
+		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
+
+		@warn "You should provide the initial value for v by ∂t η = - ∂x v.\n\
 		It equals the derivative of the trace of the velocity potential \
 		used for water waves only when they are null."
-		end
 
 		# Pre-allocate useful data
-		mesh  = Mesh(param)
         x = mesh.x
 		k = mesh.k
         Γ = abs.(k)
@@ -103,13 +103,13 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 		function mapfro(U)
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
-		new(label, f!, mapto, mapfro )
+		new(label, f!, mapto, mapfro, info )
 
     end
 end
 
 """
-    DeepQuadratic(param;dealias,label,verbose)
+    DeepQuadratic(param;dealias,label)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the quadratic deep-water model proposed by [Akers and Milewski](https://doi.org/10.1137/090758386)
@@ -123,7 +123,6 @@ and [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s
 ## Optional keyword arguments
 - `dealias`: dealiasing with `1/3` Orlicz rule if `true` or no dealiasing if `false` (by default);
 - `label`: a label for future references (default is `"deep quadratic"`);
-- `verbose`: prints information if `true` (default is `true`).
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
@@ -140,30 +139,29 @@ mutable struct DeepQuadratic <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	info 	:: String
 
     function DeepQuadratic( param::NamedTuple;
-							dealias=false, label="deep quadratic", verbose=true )
+							dealias=false, label="deep quadratic")
 
 		# Set up
 		ϵ = param.ϵ
+		mesh = Mesh(param)
 
-		if verbose   # Print information
-			info = "Build the deep quadratic model.\n"
-			info *= "Steepness parameter ϵ=$(param.ϵ) (infinite depth case).\n"
-			if dealias == true || dealias == 1
-				info *= "Dealiasing with Orszag’s 3/2 rule. "
-			else
-				info *= "No dealiasing. "
-			end
-			info *= "\nShut me up with keyword argument `verbose = false`."
-			@info info
-			@warn "You should provide the initial value for v by ∂t η = - ∂x v.\n\
+		# Print information
+		info = "Deep quadratic model.\n"
+		info *= "├─Steepness parameter ϵ=$(param.ϵ) (infinite depth case).\n"
+		if dealias == true || dealias == 1
+			info *= "└─Dealiasing with Orszag’s 3/2 rule. "
+		else
+			info *= "└─No dealiasing. "
+		end
+		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
+		@warn "You should provide the initial value for v by ∂t η = - ∂x v.\n\
 		It equals the derivative of the trace of the velocity potential \
 		used for water waves only when they are null."
-		end
 
 		# Pre-allocate useful data
-		mesh  = Mesh(param)
 		x = mesh.x
 		k = mesh.k
         Γ = abs.(k)
@@ -210,7 +208,7 @@ mutable struct DeepQuadratic <: AbstractModel
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
 
-		new(label, f!, mapto, mapfro )
+		new(label, f!, mapto, mapfro, info )
 
     end
 end

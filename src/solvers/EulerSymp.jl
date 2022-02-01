@@ -30,6 +30,9 @@ struct EulerSymp <: TimeSolver
     U2   :: Array
     Niter:: Int
     implicit:: Int
+    label :: String
+    info :: String
+
 
     function EulerSymp( U :: Array; Niter = 10, implicit = 1, realdata=nothing )
         U1 = copy(U[:,1])
@@ -43,7 +46,11 @@ struct EulerSymp <: TimeSolver
         if implicit!=1 && implicit!=2
             @warn "the keyword `implicit` must be 1 or 2. solve! will not work."
         end
-        new( U1, U2, Niter, implicit)
+        info = "Symplectic Euler time solver: equation $implicit is solved first via \
+        the implicit Euler step (using the Neumann expansion with $Niter iterations) \
+        and then equation $(3-implicit) is solved via the explicit Euler step."
+        label = "symplectic Euler"
+        new( U1, U2, Niter, implicit, label, info)
     end
 
     function EulerSymp( model :: AbstractModel; Niter = 10, implicit = 1, realdata=nothing )

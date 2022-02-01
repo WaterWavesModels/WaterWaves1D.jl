@@ -21,7 +21,6 @@ a Boussinesq-type model with full-dispersion property.
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"Whitham-Boussinesq"`);
-- `verbose`: prints information if `true` (default is `true`).
 
 
 # Return values
@@ -39,17 +38,19 @@ mutable struct WhithamBoussinesq <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	info 	:: String
 
     function WhithamBoussinesq(param::NamedTuple;Boussinesq=false,
-								α = 1, a = -1/3, b = 1/3,
+								α = 1, a = -1//3, b = 1//3,
 								dealias = 0,
 								ktol	= 0,
-								label 	= nothing,
-								verbose	=true)
+								label 	= nothing
+								)
 
 		# Set up
 		μ 	= param.μ
 		ϵ 	= param.ϵ
+		mesh = Mesh(param)
 
 		if Boussinesq == true
 			if label == nothing label = "Boussinesq" end
@@ -59,25 +60,22 @@ mutable struct WhithamBoussinesq <: AbstractModel
 			info_param = "α=$α"
 		end
 
-		if verbose # Print information
-			info = "Build the $label model with $info_param.\n"
-			info *= "Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ.\n"
-			if dealias == 0
-				info *= "No dealiasing. "
-			else
-				info *= "Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
-			end
-			if ktol == 0
-				info *= "No Krasny filter. "
-			else
-				info *= "Krasny filter with tolerance $ktol."
-			end
-			info *= "\nShut me up with keyword argument `verbose = false`."
-			@info info
+		# Print information
+		info = "$label model with $info_param.\n"
+		info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ.\n"
+		if dealias == 0
+			info *= "└─No dealiasing. "
+		else
+			info *= "└─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
 		end
+		if ktol == 0
+			info *= "No Krasny filter. "
+		else
+			info *= "Krasny filter with tolerance $ktol."
+		end
+		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
 		# Pre-allocate data
-		mesh = Mesh(param)
 		x 	= mesh.x
 		k = mesh.k
 		∂ₓ	=  1im * k
@@ -132,6 +130,6 @@ mutable struct WhithamBoussinesq <: AbstractModel
 			real(ifft(U[:,1])),real(ifft(U[:,2]))
 		end
 
-        new(label, f!, mapto, mapfro)
+        new(label, f!, mapto, mapfro, info )
     end
 end

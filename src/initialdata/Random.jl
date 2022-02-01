@@ -19,6 +19,7 @@ struct Random <: InitialData
 
     η
     v
+    label :: String
 
     function Random(;L=1,s=Inf,λ=nothing)
 
@@ -48,7 +49,7 @@ struct Random <: InitialData
         v( x ) = generate( x )
 
 
-    	new( η,v )
+    	new( η,v, "randomly generated" )
 
     end
 

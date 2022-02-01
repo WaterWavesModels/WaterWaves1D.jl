@@ -3,12 +3,29 @@ module WaterWaves1D
 # external modules
 using ProgressMeter,FFTW
 using LinearMaps,IterativeSolvers,LinearAlgebra
+import Base.show
 
 # abstract types
 export AbstractModel,TimeSolver,InitialData
 abstract type AbstractModel end
+show(io::IO, m::AbstractModel) =
+    try print(io,m.info)
+    catch
+        print(io,"Model: $(m.label)")
+    end
 abstract type TimeSolver end
+show(io::IO, s::TimeSolver) =
+    try print(io,s.info)
+    catch
+        print(io,"Time solver: $(s.label)")
+    end
 abstract type InitialData end
+show(io::IO, i::InitialData) =
+    try print(io,i.info)
+    catch
+        print(io,"Initial data: $(i.label)")
+    end
+
 
 # sructures
 include("data.jl")

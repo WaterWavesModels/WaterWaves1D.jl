@@ -43,6 +43,7 @@ mutable struct WaterWaves <: AbstractModel
 	f2!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	info	:: String
 
     function WaterWaves(param::NamedTuple;
 						ν	    = nothing,
@@ -73,37 +74,35 @@ mutable struct WaterWaves <: AbstractModel
 			IL = true;  # IL (=Infinite layer) is a flag to be used in functions tanh,cotanh,xdcotanh
 			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		end
+		mesh = Mesh(param)
 
 
-		if verbose # Print information
-			info = "Build the water waves system.\n"
-			if IL == true
-				info *= "Steepness parameter ϵ=$ϵ (infinite depth case).\n"
-			else
-				info *= "Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
-						scaling parameter ν=$nu.\n"
-			end
-			info *= "Build initial data with method $method: "
-			if method == 1 info *= "standard contraction fix-point iteration." end
-			if method == 2 info *= "Newton algorithm with GMRES iterative solver to invert the Jacobian." end
-			if method == 3 info *= "Newton algorithm with direct solver to invert the Jacobian." end
-			info *= " Relative tolerance $tol and maximum $maxiter iterations.\n"
-			if dealias == 0
-				info *= "No dealiasing. "
-			else
-				info *= "Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
-			end
-			if ktol == 0
-				info *= "No Krasny filter. "
-			else
-				info *= "Krasny filter with tolerance $ktol."
-			end
-			info *= "\nShut me up with keyword argument `verbose = false`."
-			@info info
+		# Print information
+		info = "Water waves system.\n"
+		if IL == true
+			info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+		else
+			info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
+					scaling parameter ν=$nu.\n"
 		end
+		info *= "├─Initial data built with method $method: "
+		if method == 1 info *= "standard contraction fix-point iteration." end
+		if method == 2 info *= "Newton algorithm with GMRES iterative solver to invert the Jacobian." end
+		if method == 3 info *= "Newton algorithm with direct solver to invert the Jacobian." end
+		info *= " Relative tolerance $tol and maximum $maxiter iterations.\n"
+		if dealias == 0
+			info *= "└─No dealiasing. "
+		else
+			info *= "└─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
+		end
+		if ktol == 0
+			info *= "No Krasny filter. "
+		else
+			info *= "Krasny filter with tolerance $ktol."
+		end
+		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
 		# Pre-allocate useful data
-		mesh = Mesh(param)
 
 		x 	= mesh.x
 		x₀ = x[1]
@@ -315,6 +314,6 @@ mutable struct WaterWaves <: AbstractModel
 		end
 
 
-		new(label, f!, f1!, f2!, mapto, mapfro )
+		new(label, f!, f1!, f2!, mapto, mapfro, info )
     end
 end

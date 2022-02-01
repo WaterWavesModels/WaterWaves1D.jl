@@ -15,35 +15,34 @@ models=[]
 push!(models,Boussinesq(param;
                     a=-1,b=3,
                     dealias=2,ktol=1e-12,
-                    label="Boussinesq",
-                    verbose=false) )
+                    label="Boussinesq") )
 
 push!(models,WhithamBoussinesq(param;
 				α = 1.5, a = -1, b = 3,
 				dealias = 2,
 				ktol	= 1e-12,
-				label 	= "Whitham-Boussinesq",
-				verbose	=false) )
+				label 	= "Whitham-Boussinesq"
+				) )
 
 push!(models,WhithamBoussinesq(param;
 				Boussinesq=true,
 				α = 1.5, a = -1, b = 3,
 				dealias = 2,
 				ktol	= 1e-12,
-				label 	= "(Whitham-)Boussinesq",
-				verbose	=false) )
+				label 	= "(Whitham-)Boussinesq"
+				) )
 
 push!(models,DeepQuadratic_fast( param;
-                    dealias=true, verbose=false, label="fast deep quadratic") )
+                    dealias=true, label="fast deep quadratic") )
 
 push!(models,DeepQuadratic( param;
-                    dealias=false, verbose=false, label="naive deep quadratic") )
+                    dealias=false, label="naive deep quadratic") )
 
 push!(models,Matsuno_fast( param;
-                    dealias=true, verbose=false, label="fast Matsuno") )
+                    dealias=true, label="fast Matsuno") )
 
 push!(models,Matsuno( param;
-                    dealias=false, verbose=false, label="naive Matsuno") )
+                    dealias=false, label="naive Matsuno") )
 
 
 push!(models,IsobeKakinuma(param;
@@ -54,12 +53,11 @@ push!(models,IsobeKakinuma(param;
             precond = false,
             restart	= 1,
             maxiter	= 2,
-            label	= "Isobe-Kakinuma with GMRES",
-            verbose	= false) )
+            label	= "Isobe-Kakinuma with GMRES"
+			) )
 
 push!(models, modifiedMatsuno(param;
 			ν=2,ktol=01e-10,dealias=2,
-			verbose=false,
 			label="modified Matsuno") )
 
 push!(models,IsobeKakinuma(param::NamedTuple;
@@ -70,8 +68,8 @@ push!(models,IsobeKakinuma(param::NamedTuple;
 			precond = false,
 			restart	= nothing,
 			maxiter	= nothing,
-			label	= "Isobe-Kakinuma with LU",
-			verbose	= false) )
+			label	= "Isobe-Kakinuma with LU"
+			) )
 
 push!(models,NonHydrostatic(param;
             dealias = 2,
@@ -81,8 +79,8 @@ push!(models,NonHydrostatic(param;
             precond = false,
             restart	= 1,
             maxiter	= 2,
-            label	= "non-hydrostatic with GMRES",
-            verbose	= false) )
+            label	= "non-hydrostatic with GMRES"
+			) )
 
 push!(models,NonHydrostatic(param::NamedTuple;
 			dealias = 0,
@@ -92,8 +90,8 @@ push!(models,NonHydrostatic(param::NamedTuple;
 			precond = false,
 			restart	= nothing,
 			maxiter	= nothing,
-			label	= "non-hydrostatic with LU",
-			verbose	= false) )
+			label	= "non-hydrostatic with LU"
+			) )
 
 push!(models,SquareRootDepth(param;
             dealias = 2,
@@ -103,8 +101,8 @@ push!(models,SquareRootDepth(param;
             precond = false,
             restart	= 1,
             maxiter	= 2,
-            label	= "square-root depth with GMRES",
-            verbose	= false) )
+            label	= "square-root depth with GMRES"
+			) )
 
 push!(models,SquareRootDepth(param::NamedTuple;
 			dealias = 0,
@@ -114,8 +112,8 @@ push!(models,SquareRootDepth(param::NamedTuple;
 			precond = false,
 			restart	= nothing,
 			maxiter	= nothing,
-			label	= "square-root depth with LU",
-			verbose	= false) )
+			label	= "square-root depth with LU"
+			) )
 
 push!(models,SerreGreenNaghdi(param;
             dealias = 2,
@@ -125,8 +123,8 @@ push!(models,SerreGreenNaghdi(param;
             precond = false,
             restart	= 1,
             maxiter	= 2,
-            label	= "Green-Naghdi with GMRES",
-            verbose	= false) )
+            label	= "Green-Naghdi with GMRES"
+			) )
 
 push!(models,SerreGreenNaghdi(param::NamedTuple;
 			dealias = 0,
@@ -136,8 +134,8 @@ push!(models,SerreGreenNaghdi(param::NamedTuple;
 			precond = false,
 			restart	= nothing,
 			maxiter	= nothing,
-			label	= "Green-Naghdi with LU",
-			verbose	= false) )
+			label	= "Green-Naghdi with LU"
+			) )
 
 WhithamGreenNaghdi
 
@@ -149,8 +147,8 @@ push!(models,WhithamGreenNaghdi(param;
             precond = false,
             restart	= 1,
             maxiter	= 2,
-            label	= "Whitham-Green-Naghdi with GMRES",
-            verbose	= false) )
+            label	= "Whitham-Green-Naghdi with GMRES"
+			) )
 
 push!(models,WhithamGreenNaghdi(param::NamedTuple;
 			dealias = 0,
@@ -160,8 +158,8 @@ push!(models,WhithamGreenNaghdi(param::NamedTuple;
 			precond = false,
 			restart	= nothing,
 			maxiter	= nothing,
-			label	= "Whitham-Green-Naghdi with LU",
-			verbose	= false) )
+			label	= "Whitham-Green-Naghdi with LU"
+			) )
 
 push!(models,WhithamGreenNaghdi(param;
 			SGN=true,
@@ -172,8 +170,8 @@ push!(models,WhithamGreenNaghdi(param;
             precond = false,
             restart	= 1,
             maxiter	= 2,
-            label	= "(Whitham-)Green-Naghdi with GMRES",
-            verbose	= false) )
+            label	= "(Whitham-)Green-Naghdi with GMRES"
+			) )
 
 push!(models,WhithamGreenNaghdi(param::NamedTuple;
 			SGN=true,
@@ -184,8 +182,8 @@ push!(models,WhithamGreenNaghdi(param::NamedTuple;
 			precond = false,
 			restart	= nothing,
 			maxiter	= nothing,
-			label	= "(Whitham-)Green-Naghdi with LU",
-			verbose	= false) )
+			label	= "(Whitham-)Green-Naghdi with LU"
+			) )
 
 push!(models, WWn(param;
 			ν		= 2,
@@ -194,8 +192,8 @@ push!(models, WWn(param;
 			m		= -12,
 			ktol	= 1e-12,
 			dealias	= 2,
-			label	= "WW1",
-			verbose	= false) )
+			label	= "WW1"
+			) )
 
 push!(models, WWn(param;
 			ν		= 1/2,
@@ -204,8 +202,8 @@ push!(models, WWn(param;
 			m		= -Inf,
 			ktol	= 1e-12,
 			dealias	= 2,
-			label	= "WW2",
-			verbose	= false) )
+			label	= "WW2"
+			) )
 
 push!(models, WWn(param;
 			ν		= 0,
@@ -214,8 +212,8 @@ push!(models, WWn(param;
 			m		= (-1,2),
 			ktol	= 1e-12,
 			dealias	= 2,
-			label	= "WW3",
-			verbose	= false) )
+			label	= "WW3"
+			) )
 
 push!(models, WaterWaves(param;
 					ν	    = 1,
@@ -256,7 +254,7 @@ push!(models, WaterWaves(param;
 #--- tests
 for model in models
     # build the initial-value problem
-    problem = Problem( model, init, parap; verbose = false )
+    problem = Problem( model, init, parap )
     # solve the initial-value problem
     solve!(problem ; verbose=false)
     # check everything went well

@@ -93,3 +93,7 @@ struct Mesh
 
     end
 end
+
+show(io::IO, m::Mesh) =
+    print(io,"One-dimensional grid of $(m.N) collocation points on [$(m.xmin), $(m.xmax)].\n\
+    Grid spacing dx=$(m.dx).")

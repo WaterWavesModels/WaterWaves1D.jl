@@ -22,6 +22,7 @@ By default, they are either determined by the model or the type of the array in 
 struct Euler <: TimeSolver
 
     U1 :: Array
+    label :: String
 
     function Euler( U :: Array; realdata=nothing )
         U1 = copy(U)
@@ -31,7 +32,7 @@ struct Euler <: TimeSolver
         if realdata==false
             U1 = complex.(U1);
         end
-        new( U1 )
+        new( U1, "Euler" )
     end
 
     function Euler( model :: AbstractModel; realdata=nothing )
@@ -73,7 +74,12 @@ Runge-Kutta fourth order solver.
 A naive version of `Euler`, without argument since no pre-allocation is performed.
 
 """
-struct Euler_naive <: TimeSolver end
+struct Euler_naive <: TimeSolver
+    label :: String
+
+    function Euler_naive() new("Euler (naive)") end
+end
+
 
 function step!(s  :: Euler_naive,
                model :: AbstractModel ,

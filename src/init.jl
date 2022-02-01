@@ -1,6 +1,6 @@
 export Init
 """
-    Init(data ; fast=false)
+    Init(data ; fast, label)
 
 Generate an initial data to be used in the function `Problem`.
 
@@ -18,44 +18,47 @@ In the last four cases, an optional keyword argument `fast` can be set to `true`
 
 In the last two cases, the collocation points must be regularly spaced, otherwise an `ErrorException` is raised.
 
+If the keyword `label::String` (used to display information to the output stream)
+is not provided, then it is set to the `"user-defined"`.
 """
 struct Init <: InitialData
 
     η
     v
+    label :: String
 
-    function Init(η , v)
-        new( x->η(x) , x->v(x) )
+    function Init(η , v;  label = "user-defined")
+        new( x->η(x) , x->v(x), label )
     end
 
-    function Init(p :: NamedTuple)
-        new( x->p.η(x) , x->p.v(x) )
+    function Init(p :: NamedTuple;  label = "user-defined")
+        new( x->p.η(x) , x->p.v(x), label )
     end
 
-    function Init(mesh :: Mesh, η0 , v0 ; fast = false)
-        new( x->interpolate(mesh,η0,x;fast=fast) , x->interpolate(mesh,v0,x;fast=fast) )
+    function Init(mesh :: Mesh, η0 , v0 ; fast = false,  label = "user-defined")
+        new( x->interpolate(mesh,η0,x;fast=fast) , x->interpolate(mesh,v0,x;fast=fast), label )
     end
 
-    function Init(mesh :: Mesh, p :: NamedTuple ; fast = false)
-        new( x->interpolate(mesh,p.η,x;fast=fast) , x->interpolate(mesh,p.v,x;fast=fast) )
+    function Init(mesh :: Mesh, p :: NamedTuple ; fast = false, label = "user-defined")
+        new( x->interpolate(mesh,p.η,x;fast=fast) , x->interpolate(mesh,p.v,x;fast=fast), label )
     end
 
-    function Init(x :: Array, η0 , v0 ; fast = false)
+    function Init(x :: Array, η0 , v0 ; fast = false, label = "user-defined")
         y=x[2:end]-x[1:end-1];y.-=y[1];
         if maximum(abs.(y))>8*eps(maximum(x))
             @error("Collocation points must be equally spaced.")
         end
         mesh=Mesh(x)
-        Init(mesh, η0 , v0 ; fast = fast)
+        Init(mesh, η0 , v0 ; fast = fast, label = label)
     end
 
-    function Init(x :: Array, p :: NamedTuple ; fast = false)
+    function Init(x :: Array, p :: NamedTuple ; fast = false, label = "user-defined")
         y=x[2:end]-x[1:end-1];y.-=y[1];
         if maximum(abs.(y))>8*eps(maximum(x))
             @error("Collocation points must be equally spaced.")
         end
         mesh=Mesh(x)
-        Init(mesh, p ; fast = fast)
+        Init(mesh, p ; fast = fast, label = label)
     end
 
 

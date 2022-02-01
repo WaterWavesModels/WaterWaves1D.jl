@@ -20,7 +20,6 @@ the Isobe-Kakinuma model.
 - `ktol`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"Isobe-Kakinuma"`);
-- `verbose`: prints information if `true` (default is `true`).
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
@@ -40,6 +39,7 @@ mutable struct IsobeKakinuma <: AbstractModel
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
+	info	:: String
 
     function IsobeKakinuma(param::NamedTuple;
 				dealias = 0,
@@ -49,43 +49,43 @@ mutable struct IsobeKakinuma <: AbstractModel
 				precond = true,
 				restart	= nothing,
 				maxiter	= nothing,
-				label	= "Isobe-Kakinuma",
-				verbose	= true)
+				label	= "Isobe-Kakinuma"
+				)
 
 		# Set up
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		if maxiter == nothing maxiter = Mesh(param).N end
-		if restart == nothing restart = min(20,Mesh(param).N) end
+		mesh = Mesh(param)
 
-		if verbose # Print information
-			info = "Build the Isobe-Kakinuma model.\n"
-			info *= "Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ.\n"
-			if dealias == 0
-				info *= "No dealiasing. "
-			else
-				info *= "Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
-			end
-			if ktol == 0
-				info *= "No Krasny filter. "
-			else
-				info *= "Krasny filter with tolerance $ktol."
-			end
-			if iterate == true
-				if precond == false out="out" else out="" end
-				info *= "\nElliptic problem solved with GMRES method with$out preconditioning, \
-				tolerance $gtol, maximal number of iterations $maxiter, restart after $restart iterations \
-				(consider `iterate=false` for non-iterative method). "
-			else
-				info *= "\nElliptic problem solved with standard LU factorization \
-				(consider `iterate=true` for faster results). "
-			end
-			info *= "\nShut me up with keyword argument `verbose = false`."
-			@info info
+		if maxiter == nothing maxiter = mesh.N end
+		if restart == nothing restart = min(20,mesh.N) end
+
+		# Print information
+		info = "Isobe-Kakinuma model of order 2.\n"
+		info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ.\n"
+		if dealias == 0
+			info *= "├─No dealiasing. "
+		else
+			info *= "├─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
 		end
+		if ktol == 0
+			info *= "No Krasny filter. "
+		else
+			info *= "Krasny filter with tolerance $ktol."
+		end
+		if iterate == true
+			if precond == false out="out" else out="" end
+			info *= "\n└─Elliptic problem solved with GMRES method with$out preconditioning, \
+			tolerance $gtol, maximal number of iterations $maxiter, restart after $restart iterations \
+			(consider `iterate=false` for non-iterative method). "
+		else
+			info *= "\n└─Elliptic problem solved with standard LU factorization \
+			(consider `iterate=true` for faster results). "
+		end
+		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
+
 
 		# Pre-allocate useful data
-		mesh = Mesh(param)
 		k = mesh.k
 		x 	= mesh.x
 		x₀ = mesh.x[1]
@@ -93,7 +93,7 @@ mutable struct IsobeKakinuma <: AbstractModel
 		∂ₓ	=  1im * k
 		if dealias == 0
 			Π⅔ 	= ones(size(k)) # No dealiasing (Π⅔=Id)
-		else verbose
+		else
 			K = (mesh.kmax-mesh.kmin)/(2+dealias)
 			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
 		end
@@ -176,6 +176,6 @@ mutable struct IsobeKakinuma <: AbstractModel
 				   real(ifft(U[:,1])),real(ifft(U[:,2])),real(ifft(L \ U[:,2]))
 		end
 
-        new(label, f!, mapto, mapfro, mapfrofull)
+        new(label, f!, mapto, mapfro, mapfrofull, info)
     end
 end

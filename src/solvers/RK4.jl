@@ -23,6 +23,7 @@ struct RK4 <: TimeSolver
 
     U1 :: Array
     dU :: Array
+    label :: String
 
     function RK4( U :: Array; realdata=nothing )
         U1 = copy(U)
@@ -33,7 +34,7 @@ struct RK4 <: TimeSolver
         if realdata==false
             U1 = complex.(U1);dU = complex.(dU)
         end
-        new( U1, dU)
+        new( U1, dU, "RK4")
     end
 
     function RK4( model :: AbstractModel; realdata=nothing )
@@ -90,7 +91,12 @@ Runge-Kutta fourth order solver.
 A naive version of `RK4`, without argument since no pre-allocation is performed.
 
 """
-struct RK4_naive <: TimeSolver end
+struct RK4_naive <: TimeSolver
+
+    label :: String
+    
+    function RK4_naive() new("RK4 (naive)") end
+end
 
 function step!(s  :: RK4_naive,
                m :: AbstractModel ,

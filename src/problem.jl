@@ -1,7 +1,7 @@
 export Problem
 
 """
-    Problem( model, initial, param ; solver, label, verbose=true)
+    Problem( model, initial, param ; solver, label)
 
 Build an initial-value problem which can then be solved (i.e. integrated in time) through `solve!( problem )`
 
@@ -40,19 +40,13 @@ mutable struct Problem
                      initial :: InitialData,
                      param   :: NamedTuple;
                      solver = RK4(model)  :: TimeSolver,
-                     label = nothing,
-                     verbose = true :: Bool)
+                     label = nothing
+                     )
 
-        if label == nothing # try to retrieve label from the model (if not provided by the user)
-            try
-                label = model.label
-            catch
-                label = ""
-            end
-        end
-        if verbose == true
-            @info "Build the initial-value problem $label."
-        end
+        if label == nothing   label = model.label end
+
+        mesh  = Mesh(param)
+
         if in(:Ns,keys(param))
             times = Times(param.dt, param.T; Ns = param.Ns)
         elseif in(:ns,keys(param))
@@ -61,8 +55,8 @@ mutable struct Problem
             times = Times(param.dt, param.T)
         end
 
-        mesh  = Mesh(param)
         data  = Data(model.mapto(initial))
+
 
         # A basic check
         try
@@ -76,6 +70,14 @@ mutable struct Problem
     end
 
 end
+
+show(io::IO, p::Problem) =
+    print(io,"Initial-value problem with...\n\
+    ├─Model: $(p.model.label).\n├─Initial data: $(p.initial.label).\n└─Solver: $(p.solver.label).\n\
+    Discretized with $(p.mesh.N) collocation points on [$(p.mesh.xmin), $(p.mesh.xmax)],\n\
+    and $(p.times.Nc) computed times on [0, $(p.times.tfin)] (timestep dt=$(p.times.dt)), \
+    among which $(p.times.Ns) will be stored.")
+
 
 export solve!
 

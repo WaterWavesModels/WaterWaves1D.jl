@@ -22,7 +22,6 @@ with the "rectification" method proposed by Duchêne and Melinand.
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"WWn"` with `n` the order of the expansion);
-- `verbose`: prints information if `true` (default is `true`).
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
@@ -41,6 +40,7 @@ mutable struct WWn <: AbstractModel
 	f2!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	info 	:: String
 
     function WWn(param::NamedTuple;
 							ν		= nothing,
@@ -50,8 +50,8 @@ mutable struct WWn <: AbstractModel
 							m		= -1,
 							ktol	= 0,
 							dealias	= 0,
-							label	= nothing,
-							verbose	= true)
+							label	= nothing
+							)
 
 		# Set up
 		if !(n in [1,2,3,4]) n=2 end
@@ -73,34 +73,32 @@ mutable struct WWn <: AbstractModel
 			IL = true;  # IL (=Infinite layer) is a flag to be used thereafter
 			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		end
+		mesh = Mesh(param)
 
-		if verbose # Print information
-			info = "Build the spectral model of order $n.\n"
-			if IL == true
-				info *= "Steepness parameter ϵ=$ϵ (infinite depth case).\n"
-			else
-				info *= "Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
-						scaling parameter ν=$nu.\n"
-			end
-			if δ != 0
-				info *= "Rectifier with strength δ=$δ and order m=$m.\n"
-			end
-			if dealias == 0
-				info *= "No dealiasing. "
-			else
-				info *= "Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
-			end
-			if ktol == 0
-				info *= "No Krasny filter. "
-			else
-				info *= "Krasny filter with tolerance $ktol."
-			end
-			info *= "\nShut me up with keyword argument `verbose = false`."
-			@info info
+		# Print information
+		info = "Spectral model of order $n.\n"
+		if IL == true
+			info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+		else
+			info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
+					scaling parameter ν=$nu.\n"
 		end
+		if δ != 0
+			info *= "├─Rectifier with strength δ=$δ and order m=$m.\n"
+		end
+		if dealias == 0
+			info *= "└─No dealiasing. "
+		else
+			info *= "└─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
+		end
+		if ktol == 0
+			info *= "No Krasny filter. "
+		else
+			info *= "Krasny filter with tolerance $ktol."
+		end
+		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
 		# Pre-allocate useful data
-		mesh = Mesh(param)
 		k = mesh.k
 		x = mesh.x
 
@@ -246,6 +244,6 @@ mutable struct WWn <: AbstractModel
 
 
 
-        new(label, f!, f1!, f2! , mapto, mapfro )
+        new(label, f!, f1!, f2! , mapto, mapfro, info )
     end
 end

@@ -17,7 +17,6 @@ See [Bona, Chen, and Saut](https://doi.org/10.1007/s00332-002-0466-4)
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"Boussinesq"`);
-- `verbose`: prints information if `true` (default is `true`).
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
@@ -34,18 +33,19 @@ mutable struct Boussinesq <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	info	:: String
 
     function Boussinesq(param::NamedTuple;
-						a=-1/3,b=1/3,
+						a=-1//3,b=1//3,
 						dealias=0,ktol=0,
-						label="Boussinesq",
-						verbose=true)
+						label="Boussinesq"
+						)
 
 		m=WhithamBoussinesq(param;Boussinesq=true,
 							a=a,b=b,
 							dealias=dealias,ktol=ktol,
-							verbose=verbose,label=label)
+							label=label)
 
-		new(m.label, m.f!, m.mapto, m.mapfro)
+		new(m.label, m.f!, m.mapto, m.mapfro, m.info)
     end
 end

@@ -20,7 +20,6 @@ the Serre-Green-Naghdi model
 - `ktol`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"Green-Naghdi"`);
-- `verbose`: prints information if `true` (default is `true`).
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
@@ -40,6 +39,7 @@ mutable struct SerreGreenNaghdi <: AbstractModel
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
+	info	:: String
 
     function SerreGreenNaghdi(param::NamedTuple;
 							dealias = 0,
@@ -49,8 +49,8 @@ mutable struct SerreGreenNaghdi <: AbstractModel
 							precond	= true,
 							restart	= nothing,
 							maxiter	= nothing,
-							label	= "Green-Naghdi",
-							verbose	= true)
+							label	= "Green-Naghdi"
+							)
 
 		m=WhithamGreenNaghdi(param;
 							SGN=true,
@@ -61,9 +61,9 @@ mutable struct SerreGreenNaghdi <: AbstractModel
 							precond=precond,
 							restart=restart,
 							maxiter=maxiter,
-							label=label,
-							verbose=verbose)
+							label=label
+							)
 
-		new(m.label, m.f!, m.mapto, m.mapfro, m.mapfrofull)
+		new(m.label, m.f!, m.mapto, m.mapfro, m.mapfrofull, m.info )
     end
 end

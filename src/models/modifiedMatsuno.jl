@@ -17,7 +17,6 @@ the modified Matsuno model
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"modified Matsuno"`);
-- `verbose`: prints information if `true` (default is `true`).
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
@@ -34,14 +33,15 @@ mutable struct modifiedMatsuno <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	info	:: String
 
     function modifiedMatsuno(param::NamedTuple;
 							ν		= nothing,
 							IL	    = false,
 							ktol	= 0,
 							dealias	= 0,
-							label	= "modified Matsuno",
-							verbose	= true )
+							label	= "modified Matsuno"
+							)
 
 		# Set up
 		μ 	= param.μ
@@ -62,34 +62,32 @@ mutable struct modifiedMatsuno <: AbstractModel
 			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		else IL = false
 		end
+		mesh = Mesh(param)
 
-		if verbose  # Print information
-			info = "Build the modified 'exponential' Matsuno model of Duchêne and Melinand.\n"
-			if IL == true
-				info *= "Steepness parameter ϵ=$ϵ (infinite depth case).\n"
-			else
-				info *= "Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
-						scaling parameter ν=$nu.\n"
-			end
-			if dealias == true || dealias == 1
-				info *= "Dealiasing with Orszag’s 3/2 rule. "
-			else
-				info *= "No dealiasing. "
-			end
-			if ktol == 0
-				info *= "No Krasny filter. "
-			else
-				info *= "Krasny filter with tolerance $ktol."
-			end
-			info *= "\nShut me up with keyword argument `verbose = false`."
-			@info info
-			@warn "The velocity is consistent with the \
-			derivative of the trace of the velocity potential \
-			used for water waves only when they are null."
+		# Print information
+		info = "Modified 'exponential' Matsuno model of Duchêne and Melinand.\n"
+		if IL == true
+			info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+		else
+			info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
+					scaling parameter ν=$nu.\n"
 		end
+		if dealias == true || dealias == 1
+			info *= "└─Dealiasing with Orszag’s 3/2 rule. "
+		else
+			info *= "└─No dealiasing. "
+		end
+		if ktol == 0
+			info *= "No Krasny filter. "
+		else
+			info *= "Krasny filter with tolerance $ktol."
+		end
+		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
+		@warn "The velocity is consistent with the \
+		derivative of the trace of the velocity potential \
+		used for water waves only when they are null."
 
 		# Pre-allocate useful data
-		mesh = Mesh(param)
 		x = mesh.x
 		k = mesh.k
 		if dealias == 0
@@ -147,6 +145,6 @@ mutable struct modifiedMatsuno <: AbstractModel
 		end
 
 
-        new(label, f!, mapto, mapfro )
+        new(label, f!, mapto, mapfro, info )
     end
 end

@@ -23,8 +23,8 @@ push!(models,SerreGreenNaghdi(param;
             precond = true,
             restart	= 15,
             maxiter	= 25,
-            label	= "Green-Naghdi with GMRES",
-            verbose	= false) )
+            label	= "Green-Naghdi with GMRES"
+			) )
 push!(precisions,para.μ^2)
 
 push!(models,SerreGreenNaghdi(param::NamedTuple;
@@ -35,8 +35,8 @@ push!(models,SerreGreenNaghdi(param::NamedTuple;
 			precond = false,
 			restart	= nothing,
 			maxiter	= nothing,
-			label	= "Green-Naghdi with LU",
-			verbose	= false) )
+			label	= "Green-Naghdi with LU"
+			) )
 push!(precisions,para.μ^2)
 
 push!(models,WhithamGreenNaghdi(param::NamedTuple;
@@ -48,8 +48,8 @@ push!(models,WhithamGreenNaghdi(param::NamedTuple;
 			precond = false,
 			restart	= nothing,
 			maxiter	= nothing,
-			label	= "(Whitham-)Green-Naghdi with LU",
-			verbose	= false) )
+			label	= "(Whitham-)Green-Naghdi with LU"
+			) )
 push!(precisions,para.μ^2)
 
 
@@ -62,8 +62,8 @@ push!(models,WhithamGreenNaghdi(param;
             precond = false,
             restart	= 15,
             maxiter	= 25,
-            label	= "(Whitham-)Green-Naghdi with GMRES",
-            verbose	= false) )
+            label	= "(Whitham-)Green-Naghdi with GMRES"
+			) )
 push!(precisions,para.μ^2)
 
 
@@ -75,8 +75,7 @@ push!(models,WhithamGreenNaghdi(param;
             precond = false,
             restart	= 5,
             maxiter	= 15,
-            label	= "Whitham-Green-Naghdi with GMRES",
-            verbose	= false) )
+            label	= "Whitham-Green-Naghdi with GMRES") )
 push!(precisions,para.μ^2*param.ϵ)
 
 
@@ -88,8 +87,7 @@ push!(models,WhithamGreenNaghdi(param::NamedTuple;
 			precond = false,
 			restart	= nothing,
 			maxiter	= nothing,
-			label	= "Whitham-Green-Naghdi with LU",
-			verbose	= false) )
+			label	= "Whitham-Green-Naghdi with LU") )
 push!(precisions,para.μ^2*param.ϵ)
 
 
@@ -101,8 +99,7 @@ push!(models,IsobeKakinuma(param::NamedTuple;
 			precond = false,
 			restart	= nothing,
 			maxiter	= nothing,
-			label	= "Isobe-Kakinuma with LU",
-			verbose	= false) )
+			label	= "Isobe-Kakinuma with LU") )
 push!(precisions,para.μ^3)
 
 push!(models,IsobeKakinuma(param;
@@ -113,8 +110,7 @@ push!(models,IsobeKakinuma(param;
             precond = true,
             restart	= 10,
             maxiter	= 20,
-            label	= "Isobe-Kakinuma with GMRES",
-            verbose	= false) )
+            label	= "Isobe-Kakinuma with GMRES") )
 push!(precisions,para.μ^3)
 
 
@@ -126,8 +122,7 @@ push!(models,NonHydrostatic(param;
             precond = false,
             restart	= 1,
             maxiter	= 2,
-            label	= "non-hydrostatic with GMRES",
-            verbose	= false) )
+            label	= "non-hydrostatic with GMRES") )
 push!(precisions,para.μ/5)
 
 push!(models,NonHydrostatic(param::NamedTuple;
@@ -138,8 +133,7 @@ push!(models,NonHydrostatic(param::NamedTuple;
 			precond = false,
 			restart	= nothing,
 			maxiter	= nothing,
-			label	= "non-hydrostatic with LU",
-			verbose	= false) )
+			label	= "non-hydrostatic with LU") )
 push!(precisions,para.μ/5)
 
 push!(models,SquareRootDepth(param;
@@ -150,8 +144,7 @@ push!(models,SquareRootDepth(param;
             precond = false,
             restart	= 15,
             maxiter	= 20,
-            label	= "square-root depth with GMRES",
-            verbose	= false) )
+            label	= "square-root depth with GMRES") )
 push!(precisions,max(para.μ*para.ϵ,para.μ^2))
 
 
@@ -163,8 +156,8 @@ push!(models,SquareRootDepth(param::NamedTuple;
 			precond = false,
 			restart	= nothing,
 			maxiter	= nothing,
-			label	= "square-root depth with LU",
-			verbose	= false) )
+			label	= "square-root depth with LU"
+			) )
 push!(precisions,max(para.μ*para.ϵ,para.μ^2))
 
 
@@ -173,8 +166,8 @@ push!(precisions,max(para.μ*para.ϵ,para.μ^2))
 push!(models,Boussinesq(param;
                     a=-1//2,b=5//12,
                     dealias=0,ktol=1e-12,
-                    label="Boussinesq",
-                    verbose=false) )
+                    label="Boussinesq"
+					) )
 push!(precisions,max(para.μ*para.ϵ/4,para.μ^2))
 
 
@@ -183,16 +176,16 @@ push!(models,WhithamBoussinesq(param;
 				α = 1, a = -1/2, b = 5/12,
 				dealias = 0,
 				ktol	= 1e-14,
-				label 	= "(Whitham-)Boussinesq",
-				verbose	=false) )
+				label 	= "(Whitham-)Boussinesq"
+				) )
 push!(precisions,max(para.μ*para.ϵ/4,para.μ^2))
 
 push!(models,WhithamBoussinesq(param;
 				α = 1.5, a = -1, b = 3,
 				dealias = 0,
 				ktol	= 1e-12,
-				label 	= "Whitham-Boussinesq",
-				verbose	=false) )
+				label 	= "Whitham-Boussinesq"
+				) )
 push!(precisions,para.μ*para.ϵ/4)
 
 # Build reference problem (water waves)
@@ -206,14 +199,14 @@ modelWW =  WaterWaves(param;
 					ktol	= 1e-10,
 					label	= "water waves (shallow water)",
 					verbose	= false)
-pbWW = Problem( modelWW, init, parap; verbose = false )
+pbWW = Problem( modelWW, init, parap )
 solve!(pbWW;verbose=false)
 ηWW,vWW,xWW=solution(pbWW)
 
 realp=[]
 for i in 1:length(models)
     # build the initial-value problem
-    problem = Problem( models[i], init, parap; verbose = false )
+    problem = Problem( models[i], init, parap )
     # solve the initial-value problem
     solve!(problem ; verbose=false)
     # check the order of magnitude of the precision is correct (from above and from below)
@@ -236,8 +229,8 @@ parap = merge(paraX,paraT) # used to construct problems
 # Build deep layer models
 push!(models, modifiedMatsuno(param;
 			ν=1/√para.μ,ktol=01e-14,dealias=0,
-			verbose=false,
-			label="modified Matsuno") )
+			label="modified Matsuno"
+			) )
 push!(precisions, para.ϵ.^2*para.μ)
 
 push!(models, WWn(param;
@@ -246,8 +239,8 @@ push!(models, WWn(param;
 			m		= (-1,2),
 			ktol	= 1e-12,
 			dealias	= 1,
-			label	= "WW1",
-			verbose	= false) )
+			label	= "WW1"
+			) )
 push!(precisions, para.ϵ*√para.μ)
 
 push!(models, WWn(param;
@@ -257,8 +250,8 @@ push!(models, WWn(param;
 			m		= -Inf,
 			ktol	= 1e-12,
 			dealias	= 0,
-			label	= "WW2",
-			verbose	= false) )
+			label	= "WW2"
+			) )
 push!(precisions, para.ϵ.^2*para.μ)
 
 
@@ -268,8 +261,8 @@ push!(models, WWn(param;
 			δ		= 0.01,
 			ktol	= 1e-14,
 			dealias	= 0,
-			label	= "WW3",
-			verbose	= false) )
+			label	= "WW3"
+			) )
 push!(precisions, para.ϵ.^3*para.μ^(3/2))
 
 # Build reference problem (water waves)
@@ -283,14 +276,14 @@ modelWW = WaterWaves(param;
 					ktol	= 1e-10,
 					label	= "water waves (deep water)",
 					verbose	= false)
-pbWW = Problem( modelWW, init, parap; verbose = false )
+pbWW = Problem( modelWW, init, parap )
 solve!(pbWW;verbose=false)
 ηWW,vWW,xWW=solution(pbWW)
 
 
 for i in 1:length(models)
     # build the initial-value problem
-    problem = Problem( models[i], init, parap; verbose = false )
+    problem = Problem( models[i], init, parap )
     # solve the initial-value problem
     solve!(problem ; verbose=false)
     # check the order of magnitude of the precision is correct (from above and from below)
@@ -314,8 +307,8 @@ parap = merge(paraX,paraT) # used to construct problems
 # Build infinite layer models
 push!(models, modifiedMatsuno(param;
 			ktol=01e-14,dealias=0,
-			verbose=false,
-			label="modified Matsuno") )
+			label="modified Matsuno"
+			) )
 push!(precisions, para.ϵ.^2)
 
 push!(models, WWn(param;
@@ -324,8 +317,7 @@ push!(models, WWn(param;
 			m		= (-1,2),
 			ktol	= 1e-12,
 			dealias	= 1,
-			label	= "WW1",
-			verbose	= false) )
+			label	= "WW1") )
 push!(precisions, para.ϵ)
 
 push!(models, WWn(param;
@@ -335,8 +327,7 @@ push!(models, WWn(param;
 			m		= -Inf,
 			ktol	= 1e-12,
 			dealias	= 0,
-			label	= "WW2",
-			verbose	= false) )
+			label	= "WW2") )
 push!(precisions, para.ϵ.^2)
 
 
@@ -346,26 +337,25 @@ push!(models, WWn(param;
 			δ		= 0.01,
 			ktol	= 0,
 			dealias	= 0,
-			label	= "WW3",
-			verbose	= false) )
+			label	= "WW3") )
 push!(precisions, para.ϵ.^3)
 
 
 
 push!(models,DeepQuadratic_fast( param;
-                    dealias=true, verbose=false, label="fast deep quadratic") )
+                    dealias=true, label="fast deep quadratic") )
 push!(precisions, para.ϵ.^2)
 
 push!(models,DeepQuadratic( param;
-                    dealias=false, verbose=false, label="naive deep quadratic") )
+                    dealias=false, label="naive deep quadratic") )
 push!(precisions, para.ϵ.^2)
 
 push!(models,Matsuno_fast( param;
-                    dealias=true, verbose=false, label="fast Matsuno") )
+                    dealias=true, label="fast Matsuno") )
 push!(precisions, para.ϵ.^2)
 
 push!(models,Matsuno( param;
-                    dealias=false, verbose=false, label="naive Matsuno") )
+                    dealias=false, label="naive Matsuno") )
 push!(precisions, para.ϵ.^2)
 
 
@@ -379,13 +369,13 @@ modelWW =  WaterWaves(param;
 					ktol	= 1e-14,
 					label	= "water waves (infinite layer)",
 					verbose	= false)
-pbWW = Problem( modelWW, init, parap; verbose = false )
+pbWW = Problem( modelWW, init, parap )
 solve!(pbWW;verbose=false)
 ηWW,vWW,xWW=solution(pbWW)
 
 for i in 1:length(models)
     # build the initial-value problem
-    problem = Problem( models[i], init, parap; verbose = false )
+    problem = Problem( models[i], init, parap )
     # solve the initial-value problem
     solve!(problem ; verbose=false)
     # check the order of magnitude of the precision is correct (from above and from below)
