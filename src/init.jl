@@ -44,8 +44,7 @@ struct Init <: InitialData
     end
 
     function Init(x :: Array, η0 , v0 ; fast = false, label = "user-defined")
-        y=x[2:end]-x[1:end-1];y.-=y[1];
-        if maximum(abs.(y))>8*eps(maximum(x))
+        if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
             @error("Collocation points must be equally spaced.")
         end
         mesh=Mesh(x)
@@ -53,8 +52,7 @@ struct Init <: InitialData
     end
 
     function Init(x :: Array, p :: NamedTuple ; fast = false, label = "user-defined")
-        y=x[2:end]-x[1:end-1];y.-=y[1];
-        if maximum(abs.(y))>8*eps(maximum(x))
+        if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
             @error("Collocation points must be equally spaced.")
         end
         mesh=Mesh(x)
