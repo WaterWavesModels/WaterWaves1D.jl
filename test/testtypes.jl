@@ -58,13 +58,13 @@ end
 
 #--- test problems
 @testset "Tests on problems" begin
-    param = (L=10, N=20, ϵ = 0.1, μ = 0.1, T=1, dt=0.1)
+    param = (L=10, N=20, ϵ = 0.1, μ = 0.1, T=1, dt=1/30)
     init = Random(param)
     model1 = WWn(param;n=1)
     model2 = WWn(param;n=2)
-    problem1 = Problem(model1, init, param; label = "problem 1")
+    problem1 = Problem(model1, init, merge(param,(ns=2,)); label = "problem 1")
     problem2 = Problem(model2, init, param; label = "problem 2")
-    pb1 = Problem(model1, init, param)
+    pb1 = Problem(model1, init, merge(param,(ns=2,)))
     pb2 = Problem(model2, init, param)
 
     solve!([pb1 pb2]);solve!(problem1);solve!(problem2);
