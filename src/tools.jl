@@ -48,8 +48,7 @@ function interpolate(mesh::Mesh,vector,x;fast=false)
 		end
 		new_vector ./= length(k)
 	else
-		y=x[2:end]-x[1:end-1];y.-=y[1];
-        if maximum(abs.(y))>8*eps(maximum(x))
+        if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
             @error("Collocation points must be equally spaced.")
         end
 		new_vector = similar(x,Complex); z = exp.(-1im*(x[1].-x₀)*k);eidk=exp.(-1im*(x[2]-x[1])*k);
