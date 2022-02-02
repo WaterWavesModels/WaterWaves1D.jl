@@ -11,19 +11,19 @@ m2c = Mesh( [-2*π 0 ] )
 m2d = Mesh( 2π , 2 )
 
 
-function mesh(m::Mesh)
+function the_mesh(m::Mesh)
     [m.N, m.xmin, m.xmax, m.dx, m.x, m.kmin, m.kmax, m.dk, m.k]
 end
 
 @testset "Tests on Mesh" begin
-    @test mesh(m1a) ≈ [3,-2π,π,π,[-2π; -π; 0],-2/3,2/3,2/3,[0; 2/3; -2/3]]
-    @test mesh(m1a) == mesh(m1b)
-    @test mesh(m1a) == mesh(m1c)
+    @test the_mesh(m1a) ≈ [3,-2π,π,π,[-2π; -π; 0],-2/3,2/3,2/3,[0; 2/3; -2/3]]
+    @test the_mesh(m1a) == the_mesh(m1b)
+    @test the_mesh(m1a) == the_mesh(m1c)
 
-    @test mesh(m2a) ≈ [2,-2π,2π,2π,[-2π; 0],-1//2,0,1//2,[0; -1/2]]
-    @test mesh(m2a) == mesh(m2b)
-    @test mesh(m2a) == mesh(m2c)
-    @test mesh(m2a) == mesh(m2d)
+    @test the_mesh(m2a) ≈ [2,-2π,2π,2π,[-2π; 0],-1//2,0,1//2,[0; -1/2]]
+    @test the_mesh(m2a) == the_mesh(m2b)
+    @test the_mesh(m2a) == the_mesh(m2c)
+    @test the_mesh(m2a) == the_mesh(m2d)
 
 end
 
@@ -34,16 +34,16 @@ t1b = Times( (dt=0.1 , T=1); ns=3 )
 t2a = Times( 1//10 , 1; Ns=3 )
 t2b = Times( (dt=0.1 , T=1); Ns=3 )
 
-function times(t::Times)
+function the_times(t::Times)
     [t.Nc, t.Ns, t.ns, t.tfin, t.dt, t.tc, t.ts]
 end
 
 @testset "Tests on times" begin
-    @test times(t1a) == [11,4,[3,3,3],1.,0.1,0:0.1:1,[0.0, 0.3, 0.6, 0.9]]
-    @test times(t1a) == times(t1b)
+    @test the_times(t1a) == [11,4,[3,3,3],1.,0.1,0:0.1:1,[0.0, 0.3, 0.6, 0.9]]
+    @test the_times(t1a) == the_times(t1b)
 
-    @test times(t2a) == [11,4,[3,4,3],1,0.1,0:0.1:1,[0.0, 0.3, 0.7, 1.0]]
-    @test times(t2a) == times(t2b)
+    @test the_times(t2a) == [11,4,[3,4,3],1,0.1,0:0.1:1,[0.0, 0.3, 0.7, 1.0]]
+    @test the_times(t2a) == the_times(t2b)
 end
 
 #--- test data
