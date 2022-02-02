@@ -1,12 +1,14 @@
-export SolitaryWaveWhitham
+export SolitaryWaveWhitham, SolitaryWhitham
 
 """
-    `SolitaryWaveWhitham(param; kwargs...)`
+    SolitaryWaveWhitham(param; kwargs)
 
-Computes the Whitham solitary wave with prescribed velocity.
+Compute the Whitham solitary wave with prescribed velocity.
 
 # Argument
-- `param :: NamedTuple`: parameters of the problem containing velocity `c` and dimensionless parameters `ϵ` and `μ`, and mesh size `L` and number of collocation points `N`;
+- `param :: NamedTuple`: parameters of the problem containing velocity `c` \
+and dimensionless parameters `ϵ` and `μ`, \
+and mesh size `L` and number of collocation points `N`;
 
 ## Keywords (optional)
 - `guess :: Vector{Real}`: initial guess for the surface deformation (if not provided, the exact formula for KdV is used);
@@ -16,7 +18,7 @@ Computes the Whitham solitary wave with prescribed velocity.
 - `max_iter :: Int`: maximum number of iterations of the Newton algorithm;
 - `tol :: Real`: general tolerance (default is `1e-10`);
 - `ktol :: Real`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
-- `gtol :: Real`: relative tolerance of the GMRES algorithm;
+- `gtol :: Real`: relative tolerance of the GMRES algorithm (default is `1e-10`);
 - `dealias :: Int`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `q :: Real`: Newton algorithm modified with
 `u_{n+1}=q*u_{n+1}+(1-q)*u_n`
@@ -24,17 +26,20 @@ Computes the Whitham solitary wave with prescribed velocity.
 - `α :: Real`: adds `α` times spectral projection onto the Kernel to the Jacobian;
 - `KdV :: Bool`: if `true` computes the KdV (instead of Whitham) solitary wave.
 # Return values
-`u :: Vector{Float64}` the solution
+`(u,mesh)` with
+- `u :: Vector{Float64}`: the solution;
+- `mesh :: Mesh`: mesh collocation points.
+
 """
 function SolitaryWaveWhitham(
                 param :: NamedTuple;
                 guess = zeros(0) :: Vector{Float64},
                 x₀ = 0 :: Real,
                 iterative = false :: Bool,
-                verbose = true :: Bool,
+                verbose = false :: Bool,
                 max_iter = 20 :: Int,
-                tol = 1e-14 :: Real,
-                gtol = 1e-14 :: Real,
+                tol = 1e-10 :: Real,
+                gtol = 1e-10 :: Real,
                 ktol = 0 :: Real,
                 dealias = 0 :: Int,
                 q=1 :: Real,
@@ -46,19 +51,21 @@ function SolitaryWaveWhitham(
         c = param.c
         ϵ = param.ϵ
         μ = param.μ
+        if abs(c)<1
+                @error("The velocity must be greater than 1 (in absolute value).")
+        end
+
 
         if guess == zeros(0)
-                @info "Using the exact formula for the KdV solitary wave as initial guess"
+                # Using the exact formula for the KdV solitary wave as initial guess
                 guess = 2*(c-1)/ϵ*sech.(sqrt(3*2*(c-1)/μ)/2*mesh.x.-x₀).^2
         end
 
         k  = mesh.k
         Dx =  1im * k
         if KdV == true
-                @info string("Solving the KdV solitary wave with velocity c=",param.c)
                 F₁ = 1 .-μ/6*k.^2
         else
-                @info string("Solving the Whitham solitary wave with velocity c=",param.c)
                 F₁ = sqrt.(tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k)))
                 F₁[1]=1
         end
@@ -132,9 +139,87 @@ function SolitaryWaveWhitham(
                 if iterative == false
                         du .= JacF(u,dxu) \ fu
                 else
-                        du .= gmres( JacFfast(u,dxu) , fu ; verbose = verbose, tol = gtol )
+                        du .= gmres( JacFfast(u,dxu) , fu ; verbose = verbose, reltol = gtol )
                 end
     		u .-= q*filter(du)
         end
-        return u
+        return (u,mesh)
+end
+
+
+"""
+    SolitaryWhitham(param; kwargs)
+
+Build the initial data associated with `SolitaryWaveWhitham(param; kwargs)`, of type `InitialData`,
+to be used in initial-value problems `Problem(model, initial::InitialData, param)`.
+
+---
+    SolitaryWhitham(c; ϵ=1,μ=1,N=2^12,kwargs)
+Build the initial data with velocity `c`, dimensionless parameters `ϵ` and `μ`, and number of collocation points `N`, \
+and `kwargs` the other (optional) keyword arguments as above.
+"""
+struct SolitaryWhitham <: InitialData
+
+	η
+	v
+	label :: String
+	info  :: String
+
+	function SolitaryWhitham(param::NamedTuple;
+			guess = zeros(0) :: Vector{Float64},
+			x₀ = 0 :: Real,
+			iterative = false :: Bool,
+			verbose = false :: Bool,
+			max_iter = 20 :: Int,
+			tol = 1e-10 :: Real,
+			gtol = 1e-10 :: Real,
+			ktol = 0 :: Real,
+			dealias = 0 :: Int,
+			q=1 :: Real,
+			α=0 :: Real,
+			KdV = false :: Bool)
+                (u,mesh)=SolitaryWaveWhitham(param;
+                                guess=guess,x₀=x₀,KdV=KdV,
+                                iterative=iterative,verbose=verbose,max_iter=max_iter,
+                                tol=tol,ktol=ktol,gtol=gtol,dealias=dealias,q=q,α=α)
+		ϵ=param.ϵ
+		η=((ϵ*u/2 .+1).^2 .-1)/ϵ
+		init = Init(mesh,η,u)
+		if KdV == false
+        		model = "Whitham"
+		else
+			model = "KdV"
+		end
+                label = "$model solitary wave"
+		info = "Solitary travelling wave for the $model model.\n\
+		├─velocity c = $(param.c)\n\
+		└─maximum h₀ = $(maximum(η)) (from rest state)."
+
+		new( init.η,init.v,label,info  )
+	end
+
+	function SolitaryWhitham(
+                        c::Real; ϵ=1::Real,μ=1::Real,N=2^12::Int,
+			guess = zeros(0) :: Vector{Float64},
+	                x₀ = 0 :: Real,
+	                iterative = false :: Bool,
+	                verbose = false :: Bool,
+	                max_iter = 20 :: Int,
+	                tol = 1e-10 :: Real,
+	                gtol = 1e-10 :: Real,
+	                ktol = 0 :: Real,
+	                dealias = 0 :: Int,
+	                q=1 :: Real,
+	                α=0 :: Real,
+	                KdV = false :: Bool)
+		L=200/sqrt(3*(c^2-1)/(c^2)/μ)/2
+		xmin,xmax = x₀-L,x₀+L;
+		param=(ϵ=ϵ,μ=μ,c=c,L=L,xmin=xmin,xmax=xmax,N=N)
+		sol=SolitaryWhitham(param;
+                                guess=guess,x₀=x₀,KdV=KdV,
+                                iterative=iterative,verbose=verbose,max_iter=max_iter,
+                                tol=tol,ktol=ktol,gtol=gtol,dealias=dealias,q=q,α=α)
+		new( sol.η,sol.v,sol.label,sol.info  )
+	end
+
 end

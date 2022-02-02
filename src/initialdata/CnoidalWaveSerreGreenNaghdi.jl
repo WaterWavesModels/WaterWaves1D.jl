@@ -1,11 +1,11 @@
-export CnoidalWaveSerreGreenNaghdi
+export CnoidalWaveSerreGreenNaghdi, CnoidalSGN
 using Elliptic
 
 """
     CnoidalWaveSerreGreenNaghdi(param; P)
 
 Compute the Serre-Green-Naghdi cnoidal wave with prescribed `h₀<h₁<h₂`.
-`h_1` is the minimum, `h_2` is the maximum of the wave.
+`h₁` is the minimum, `h₂` is the maximum of the wave.
 As `h₀ -> h₁`, the cnoidal wave converges towards the solitary wave.
 See for instance Gavrilyuk, Nkonga, Shyue and Truskinovsky, doi:10.1088/1361-6544/ab95ac
 
@@ -17,7 +17,7 @@ See for instance Gavrilyuk, Nkonga, Shyue and Truskinovsky, doi:10.1088/1361-654
 `(η,u,v,mesh,param)` with
 - `η :: Vector{Float64}`: surface deformation;
 - `u :: Vector{Float64}`: layer-averaged velocity;
-- `v :: Vector{Float64}`: tangential velocity;
+- `v :: Vector{Float64}`: derivative of the trace of the velocity potential at the surface;
 - `mesh :: Mesh`: mesh collocation points;
 - `param :: NamedTuple`: useful parameters
 """
@@ -32,11 +32,9 @@ function CnoidalWaveSerreGreenNaghdi(
         h₁=param.h₁
         h₂=param.h₂
         c = sqrt(h₀*h₁*h₂)
-        @info string("The velocity is c=",c)
         m = sqrt((h₂-h₁)/(h₂-h₀))
         κ = sqrt(3*(h₂-h₀))/(2*c)/sqrt(μ)
         λ = Elliptic.K(m^2)/κ
-        @info string("The period is 2*λ=",2*λ)
         mesh = Mesh((L=P*λ,N=param.N))
         formula = h₁ .-1 .+ (h₂-h₁)*(Jacobi.cn.(κ*mesh.x,m^2).^2)
 
@@ -62,4 +60,29 @@ function CnoidalWaveSerreGreenNaghdi(
 
         return (η,u,v,mesh,param)
 
+end
+
+"""
+    CnoidalSGN(param; P)
+
+Build the initial data associated with `CnoidalWaveSerreGreenNaghdi(param; P)`, of type `InitialData`,
+to be used in initial-value problems `Problem(model, initial::InitialData, param)`.
+"""
+struct CnoidalSGN <: InitialData
+
+	η
+	v
+	label :: String
+	info  :: String
+
+	function CnoidalSGN(param; P=2)
+		(η,u,v,mesh,para)=CnoidalWaveSerreGreenNaghdi(param; P)
+		init = Init(mesh,η,v)
+		label = "Green-Naghdi cnoidal wave"
+		info = "Cnoidal travelling wave for the Serre-Green-Naghdi model.\n\
+		├─velocity c = $(para.c)\n├───period P = $(2(para.λ))\n\
+		├─maximum h₂ = $(para.h₂) (from bottom)\n└─minimum h₁ = $(para.h₁) (from bottom)."
+
+		new( init.η,init.v,label,info  )
+	end
 end

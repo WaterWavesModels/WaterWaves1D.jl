@@ -1,12 +1,14 @@
-export SolitaryWaveWhithamGreenNaghdi
+export SolitaryWaveWhithamGreenNaghdi, SolitaryWGN
 
 """
-    SolitaryWaveWhithamGreenNaghdi(param; kwargs...)
+    SolitaryWaveWhithamGreenNaghdi(param; kwargs)
 
 Compute the Whitham-Green-Naghdi solitary wave with prescribed velocity.
 
 # Arguments
-- `param :: NamedTuple`: parameters of the problem containing velocity `c` and dimensionless parameters `ϵ` and `μ`, and mesh size `L` and number of collocation points `N`;
+- `param :: NamedTuple`: parameters of the problem containing velocity `c` \
+and dimensionless parameters `ϵ` and `μ`, \
+and mesh size `L` and number of collocation points `N`;
 ## Keywords (optional)
 - `guess :: Vector{Real}`: initial guess for the surface deformation (if not provided, the exact formula for SGN is used);
 - `x₀ :: Real`: center of solitary wave (if guess is not provided);
@@ -21,13 +23,13 @@ Compute the Whitham-Green-Naghdi solitary wave with prescribed velocity.
 - `dealias :: Int`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `q :: Real`: Newton algorithm modified with `u_{n+1}=q*u_{n+1}+(1-q)*u_n` (default is `1`);
 - `α :: Real`: adds `α` times spectral projection onto the Kernel to the Jacobian (default is `0`).
+
 # Return values
-`(η,u,v)` with
+`(η,u,v,mesh)` with
 - `η :: Vector{Float64}`: surface deformation;
 - `u :: Vector{Float64}`: layer-averaged velocity;
-- `v :: Vector{Float64}`: tangential velocity;
+- `v :: Vector{Float64}`: derivative of the velocity potential at the surface;
 - `mesh :: Mesh`: mesh collocation points.
-
 
 """
 function SolitaryWaveWhithamGreenNaghdi(
@@ -46,21 +48,20 @@ function SolitaryWaveWhithamGreenNaghdi(
                 q=1 :: Real,
                 α=0 :: Real
                         )
-        if SGN == true
-                @info string("Computing the SGN solitary wave with velocity c=",param.c)
-        else
-                @info string("Computing the WGN solitary wave with velocity c=",param.c)
-        end
 
 
         c = param.c
         ϵ = param.ϵ
         μ = param.μ
+        if abs(c)<1
+                @error("The velocity must be greater than 1 (in absolute value).")
+        end
+
 
         mesh = Mesh(param)
 
         if guess == zeros(0)
-                @info "Using the exact formula for the SGN solitary wave as initial guess"
+                # Using the exact formula for the SGN solitary wave as initial guess (if not provided)
                 guess = (c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*(mesh.x.-x₀)).^2
         end
 
@@ -283,5 +284,83 @@ function SolitaryWaveWhithamGreenNaghdi(
 	v = u - 1/3 ./h .* (DxF(h.^3 .*DxF(u)))
 
         return (η,u,v,mesh)
+
+end
+
+"""
+    SolitaryWGN(param; kwargs)
+
+Build the initial data associated with `SolitaryWaveWhithamGreenNaghdi(param; kwargs)`, of type `InitialData`,
+to be used in initial-value problems `Problem(model, initial::InitialData, param)`.
+
+---
+    SolitaryWGN(c; ϵ=1,μ=1,N=2^12,kwargs)
+Build the initial data with velocity `c`, dimensionless parameters `ϵ` and `μ`, and number of collocation points `N`, \
+and `kwargs` the other (optional) keyword arguments as above.
+"""
+struct SolitaryWGN <: InitialData
+
+	η
+	v
+	label :: String
+	info  :: String
+
+	function SolitaryWGN(param::NamedTuple;
+                                guess = zeros(0) :: Vector{Float64},
+                                x₀ = 0 :: Real,
+                                SGN = false :: Bool,
+                                method = 2 :: Int,
+                                iterative = false :: Bool,
+                                verbose = false :: Bool,
+                                max_iter = 20 :: Int,
+                                tol = 1e-10 :: Real,
+                                ktol = 0 :: Real,
+                                gtol = 1e-10 :: Real,
+                                dealias = 0 :: Int,
+                                q=1 :: Real,
+                                α=0 :: Real)
+		(η,u,v,mesh)=SolitaryWaveWhithamGreenNaghdi(param;
+                                guess=guess,x₀=x₀,SGN=SGN,method=method,
+                                iterative=iterative,verbose=verbose,max_iter=max_iter,
+                                tol=tol,ktol=ktol,gtol=gtol,dealias=dealias,q=q,α=α)
+		init = Init(mesh,η,v)
+                if SGN == true
+        	    model = "Serre-Green-Naghdi"
+                else
+                    model = "Whitham-Green-Naghdi"
+                end
+                label = "$model solitary wave"
+		info = "Solitary travelling wave for the $model model.\n\
+		├─velocity c = $(param.c)\n\
+		└─maximum h₀ = $(maximum(η)) (from rest state)."
+
+		new( init.η,init.v,label,info  )
+	end
+
+	function SolitaryWGN(
+                        c::Real; ϵ=1::Real,μ=1::Real,N=2^12::Int,
+                        guess = zeros(0) :: Vector{Float64},
+                        x₀ = 0 :: Real,
+                        SGN = false :: Bool,
+                        method = 2 :: Int,
+                        iterative = false :: Bool,
+                        verbose = false :: Bool,
+                        max_iter = 20 :: Int,
+                        tol = 1e-10 :: Real,
+                        ktol = 0 :: Real,
+                        gtol = 1e-10 :: Real,
+                        dealias = 0 :: Int,
+                        q=1 :: Real,
+                        α=0 :: Real
+                                )
+		L=200/sqrt(3*(c^2-1)/(c^2)/μ)/2
+		xmin,xmax = x₀-L,x₀+L;
+		param=(ϵ=ϵ,μ=μ,c=c,L=L,xmin=xmin,xmax=xmax,N=N)
+		sol=SolitaryWGN(param;
+                        guess=guess,x₀=x₀,SGN=SGN,method=method,
+                        iterative=iterative,verbose=verbose,max_iter=max_iter,
+                        tol=tol,ktol=ktol,gtol=gtol,dealias=dealias,q=q,α=α)
+		new( sol.η,sol.v,sol.label,sol.info  )
+	end
 
 end
