@@ -1,6 +1,6 @@
 using Test
 using WaterWaves1D
-import WaterWaves1D: dump, load!, load_data
+import WaterWaves1D: dump, load_data
 
 @testset "LoadSave" begin
  
@@ -20,12 +20,11 @@ import WaterWaves1D: dump, load!, load_data
             precond = true,
             restart	= 15,
             maxiter	= 25,
-            label	= "Green-Naghdi with GMRES",
-            verbose	= false)
+			label	= "Green-Naghdi with GMRES")
 
     precision = para.μ^2
 
-    problem = Problem( model, init, parap; verbose = false )
+    problem = Problem( model, init, parap )
     solve!(problem; verbose=false)
 
     # model   :: AbstractModel
