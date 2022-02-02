@@ -58,7 +58,7 @@ function SolitaryWaveWhitham(
 
         if guess == zeros(0)
                 # Using the exact formula for the KdV solitary wave as initial guess
-                guess = 2*(c-1)/ϵ*sech.(sqrt(3*2*(c-1)/μ)/2*mesh.x.-x₀).^2
+                guess = 2*(c-1)/ϵ*sech.(sqrt(3*2*(c-1)/μ)/2*(mesh.x.-x₀)).^2
         end
 
         k  = mesh.k

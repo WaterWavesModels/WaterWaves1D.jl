@@ -23,7 +23,7 @@ and mesh size `L` and number of collocation points `N`;
 - `gtol :: Real`: relative tolerance of the GMRES algorithm (default is `1e-10`);
 - `dealias :: Int`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `q :: Real`: Newton algorithm modified with
-`u_{n+1}=q*u_{n+1}+(1-q)*u_n`
+`u_{n+1}=q*(u_n+du)+(1-q)*u_n`
 (default is `1`);
 - `β :: Real`: adds `β` times spectral projection onto the Kernel to the Jacobian.β
 
@@ -39,8 +39,8 @@ function SolitaryWaveWhithamBoussinesq(
         guess = zeros(0) :: Vector{Float64},
         x₀ = 0 :: Real,
         α = 1 :: Real,
-	a = -1//3, b = 1//3,
-	Boussinesq = false :: Bool,
+		a = -1//3, b = 1//3,
+		Boussinesq = false :: Bool,
         iterative = false :: Bool,
         verbose = false :: Bool,
         max_iter = 20 :: Int,
@@ -186,11 +186,11 @@ struct SolitaryWB <: InitialData
 	info  :: String
 
 	function SolitaryWB(param::NamedTuple;
-				guess = zeros(0) :: Vector{Float64},
+					guess = zeros(0) :: Vector{Float64},
 			        x₀ = 0 :: Real,
 			        α = 1 :: Real,
-				a = -1//3, b = 1//3,
-				Boussinesq = false :: Bool,
+					a = -1//3, b = 1//3,
+					Boussinesq = false :: Bool,
 			        iterative = false :: Bool,
 			        verbose = false :: Bool,
 			        max_iter = 20 :: Int,
@@ -201,10 +201,10 @@ struct SolitaryWB <: InitialData
 			        q=1 :: Real,
 			        β=0 :: Real)
 
-                (η,v,mesh)=SolitaryWaveWhithamBoussinesq(param;
-                                guess=guess,x₀=x₀,α=α,a=a,b=b,Boussinesq=Boussinesq,
-                                iterative=iterative,verbose=verbose,max_iter=max_iter,
-                                tol=tol,ktol=ktol,gtol=gtol,dealias=dealias,q=q,β=β)
+        (η,v,mesh)=SolitaryWaveWhithamBoussinesq(param;
+                        guess=guess,x₀=x₀,α=α,a=a,b=b,Boussinesq=Boussinesq,
+                        iterative=iterative,verbose=verbose,max_iter=max_iter,
+                        tol=tol,ktol=ktol,gtol=gtol,dealias=dealias,q=q,β=β)
 		init = Init(mesh,η,v)
 		if Boussinesq == false
         		model = "Whitham-Boussinesq"
@@ -220,12 +220,12 @@ struct SolitaryWB <: InitialData
 	end
 
 	function SolitaryWB(
-                        c::Real; ϵ=1::Real,μ=1::Real,N=2^12::Int,
-			guess = zeros(0) :: Vector{Float64},
+                c::Real; ϵ=1::Real,μ=1::Real,N=2^12::Int,
+				guess = zeros(0) :: Vector{Float64},
 		        x₀ = 0 :: Real,
 		        α = 1 :: Real,
-			a = -1//3, b = 1//3,
-			Boussinesq = false :: Bool,
+				a = -1//3, b = 1//3,
+				Boussinesq = false :: Bool,
 		        iterative = false :: Bool,
 		        verbose = false :: Bool,
 		        max_iter = 20 :: Int,

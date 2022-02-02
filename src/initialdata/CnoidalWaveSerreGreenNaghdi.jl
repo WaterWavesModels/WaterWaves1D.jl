@@ -2,7 +2,7 @@ export CnoidalWaveSerreGreenNaghdi, CnoidalSGN
 using Elliptic
 
 """
-    CnoidalWaveSerreGreenNaghdi(param; P)
+    CnoidalWaveSerreGreenNaghdi(param; P=1)
 
 Compute the Serre-Green-Naghdi cnoidal wave with prescribed `h₀<h₁<h₂`.
 `h₁` is the minimum, `h₂` is the maximum of the wave.
@@ -11,7 +11,7 @@ See for instance Gavrilyuk, Nkonga, Shyue and Truskinovsky, doi:10.1088/1361-654
 
 # Arguments
 - `param :: NamedTuple`: parameters of the problem containing `h₀<h₁<h₂` and dimensionless parameters `ϵ` and `μ`, and number of collocation points `N`.
-- `P :: Int`: (keyword, optional, default = 2) the number of periods of the cnoidal wave in the constructed mesh.
+- `P :: Int`: (keyword, optional, default = 1) the number of periods of the cnoidal wave in the constructed mesh.
 
 # Return values
 `(η,u,v,mesh,param)` with
@@ -23,7 +23,7 @@ See for instance Gavrilyuk, Nkonga, Shyue and Truskinovsky, doi:10.1088/1361-654
 """
 function CnoidalWaveSerreGreenNaghdi(
                 param :: NamedTuple;
-                P = 2 :: Int)
+                P = 1 :: Int)
 
         ϵ = param.ϵ
         μ = param.μ
@@ -49,11 +49,11 @@ function CnoidalWaveSerreGreenNaghdi(
         η = formula/ϵ
         h = 1 .+ ϵ*η
         u = c*η./h
-	k = mesh.k
+		k = mesh.k
         Dx=  1im * k
-	F₀ = sqrt(μ)*Dx
+		F₀ = sqrt(μ)*Dx
         DxF(v) = real.(ifft(F₀ .* fft(v)))
-	v = u - 1/3 ./h .* (DxF(h.^3 .*DxF(u)))
+		v = u - 1/3 ./h .* (DxF(h.^3 .*DxF(u)))
         #
         # h2 = 1 .+ ϵ*formula2
         # v2 = u2 - 1/3 ./h2 .* (DxF(h2.^3 .*DxF(u2)))
@@ -63,9 +63,9 @@ function CnoidalWaveSerreGreenNaghdi(
 end
 
 """
-    CnoidalSGN(param; P)
+    CnoidalSGN(param; P=1)
 
-Build the initial data associated with `CnoidalWaveSerreGreenNaghdi(param; P)`, of type `InitialData`,
+Build the initial data associated with `CnoidalWaveSerreGreenNaghdi(param; P=1)`, of type `InitialData`,
 to be used in initial-value problems `Problem(model, initial::InitialData, param)`.
 """
 struct CnoidalSGN <: InitialData
@@ -75,7 +75,7 @@ struct CnoidalSGN <: InitialData
 	label :: String
 	info  :: String
 
-	function CnoidalSGN(param; P=2)
+	function CnoidalSGN(param; P=1)
 		(η,u,v,mesh,para)=CnoidalWaveSerreGreenNaghdi(param; P)
 		init = Init(mesh,η,v)
 		label = "Green-Naghdi cnoidal wave"
