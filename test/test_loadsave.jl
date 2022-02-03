@@ -1,6 +1,6 @@
 using Test
 using WaterWaves1D
-import WaterWaves1D: dump, load_data, load_mesh
+import WaterWaves1D: dump, load_data, load_mesh, load_times
 
 @testset "LoadSave" begin
  
@@ -31,27 +31,25 @@ import WaterWaves1D: dump, load_data, load_mesh
     # [ ] InitialData
     # [ ] NamedTuple
     # [ ] TimeSolver
-    # [ ] Times
-    # [ ] Mesh
+    # [x] Times
+    # [x] Mesh
     # [x] Data
 
 
     save_filename = "testsave"
     rm(joinpath(save_filename * ".h5"), force=true)
 
+    dump(save_filename, problem.times)
+    times = load_times( save_filename)
+    @test times == problem.times
+
     dump(save_filename, problem.mesh)
     mesh = load_mesh( save_filename)
     @test mesh == problem.mesh
 
-    @show size(problem.data)
-    @show length(problem.data)
-    
     dump(save_filename, problem.data)
-
     data = load_data(save_filename)
-
     @test length(data) == length(problem.data)
-    @show size(data)
 
  
 end

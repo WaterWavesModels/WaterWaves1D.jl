@@ -60,3 +60,25 @@ show(io::IO, t::Times) =
     print(io,"Mesh of times on [0, $(t.tfin)], with timestep dt=$(t.dt).\n\
     There will be $(t.Nc) computed times (including initial data),\n\
     among which $(t.Ns) will be stored.")
+
+function dump( h5file :: String, times :: Times )
+
+    h5write(joinpath(h5file * ".h5"), "/times/dt", times.dt)
+    h5write(joinpath(h5file * ".h5"), "/times/tfin", times.tfin)
+    h5write(joinpath(h5file * ".h5"), "/times/ns", times.ns)
+    h5write(joinpath(h5file * ".h5"), "/times/Ns", times.Ns)
+
+end
+
+function load_times( h5file :: String )
+
+    dt = h5read(joinpath(h5file * ".h5"),   "/times/dt")
+    tfin = h5read(joinpath(h5file * ".h5"), "/times/tfin")
+    ns = h5read(joinpath(h5file * ".h5"),   "/times/ns")
+    Ns = h5read(joinpath(h5file * ".h5"),   "/times/Ns")
+
+    return Times( dt, tfin; ns = ns, Ns=Ns)
+
+end
+
+Base.:(==)(a::Times, b::Times) = ( a.dt == b.dt && a.tfin == a.tfin && a.ns == b.ns )
