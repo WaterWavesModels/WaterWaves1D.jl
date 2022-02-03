@@ -23,8 +23,8 @@ is not provided, then it is set to the `"user-defined"`.
 """
 struct Init <: InitialData
 
-    η
-    v
+    η :: Any
+    v :: Any
     label :: String
 
     function Init(η , v;  label = "user-defined")
@@ -59,5 +59,19 @@ struct Init <: InitialData
         Init(mesh, p ; fast = fast, label = label)
     end
 
+
+end
+
+
+function dump( h5file :: String, init :: InitialData )
+
+    h5write(joinpath(h5file * ".h5"), "/init/label", init.label)
+
+end
+
+ 
+function load_init( h5file :: String )
+
+    return h5read(joinpath(h5file * ".h5"), "/init/label")
 
 end

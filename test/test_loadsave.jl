@@ -6,10 +6,12 @@ import WaterWaves1D: load_mesh
 import WaterWaves1D: load_times
 import WaterWaves1D: load_timesolver
 import WaterWaves1D: load_param
+import WaterWaves1D: load_model
+import WaterWaves1D: load_init
 
 @testset "LoadSave" begin
  
-    init     = Init(x->exp.(-1/8*x.^4),x-> 0. * x )
+    init  = Init(x->exp.(-1/8*x.^4),x-> 0. * x )
 
     para  = ( ϵ  = 0.01, μ = 0.01)  # physical parameters
     paraX = ( N  = 2^6, L  = 4)   # mesh with 64 collocation points on [-4,4]
@@ -32,17 +34,14 @@ import WaterWaves1D: load_param
     problem = Problem( model, init, parap )
     solve!(problem; verbose=false)
 
-    # [ ] AbstractModel
-    # [ ] InitialData
-    # [x] NamedTuple
-    # [x] TimeSolver
-    # [x] Times
-    # [x] Mesh
-    # [x] Data
-
-
     save_filename = "testsave"
     rm(joinpath(save_filename * ".h5"), force=true)
+
+    dump(save_filename, model)
+    @test load_model(save_filename) == "Green-Naghdi with GMRES"
+
+    dump(save_filename, init)
+    @test load_init(save_filename) == "user-defined"
 
     dump(save_filename, param)
     saved_param = load_param( save_filename )
