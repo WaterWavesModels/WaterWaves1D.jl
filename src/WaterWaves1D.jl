@@ -7,19 +7,15 @@ using HDF5
 import Base.show
 
 # abstract types
-export AbstractModel,TimeSolver,InitialData
+export AbstractModel
 abstract type AbstractModel end
 show(io::IO, m::AbstractModel) =
     try print(io,m.info)
     catch
         print(io,"Model: $(m.label)")
     end
-abstract type TimeSolver end
-show(io::IO, s::TimeSolver) =
-    try print(io,s.info)
-    catch
-        print(io,"Time solver: $(s.label)")
-    end
+
+export InitialData
 abstract type InitialData end
 show(io::IO, i::InitialData) =
     try print(io,i.info)
@@ -27,6 +23,7 @@ show(io::IO, i::InitialData) =
         print(io,"Initial data: $(i.label)")
     end
 
+include("solvers/common.jl")
 
 # sructures
 include("data.jl")
