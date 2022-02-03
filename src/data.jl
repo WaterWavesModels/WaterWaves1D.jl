@@ -38,11 +38,11 @@ size( data :: Data ) = size( first(data.U) )
 
 function dump( h5file :: String, data :: Data )
 
-    h5write(h5file * ".h5", "/data/size", collect(size(first(data.U))))
-    h5write(h5file * ".h5", "/data/length", length(data.U))
+    h5write(joinpath(h5file * ".h5"), "/data/size", collect(size(first(data.U))))
+    h5write(joinpath(h5file * ".h5"), "/data/length", length(data.U))
 
     for (i,u) in enumerate(data.U)
-       h5write(h5file * ".h5", "/data/U$i", u)
+       h5write(joinpath(h5file * ".h5"), "/data/U$i", u)
     end
 
 end

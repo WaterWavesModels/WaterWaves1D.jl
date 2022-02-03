@@ -57,8 +57,8 @@ mutable struct IsobeKakinuma <: AbstractModel
 		ϵ 	= param.ϵ
 		mesh = Mesh(param)
 
-		if maxiter == nothing maxiter = mesh.N end
-		if restart == nothing restart = min(20,mesh.N) end
+		if isnothing(maxiter) maxiter = mesh.N end
+		if isnothing(restart) restart = min(20,mesh.N) end
 
 		# Print information
 		info = "Isobe-Kakinuma model of order 2.\n"

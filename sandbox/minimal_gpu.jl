@@ -1,9 +1,8 @@
 using ProgressMeter
 using FFTW, LinearAlgebra
 using Test
+using WaterWaves1D
 
-include("../src/dependencies.jl")
-include("../models/WhithamGreenNaghdiGPU.jl")
 
 function run_cpu( param )
 

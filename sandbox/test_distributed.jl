@@ -5,8 +5,6 @@
 
 using Distributed
 using WaterWaves1D
-include("../src/models/WaterWaves.jl")
-include("../src/models/PseudoSpectral.jl")
 
 rmprocs(workers())
 addprocs(3)
@@ -15,10 +13,6 @@ addprocs(3)
     using Pkg
     Pkg.activate(".")
     using WaterWaves1D
-    include("../src/models/WaterWaves.jl")
-    include("../src/models/PseudoSpectral.jl")
-
-
 end
 
 using Test

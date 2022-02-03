@@ -52,7 +52,7 @@ function PlotSolitaryWaveWGN1(;c=2,N=2^10,L=10*π,verbose=false,name=nothing)
 	  title="frequency",
 	  label=["WGN" "SGN"])
 	display(plt)
-	if name != nothing savefig(string(name,".pdf")); end
+	if !isnothing(name) savefig(string(name,".pdf")); end
 	return (η,u,v,mesh)
 end
 
@@ -92,7 +92,7 @@ function PlotSolitaryWaveWGN2(;c=20,L=10*π,N=2^10,verbose=false,name=nothing)
 	  title="frequency",
 	  label=["WGN" "SGN"])
     display(plt)
-	if name != nothing savefig(string(name,".pdf")); end
+	if !isnothing(name) savefig(string(name,".pdf")); end
 	return (η,u,v,mesh)
 end
 #---- Figure 4
@@ -130,7 +130,7 @@ function PlotSolitaryWaveWGN3(;c=100,L=10*π,N=2^10,verbose=false,name=nothing)
 	  title="frequency",
 	  label=["WGN" "SGN"])
 	display(plt)
-	if name != nothing savefig(string(name,".pdf")); end
+	if !isnothing(name) savefig(string(name,".pdf")); end
 	return (η,u,v,mesh)
 end
 
@@ -193,7 +193,7 @@ function PlotJacobianWGN(;c=20,L=10*π,N=2^10,SGN=false,verbose=false,name=nothi
 		title = "non-diagonal part")
 	display(plt)
 
-	if name != nothing savefig(string(name,".pdf")); end
+	if !isnothing(name) savefig(string(name,".pdf")); end
 	return (Jac,Jacstar,FFT,IFFT)
 end
 
@@ -215,7 +215,7 @@ Arguments are all optional:
 Return `problem` of type `Problem`, containing all the information.
 """
 function IntegrateSolitaryWaveWGN(;SGN=false,c=2,N=2^10,L=10*π,T=1,dt=1/2000,name=nothing)
-	if name != nothing ns=floor(Int,max(1,T/dt/100)) else ns=1 end
+	if !isnothing(name) ns=floor(Int,max(1,T/dt/100)) else ns=1 end
 
 	param = ( μ  = 1, ϵ  = 1, c = c,
 				N  = N,
@@ -259,7 +259,7 @@ function IntegrateSolitaryWaveWGN(;SGN=false,c=2,N=2^10,L=10*π,T=1,dt=1/2000,na
 			ylabel="δu")
 	display(plt)
 
-	if name != nothing
+	if !isnothing(name)
 		savefig(string(name,".pdf"));
 		create_animation(problem;name=string(name,"-anim.pdf"))
 		plot_solution(problem)
@@ -295,7 +295,7 @@ Arguments are all optional:
 Return `problem` of type `Problem`, containing all the information.
 """
 function StabilitySolitaryWaveWGN(;p=2,c=2,N=2^10,L=10*π,T=10,dt=10/10^4,SGN=false,precond=true,iterate=true,dealias=0,name=nothing)
-	if name != nothing ns=floor(Int,max(1,T/dt/100)) else ns=1 end
+	if !isnothing(name) ns=floor(Int,max(1,T/dt/100)) else ns=1 end
 	if p == 1
 		λ = 0.99
 	elseif p == 2
@@ -370,7 +370,7 @@ function StabilitySolitaryWaveWGN(;p=2,c=2,N=2^10,L=10*π,T=10,dt=10/10^4,SGN=fa
 	plot!(plt[1,2],mesh.x,[u ufin];
 			label=["u initial" "u final"])
 	display(plt)
-	if name != nothing savefig(string(name,"-final.pdf")); end
+	if !isnothing(name) savefig(string(name,"-final.pdf")); end
 
 	ts = problem.times.ts
 	x = mesh.x
@@ -389,7 +389,7 @@ function StabilitySolitaryWaveWGN(;p=2,c=2,N=2^10,L=10*π,T=10,dt=10/10^4,SGN=fa
 	display(plt)
 
 
-	if name != nothing
+	if !isnothing(name)
 		savefig(string(name,"-znorm.pdf"));
 
 		us=zeros(length(X),length(ts));
@@ -443,7 +443,7 @@ Return `(problem,plt)` where `problem` contains all the information and `plt` a 
 """
 function IntegrateWGN(scenario;δ=0.1,N=2^11,L=3*π,x₀=-3,T= 5,dt = 5/10^4,SGN=false,dealias=0,iterate=true,precond=true,name=nothing)
 
-	if name != nothing ns=floor(Int,max(1,T/dt/100)) else ns=1 end
+	if !isnothing(name) ns=floor(Int,max(1,T/dt/100)) else ns=1 end
 	if scenario == 1 || scenario == 2
 		μ  = δ^2
 	else
@@ -515,7 +515,7 @@ function IntegrateWGN(scenario;δ=0.1,N=2^11,L=3*π,x₀=-3,T= 5,dt = 5/10^4,SGN
 			label="")
 	display(plt)
 
-	if name != nothing
+	if !isnothing(name)
 		savefig(string(name,".pdf"));
 		#save(problem,name);
 		ts = problem.times.ts

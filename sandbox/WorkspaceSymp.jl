@@ -3,14 +3,14 @@
 #md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/two_problems.ipynb)
 #
 #using WaterWaves1D,ProgressMeter,Plots,FFTW,Statistics;gr()
-include("../src/dependencies.jl")
-
-include("../src/models/PseudoSpectral.jl")
-include("../src/models/Spectral.jl")
-include("../src/models/WaterWaves.jl")
-
-include("../src/solvers/Euler.jl")
-include("../src/solvers/EulerSymp.jl")
+#include("../src/dependencies.jl")
+#
+#include("../src/models/PseudoSpectral.jl")
+#include("../src/models/Spectral.jl")
+#include("../src/models/WaterWaves.jl")
+#
+#include("../src/solvers/Euler.jl")
+#include("../src/solvers/EulerSymp.jl")
 
 
 
@@ -52,7 +52,7 @@ for problem in problems
 end
 #solve!(problems[3])
 #---- visualization
-include("../src/Figures.jl")
+#include("../src/Figures.jl")
 #using Plots
 #gr()
 (η,v,x,t)=solution(problems[1])

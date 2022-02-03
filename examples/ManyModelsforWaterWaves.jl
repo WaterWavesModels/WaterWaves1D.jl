@@ -38,7 +38,7 @@ Return `(Diff,problems,plt)` where `Diff` is a measure of the errors, `problems`
 function Integrate(scenario;μ=.1,ϵ=.1,p=2,N=2^10,L=15,T=10,dt=0.001,dealias=0,iterate=true,precond=true,method=1,maxiter=100,name=nothing)
 	#---- preparation
 
-	if name != nothing ns=floor(Int,max(1,T/dt/100)) else ns=1 end
+	if !isnothing(name) ns=floor(Int,max(1,T/dt/100)) else ns=1 end
 
 	if typeof(dealias)==Int64 dealias=dealias*ones(Int64,4) end
 
@@ -98,7 +98,7 @@ function Integrate(scenario;μ=.1,ϵ=.1,p=2,N=2^10,L=15,T=10,dt=0.001,dealias=0,
 	display(plt)
 
 
-	if name != nothing
+	if !isnothing(name)
 		#save(problem,name);
 		#@save(name,xww,ηww,ηSGN,ηWGN,ηIK2,scenario,μ,ϵ,p,N,L,T,dt,dealias,iterate,precond,name)
 

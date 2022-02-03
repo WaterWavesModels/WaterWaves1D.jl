@@ -59,7 +59,7 @@ mutable struct WaterWaves <: AbstractModel
 		# Set up
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		if ν == nothing
+		if isnothing(ν)
 			if μ > 1
 				ν = 1/sqrt(μ)
 				nu = "1/√μ (deep water case)"

@@ -6,17 +6,17 @@ using WaterWaves1D, Plots, FFTW, Statistics;
 gr();
 #include("../src/dependencies.jl")
 
-include("../src/models/WaterWaves.jl")
-include("../src/models/DeepWaterWaves.jl")
-include("../src/models/WWn.jl")
+#include("../src/models/WaterWaves.jl")
+#include("../src/models/DeepWaterWaves.jl")
+#include("../src/models/WWn.jl")
 
 #include("../src/models/SerreGreenNaghdi.jl")
 #include("../src/models/Nonhydrostatic.jl")
 #include("../src/models/SquareRootDepth.jl")
 
-include("../src/Figures.jl")
-
-
+#include("../src/Figures.jl")
+#
+#
 # if there is an error at this step, try commenting the lines above and commenting out the line below
 #include("../src/dependencies.jl")
 

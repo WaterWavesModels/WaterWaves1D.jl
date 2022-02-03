@@ -3,8 +3,8 @@
 #md # [`notebook`](@__NBVIEWER_ROOT_URL__notebooks/WWvsXX.ipynb)
 #
 using WaterWaves1D;
-include("../src/models/WaterWaves.jl")
-include("../src/models/PseudoSpectral.jl")
+#include("../src/models/WaterWaves.jl")
+#include("../src/models/PseudoSpectral.jl")
 
 # if there is an error at this step, try commenting the lines above and commenting out the line below
 #include("../src/dependencies.jl")
@@ -39,7 +39,7 @@ for problem in problems
 end
 
 #---- visualization
-include("../src/Figures.jl")
+#include("../src/Figures.jl")
 #using Plots
 #gr()
 

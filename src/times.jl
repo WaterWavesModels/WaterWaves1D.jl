@@ -38,7 +38,7 @@ struct Times
     function Times( dt, tfin; ns = 1, Ns=nothing)
         tc = range(0, stop=tfin, step = dt)
         Nc = length(tc)
-        if Ns != nothing
+        if !isnothing(Ns)
             ind_stored = round.(Int,range(1, stop=Nc, length = minimum([Ns+1 Nc])))
         else
             ind_stored = round.(Int,range(1, stop=Nc, step = ns))

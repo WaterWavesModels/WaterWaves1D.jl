@@ -1,8 +1,7 @@
 """
 Minimal example for WhithamGreenNaghdi
 """
-#using WaterWaves1D
-include("../src/dependencies.jl")
+using WaterWaves1D
 
 """
 	solveandplot()

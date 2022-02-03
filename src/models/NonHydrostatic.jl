@@ -57,8 +57,8 @@ mutable struct NonHydrostatic <: AbstractModel
 		ϵ 	= param.ϵ
 		mesh = Mesh(param)
 
-		if maxiter == nothing maxiter = mesh.N end
-		if restart == nothing restart = min(20,mesh.N) end
+		if isnothing(maxiter) maxiter = mesh.N end
+		if isnothing(restart) restart = min(20,mesh.N) end
 
 		# Print information
 		info = "Non-hydrostatic model of Bristeau, Mangeney, Sainte-Marie and Seguin.\n"

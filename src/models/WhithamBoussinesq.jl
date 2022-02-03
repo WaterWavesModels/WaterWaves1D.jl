@@ -53,10 +53,10 @@ mutable struct WhithamBoussinesq <: AbstractModel
 		mesh = Mesh(param)
 
 		if Boussinesq == true
-			if label == nothing label = "Boussinesq" end
+			if isnothing(label) label = "Boussinesq" end
 			info_param = "a=$a, b=$b, c=0 and d=$b"
 		else
-			if label == nothing label = "Whitham-Boussinesq" end
+			if isnothing(label) label = "Whitham-Boussinesq" end
 			info_param = "α=$α"
 		end
 

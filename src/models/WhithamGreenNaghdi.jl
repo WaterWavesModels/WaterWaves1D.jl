@@ -57,9 +57,9 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 		μ 	= param.μ
 		ϵ 	= param.ϵ
 		mesh = Mesh(param)
-		if maxiter == nothing maxiter = mesh.N end
-		if restart == nothing restart = min(20,mesh.N) end
-		if label == nothing
+		if isnothing(maxiter) maxiter = mesh.N end
+		if isnothing(restart) restart = min(20,mesh.N) end
+		if isnothing(label)
 			if SGN == true
 				label = "Serre-Green-Naghdi"
 			else

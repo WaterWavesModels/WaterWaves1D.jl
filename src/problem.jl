@@ -43,7 +43,7 @@ mutable struct Problem
                      label = nothing
                      )
 
-        if label == nothing   label = model.label end
+        if isnothing(label)   label = model.label end
 
         mesh  = Mesh(param)
 

@@ -36,7 +36,7 @@ Return `(problem,blowup_time,blowup,error_energy)` where
 - `error_energy` is the relative energy preservation between first and final time
 """
 function IntegrateWW2(;init=1,μ=1,ϵ=0.1,L=20,N=2^10,T=10,dt = 0.001,dealias=1,δ=0.001,m=-1,K=100,p=2,Ns=nothing)
-	if Ns == nothing
+	if isnothing(Ns)
 		param = ( μ  = μ, ϵ  = ϵ,
 				N  = N, L  = L,
 	            T  = T, dt = dt )
@@ -136,7 +136,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 	if scenario == 1
 		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^9,T=10,dt = 0.001,dealias=0,δ=0,m=-1)
 		plt=plot_solution(problem;compression=compression,label="")
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			if anim
 				create_animation(problem;ylims=(-0.5,1.1),compression=compression,name=name)
@@ -147,7 +147,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 	elseif scenario == 2
 		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^11,T=1.5,dt = 0.001,dealias=0,δ=0,m=-1)
 		plt=plot_solution(problem,t=1.2;compression=compression,label="")
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			if anim
 				create_animation(problem;ylims=(-0.5,1.1),compression=compression,name=name)
@@ -158,7 +158,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 	elseif scenario == 3
 		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^12,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
 		plt=plot_solution(problem;compression=compression,label="")
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			if anim
 				create_animation(problem;ylims=(-0.5,1.1),compression=compression,name=name)
@@ -169,7 +169,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 	elseif scenario == 4
 		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^14,T=1.5,dt = 0.001,dealias=1,δ=0,m=-1)
 		plt=plot_solution(problem,t=1.3;compression=compression,label="")
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			if anim
 				create_animation(problem;ylims=(-0.5,1.1),compression=compression,name=name)
@@ -183,7 +183,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,m=-1,Ns=Ns)
 		plt0=plot_solution(problem0;compression=compression,label="")
 		plt1=plot_solution(problem1;compression=compression,label="")
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt0,string(name,"r12.pdf"));savefig(plt0,string(name,"r12.svg"));
 			savefig(plt1,string(name,"r1.pdf"));savefig(plt1,string(name,"r1.svg"));
 			if anim
@@ -199,7 +199,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^16,T=1,dt = 0.01,dealias=1,δ=0.01,m=-1/4,Ns=Ns)
 		plt0=plot_solution(problem0,t=0.6;compression=compression,label="")
 		plt1=plot_solution(problem1,t=0.6;compression=compression,label="")
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt0,string(name,"N18.pdf"));savefig(plt0,string(name,"N18.svg"));
 			savefig(plt1,string(name,"N16.pdf"));savefig(plt1,string(name,"N16.svg"));
 			if anim
@@ -220,7 +220,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		plt1=plot_solution(problem1;compression=compression,label="t=10")
 		plot_solution!(plt1,problem1,t=2;compression=compression,label="t=2")
 		title!(plt1[1,1],"surface deformation")
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt0,string(name,"d01.pdf"));savefig(plt0,string(name,"d01.svg"));
 			savefig(plt1,string(name,"d002.pdf"));savefig(plt1,string(name,"d002.svg"));
 			if anim
@@ -245,7 +245,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 				xlabel="K (in log scale)",
 				ylabel="t (in log scale)",
 				xscale=:log10,yscale=:log10)
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			#@save(name,K,blowups0,blowups1)
 		end
@@ -267,7 +267,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 				xlabel="K (in log scale)",
 				ylabel="t (in log scale)",
 				xscale=:log10,yscale=:log10)
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			#@save(name,K,blowups0,blowups1)
 		end
@@ -291,7 +291,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 				xlabel="ϵ (in log scale)",
 				ylabel="t (in log scale)",
 				xscale=:log10,yscale=:log10)
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			#@save(name,Eps,blowups1,blowups2,blowups3,blowups4)
  		end
@@ -312,7 +312,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		plot_solution!(plt1,problem1,t=0.3;compression=compression,label="t=0.3")
 		plot_solution!(plt1,problem1,t=0.5;compression=compression,label="t=0.5")
 		plot!(plt1[1,1],title="surface deformation")
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt0,string(name,"a.pdf"));savefig(plt0,string(name,"a.svg"));
 			savefig(plt1,string(name,"b.pdf"));savefig(plt1,string(name,"b.svg"));
 			if anim
@@ -367,7 +367,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		ohlc!(plt,log10.(Eps[:]),y2,label="",linecolor=:orange)
 		plot!(plt,log10.(Eps[:]),Eps[:].^2,label="δ=ϵ²",linecolor=:3)
 		plot!(yscale=:log10,legend=:topleft,ylabel="δ (in log scale)",xlabel="ϵ (in log scale)")
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			#@save(name,Eps,δc2,δc10)
 		end
@@ -400,7 +400,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 			scatter!(plt,Delta,Norms[i],label=string("ϵ=",Eps[i]),marker=markers[i])
 		end
 		plot!(plt,xlabel="δ",ylabel="error",legend=:topleft)
-		if name != nothing
+		if !isnothing(name)
 			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
 			plot!(plt,xscale=:log10,yscale=:log10)
 			plot!(plt,xlabel="δ (in log scale)",ylabel="error (in log scale)")

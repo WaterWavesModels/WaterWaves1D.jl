@@ -87,12 +87,12 @@ Provides `(η,v,x,t)` where
 
 """
 function solution(p::Problem; t=nothing, x=nothing, interpolation = false)
-	if t == nothing t = p.times.tfin end
+	if isnothing(t) t = p.times.tfin end
 	t=min(max(t,0),p.times.tfin)
 	index = indexin(false,p.times.ts.<t)[1]
 	t=p.times.ts[index]
 	if Symbol(typeof(p.model)) == :WaterWaves
-		if x != nothing || interpolation != false
+		if !isnothing(x) || interpolation != false
 			@warn "cannot interpolate non-regularly spaced mesh."
 		end
 		(x,η,v) = (p.model.mapfro)(p.data.U[index])
@@ -100,7 +100,7 @@ function solution(p::Problem; t=nothing, x=nothing, interpolation = false)
 	else
     	(η,v) = (p.model.mapfro)(p.data.U[index])
 		mesh=p.mesh
-		if x != nothing
+		if !isnothing(x)
 			η = interpolate(mesh,η,x)
 			v = interpolate(mesh,v,x)
 		else

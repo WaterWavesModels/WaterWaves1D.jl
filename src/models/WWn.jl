@@ -55,10 +55,10 @@ mutable struct WWn <: AbstractModel
 
 		# Set up
 		if !(n in [1,2,3,4]) n=2 end
-		if label == nothing  label = "WW$n" end
+		if isnothing(label)  label = "WW$n" end
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		if ν == nothing
+		if isnothing(ν)
 			if μ > 1
 				ν = 1/sqrt(μ)
 				nu = "1/√μ (deep water case)"
