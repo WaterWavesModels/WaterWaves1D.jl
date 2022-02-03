@@ -3,7 +3,7 @@
 ```@autodocs
 Modules = [WaterWaves1D]
 Order   = [:type]
-pages   = [
+Pages   = [
 "Boussinesq.jl",
 "DeepQuadratic.jl",
 "IsobeKakinuma.jl",
