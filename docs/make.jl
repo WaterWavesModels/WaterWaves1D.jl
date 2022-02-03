@@ -1,3 +1,4 @@
+# How-to guides
 push!(LOAD_PATH,"../src/")
 
 ENV["GKSwstype"]="100"
@@ -22,11 +23,11 @@ makedocs(modules=[WaterWaves1D],
          authors = "Vincent Duchene",
          format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
          sitename = "WaterWaves1D.jl",
-         pages = [ "Quickstart" => "quickstart.md",
-                   "Code basics"   => "basics.md",
-                   "How-to..."   => "howto.md",
-                   "Documentation" => "index.md",
-                   "Contents"      => "contents.md"])
+         pages = [ "Home" => "index.md",
+                   "Quickstart" => "quickstart.md",
+                   "Models"   => "models.md",
+                   "Graphics"   => "figures.md",
+                   ])
 
 #                  "Animation"     => "examples/animation.md",
 #                 "Example"       => "examples/two_problems.md",
