@@ -57,7 +57,7 @@ Generate an animation
 
 ```@example 1
 anim = create_animation([problem1 problem2];fourier=false,ylims=(-0.5,1))
-gif(anim, "assets/example.gif", fps=15) # hide
+gif(anim, "assets/example.gif", fps=15); nothing # hide
 ```
 
 ![](assets/example.gif)
