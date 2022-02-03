@@ -215,6 +215,6 @@ function load_param( h5file :: String )
 
 end
 
-≈(x::NamedTuple{N,T}, y::NamedTuple{N2,T2}) where {N,T,N2,T2} =
+Base.:(≈)(x::NamedTuple{N,T}, y::NamedTuple{N2,T2}) where {N,T,N2,T2} =
   length(N) === length(union(N,N2)) &&
   all(k->getfield(x,k) == getfield(y,k), keys(x))
