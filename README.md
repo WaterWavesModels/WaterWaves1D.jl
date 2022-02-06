@@ -69,7 +69,7 @@ solve!([problem_WW problem_WW2]);
 Plot solutions at final time.
 ```julia
 plot_solution([problem_WW problem_WW2];fourier=false)
-~~~
+```
 ![](./notebooks/Example.png)
 
 Generate an animation.
