@@ -8,16 +8,16 @@
 
 ## Installation
 
-~~~
+```julia
 (v1.0) pkg> add https://github.com/WaterWavesModels/WaterWaves1D.jl.git
 using WaterWaves1D
-~~~
+```
 
 ## Overview
 
 `WaterWaves1D.jl` is a [Julia](https://julialang.org/) package providing a framework to study and compare several models for the propagation of unidimensional surface gravity waves (a.k.a. ["water waves"](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/background/#Water-waves)).
 
-Several models are already implemented, included ([but not limited to](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/background/#Models)) the so-called water waves system, its truncated spectral expansion, the Green-Naghdi system, the Matsuno system, and so on. You may easily add your favorite one to the gang: see the [how-to guide](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/basics/#add-your-model) .
+Several models are already implemented, including ([but not limited to](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/background/#Models)) the so-called water waves system, its truncated spectral expansion, the Green-Naghdi system, the Matsuno system, and so on. You may easily add your favorite one to the gang: see the [how-to guide](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/basics/#add-your-model).
 
 ## Documentation
 
@@ -31,7 +31,7 @@ A simple example of a typical use of the package can be found below. More advanc
 
 
 Gather parameters of the problem.
-~~~
+```julia
 param = (
     # Physical parameters. Variables are non-dimensionalized as in Lannes, The water waves problem, isbn:978-0-8218-9470-5
     μ  = 1,     # shallow-water dimensionless parameter
@@ -42,42 +42,42 @@ param = (
     T  = 5,     # final time of computation
     dt = 0.01,  # timestep
                 );
-~~~
+```
 
-Define initial data (the "heap of water").
-~~~
+Define initial data (here, a "heap of water").
+```julia
 z(x) = exp.(-abs.(x).^4); # surface deformation
 v(x) = 0*exp.(-x.^2);     # zero initial velocity
 init = Init(z,v);         # generate the initial data with correct type
-~~~
+```
 
 Set up initial-value problems for different models to compare.
-~~~
+```julia
 # Build models
 model_WW=WaterWaves(param,verbose=false) # The water waves system
 model_WW2=WWn(param;n=2,dealias=1,δ=1/10,verbose=false) # The quadratic model (WW2)
 # Build problems
 problem_WW=Problem(model_WW, init, param) ;
 problem_WW2=Problem(model_WW2, init, param) ;
-~~~
+```
 
 Integrate in time the initial-value problems.
-~~~
+```julia
 solve!([problem_WW problem_WW2]);
-~~~
+```
 
 Plot solutions at final time.
-~~~
+```julia
 plot_solution([problem_WW problem_WW2];fourier=false)
 ~~~
 ![](./notebooks/Example.png)
 
 Generate an animation.
-~~~
+```julia
 anim = create_animation([problem_WW problem_WW2];fourier=false,ylims=(-0.5,1))
 import Plots.gif
 gif(anim, "Example.gif", fps=15)
-~~~
+```
 ![](./notebooks/Example.gif)
 
 
