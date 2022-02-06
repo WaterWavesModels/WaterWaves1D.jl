@@ -15,22 +15,22 @@ using WaterWaves1D
 
 ## Overview
 
-`WaterWaves1D` provides a framework to study and compare several models for the propagation of unidimensional surface gravity waves (a.k.a. "water waves").
+`WaterWaves1D.jl` is a [Julia](https://julialang.org/) package providing a framework to study and compare several models for the propagation of unidimensional surface gravity waves (a.k.a. ["water waves"](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/background/#Water-waves)).
 
-Several models are already implemented, included ([but not limited to](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/basics/#models)) the so-called water waves system, its truncated spectral expansion, the Green-Naghdi system, the Matsuno system, and so on. You may easily add your favorite one to the gang: see the [how-to guide](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/howto) .
+Several models are already implemented, included ([but not limited to](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/background/#Models)) the so-called water waves system, its truncated spectral expansion, the Green-Naghdi system, the Matsuno system, and so on. You may easily add your favorite one to the gang: see the [how-to guide](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/basics/#add-your-model) .
 
 ## Documentation
 
-See [here](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/quickstart/).
+See [here](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/home/).
 
 
 ## Example
 
-An example of a possible usage of the code can be found below. More examples are available at the [examples](examples/) and [notebooks](notebooks/) repertories.
+A simple example of a typical use of the package can be found below. More advanced examples are available at the [examples](examples/) and [notebooks](notebooks/) folders.
 
 
 
-Define parameters of your problem
+Gather parameters of the problem.
 ~~~
 param = (
     # Physical parameters. Variables are non-dimensionalized as in Lannes, The water waves problem, isbn:978-0-8218-9470-5
@@ -40,42 +40,47 @@ param = (
     N  = 2^11,  # number of collocation points
     L  = 10,    # half-length of the numerical tank (-L,L)
     T  = 5,     # final time of computation
-    dt = 0.01, # timestep
+    dt = 0.01,  # timestep
                 );
 ~~~
 
-Define initial data
+Define initial data (the "heap of water").
 ~~~
 z(x) = exp.(-abs.(x).^4); # surface deformation
 v(x) = 0*exp.(-x.^2);     # zero initial velocity
 init = Init(z,v);         # generate the initial data with correct type
 ~~~
 
-Set up initial-value problems for different models to compare
+Set up initial-value problems for different models to compare.
 ~~~
-model1=WaterWaves(param,verbose=false) # The water waves system
-model2=WWn(param;n=2,dealias=1,δ=1/10,verbose=false) # The quadratic model (WW2)
-# type `?WaterWaves` or `?WWn` to see details and signification of arguments
-problem1=Problem(model1, init, param, solver=RK4(model1)) ;
-problem2=Problem(model2, init, param, solver=RK4(model2)) ;
-~~~
-
-Solve numerical time integration
-~~~
-solve!(problem1);
-solve!(problem2);
+# Build models
+model_WW=WaterWaves(param,verbose=false) # The water waves system
+model_WW2=WWn(param;n=2,dealias=1,δ=1/10,verbose=false) # The quadratic model (WW2)
+# Build problems
+problem_WW=Problem(model_WW, init, param) ;
+problem_WW2=Problem(model_WW2, init, param) ;
 ~~~
 
-Plot solutions at final time
+Integrate in time the initial-value problems.
 ~~~
-plot_solution([problem1 problem2];fourier=false)
+solve!([problem_WW problem_WW2]);
+~~~
+
+Plot solutions at final time.
+~~~
+plot_solution([problem_WW problem_WW2];fourier=false)
 ~~~
 ![](./notebooks/Example.png)
 
-Generate an animation
+Generate an animation.
 ~~~
-anim = create_animation([problem1 problem2];fourier=false,ylims=(-0.5,1))
+anim = create_animation([problem_WW problem_WW2];fourier=false,ylims=(-0.5,1))
 import Plots.gif
 gif(anim, "Example.gif", fps=15)
 ~~~
 ![](./notebooks/Example.gif)
+
+
+## Developers
+
+`WaterWaves1D.jl` is being developed by [Vincent Duchêne](https://perso.univ-rennes1.fr/vincent.duchene/) and [Pierre Navaro](https://github.com/pnavaro).
