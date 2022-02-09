@@ -8,6 +8,10 @@ import Base.show
 
 # abstract types
 export AbstractModel
+"""
+Abstract type whose subtypes are the models from which initial-value problems can be built,
+through `Problem( model :: AbstractModel, initial :: InitialData, param :: NamedTuple )`
+"""
 abstract type AbstractModel end
 show(io::IO, m::AbstractModel) =
     try print(io,m.info)
@@ -16,6 +20,11 @@ show(io::IO, m::AbstractModel) =
     end
 
 export InitialData
+
+"""
+Abstract type defining initial data from which initial-value problems can be built,
+through `Problem( model :: AbstractModel, initial :: InitialData, param :: NamedTuple )`
+"""
 abstract type InitialData end
 show(io::IO, i::InitialData) =
     try print(io,i.info)
@@ -52,6 +61,7 @@ include("models/Matsuno.jl")
 include("models/modifiedMatsuno.jl")
 include("models/NonHydrostatic.jl")
 include("models/SerreGreenNaghdi.jl")
+include("models/SaintVenant.jl")
 include("models/SquareRootDepth.jl")
 include("models/WaterWaves.jl")
 include("models/WhithamBoussinesq.jl")

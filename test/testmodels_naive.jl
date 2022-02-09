@@ -12,6 +12,10 @@ init     = Init(x->exp.(-x.^2),x-> x )
 
 #--- models
 models=[]
+push!(models,SaintVenant(param;
+                    dealias=2,ktol=1e-12,
+                    label="Saint-Venant") )
+
 push!(models,Boussinesq(param;
                     a=-1,b=3,
                     dealias=2,ktol=1e-12,

@@ -160,6 +160,12 @@ push!(models,SquareRootDepth(param::NamedTuple;
 			) )
 push!(precisions,max(para.μ*para.ϵ,para.μ^2))
 
+push!(models,SaintVenant(param;
+                    dealias=0,ktol=1e-12,
+                    label="Saint-Venant"
+					) )
+push!(precisions,para.μ)
+
 
 
 
