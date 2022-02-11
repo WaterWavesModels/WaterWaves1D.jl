@@ -4,7 +4,7 @@ export SerreGreenNaghdi
     SerreGreenNaghdi(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the Serre-Green-Naghdi model
+the Serre-Green-Naghdi model ([Serre](https://10.1051/lhb/1953058), [Su and Gardner](https://10.1063/1.1664873), [Green and Naghdi](https://10.1017/s0022112076002425)).
 
 # Argument
 `param` is of type `NamedTuple` and must contain
