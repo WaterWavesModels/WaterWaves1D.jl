@@ -9,11 +9,11 @@ the water waves system (via conformal mapping, see [Zakharov, Dyachenko and Vasi
 # Argument
 `param` is of type `NamedTuple` and must contain
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
+- optionally, `ν` the shallow/deep water scaling factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0`, or `μ=Inf`.
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
 
 ## Optional keyword arguments
-- `ν`: shallow/deep water multiplication factor (see [Lannes, The water waves problem](https://bookstore.ams.org/surv-188)). By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise.
-- `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
+- `IL`: Set the infinite-layer case if `IL=true`, in which case `ϵ` is the steepness parameter. Default is `false`.
 - `method ∈ {1,2,3}`: method used to initialize the conformal mapping, as a fix-point problem `F(u)=u`
     - if `method == 1`, use standard contraction fix-point iteration;
     - if `method == 2`, use Newton algorithm with GMRES iterative solver to invert the Jacobian;
@@ -46,7 +46,6 @@ mutable struct WaterWaves <: AbstractModel
 	info	:: String
 
     function WaterWaves(param::NamedTuple;
-						ν	    = nothing,
 						IL	    = false,
 						method  = 1,
 						tol	    = 1e-16,
@@ -59,7 +58,7 @@ mutable struct WaterWaves <: AbstractModel
 		# Set up
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		if isnothing(ν)
+		if !in(:ν,keys(param))
 			if μ > 1
 				ν = 1/sqrt(μ)
 				nu = "1/√μ (deep water case)"
@@ -68,6 +67,7 @@ mutable struct WaterWaves <: AbstractModel
 				nu = "1 (shallow water case)"
 			end
 		else
+			ν = param.ν
 			nu = "$ν"
 		end
 		if μ == Inf || ν==0 # infinite layer case

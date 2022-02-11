@@ -195,8 +195,7 @@ push!(models,WhithamBoussinesq(param;
 push!(precisions,para.μ*para.ϵ/4)
 
 # Build reference problem (water waves)
-modelWW =  WaterWaves(param;
-					ν	    = 1,
+modelWW =  WaterWaves(merge(param,(ν=1,));
 					IL	    = false,
 					method  = 3,
 					tol	    = 1e-8,
@@ -233,8 +232,8 @@ param = merge(para,paraX)  # used to construct models
 parap = merge(paraX,paraT) # used to construct problems
 
 # Build deep layer models
-push!(models, modifiedMatsuno(param;
-			ν=1/√para.μ,ktol=01e-14,dealias=0,
+push!(models, modifiedMatsuno(merge(param,(ν=1/√para.μ,));
+			ktol=01e-14,dealias=0,
 			label="modified Matsuno"
 			) )
 push!(precisions, para.ϵ.^2*para.μ)
@@ -249,8 +248,7 @@ push!(models, WWn(param;
 			) )
 push!(precisions, para.ϵ*√para.μ)
 
-push!(models, WWn(param;
-			ν		=1/√para.μ,
+push!(models, WWn(merge(param,(ν=1/√para.μ,));
 			n		= 7,
 			δ		= 0.1,
 			m		= -Inf,
@@ -262,7 +260,6 @@ push!(precisions, para.ϵ.^2*para.μ)
 
 
 push!(models, WWn(param;
-			ν		= 1/sqrt(para.μ),
 			n		= 3,
 			δ		= 0.01,
 			ktol	= 1e-14,
@@ -273,7 +270,6 @@ push!(precisions, para.ϵ.^3*para.μ^(3/2))
 
 # Build reference problem (water waves)
 modelWW = WaterWaves(param;
-					ν	    = 1/sqrt(para.μ),
 					IL	    = false,
 					method  = 2,
 					tol	    = 1e-12,
@@ -326,8 +322,7 @@ push!(models, WWn(param;
 			label	= "WW1") )
 push!(precisions, para.ϵ)
 
-push!(models, WWn(param;
-			ν		=0,
+push!(models, WWn(merge(param,(ν=0,));
 			n		= 7,
 			δ		= 0.1,
 			m		= -Inf,
@@ -338,7 +333,7 @@ push!(precisions, para.ϵ.^2)
 
 
 push!(models, WWn(param;
-			ν		= 0,
+			IL		= true,
 			n		= 3,
 			δ		= 0.01,
 			ktol	= 0,

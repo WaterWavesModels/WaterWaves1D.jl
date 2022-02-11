@@ -9,10 +9,10 @@ the modified Matsuno model
 # Argument
 `param` is of type `NamedTuple` and must contain
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
+- optionally, `ν` the shallow/deep water scaling factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0`, or `μ=Inf`.
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
 
 ## Optional keyword arguments
-- `ν`: shallow/deep water multiplication factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0` (or `μ=Inf`).
 - `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
@@ -36,7 +36,6 @@ mutable struct modifiedMatsuno <: AbstractModel
 	info	:: String
 
     function modifiedMatsuno(param::NamedTuple;
-							ν		= nothing,
 							IL	    = false,
 							ktol	= 0,
 							dealias	= 0,
@@ -46,7 +45,7 @@ mutable struct modifiedMatsuno <: AbstractModel
 		# Set up
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		if isnothing(ν)
+		if !in(:ν,keys(param))
 			if μ > 1
 				ν = 1/sqrt(μ)
 				nu = "1/√μ (deep water case)"
@@ -55,6 +54,7 @@ mutable struct modifiedMatsuno <: AbstractModel
 				nu = "1 (shallow water case)"
 			end
 		else
+			ν = param.ν
 			nu = "$ν"
 		end
 		if μ == Inf || ν==0 # infinite layer case

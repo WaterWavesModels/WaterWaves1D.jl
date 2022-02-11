@@ -4,17 +4,18 @@ export WWn
     WWn(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the water waves expansion proposed by Dommermuth and Yue (doi:10.1017/s002211208700288x), West et al. (doi:10.1029/jc092ic11p11803), Craig and Sulem (doi:10.1006/jcph.1993.1164)
-(see also the account by Choi : Fifth-order nonlinear spectral model for surface gravity waves: From pseudo-spectral to spectral formulations, RIMS Kokyuroku, 2019)
+the water waves expansion proposed by [Dommermuth and Yue](https://doi.org/10.1017/s002211208700288x),
+[West et al.](https://doi.org/10.1029/jc092ic11p11803), [Craig and Sulem](https://doi.org/10.1006/jcph.1993.1164)
+(see also the account by [Choi](http://hdl.handle.net/2433/251940))
 with the "rectification" method proposed by Duchêne and Melinand.
 
 # Argument
 `param` is of type `NamedTuple` and must contain
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
+- optionally, `ν` the shallow/deep water scaling factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0`, or `μ=Inf`.
 - numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
 
 ## Optional keyword arguments
-- `ν`: shallow/deep water multiplication factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0` (or `μ=Inf`).
 - `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
 - `n :: Int`: the order of the expansion; linear system if `1`, quadratic if `2`, cubic if `3`, quartic if `4` (default and other values yield `2`);
 - `δ` and `m`: parameters of the rectifier operator, set as `k->min(1,|δ*k|^m)` or `k->min(1,|δ*k|^m[1]*exp(1-|δ*k|^m[2]))` if `m` is a couple
@@ -43,7 +44,6 @@ mutable struct WWn <: AbstractModel
 	info 	:: String
 
     function WWn(param::NamedTuple;
-							ν		= nothing,
 							IL	    = false,
 							n		= 2,
 							δ		= 0,
@@ -58,7 +58,7 @@ mutable struct WWn <: AbstractModel
 		if isnothing(label)  label = "WW$n" end
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		if isnothing(ν)
+		if !in(:ν,keys(param))
 			if μ > 1
 				ν = 1/sqrt(μ)
 				nu = "1/√μ (deep water case)"
@@ -67,6 +67,7 @@ mutable struct WWn <: AbstractModel
 				nu = "1 (shallow water case)"
 			end
 		else
+			ν = param.ν
 			nu = "$ν"
 		end
 		if μ == Inf || ν==0 # infinite layer case

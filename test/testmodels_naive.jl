@@ -61,7 +61,7 @@ push!(models,IsobeKakinuma(param;
 			) )
 
 push!(models, modifiedMatsuno(param;
-			ν=2,ktol=01e-10,dealias=2,
+			ktol=01e-10,dealias=2,
 			label="modified Matsuno") )
 
 push!(models,IsobeKakinuma(param::NamedTuple;
@@ -190,7 +190,6 @@ push!(models,WhithamGreenNaghdi(param::NamedTuple;
 			) )
 
 push!(models, WWn(param;
-			ν		= 2,
 			n		= 1,
 			δ		= 0.1,
 			m		= -12,
@@ -200,7 +199,6 @@ push!(models, WWn(param;
 			) )
 
 push!(models, WWn(param;
-			ν		= 1/2,
 			n		= 7,
 			δ		= 0.1,
 			m		= -Inf,
@@ -209,8 +207,7 @@ push!(models, WWn(param;
 			label	= "WW2"
 			) )
 
-push!(models, WWn(param;
-			ν		= 0,
+push!(models, WWn(merge(param,(ν=0,));
 			n		= 3,
 			δ		= 0.1,
 			m		= (-1,2),
@@ -220,7 +217,6 @@ push!(models, WWn(param;
 			) )
 
 push!(models, WaterWaves(param;
-					ν	    = 1,
 					IL	    = true,
 					method  = 1,
 					tol	    = 1e-8,
@@ -232,7 +228,6 @@ push!(models, WaterWaves(param;
 
 
 push!(models, WaterWaves(param;
-					ν	    = 2,
 					IL	    = false,
 					method  = 2,
 					tol	    = 1e-8,
@@ -243,8 +238,7 @@ push!(models, WaterWaves(param;
 					verbose	= false) )
 
 
-push!(models, WaterWaves(param;
-					ν	    = 1/2,
+push!(models, WaterWaves(merge(param,(ν=1/2,));
 					IL	    = false,
 					method  = 3,
 					tol	    = 1e-8,
