@@ -265,7 +265,7 @@ mutable struct WaterWaves <: AbstractModel
 		   	ξ  .= real.(sqrt(μ)*(1+ϵ*meanf(U[:,1]))*k)
 	       	xv .= real.(-1im*sqrt(μ)*ifft( Π⅔ .*cotanh(ξ) .*  U[:,1] ))
 
-		   return x + ϵ*xv, real.( ifft(U[:,1]) ) , real.( ifft(U[:,2]) )
+		   return x + ϵ*xv, real.( ifft(U[:,1]) ) , real.( ifft(U[:,2])./(1 .+ ϵ*real.(ifft(∂ₓ.*fft(xv)) )) )
 		end
 
 		# Water Waves equations are ∂t U = f(U)
