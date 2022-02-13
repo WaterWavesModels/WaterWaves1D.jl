@@ -108,7 +108,7 @@ mutable struct WWn <: AbstractModel
 		else
 			rectifier = k -> min(1,abs(k)^(m[1])*exp(1-abs(k)^m[2]))
 		end
-		Π = rectifier.(δ*k)   # regularizing rectifier
+		Jδ = rectifier.(δ*k)   # regularizing rectifier
 		if dealias == 0
 			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
 		else
@@ -116,10 +116,10 @@ mutable struct WWn <: AbstractModel
 			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
 		end
 		if IL == true
-			∂ₓF₀ 	= 1im * sign.(k)
+			Tμ 	= -1im * sign.(k)
 			G₀ 	= abs.(k)
 		else
-        	∂ₓF₀ 	= 1im* sign.(k) .* tanh.(sqrt(μ)*abs.(k))
+        	Tμ 	= -1im* sign.(k) .* tanh.(sqrt(μ)*abs.(k))
 			G₀ 	= sqrt(μ)*abs.(k).*tanh.(sqrt(μ)*abs.(k))
 		end
 		∂ₓ	=  1im * sqrt(μ)* k            # Differentiation
@@ -148,28 +148,28 @@ mutable struct WWn <: AbstractModel
 
 			fftη .= U[:,1]
 		    fftv .= U[:,2]
-			Q .= -∂ₓF₀.*fftv
+			Q .= Tμ.*fftv
 			R .= -fftη*ν
 
 			if n >= 2
-				η  .= ifft(Π.*U[:,1])
+				η  .= ifft(Jδ.*U[:,1])
 				v  .= ifft(U[:,2])
 				Lphi .= -ifft(Q)
 				Q += -ϵ *∂ₓ.*fft(η.*ifft(fftv)) .+ ϵ*G₀.*fft(η.*Lphi)
-				R += ϵ/2*Π.*fft(-v.^2 .+ Lphi.^2)
+				R += ϵ/2*Jδ.*fft(-v.^2 .+ Lphi.^2)
 			end
 			if n >= 3
 				LzLphi .= ifft(-G₀.* fft(η.*Lphi))
 				dxv .= ifft(∂ₓ.*fftv)
 				Q += ϵ^2*G₀.*fft(η.* LzLphi + 1/2 * η.^2 .* dxv ) .- ϵ^2*∂ₓ.*∂ₓ.*fft( 1/2 * η.^2  .*Lphi)
-				R += ϵ^2*Π.*fft(Lphi .* ( LzLphi .+ η.* dxv ) )
+				R += ϵ^2*Jδ.*fft(Lphi .* ( LzLphi .+ η.* dxv ) )
 			end
 			if n >= 4
 				Q += ϵ^3 * G₀.*fft(η.*ifft(-G₀.* fft(η.*LzLphi + 1/2 * η.^2 .* dxv ) )
 							.+ 1/2 * η.^2 .* ifft(∂ₓ.*∂ₓ.*fft( η  .* Lphi ) )
 							.- 1/6 * η.^3 .* ifft(∂ₓ.*∂ₓ.*fft( Lphi ) ) ) .-
 					   ϵ^3 * ∂ₓ.*∂ₓ.*fft( 1/2 * η.^2  .*LzLphi .+ 1/3 * η.^3  .* dxv )
-				R += ϵ^3 * Π.*fft( Lphi .*  ifft(-G₀.* fft(η.*LzLphi + 1/2 * η.^2 .* dxv ) )
+				R += ϵ^3 * Jδ.*fft( Lphi .*  ifft(-G₀.* fft(η.*LzLphi + 1/2 * η.^2 .* dxv ) )
 						.+ 1/2* (LzLphi .+ η .* dxv ).^2
 						.+ 1/2* η.* Lphi.^2 .* ifft(∂ₓ.*∂ₓ.* fftη)
 						.- 1/2* (η.^2).* (ifft(∂ₓ .* fft(Lphi))).^2 ) .+
@@ -186,11 +186,11 @@ mutable struct WWn <: AbstractModel
 
 			fftη .= U1
 		    fftv .= U2
-			Q .= -∂ₓF₀.*fftv
+			Q .= Tμ.*fftv
 
 			# attention,  G₀=-L dans Choi
 			if n >= 2
-				η  .= ifft(Π.*U1)
+				η  .= ifft(Jδ.*U1)
 				v  .= ifft(U2)
 				Lphi .= -ifft(Q)
 				Q += -ϵ *∂ₓ.*fft(η.*ifft(fftv)) .+ ϵ*G₀.*fft(η.*Lphi)
@@ -216,23 +216,23 @@ mutable struct WWn <: AbstractModel
 
 			fftη .= U1
 		    fftv .= U2
-			Q .= -∂ₓF₀.*fftv
+			Q .= Tμ.*fftv
 			R .= -fftη*ν
 
 			# attention,  G₀=-L dans Choi
 			if n >= 2
-				η  .= ifft(Π.*U1)
+				η  .= ifft(Jδ.*U1)
 				v  .= ifft(U2)
 				Lphi .= -ifft(Q)
-				R += ϵ/2*Π.*fft(-v.^2 .+ Lphi.^2)
+				R += ϵ/2*Jδ.*fft(-v.^2 .+ Lphi.^2)
 			end
 			if n >= 3
 				LzLphi .= ifft(-G₀.* fft(η.*Lphi))
 				dxv .= ifft(∂ₓ.*fftv)
-				R += ϵ^2*Π.*fft(Lphi .* ( LzLphi .+ η.* dxv ) )
+				R += ϵ^2*Jδ.*fft(Lphi .* ( LzLphi .+ η.* dxv ) )
 			end
 			if n >= 4
-				R += ϵ^3 * Π.*fft( Lphi .*  ifft(-G₀.* fft(η.*LzLphi + 1/2 * η.^2 .* dxv ) )
+				R += ϵ^3 * Jδ.*fft( Lphi .*  ifft(-G₀.* fft(η.*LzLphi + 1/2 * η.^2 .* dxv ) )
 						.+ 1/2* (LzLphi .+ η .* dxv ).^2
 						.+ 1/2* η.* Lphi.^2 .* ifft(∂ₓ.*∂ₓ.* fftη)
 						.- 1/2* (η.^2).* (ifft(∂ₓ .* fft(Lphi))).^2 ) .+
