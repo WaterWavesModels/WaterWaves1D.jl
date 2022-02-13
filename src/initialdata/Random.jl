@@ -38,7 +38,7 @@ function random( x;L=1,s=Inf,λ=Inf,a=1 )
 end
 
 """
-    Random(mesh::Mesh;args)
+    Random(param;args)
 
 Randomly generated initial data, based on provided (optional arguments) :
 - `L` is the typical wavelength (default is `L=1`),
