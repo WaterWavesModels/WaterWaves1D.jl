@@ -29,9 +29,6 @@ mutable struct Matsuno_fast <: AbstractModel
 				info *= "└─No dealiasing. "
 			end
 			info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
-			@warn "The velocity is consistent with the \
-			derivative of the trace of the velocity potential \
-			used for water waves only when they are null."
 
 		# Pre-allocate useful data
         x        = mesh.x
@@ -120,20 +117,20 @@ mutable struct Matsuno_fast <: AbstractModel
 		end
 
 		# Build raw data from physical data.
-		# Discrete Fourier transform with, possibly, dealiasing.
-		# This function is correct only when the initial data for v is zero.
 		function mapto(data::InitialData)
-
-		    [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
-
+			fftη = Π⅔ .* fft(data.η(x));
+			fftv = Π⅔ .* fft(data.v(x));
+			U = [fftη fftv-ϵ* Π⅔ .*fft(ifft(H.*fftv).*ifft(Dx.*fftη) )]
+			return U
 		end
 
-		# Return `(η,v)`, where
+		# Take raw data and return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is the velocity variable.
-		# Inverse Fourier transform and takes the real part.
 		function mapfro(U)
-		    real(ifft(view(U,:,1))),real(ifft(view(U,:,2)))
+			#real(ifft(view(U,:,1))),real(ifft(view(U,:,2))+ϵ* ifft(H.*view(U,:,2)).*ifft(Dx.*view(U,:,1)))
+			real(ifft(U[:,1])),real(ifft(U[:,2])+ϵ* ifft(H.*U[:,2]).*ifft(Dx.*U[:,1]))
+
 		end
 
 		new(label, f!, mapto, mapfro, info )
@@ -189,9 +186,6 @@ mutable struct Matsuno <: AbstractModel
 			info *= "└─No dealiasing. "
 		end
 		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
-		@warn "The velocity is consistent with the \
-		derivative of the trace of the velocity potential \
-		used for water waves only when they are null."
 
 		# Pre-allocate useful data
 		x   = mesh.x
@@ -227,20 +221,18 @@ mutable struct Matsuno <: AbstractModel
 		end
 
 		# Build raw data from physical data.
-		# Discrete Fourier transform with, possibly, dealiasing.
-		# This function is correct only when the initial data for v is zero.
 		function mapto(data::InitialData)
-
-		    [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
-
+			fftη = Π⅔ .* fft(data.η(x));
+			fftv = Π⅔ .* fft(data.v(x));
+			U = [fftη fftv-ϵ* Π⅔ .*fft(ifft(H.*fftv).*ifft(∂ₓ.*fftη) )]
+			return U
 		end
 
-		# Return `(η,v)`, where
+		# Take raw data and return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is the velocity variable.
-		# Inverse Fourier transform and takes the real part.
 		function mapfro(U)
-		    real(ifft(view(U,:,1))),real(ifft(view(U,:,2)))
+			real(ifft(U[:,1])),real(ifft(U[:,2])+ϵ* ifft(H.*U[:,2]).*ifft(∂ₓ.*U[:,1]))
 		end
 
 		new(label, f!, mapto, mapfro, info )

@@ -30,10 +30,6 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 		end
 		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
-		@warn "You should provide the initial value for v by ∂t η = - ∂x v.\n\
-		It equals the derivative of the trace of the velocity potential \
-		used for water waves only when they are null."
-
 		# Pre-allocate useful data
         x = mesh.x
 		k = mesh.k
@@ -91,18 +87,20 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 
 		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing.
-		# This function is correct only when the initial data for v is zero.
 		function mapto(data::InitialData)
-		    [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
+			η=data.η(x);v=data.v(x);
+			fftv=fft(v);fftv[1]=0;
+			[Π⅔ .* fft(η)  Π⅔ .* (fftv./(Γ.+eps())+ϵ*fft(η.*v)+ ϵ*H.*fft(η.*ifft(H.*fftv)))]
 		end
 
 		# Return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is detemined by ∂t η + ∂x v = 0.
-		# Inverse Fourier transform and takes the real part.
 		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2]))
+			η=ifft(U[:,1]);fftv=Γ.*U[:,2];
+			real(η),real(ifft(fftv-ϵ *Γ.*fft(η.*ifft(fftv))- ϵ*(H.*Γ).*fft(η.*ifft(H.*fftv))))
 		end
+
 		new(label, f!, mapto, mapfro, info )
 
     end
@@ -157,9 +155,6 @@ mutable struct DeepQuadratic <: AbstractModel
 			info *= "└─No dealiasing. "
 		end
 		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
-		@warn "You should provide the initial value for v by ∂t η = - ∂x v.\n\
-		It equals the derivative of the trace of the velocity potential \
-		used for water waves only when they are null."
 
 		# Pre-allocate useful data
 		x = mesh.x
@@ -195,17 +190,18 @@ mutable struct DeepQuadratic <: AbstractModel
 
 		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing.
-		# This function is correct only when the initial data for v is zero.
 		function mapto(data::InitialData)
-			[Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
+			η=data.η(x);v=data.v(x);
+			fftv=fft(v);fftv[1]=0;
+			[Π⅔ .* fft(η)  Π⅔ .* (fftv./(Γ.+eps())+ϵ*fft(η.*v)+ ϵ*H.*fft(η.*ifft(H.*fftv)))]
 		end
 
 		# Return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is detemined by ∂t η + ∂x v = 0.
-		# Inverse Fourier transform and takes the real part.
 		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2]))
+			η=ifft(U[:,1]);fftv=Γ.*U[:,2];
+			real(η),real(ifft(fftv-ϵ *Γ.*fft(η.*ifft(fftv))- ϵ*(H.*Γ).*fft(η.*ifft(H.*fftv))))
 		end
 
 		new(label, f!, mapto, mapfro, info )

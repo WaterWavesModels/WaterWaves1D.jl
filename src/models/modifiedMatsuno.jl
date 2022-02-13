@@ -83,9 +83,6 @@ mutable struct modifiedMatsuno <: AbstractModel
 			info *= "Krasny filter with tolerance $ktol."
 		end
 		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
-		@warn "The velocity is consistent with the \
-		derivative of the trace of the velocity potential \
-		used for water waves only when they are null."
 
 		# Pre-allocate useful data
 		x = mesh.x
@@ -97,10 +94,10 @@ mutable struct modifiedMatsuno <: AbstractModel
 			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
 		end
 		if IL == true
-			∂ₓF₀ 	= 1im * sign.(k)
+			Tμ 	= -1im * sign.(k)
 			G₀ 	= abs.(k)
 		else
-        	∂ₓF₀ 	= 1im* sign.(k) .* tanh.(sqrt(μ)*abs.(k))
+        	Tμ 	= -1im* sign.(k) .* tanh.(sqrt(μ)*abs.(k))
 			G₀ 	= sqrt(μ)*abs.(k).*tanh.(sqrt(μ)*abs.(k))
 		end
 		∂ₓ	=  1im * sqrt(μ)* k            # Differentiation
@@ -109,20 +106,21 @@ mutable struct modifiedMatsuno <: AbstractModel
 		fftη = copy(z) ; fftv = copy(z) ; Q = copy(z) ; R = copy(z) ;
 
 		# Build raw data from physical data.
-		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
-		# This function is correct only when the initial data for v is zero.
 		function mapto(data::InitialData)
-			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
+			fftη .= Π⅔ .* fft(data.η(x));
+			fftv .= Π⅔ .* fft(data.v(x));
+			U = [fftη fftv-ϵ* Π⅔ .*fft(ifft(Tμ.*fftv).*ifft(∂ₓ.*fftη) )]
 			U[abs.(U).< ktol ].=0
 			return U
 		end
 
-		# Return `(η,v)`, where
+		# Take raw data and return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is the velocity variable.
-		# Inverse Fourier transform and takes the real part.
 		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2]))
+			fftη .= Π⅔ .* U[:,1];
+			fftv .= Π⅔ .* U[:,2];
+			real(ifft(fftη)),real(ifft(fftv) .+ϵ* ifft(Tμ.*fftv).*ifft(∂ₓ.*fftη) )
 		end
 
 		# Evolution equations are ∂t U = f(U)
@@ -132,11 +130,11 @@ mutable struct modifiedMatsuno <: AbstractModel
 		    fftv .= U[:,2]
 			η  .= ifft(U[:,1])
 			v  .= ifft(U[:,2])
-			Q .= -∂ₓF₀.*fftv
-			Q += -ϵ *∂ₓ.*fft(η.*ifft(fftv)) .+ ϵ*∂ₓF₀.*fft(η.*ifft(G₀.*fftv))
+			Q .= Tμ.*fftv
+			Q -= ϵ *∂ₓ.*fft(η.*ifft(fftv)) .+ ϵ*Tμ.*fft(η.*ifft(G₀.*fftv))
 			F .= exp.(-ϵ*ifft(G₀.*fftη))
 			R .= -fft(F.*ifft(∂ₓ.*fftη))*ν
-			R += ϵ/2*∂ₓ.*fft(-v.^2)
+			R -= ϵ/2*∂ₓ.*fft(v.^2)
 
 			U[:,1] .= Π⅔.*Q/sqrt(μ)/ν
 		   	U[:,2] .= Π⅔.*R/sqrt(μ)/ν
