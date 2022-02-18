@@ -32,7 +32,7 @@ the equations in dimensionless variables read as follows
 ```math
   \left\{\begin{array}{l}
   ∂_tη-\tfrac{1}{μν} G^μ[ϵη]ψ=0,\\[1ex]
-  ∂_tψ+η+\frac{ϵ}{2ν}|∂_xψ|^2-\tfrac{ϵμ}{2ν}\frac{(\frac{1}{μν} G^μ[ϵη]ψ+ϵ(∂_xη)(∂_xψ))^2}{1+μϵ²|∂_xη|^2}=0,
+  ∂_tψ+η+\frac{ϵ}{2ν}(∂_xψ)^2-\tfrac{ϵμ}{2ν}\frac{(\frac{1}{μ} G^μ[ϵη]ψ+ϵ(∂_xη)(∂_xψ))^2}{1+μϵ²(∂_xη)^2}=0,
   \end{array}\right.
 ```
 where, by definition,
@@ -130,11 +130,11 @@ fully recovering the [dispersive properties](https://en.wikipedia.org/wiki/Dispe
 Specifically, we consider systems of the form
 ```math
   \left\{\begin{array}{l}
-  ∂_tη+∂_x(F₁v + ϵ F₂ (η F₂v))=0,\\[1ex]
-  ∂_tv+∂_xη+\tfrac{ϵ}{2}∂_x((F₂v)^2) =0,
+  ∂_tη+∂_x(F₁^μv + ϵ F₂^μ (η F₂^μv))=0,\\[1ex]
+  ∂_tv+∂_xη+\tfrac{ϵ}{2}∂_x((F₂^μv)^2) =0,
   \end{array}\right.
 ```
-with ``F₁=\frac{\tanh(\sqrt\mu D)}{\sqrt\mu D}``, and ``F₂=(F₁)^α`` (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
+with ``F₁^μ=\frac{\tanh(\sqrt\mu D)}{\sqrt\mu D}``, and ``F₂^μ=(F₁^μ)^α`` (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
 The case ``α = 1`` has been introduced by [Dinvay, Dutykh and Kalisch](https://doi.org/10.1016/j.apnum.2018.09.016), more general situations have been studied by [Emerald](https://doi.org/10.1137/20M1332049).
 
 
@@ -206,14 +206,14 @@ fully recovering the [dispersive properties](https://en.wikipedia.org/wiki/Dispe
 ```math
   \left\{\begin{array}{l}
   ∂_tη+∂_x\big( h u\big)=0,\\[1ex]
-  ∂_tv+∂_x\big(η+ϵ uv - \tfrac{ϵ}{2}u^2-\tfrac{μϵ}2 (h F₀∂_xu)^2\big) =0,
+  ∂_tv+∂_x\big(η+ϵ uv - \tfrac{ϵ}{2}u^2-\tfrac{μϵ}2 (h F₀^μ∂_xu)^2\big) =0,
   \end{array}\right.
 ```
  where ``h=1 + ϵ η`` is the depth, ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface, and ``u`` the layer-averaged horizontal velocity obtained by solving the elliptic problem
 ```math
-hu -\tfrac{μ}{3}F₀∂_x( h^3 F₀∂_xu) = hv.
+hu -\tfrac{μ}{3}F₀^μ∂_x( h^3 F₀^μ∂_xu) = hv.
 ```
-with ``F₀=\sqrt{3(F₁^{-1}(D) - 1)}/D`` where ``F₁=\frac{\tanh(\sqrt\mu D)}{\sqrt\mu D}``
+with ``F₀^μ=\sqrt{3(F₁^{-1}(D) - 1)}/D`` where ``F₁^μ=\frac{\tanh(\sqrt\mu D)}{\sqrt\mu D}``
 (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
 
 The associated code is [`WhithamBoussinesq`](@ref WaterWaves1D.WhithamBoussinesq).
@@ -258,18 +258,118 @@ and may be valid in shallow water as well as deep water configurations.
 
 #### The spectral systems
 
+[Dommermuth and Yue](https://doi.org/10.1017/s002211208700288x),
+[West et al.](https://doi.org/10.1029/jc092ic11p11803), and
+[Craig and Sulem](https://doi.org/10.1006/jcph.1993.1164) have proposed
+a hierarchy of systems based on a "spectral" expansion, which can be interpreted
+through the Taylor expansion of the Dirichlet-to-Neumann, ``G^μ[ϵη]ψ``, with respect
+to the surface deformation variable:
+```math
+G^μ[ϵη]ψ=G^μ[0]ψ + ϵ (D_η G^μ[0])(ϵη)ψ + ϵ^2 (D_η^2 G^μ[0])(ϵη,ϵη)ψ + ⋯
+```
+
+The first nonlinear system of the hierarchy, incorporating only quadratic nonlinearities, is
+```math
+  \left\{\begin{array}{l}
+  ∂_tη-\tfrac{1}{\sqrt μ ν} T^μv  + \tfrac{ϵ}{ν} ∂_x\big(η v +  T^μ(η T^μ v)\big) =0,\\[1ex]
+  ∂_tv+∂_xη+\frac{ϵ}{2ν}∂_x\big( v^2-(T^μv)^2\big)=0,
+  \end{array}\right.
+```
+with ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface,
+and ``T^μ=-i\tanh(\sqrt\mu D)`` the "Tilbert transform"
+(related to the [Hilbert transform](https://en.wikipedia.org/wiki/Hilbert_transform#Relationship_with_the_Fourier_transform);
+here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
+
+Higher order systems can be constructed using recursive formula.
+Explicit expressions up to quintic nonlinearities are given in
+[Choi](http://hdl.handle.net/2433/251940).
+
+The associated code is [`WWn`](@ref WaterWaves1D.WWn).
+
+
+
+
 #### The rectified spectral systems
+
+It turns out the spectral models above suffer from spurious instabilities; see
+[Ambrose, Bona and Nicholls](https://doi.org/10.1098/rspa.2013.0849).
+
+[Duchêne and Melinand](to be submitted) proposed a "rectified" quadratic model:
+```math
+  \left\{\begin{array}{l}
+  ∂_tη-\tfrac{1}{\sqrt μ ν} T^μv  + \tfrac{ϵ}{ν} ∂_x\big((J^δη) v +  T^μ((J^δη) T^μ v)\big) =0,\\[1ex]
+  ∂_tv+∂_xη+\frac{ϵ}{2ν}∂_xJ^δ\big( v^2-(T^μv)^2\big)=0,
+  \end{array}\right.
+```
+with notations as above and ``J^δ=J_0(δD)`` where ``J_0(k)`` approaches ``1`` for small wavenumbers, ``k``, and approaches ``0`` for large wavenumbers; and the parameter ``δ`` can be freely chosen, but is typically of the size of ``\tfrac{ϵ}{ν}``. In the associated code, [`WWn`](@ref WaterWaves1D.WWn), one has by default
+```math
+J_0(k)=\min(1,1/|k|).
+```
 
 #### The deep quadratic system
 
+***Under redaction***
+
 #### The Matsuno system
+
+The model introduced by [Matsuno](https://doi.org/10.1103/PhysRevLett.69.609) is
+```math
+  \left\{\begin{array}{l}
+  ∂_tη-\tfrac{1}{\sqrt μ ν} T^μu  + \tfrac{ϵ}{ν} ∂_x(η u) +  \tfrac{ϵ}{ν} T^μ(η ∂_x T^μ u) =0,\\[1ex]
+  ∂_tu+\big(1-ϵ\sqrt μ T^μ∂_xη\big)∂_xη+\frac{ϵ}{2ν}∂_x\big( u^2\big)=0,
+  \end{array}\right.
+```
+where ``u=∂_xψ-ϵ\sqrt μ(T^μ∂_xψ)(∂_xη)`` represents the horizontal velocity at the free surface.
+
+The associated codes are [`Matsuno`](@ref WaterWaves1D.Matsuno), and [`Matsuno_fast`](@ref WaterWaves1D.Matsuno_fast) for a less human-readable but more efficient version.
+
 
 #### The modified Matsuno system
 
 
+In view of ensuring the stability of the model,
+[Duchêne and Melinand](to be submitted)
+proposed a modified Matsuno system:
+```math
+  \left\{\begin{array}{l}
+  ∂_tη-\tfrac{1}{\sqrt μ ν} T^μu  + \tfrac{ϵ}{ν} ∂_x(η u) +  \tfrac{ϵ}{ν} T^μ(η ∂_x T^μ u) =0,\\[1ex]
+  ∂_tu+\exp\big(-ϵ\sqrt μ T^μ∂_xη\big)∂_xη+\frac{ϵ}{2ν}∂_x\big( u^2\big)=0.
+  \end{array}\right.
+```
+
+The associated codes is [`modifiedMatsuno`](@ref WaterWaves1D.modifiedMatsuno).
 
 
 
 ## Pseudospectral methods
 
-All the systems described above are discretized (in the space variable) using the Fourier-based pseudospectral method. This method is particularly suitable for data which are either periodic or decaying at infinity, and fairly regular. In this framework one approaches data by a sum [...]
+Although this is not imperative of the package, all the codes mentioned above use Fourier-based pseudospectral methods for spatial discretization. This method is particularly suitable for data which are either periodic or decaying at infinity (in which case the function at stake is considered as periodic on a sufficiently large period), and fairly regular. In this framework one approaches ``2L``-periodic functions by *finite* Fourier sums of the form
+```math
+u(t,x)≈\sum_{k=1}^{N} a_k(t) e^{{\rm i} \tfrac{π}{L}k x},
+```
+and seek a system of ordinary differential equations on the coefficients ``a_k(t)`` (which are then discretized in time by your favorite time solver).
+
+In practice, given the values ``(u(x_j))_{j∈\{0,⋯,N-1\}}`` at the regularly spaced *collocation points* ``x_j= -L+2j\tfrac{L}{N}``, one uses the discrete Fourier transform (computed efficiently with a [Fast Fourier transform](https://en.wikipedia.org/wiki/Fast_Fourier_transform) (FFT)) to deduce the corresponding coefficients ``a_k``. Hence the coefficients are related to the coefficients of the (infinite) Fourier series
+```math
+u(t,x)=\sum_{k=-∞}^{∞} c_k(t) e^{{\rm i} \tfrac{π}{L}k x}
+```
+through the relation
+```math
+a_k(t) = \sum_{ℓ\in\mathbb{Z}} c_{k+ℓN}(t).
+```
+Hence each of the coefficients ``a_k`` encompasses a full series of Fourier coefficients,
+which is unavoidable since ``e^{{\rm i} \tfrac{π}{L}k x}`` and ``e^{{\rm i} \tfrac{π}{L}(k+ℓN) x}`` are indistinguishable on the gridpoints ``x∈\{x_0,⋯,x_{N-1}\}``: this is called [*aliasing*](https://en.wikipedia.org/wiki/Aliasing).
+Yet for smooth functions, Fourier coefficients rapidly decrease, and the error between the
+finite spectral decomposition and the infinite Fourier decomposition can often be made immaterial (that is to the order of machine precision rounding errors) when choosing a sufficient large number of modes, ``N``.
+
+When using the finite spectral decomposition, the action of [Fourier multipliers](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)), and in particular spatial differentiation, is performed *exactly*
+(that is up to machine precision rounding errors) through corresponding multiplication on the discrete coefficients ``a_k``, and only nonlinear contributions require some attention. The simplest way to approximately compute products (or any pointwise operations in the space variable) is by performing
+pointwise operations on values at collocation points which are obtained from the discrete coefficients using discrete inverse Fourier transform. For the sake of discussion, consider
+```math
+ u^2(x_j,t) ≈ \big(\sum_{k=1}^{N} a_k(t) e^{{\rm i} \tfrac{π}{L}k x_j}\big)^2 = \sum_{m=1}^N\sum_{n=1}^N a_m a_n e^{{\rm i} \tfrac{π}{L}(m+n) x_j}.
+```
+One infers
+```math
+u^2(x_j,t) ≈ \sum_{k=1}^{N} b_k(t) e^{{\rm i} \tfrac{π}{L}k x_j}, \qquad b_k = \sum_{m+n-k\in N\mathbb{Z} }a_m a_n.
+```
+In the above formula for ``b_k``, some of the summands are spurious effects from aliasing, which sometimes contribute to numerical instabilities. In order to suppress such terms the so-called *dealiasing* consists in adding a sufficient number of modes with coefficients set to zero (in practice one often uses ideal low-pass filters, that is set to zero extreme modes, so as to always work with vectors with a fixed given length). The so-called [Orszag](https://doi.org/10.1175/1520-0469(1971)028<1074:oteoai>2.0.co;2)'s `3/2` rule states that, in the presence of quadratic nonlinearities, padding `3/2` modes (or zero-ing `1/3` modes) is sufficient to discard all spurious aliasing contributions, and provides in particular a [Galerkin](https://en.wikipedia.org/wiki/Galerkin_method) approximation since the error is orthogonal to all expansion functions.
