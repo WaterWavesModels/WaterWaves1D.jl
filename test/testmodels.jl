@@ -167,8 +167,6 @@ push!(models,SaintVenant(param;
 push!(precisions,para.μ)
 
 
-
-
 push!(models,Boussinesq(param;
                     a=-1//2,b=5//12,
                     dealias=0,ktol=1e-12,
@@ -237,6 +235,12 @@ push!(models, modifiedMatsuno(merge(param,(ν=1/√para.μ,));
 			label="modified Matsuno"
 			) )
 push!(precisions, para.ϵ.^2*para.μ)
+
+push!(models,Airy(param;
+                    label="Airy"
+					) )
+push!(precisions,para.ϵ*√para.μ)
+
 
 push!(models, WWn(param;
 			n		= 1,

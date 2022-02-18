@@ -54,6 +54,7 @@ include("initialdata/SolitaryWaveWhithamBoussinesq.jl")
 include("initialdata/SolitaryWaveWhitham.jl")
 
 include("models/common.jl")
+include("models/Airy.jl")
 include("models/Boussinesq.jl")
 include("models/DeepQuadratic.jl")
 include("models/IsobeKakinuma.jl")

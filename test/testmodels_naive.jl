@@ -12,6 +12,11 @@ init     = Init(x->exp.(-x.^2),x-> x )
 
 #--- models
 models=[]
+
+push!(models,Airy(param;
+                    label="Airy"
+					) )
+
 push!(models,SaintVenant(param;
                     dealias=2,ktol=1e-12,
                     label="Saint-Venant") )
