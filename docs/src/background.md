@@ -130,11 +130,11 @@ fully recovering the [dispersive properties](https://en.wikipedia.org/wiki/Dispe
 Specifically, we consider systems of the form
 ```math
   \left\{\begin{array}{l}
-  ∂_tη+∂_x(F₁^μv + ϵ F₂^μ (η F₂^μv))=0,\\[1ex]
-  ∂_tv+∂_xη+\tfrac{ϵ}{2}∂_x((F₂^μv)^2) =0,
+  ∂_tη+∂_x(F_1^μv + ϵ F_2^μ (η F_2^μv))=0,\\[1ex]
+  ∂_tv+∂_xη+\tfrac{ϵ}{2}∂_x((F_2^μv)^2) =0,
   \end{array}\right.
 ```
-with ``F₁^μ=\frac{\tanh(\sqrt\mu D)}{\sqrt\mu D}``, and ``F₂^μ=(F₁^μ)^α`` (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
+with ``F_1^μ=\frac{\tanh(\sqrt\mu D)}{\sqrt\mu D}``, and ``F_2^μ=(F_1^μ)^α`` (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
 The case ``α = 1`` has been introduced by [Dinvay, Dutykh and Kalisch](https://doi.org/10.1016/j.apnum.2018.09.016), more general situations have been studied by [Emerald](https://doi.org/10.1137/20M1332049).
 
 
@@ -206,14 +206,14 @@ fully recovering the [dispersive properties](https://en.wikipedia.org/wiki/Dispe
 ```math
   \left\{\begin{array}{l}
   ∂_tη+∂_x\big( h u\big)=0,\\[1ex]
-  ∂_tv+∂_x\big(η+ϵ uv - \tfrac{ϵ}{2}u^2-\tfrac{μϵ}2 (h F₀^μ∂_xu)^2\big) =0,
+  ∂_tv+∂_x\big(η+ϵ uv - \tfrac{ϵ}{2}u^2-\tfrac{μϵ}2 (h F_0^μ∂_xu)^2\big) =0,
   \end{array}\right.
 ```
  where ``h=1 + ϵ η`` is the depth, ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface, and ``u`` the layer-averaged horizontal velocity obtained by solving the elliptic problem
 ```math
-hu -\tfrac{μ}{3}F₀^μ∂_x( h^3 F₀^μ∂_xu) = hv.
+hu -\tfrac{μ}{3}F_0^μ∂_x( h^3 F_0^μ∂_xu) = hv.
 ```
-with ``F₀^μ=\sqrt{3(F₁^{-1}(D) - 1)}/D`` where ``F₁^μ=\frac{\tanh(\sqrt\mu D)}{\sqrt\mu D}``
+with ``F_0^μ=\sqrt{3((F_1^μ)^{-1}(D) - 1)}/D`` where ``F_1^μ=\frac{\tanh(\sqrt\mu D)}{\sqrt\mu D}``
 (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
 
 The associated code is [`WhithamBoussinesq`](@ref WaterWaves1D.WhithamBoussinesq).
