@@ -119,11 +119,11 @@ mutable struct modifiedMatsuno <: AbstractModel
 		# - `v` is the velocity variable.
 		function mapfro(U;n=10)
 			∂ζ=ifft(∂ₓ.*U[:,1]);
-			I₁.=U[:,2];I₂.=U[:,2];
+			z.=U[:,2];v.=U[:,2];
 			for j=1:n
-				I₂.=I₁+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*I₂))
+				v.=z+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*v))
 			end
-			real(ifft(U[:,1])),real(ifft(I₂))
+			real(ifft(U[:,1])),real(ifft(v))
 		end
 
 		# Evolution equations are ∂t U = f(U)
