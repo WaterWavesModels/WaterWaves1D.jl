@@ -117,10 +117,13 @@ mutable struct modifiedMatsuno <: AbstractModel
 		# Take raw data and return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is the velocity variable.
-		function mapfro(U)
-			fftη .= Π⅔ .* U[:,1];
-			fftv .= Π⅔ .* U[:,2];
-			real(ifft(fftη)),real(ifft(fftv) .+ϵ* ifft(Tμ.*fftv).*ifft(∂ₓ.*fftη) )
+		function mapfro(U;n=10)
+			∂ζ=ifft(∂ₓ.*U[:,1]);
+			I₁.=U[:,2];I₂.=U[:,2];
+			for j=1:n
+				I₂.=I₁+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*I₂))
+			end
+			real(ifft(U[:,1])),real(ifft(I₂))
 		end
 
 		# Evolution equations are ∂t U = f(U)

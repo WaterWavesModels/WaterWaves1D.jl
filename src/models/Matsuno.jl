@@ -71,7 +71,7 @@ mutable struct Matsuno_fast <: AbstractModel
 			Π⅔    = zero(k) .+ 1     		# No dealiasing (Π⅔=Id)
 		end
 
-        hnew = zeros(Complex{Float64}, mesh.N)
+        ζ = zeros(Complex{Float64}, mesh.N)
         unew = zeros(Complex{Float64}, mesh.N)
 
         I₀ = zeros(Complex{Float64}, mesh.N)
@@ -79,34 +79,34 @@ mutable struct Matsuno_fast <: AbstractModel
         I₂ = zeros(Complex{Float64}, mesh.N)
         I₃ = zeros(Complex{Float64}, mesh.N)
 
-        Px  = plan_fft(hnew; flags = FFTW.MEASURE)
+        Px  = plan_fft(ζ; flags = FFTW.MEASURE)
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
-		    for i in eachindex(hnew)
-		        hnew[i] = G₀[i] * U[i,1]
+		    for i in eachindex(ζ)
+		        ζ[i] = G₀[i] * U[i,1]
 		    end
 
-		    ldiv!(unew, Px, hnew )
+		    ldiv!(unew, Px, ζ )
 
-		    for i in eachindex(hnew)
-		        hnew[i] = ∂ₓ[i] * U[i,1]
+		    for i in eachindex(ζ)
+		        ζ[i] = ∂ₓ[i] * U[i,1]
 		    end
 
-		    ldiv!(I₁, Px, hnew)
+		    ldiv!(I₁, Px, ζ)
 
 		    unew  .*= I₁
 
 		    mul!(I₁, Px, unew)
 
 		    I₁  .*= ϵ .* Π⅔
-		    I₁  .-= hnew
+		    I₁  .-= ζ
 
-		    ldiv!(hnew, Px, view(U,:,1))
+		    ldiv!(ζ, Px, view(U,:,1))
 		    ldiv!(unew, Px, view(U,:,2))
 
-		    I₂    .= hnew .* unew
+		    I₂    .= ζ .* unew
 
 		    mul!(I₃, Px, I₂)
 
@@ -119,12 +119,12 @@ mutable struct Matsuno_fast <: AbstractModel
 
 		    ldiv!(I₂, Px, I₀)
 
-		    I₂    .*= hnew
+		    I₂    .*= ζ
 
-		    mul!(hnew, Px, I₂)
+		    mul!(ζ, Px, I₂)
 
-		    hnew  .*= Tμ
-		    I₃    .+= hnew
+		    ζ  .*= Tμ
+		    I₃    .+= ζ
 		    I₃    .*= ϵ .* Π⅔
 
 		    for i in eachindex(I₃)
@@ -157,10 +157,13 @@ mutable struct Matsuno_fast <: AbstractModel
 		# Take raw data and return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is the velocity variable.
-		function mapfro(U)
-			#real(ifft(view(U,:,1))),real(ifft(view(U,:,2))+ϵ* ifft(Tμ.*view(U,:,2)).*ifft(∂ₓ.*view(U,:,1)))
-			real(ifft(U[:,1])),real(ifft(U[:,2])+ϵ* ifft(Tμ.*U[:,2]).*ifft(∂ₓ.*U[:,1]))
-
+		function mapfro(U;n=10)
+			∂ζ=ifft(∂ₓ.*U[:,1]);
+			I₁.=view(U,:,2);I₂.=view(U,:,2);
+			for j=1:n
+				I₂.=I₁+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*I₂))
+			end
+			real(ifft(view(U,:,1))),real(ifft(I₂))
 		end
 
 		new(label, f!, mapto, mapfro, info )
@@ -261,7 +264,7 @@ mutable struct Matsuno <: AbstractModel
 			Π⅔    = zero(k) .+ 1     		# No dealiasing (Π⅔=Id)
 		end
 
-        hnew = zeros(Complex{Float64}, mesh.N)
+        ζ = zeros(Complex{Float64}, mesh.N)
         unew = zeros(Complex{Float64}, mesh.N)
 
         I₁ = zeros(Complex{Float64}, mesh.N)
@@ -271,10 +274,10 @@ mutable struct Matsuno <: AbstractModel
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
-		   hnew .= ifft(U[:,1])
+		   ζ .= ifft(U[:,1])
 		   unew .= ifft(U[:,2])
 		   I₃ .= fft(ifft(∂ₓ.*U[:,1]).*ifft(G₀.*U[:,1]))
-		   I₁ .= Tμ.*U[:,2].-ϵ*Π⅔.*(Tμ.*fft(hnew.*ifft(G₀.*U[:,2])).+∂ₓ.*fft(hnew.*unew))
+		   I₁ .= Tμ.*U[:,2].-ϵ*Π⅔.*(Tμ.*fft(ζ.*ifft(G₀.*U[:,2])).+∂ₓ.*fft(ζ.*unew))
 		   I₂ .= -ν*(∂ₓ.*U[:,1])+ϵ*Π⅔.*(ν*I₃-∂ₓ.*fft(unew.^2)/2)
 		   #
 		   U[:,1] .= I₁/sqrt(μ)/ν
@@ -293,9 +296,15 @@ mutable struct Matsuno <: AbstractModel
 		# Take raw data and return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is the velocity variable.
-		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2])+ϵ* ifft(Tμ.*U[:,2]).*ifft(∂ₓ.*U[:,1]))
+		function mapfro(U;n=10)
+			∂ζ=ifft(∂ₓ.*U[:,1]);
+			I₁.=U[:,2];I₂.=U[:,2];
+			for j=1:n
+				I₂.=I₁+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*I₂))
+			end
+			real(ifft(U[:,1])),real(ifft(I₂))
 		end
+
 
 		new(label, f!, mapto, mapfro, info )
     end

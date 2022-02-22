@@ -72,19 +72,19 @@ mutable struct AkersNicholls_fast <: AbstractModel
 			Π⅔    = zero(k) .+ 1     		# No dealiasing (Π⅔=Id)
 		end
 
-        hnew = zeros(Complex{Float64}, mesh.N)
+        ζ = zeros(Complex{Float64}, mesh.N)
         unew = zeros(Complex{Float64}, mesh.N)
 
         I₁ = zeros(Complex{Float64}, mesh.N)
         I₂ = zeros(Complex{Float64}, mesh.N)
         I₃ = zeros(Complex{Float64}, mesh.N)
 
-        Px  = plan_fft(hnew; flags = FFTW.MEASURE)
+        Px  = plan_fft(ζ; flags = FFTW.MEASURE)
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
-		    ldiv!(hnew, Px , view(U,:,1))
+		    ldiv!(ζ, Px , view(U,:,1))
 
 		    I₁  .= view(U,:,2) .* Lμ
 		    ldiv!(unew, Px , I₁)
@@ -94,16 +94,16 @@ mutable struct AkersNicholls_fast <: AbstractModel
 
 		    I₂  .= view(U,:,1) .* ∂ₓ
 		    ldiv!(unew, Px , I₂)
-		    unew .*= hnew
+		    unew .*= ζ
 		    mul!(I₂, Px , unew)
 
 		    I₃  .= view(U,:,1) .* Tμ∂ₓ
 		    ldiv!(unew, Px, I₃)
-		    unew .*= hnew
+		    unew .*= ζ
 		    mul!(I₃ , Px , unew)
 		    I₃ .*= Tμ
 
-		    hnew  .= .- view(U,:,2) .* ∂ₓ
+		    ζ  .= .- view(U,:,2) .* ∂ₓ
 
 		    I₁ .*= ν
 			I₁ .-= I₂
@@ -112,24 +112,27 @@ mutable struct AkersNicholls_fast <: AbstractModel
 		    I₁ .*= ϵ
 
 		    U[:,2] .= (view(U,:,1) .* Tμ .+ I₁)/sqrt(μ)/ν
-		    U[:,1] .= hnew/sqrt(μ)
+		    U[:,1] .= ζ/sqrt(μ)
 
 		end
 
 		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing.
 		function mapto(data::InitialData)
-			η=data.η(x);v=data.v(x);
+			ζ.=data.η(x);v=data.v(x);
 			fftv=fft(v);
-			[Π⅔ .* fft(η)  Π⅔ .* (fftv./Lμ+ϵ*fft(η.*v)+ ϵ*Tμ.*fft(η.*ifft(Tμ.*fftv)))/ν]
+			[Π⅔ .* fft(ζ)  Π⅔ .* (fftv./Lμ+ϵ*fft(ζ.*v)+ ϵ*Tμ.*fft(ζ.*ifft(Tμ.*fftv)))/ν]
 		end
 
 		# Return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is detemined by ∂t η + ∂x v = 0.
-		function mapfro(U)
-			η=ifft(U[:,1]);fftv=Lμ.*U[:,2];
-			real(η),real(ifft(fftv-ϵ*Lμ.*(fft(η.*ifft(fftv))+ Tμ.*fft(η.*ifft(Tμ.*fftv)))))*ν
+		function mapfro(U;n=10)
+			ζ.=ifft(view(U,:,1));I₁.=ν*view(U,:,2);I₂.=Lμ.*I₁;
+			for j=1:n
+				I₂.=Lμ.*(I₁-ϵ*Π⅔ .* ( fft(ζ.*ifft(I₂)) + Tμ.*fft(ζ.*ifft(Tμ.*I₂))) )
+			end
+			real(ζ),real(ifft(I₂))
 		end
 
 		new(label, f!, mapto, mapfro, info )
@@ -232,7 +235,7 @@ mutable struct AkersNicholls <: AbstractModel
 			Π⅔    = zero(k) .+ 1     		# No dealiasing (Π⅔=Id)
 		end
 
-        hnew = zeros(Complex{Float64}, mesh.N)
+        ζ = zeros(Complex{Float64}, mesh.N)
         unew = zeros(Complex{Float64}, mesh.N)
 
         I₁ = zeros(Complex{Float64}, mesh.N)
@@ -242,34 +245,37 @@ mutable struct AkersNicholls <: AbstractModel
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
-			hnew .=ifft(U[:,1]);
+			ζ .=ifft(U[:,1]);
 			I₁ .=Tμ.*fft(ifft(Lμ.*U[:,2]).^2);
 			# Tricomi identity : the above equals the two commented lines below
 			# I₁ .=Tμ.*fft(ifft(Lμ.*U[:,2]).^2 .+ ifft(∂ₓ.*U[:,2]).^2)/2;
 			# I₁ .-=fft(ifft(Lμ.*U[:,2]).*ifft(∂ₓ.*U[:,2]));
 
-			I₂ .=fft(hnew.*ifft(∂ₓ.*U[:,1])) ;
-			I₃ .=Tμ.*fft(hnew.*ifft(Tμ∂ₓ.*U[:,1]));
-			hnew .= U[:,1] ;
+			I₂ .=fft(ζ.*ifft(∂ₓ.*U[:,1])) ;
+			I₃ .=Tμ.*fft(ζ.*ifft(Tμ∂ₓ.*U[:,1]));
+			ζ .= U[:,1] ;
 			U[:,1] .= -∂ₓ.*U[:,2]/sqrt(μ) ;
-			U[:,2] .= (Tμ.*hnew+ϵ*Π⅔.*(ν*I₁-I₂-I₃))/sqrt(μ)/ν ;
+			U[:,2] .= (Tμ.*ζ+ϵ*Π⅔.*(ν*I₁-I₂-I₃))/sqrt(μ)/ν ;
 
 		end
 
 		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing.
 		function mapto(data::InitialData)
-			η=data.η(x);v=data.v(x);
+			ζ.=data.η(x);v=data.v(x);
 			fftv=fft(v);
-			[Π⅔ .* fft(η)  Π⅔ .* (fftv./Lμ+ϵ*fft(η.*v)+ ϵ*Tμ.*fft(η.*ifft(Tμ.*fftv)))/ν]
+			[Π⅔ .* fft(ζ)  Π⅔ .* (fftv./Lμ+ϵ*fft(ζ.*v)+ ϵ*Tμ.*fft(ζ.*ifft(Tμ.*fftv)))/ν]
 		end
 
 		# Return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is detemined by ∂t η + ∂x v = 0.
-		function mapfro(U)
-			η=ifft(U[:,1]);fftv=Lμ.*U[:,2];
-			real(η),real(ifft(fftv-ϵ*Lμ.*(fft(η.*ifft(fftv))+ Tμ.*fft(η.*ifft(Tμ.*fftv)))))*ν
+		function mapfro(U;n=10)
+			ζ.=ifft(U[:,1]);I₁.=ν*U[:,2];I₂.=Lμ.*I₁;
+			for j=1:n
+				I₂.=Lμ.*(I₁-ϵ*Π⅔ .* ( fft(ζ.*ifft(I₂)) + Tμ.*fft(ζ.*ifft(Tμ.*I₂))) )
+			end
+			real(ζ),real(ifft(I₂))
 		end
 
 		new(label, f!, mapto, mapfro, info )
