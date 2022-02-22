@@ -264,7 +264,10 @@ for model in models
     @testset "Initial value problem with the model $(model.label)" begin
         @test length(problem.data.U)==length(Times(paraT).tc)
         @test size(problem.data.U[end])==(length(Mesh(paraX).x),2)
-        @test !any(isnan,problem.data.U[end][1])
-        @test !any(isnan,problem.data.U[end][2])
+		ζ,v,x,t=solution(problem)
+        @test !any(isnan,ζ)
+        @test !any(isnan,v)
+		@test !any(isnan,x)
+		@test t==(Times(paraT).ts)[end]
     end
 end
