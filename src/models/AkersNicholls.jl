@@ -14,15 +14,39 @@ mutable struct AkersNicholls_fast <: AbstractModel
 	info    :: String
 
     function AkersNicholls_fast( param::NamedTuple;
-						dealias=false, label="deep quadratic" )
+									IL	    = false,
+									dealias=false,
+									label="Akers-Nicholls" )
 
 		# Set up
-		ϵ = param.ϵ
-		mesh  = Mesh(param)
+		μ 	= param.μ
+		ϵ 	= param.ϵ
+		if !in(:ν,keys(param))
+			if μ > 1
+				ν = 1/sqrt(μ)
+				nu = "1/√μ (deep water case)"
+			else
+				ν = 1
+				nu = "1 (shallow water case)"
+			end
+		else
+			ν = param.ν
+			nu = "$ν"
+		end
+		if μ == Inf || ν==0 || IL == true # infinite layer case
+			IL = true;  # IL (=Infinite layer) is a flag to be used thereafter
+			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
+		end
+		mesh = Mesh(param)
 
 		# Print information
-		info = "Deep quadratic model.\n"
-		info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+		info = "Akers-Nicholls model.\n"
+		if IL == true
+			info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+		else
+			info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
+					scaling parameter ν=$nu.\n"
+		end
 		if dealias == true || dealias == 1
 			info *= "└─Dealiasing with Orszag’s 3/2 rule. "
 		else
@@ -31,15 +55,21 @@ mutable struct AkersNicholls_fast <: AbstractModel
 		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
 		# Pre-allocate useful data
-        x = mesh.x
+		x = mesh.x
 		k = mesh.k
-        Γ = abs.(k)
-        Dx    =  1im * k            	# Differentiation
-        H     = -1im * sign.(k)     	# Hilbert transform
-		if dealias == true || dealias == 1
-			Π⅔    = Γ .< (mesh.kmax-mesh.kmin)/3 	# Dealiasing low-pass filter
+		if IL == true
+			Tμ 	= -1im * sign.(k)
+			Lμ 	= abs.(k);Lμ[1]=1;
 		else
-			Π⅔    = zero(Γ) .+ 1     	 	# No dealiasing (Π⅔=Id)
+			Tμ 	= -1im* sign.(k) .* tanh.(sqrt(μ)*abs.(k))
+			Lμ 	= sqrt(μ)*abs.(k)./tanh.(sqrt(μ)*abs.(k));Lμ[1]=1;
+		end
+		∂ₓ	=  1im * sqrt(μ)* k            # Differentiation
+		Tμ∂ₓ= Tμ .* ∂ₓ
+		if dealias == true || dealias == 1
+			Π⅔    = abs.(k) .< (mesh.kmax-mesh.kmin)/3 	# Dealiasing low-pass filter
+		else
+			Π⅔    = zero(k) .+ 1     		# No dealiasing (Π⅔=Id)
 		end
 
         hnew = zeros(Complex{Float64}, mesh.N)
@@ -56,32 +86,33 @@ mutable struct AkersNicholls_fast <: AbstractModel
 
 		    ldiv!(hnew, Px , view(U,:,1))
 
-		    I₁  .= view(U,:,2) .* Γ
+		    I₁  .= view(U,:,2) .* Lμ
 		    ldiv!(unew, Px , I₁)
 		    unew .^= 2
 		    mul!(I₁, Px , unew)
-		    I₁ .*= H
+		    I₁ .*= Tμ
 
-		    I₂  .= view(U,:,1) .* Dx
+		    I₂  .= view(U,:,1) .* ∂ₓ
 		    ldiv!(unew, Px , I₂)
 		    unew .*= hnew
 		    mul!(I₂, Px , unew)
 
-		    I₃  .= view(U,:,1) .* Γ
+		    I₃  .= view(U,:,1) .* Tμ∂ₓ
 		    ldiv!(unew, Px, I₃)
 		    unew .*= hnew
 		    mul!(I₃ , Px , unew)
-		    I₃ .*= H
+		    I₃ .*= Tμ
 
-		    hnew  .= .- view(U,:,2) .* Dx
+		    hnew  .= .- view(U,:,2) .* ∂ₓ
 
-		    I₁ .-= I₂
+		    I₁ .*= ν
+			I₁ .-= I₂
 		    I₁ .-= I₃
 		    I₁ .*= Π⅔
 		    I₁ .*= ϵ
 
-		    U[:,2] .= view(U,:,1) .* H .+ I₁
-		    U[:,1] .= hnew
+		    U[:,2] .= (view(U,:,1) .* Tμ .+ I₁)/sqrt(μ)/ν
+		    U[:,1] .= hnew/sqrt(μ)
 
 		end
 
@@ -89,16 +120,16 @@ mutable struct AkersNicholls_fast <: AbstractModel
 		# Discrete Fourier transform with, possibly, dealiasing.
 		function mapto(data::InitialData)
 			η=data.η(x);v=data.v(x);
-			fftv=fft(v);fftv[1]=0;
-			[Π⅔ .* fft(η)  Π⅔ .* (fftv./(Γ.+eps())+ϵ*fft(η.*v)+ ϵ*H.*fft(η.*ifft(H.*fftv)))]
+			fftv=fft(v);
+			[Π⅔ .* fft(η)  Π⅔ .* (fftv./Lμ+ϵ*fft(η.*v)+ ϵ*Tμ.*fft(η.*ifft(Tμ.*fftv)))/ν]
 		end
 
 		# Return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is detemined by ∂t η + ∂x v = 0.
 		function mapfro(U)
-			η=ifft(U[:,1]);fftv=Γ.*U[:,2];
-			real(η),real(ifft(fftv-ϵ *Γ.*fft(η.*ifft(fftv))- ϵ*(H.*Γ).*fft(η.*ifft(H.*fftv))))
+			η=ifft(U[:,1]);fftv=Lμ.*U[:,2];
+			real(η),real(ifft(fftv-ϵ*Lμ.*(fft(η.*ifft(fftv))+ Tμ.*fft(η.*ifft(Tμ.*fftv)))))*ν
 		end
 
 		new(label, f!, mapto, mapfro, info )
@@ -107,18 +138,20 @@ mutable struct AkersNicholls_fast <: AbstractModel
 end
 
 """
-    AkersNicholls(param;dealias,label)
+    AkersNicholls(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the quadratic deep-water model proposed by [Akers and Nicholls](https://doi.org/10.1137/090771351)
 and [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s42286-019-00005-w)
 
-# Arguments
+# Argument
 `param` is of type `NamedTuple` and must contain
-- the dimensionless parameters `ϵ` (nonlinearity);
-- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
+- dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
+- optionally, `ν` the shallow/deep water scaling factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0`, or `μ=Inf`.
+- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
 
 ## Optional keyword arguments
+- `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
 - `dealias`: dealiasing with `1/3` Orlicz rule if `true` or no dealiasing if `false` (by default);
 - `label`: a label for future references (default is `"deep quadratic"`);
 
@@ -140,15 +173,39 @@ mutable struct AkersNicholls <: AbstractModel
 	info 	:: String
 
     function AkersNicholls( param::NamedTuple;
-							dealias=false, label="deep quadratic")
+							IL	    = false,
+							dealias=false,
+							label="Akers-Nicholls")
 
 		# Set up
-		ϵ = param.ϵ
+		μ 	= param.μ
+		ϵ 	= param.ϵ
+		if !in(:ν,keys(param))
+			if μ > 1
+				ν = 1/sqrt(μ)
+				nu = "1/√μ (deep water case)"
+			else
+				ν = 1
+				nu = "1 (shallow water case)"
+			end
+		else
+			ν = param.ν
+			nu = "$ν"
+		end
+		if μ == Inf || ν==0 || IL == true # infinite layer case
+			IL = true;  # IL (=Infinite layer) is a flag to be used thereafter
+			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
+		end
 		mesh = Mesh(param)
 
 		# Print information
-		info = "Deep quadratic model.\n"
-		info *= "├─Steepness parameter ϵ=$(param.ϵ) (infinite depth case).\n"
+		info = "Akers-Nicholls model.\n"
+		if IL == true
+			info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+		else
+			info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
+					scaling parameter ν=$nu.\n"
+		end
 		if dealias == true || dealias == 1
 			info *= "└─Dealiasing with Orszag’s 3/2 rule. "
 		else
@@ -159,13 +216,20 @@ mutable struct AkersNicholls <: AbstractModel
 		# Pre-allocate useful data
 		x = mesh.x
 		k = mesh.k
-        Γ = abs.(k)
-        Dx    =  1im * k           	# Differentiation
-        H     = -1im * sign.(k)    	# Hilbert transform
-		if dealias == true || dealias == 1
-			Π⅔    = Γ .< (mesh.kmax-mesh.kmin)/3 	# Dealiasing low-pass filter
+		if IL == true
+			Tμ 	= -1im * sign.(k)
+			Lμ 	= abs.(k);Lμ[1]=1;
 		else
-			Π⅔    = zero(Γ) .+ 1     		# No dealiasing (Π⅔=Id)
+			Tμ 	= -1im* sign.(k) .* tanh.(sqrt(μ)*abs.(k))
+			Lμ 	= sqrt(μ)*abs.(k)./tanh.(sqrt(μ)*abs.(k));Lμ[1]=1;
+		end
+		∂ₓ	=  1im * sqrt(μ)* k            # Differentiation
+		Tμ∂ₓ= Tμ .* ∂ₓ
+
+		if dealias == true || dealias == 1
+			Π⅔    = abs.(k) .< (mesh.kmax-mesh.kmin)/3 	# Dealiasing low-pass filter
+		else
+			Π⅔    = zero(k) .+ 1     		# No dealiasing (Π⅔=Id)
 		end
 
         hnew = zeros(Complex{Float64}, mesh.N)
@@ -179,12 +243,16 @@ mutable struct AkersNicholls <: AbstractModel
 		function f!(U)
 
 			hnew .=ifft(U[:,1]);
-			I₁ .=H.*fft(ifft(H.*U[:,2]).^2);
-			I₂ .=fft(hnew.*ifft(Dx.*U[:,1])) ;
-			I₃ .=H.*fft(hnew.*ifft(Γ.*U[:,1]));
+			I₁ .=Tμ.*fft(ifft(Lμ.*U[:,2]).^2);
+			# Tricomi identity : the above equals the two commented lines below
+			# I₁ .=Tμ.*fft(ifft(Lμ.*U[:,2]).^2 .+ ifft(∂ₓ.*U[:,2]).^2)/2;
+			# I₁ .-=fft(ifft(Lμ.*U[:,2]).*ifft(∂ₓ.*U[:,2]));
+
+			I₂ .=fft(hnew.*ifft(∂ₓ.*U[:,1])) ;
+			I₃ .=Tμ.*fft(hnew.*ifft(Tμ∂ₓ.*U[:,1]));
 			hnew .= U[:,1] ;
-			U[:,1] .= -U[:,2] ;
-			U[:,2] .= Γ.*hnew+ϵ*Π⅔.*Dx.*(I₁-I₂-I₃) ;
+			U[:,1] .= -∂ₓ.*U[:,2]/sqrt(μ) ;
+			U[:,2] .= (Tμ.*hnew+ϵ*Π⅔.*(ν*I₁-I₂-I₃))/sqrt(μ)/ν ;
 
 		end
 
@@ -193,15 +261,15 @@ mutable struct AkersNicholls <: AbstractModel
 		function mapto(data::InitialData)
 			η=data.η(x);v=data.v(x);
 			fftv=fft(v);
-			[Π⅔ .* fft(η)  Π⅔ .* (-H.*fftv+ϵ*Dx.*fft(η.*v)+ ϵ*Γ.*fft(η.*ifft(H.*fftv)))]
+			[Π⅔ .* fft(η)  Π⅔ .* (fftv./Lμ+ϵ*fft(η.*v)+ ϵ*Tμ.*fft(η.*ifft(Tμ.*fftv)))/ν]
 		end
 
 		# Return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is detemined by ∂t η + ∂x v = 0.
 		function mapfro(U)
-			η=ifft(U[:,1]);fftv=H.*U[:,2];
-			real(η),real(ifft(fftv-ϵ*Γ.*fft(η.*ifft(fftv))+ ϵ*Dx.*fft(η.*ifft(H.*fftv))))
+			η=ifft(U[:,1]);fftv=Lμ.*U[:,2];
+			real(η),real(ifft(fftv-ϵ*Lμ.*(fft(η.*ifft(fftv))+ Tμ.*fft(η.*ifft(Tμ.*fftv)))))*ν
 		end
 
 		new(label, f!, mapto, mapfro, info )
