@@ -1,11 +1,11 @@
-export DeepQuadratic_fast,DeepQuadratic
+export AkersNicholls_fast,AkersNicholls
 
 """
-    DeepQuadratic_fast(param;dealias,label)
+    AkersNicholls_fast(param;dealias,label)
 
-Same as `DeepQuadratic`, but faster.
+Same as `AkersNicholls`, but faster.
 """
-mutable struct DeepQuadratic_fast <: AbstractModel
+mutable struct AkersNicholls_fast <: AbstractModel
 
 	label   :: String
 	f!		:: Function
@@ -13,7 +13,7 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 	mapfro	:: Function
 	info    :: String
 
-    function DeepQuadratic_fast( param::NamedTuple;
+    function AkersNicholls_fast( param::NamedTuple;
 						dealias=false, label="deep quadratic" )
 
 		# Set up
@@ -107,10 +107,10 @@ mutable struct DeepQuadratic_fast <: AbstractModel
 end
 
 """
-    DeepQuadratic(param;dealias,label)
+    AkersNicholls(param;dealias,label)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the quadratic deep-water model proposed by [Akers and Milewski](https://doi.org/10.1137/090758386)
+the quadratic deep-water model proposed by [Akers and Nicholls](https://doi.org/10.1137/090771351)
 and [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s42286-019-00005-w)
 
 # Arguments
@@ -124,14 +124,14 @@ and [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
-1. a function `DeepQuadratic.f!` to be called in explicit time-integration solvers;
-2. a function `DeepQuadratic.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
-3. a function `DeepQuadratic.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
+1. a function `AkersNicholls.f!` to be called in explicit time-integration solvers;
+2. a function `AkersNicholls.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
+3. a function `AkersNicholls.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
     - `η` is the surface deformation;
     - `v` is given by `∂t η = - ∂x v`.
 
 """
-mutable struct DeepQuadratic <: AbstractModel
+mutable struct AkersNicholls <: AbstractModel
 
 	label   :: String
 	f!		:: Function
@@ -139,7 +139,7 @@ mutable struct DeepQuadratic <: AbstractModel
 	mapfro	:: Function
 	info 	:: String
 
-    function DeepQuadratic( param::NamedTuple;
+    function AkersNicholls( param::NamedTuple;
 							dealias=false, label="deep quadratic")
 
 		# Set up
@@ -179,12 +179,12 @@ mutable struct DeepQuadratic <: AbstractModel
 		function f!(U)
 
 			hnew .=ifft(U[:,1]);
-			I₁ .=H.*fft(ifft(Γ.*U[:,2]).^2);
+			I₁ .=H.*fft(ifft(H.*U[:,2]).^2);
 			I₂ .=fft(hnew.*ifft(Dx.*U[:,1])) ;
 			I₃ .=H.*fft(hnew.*ifft(Γ.*U[:,1]));
 			hnew .= U[:,1] ;
-			U[:,1] .= -(Dx.*U[:,2]) ;
-			U[:,2] .= H.*hnew+ϵ*Π⅔.*(I₁-I₂-I₃) ;
+			U[:,1] .= -U[:,2] ;
+			U[:,2] .= Γ.*hnew+ϵ*Π⅔.*Dx.*(I₁-I₂-I₃) ;
 
 		end
 
@@ -192,16 +192,16 @@ mutable struct DeepQuadratic <: AbstractModel
 		# Discrete Fourier transform with, possibly, dealiasing.
 		function mapto(data::InitialData)
 			η=data.η(x);v=data.v(x);
-			fftv=fft(v);fftv[1]=0;
-			[Π⅔ .* fft(η)  Π⅔ .* (fftv./(Γ.+eps())+ϵ*fft(η.*v)+ ϵ*H.*fft(η.*ifft(H.*fftv)))]
+			fftv=fft(v);
+			[Π⅔ .* fft(η)  Π⅔ .* (-H.*fftv+ϵ*Dx.*fft(η.*v)+ ϵ*Γ.*fft(η.*ifft(H.*fftv)))]
 		end
 
 		# Return `(η,v)`, where
 		# - `η` is the surface deformation;
 		# - `v` is detemined by ∂t η + ∂x v = 0.
 		function mapfro(U)
-			η=ifft(U[:,1]);fftv=Γ.*U[:,2];
-			real(η),real(ifft(fftv-ϵ *Γ.*fft(η.*ifft(fftv))- ϵ*(H.*Γ).*fft(η.*ifft(H.*fftv))))
+			η=ifft(U[:,1]);fftv=H.*U[:,2];
+			real(η),real(ifft(fftv-ϵ*Γ.*fft(η.*ifft(fftv))+ ϵ*Dx.*fft(η.*ifft(H.*fftv))))
 		end
 
 		new(label, f!, mapto, mapfro, info )

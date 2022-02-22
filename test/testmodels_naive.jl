@@ -41,10 +41,10 @@ push!(models,WhithamBoussinesq(param;
 				label 	= "(Whitham-)Boussinesq"
 				) )
 
-push!(models,DeepQuadratic_fast( param;
+push!(models,AkersNicholls_fast( param;
                     dealias=true, label="fast deep quadratic") )
 
-push!(models,DeepQuadratic( param;
+push!(models,AkersNicholls( param;
                     dealias=false, label="naive deep quadratic") )
 
 push!(models,Matsuno_fast( param;

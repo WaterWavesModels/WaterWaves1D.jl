@@ -347,11 +347,11 @@ push!(precisions, para.ϵ.^3)
 
 
 
-push!(models,DeepQuadratic_fast( param;
+push!(models,AkersNicholls_fast( param;
                     dealias=true, label="fast deep quadratic") )
 push!(precisions, para.ϵ.^2)
 
-push!(models,DeepQuadratic( param;
+push!(models,AkersNicholls( param;
                     dealias=false, label="naive deep quadratic") )
 push!(precisions, para.ϵ.^2)
 
