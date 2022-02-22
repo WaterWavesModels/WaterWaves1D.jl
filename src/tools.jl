@@ -87,8 +87,8 @@ Provides `(η,v,x,t)` where
 
 """
 function solution(p::Problem; t=nothing, x=nothing, interpolation = false)
-	if isnothing(t) t = p.times.tfin end
-	t=min(max(t,0),p.times.tfin)
+	if isnothing(t) t = p.times.ts[end] end
+	t=min(max(t,0),p.times.ts[end])
 	index = indexin(false,p.times.ts.<t)[1]
 	t=p.times.ts[index]
 	if Symbol(typeof(p.model)) == :WaterWaves
