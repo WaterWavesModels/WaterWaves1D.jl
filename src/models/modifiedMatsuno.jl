@@ -57,7 +57,7 @@ mutable struct modifiedMatsuno <: AbstractModel
 			ν = param.ν
 			nu = "$ν"
 		end
-		if μ == Inf || ν==0 # infinite layer case
+		if μ == Inf || ν==0 || IL == true # infinite layer case
 			IL = true;  # IL (=Infinite layer) is a flag to be used therefafter
 			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		else IL = false

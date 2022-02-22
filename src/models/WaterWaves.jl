@@ -70,7 +70,7 @@ mutable struct WaterWaves <: AbstractModel
 			ν = param.ν
 			nu = "$ν"
 		end
-		if μ == Inf || ν==0 # infinite layer case
+		if μ == Inf || ν==0 || IL == true # infinite layer case
 			IL = true;  # IL (=Infinite layer) is a flag to be used in functions tanh,cotanh,xdcotanh
 			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		end
