@@ -134,7 +134,7 @@ Specifically, we consider systems of the form
   ∂_tv+∂_xη+\tfrac{ϵ}{2}∂_x((F_2^μv)^2) =0,
   \end{array}\right.
 ```
-with ``F_1^μ=\frac{\tanh(\sqrt\mu D)}{\sqrt\mu D}``, and ``F_2^μ=(F_1^μ)^α`` (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
+with ``F_1^μ=\frac{\tanh(\sqrtμ D)}{\sqrtμ D}``, and ``F_2^μ=(F_1^μ)^α`` (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
 The case ``α = 1`` has been introduced by [Dinvay, Dutykh and Kalisch](https://doi.org/10.1016/j.apnum.2018.09.016), more general situations have been studied by [Emerald](https://doi.org/10.1137/20M1332049).
 
 
@@ -213,7 +213,7 @@ fully recovering the [dispersive properties](https://en.wikipedia.org/wiki/Dispe
 ```math
 hu -\tfrac{μ}{3}F_0^μ∂_x( h^3 F_0^μ∂_xu) = hv.
 ```
-with ``F_0^μ=\sqrt{3((F_1^μ)^{-1}(D) - 1)}/D`` where ``F_1^μ=\frac{\tanh(\sqrt\mu D)}{\sqrt\mu D}``
+with ``F_0^μ=\sqrt{3((F_1^μ)^{-1}(D) - 1)}/D`` where ``F_1^μ=\frac{\tanh(\sqrtμ D)}{\sqrtμ D}``
 (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
 
 The associated code is [`WhithamBoussinesq`](@ref WaterWaves1D.WhithamBoussinesq).
@@ -253,21 +253,23 @@ is (for now) limited to the case ``N=1`` and ``(p₀,p₁)=(0,2)``.
 Small-steepness models rely on the smallness of the steepness dimensionless parameter, ``ϵ\sqrt{μ}≪1``,
 and may be valid in shallow water as well as deep water configurations.
 
-**Descriptions under completion**
+In what follows we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space. Specifically,
+```math
+T^μ=-{\rm i}\tanh(\sqrtμ D)
+```
+is the "Tilbert transform"
+(related to the [Hilbert transform](https://en.wikipedia.org/wiki/Hilbert_transform#Relationship_with_the_Fourier_transform), the latter arising in the infinite layer configuration, ``μ=∞``).
 
 #### The Airy equations
 
 The simplest small-steepness model is the linear [Airy](https://en.wikipedia.org/wiki/Airy_wave_theory) water waves obtained by setting ``ϵ=0`` in the water waves system:
 ```math
   \left\{\begin{array}{l}
-  ∂_tη-\tfrac{1}{\sqrt μ ν} T^μv =0,\\[1ex]
+  ∂_tη-\tfrac{1}{\sqrtμ ν} T^μv =0,\\[1ex]
   ∂_tv+∂_xη=0,
   \end{array}\right.
 ```
-with ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface,
-and ``T^μ=-i\tanh(\sqrt\mu D)`` the "Tilbert transform"
-(related to the [Hilbert transform](https://en.wikipedia.org/wiki/Hilbert_transform#Relationship_with_the_Fourier_transform);
-here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
+where we denote ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface.
 
 The associated code is [`Airy`](@ref WaterWaves1D.Airy).
 
@@ -287,11 +289,11 @@ G^μ[ϵη]ψ=G^μ[0]ψ + ϵ (D_η G^μ[0])(ϵη)ψ + ϵ^2 (D_η^2 G^μ[0])(ϵη,
 The first nonlinear system of the hierarchy, incorporating only quadratic nonlinearities, is
 ```math
   \left\{\begin{array}{l}
-  ∂_tη-\tfrac{1}{\sqrt μ ν} T^μv  + \tfrac{ϵ}{ν} ∂_x\big(η v +  T^μ(η T^μ v)\big) =0,\\[1ex]
+  ∂_tη-\tfrac{1}{\sqrtμ ν} T^μv  + \tfrac{ϵ}{ν} ∂_x\big(η v +  T^μ(η T^μ v)\big) =0,\\[1ex]
   ∂_tv+∂_xη+\frac{ϵ}{2ν}∂_x\big( v^2-(T^μv)^2\big)=0,
   \end{array}\right.
 ```
-with notations as above.
+where we denote ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface.
 
 Higher order systems can be constructed using recursive formula.
 Explicit expressions up to quintic nonlinearities are given in
@@ -310,11 +312,11 @@ It turns out the spectral models above suffer from spurious instabilities; see
 [Duchêne and Melinand](to be submitted) proposed a "rectified" quadratic model:
 ```math
   \left\{\begin{array}{l}
-  ∂_tη-\tfrac{1}{\sqrt μ ν} T^μv  + \tfrac{ϵ}{ν} ∂_x\big((J^δη) v +  T^μ((J^δη) T^μ v)\big) =0,\\[1ex]
+  ∂_tη-\tfrac{1}{\sqrtμ ν} T^μv  + \tfrac{ϵ}{ν} ∂_x\big((J^δη) v +  T^μ((J^δη) T^μ v)\big) =0,\\[1ex]
   ∂_tv+∂_xη+\frac{ϵ}{2ν}∂_xJ^δ\big( v^2-(T^μv)^2\big)=0,
   \end{array}\right.
 ```
-with notations as above and ``J^δ=J_0(δD)`` where ``J_0(k)`` approaches ``1`` for small wavenumbers, ``k``, and approaches ``0`` for large wavenumbers; and the parameter ``δ`` can be freely chosen, but is typically of the size of ``\tfrac{ϵ}{ν}``. In the associated code, [`WWn`](@ref WaterWaves1D.WWn), one has by default
+with ``J^δ=J_0(δD)`` where ``J_0(k)`` approaches ``1`` for small wavenumbers, ``k``, and approaches ``0`` for large wavenumbers; and the parameter ``δ`` can be freely chosen, but is typically of the size of ``\tfrac{ϵ}{ν}``. In the associated code, [`WWn`](@ref WaterWaves1D.WWn), one has by default
 ```math
 J_0(k)=\min(1,1/|k|).
 ```
@@ -325,11 +327,11 @@ J_0(k)=\min(1,1/|k|).
 The model introduced by [Matsuno](https://doi.org/10.1103/PhysRevLett.69.609) is
 ```math
   \left\{\begin{array}{l}
-  ∂_tη-\tfrac{1}{\sqrt μ ν} T^μu  + \tfrac{ϵ}{ν} ∂_x(η u) +  \tfrac{ϵ}{ν} T^μ(η ∂_x T^μ u) =0,\\[1ex]
-  ∂_tu+\big(1-ϵ\sqrt μ T^μ∂_xη\big)∂_xη+\frac{ϵ}{2ν}∂_x\big( u^2\big)=0,
+  ∂_tη-\tfrac{1}{\sqrtμ ν} T^μu  + \tfrac{ϵ}{ν} ∂_x(η u) +  \tfrac{ϵ}{ν} T^μ(η ∂_x T^μ u) =0,\\[1ex]
+  ∂_tu+\big(1-ϵ\sqrtμ T^μ∂_xη\big)∂_xη+\frac{ϵ}{2ν}∂_x\big( u^2\big)=0,
   \end{array}\right.
 ```
-with notations as above and where ``u=∂_xψ-ϵ\sqrt μ(T^μ∂_xψ)(∂_xη)`` represents the horizontal velocity at the free surface.
+where ``u=∂_xψ-ϵ\sqrtμ(T^μ∂_xψ)(∂_xη)`` represents the horizontal velocity at the free surface.
 
 The associated codes are [`Matsuno`](@ref WaterWaves1D.Matsuno), and [`Matsuno_fast`](@ref WaterWaves1D.Matsuno_fast) for a less human-readable but more efficient version.
 
@@ -337,27 +339,27 @@ The associated codes are [`Matsuno`](@ref WaterWaves1D.Matsuno), and [`Matsuno_f
 #### The modified Matsuno system
 
 
-In view of ensuring the stability of the model,
+In view of ensuring the stability of the equations,
 [Duchêne and Melinand](to be submitted)
 proposed a modified Matsuno system:
 ```math
   \left\{\begin{array}{l}
-  ∂_tη-\tfrac{1}{\sqrt μ ν} T^μu  + \tfrac{ϵ}{ν} ∂_x(η u) +  \tfrac{ϵ}{ν} T^μ(η ∂_x T^μ u) =0,\\[1ex]
-  ∂_tu+\exp\big(-ϵ\sqrt μ T^μ∂_xη\big)∂_xη+\frac{ϵ}{2ν}∂_x\big( u^2\big)=0.
+  ∂_tη-\tfrac{1}{\sqrtμ ν} T^μu  + \tfrac{ϵ}{ν} ∂_x(η u) +  \tfrac{ϵ}{ν} T^μ(η ∂_x T^μ u) =0,\\[1ex]
+  ∂_tu+\exp\big(-ϵ\sqrtμ T^μ∂_xη\big)∂_xη+\frac{ϵ}{2ν}∂_x\big( u^2\big)=0.
   \end{array}\right.
 ```
 
 The associated codes is [`modifiedMatsuno`](@ref WaterWaves1D.modifiedMatsuno).
 
-#### The Akers and Nicholls system
+#### The Akers-Nicholls system
 
 The model introduced in [Akers and Nicholls](https://doi.org/10.1137/090771351)
 (see also [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s42286-019-00005-w))
 can be written as
 ```math
   \left\{\begin{array}{l}
-  ∂_tη+∂_x m=0u  + \tfrac{ϵ}{ν} ∂_x(η u) +  \tfrac{ϵ}{ν} T^μ(η ∂_x T^μ u) =0,\\[1ex]
-  ∂_tu-\tfrac{1}{\sqrt μ ν} T^μ\big(η+\frac{ϵ}{2ν}(L^μ m)^2+\frac{ϵμν}{2}(∂_x m)^2\big)+\frac{ϵ}{ν}\big(η∂_xη-T^μ(η ∂_x T^μ η)-(∂_x m)(L^μ m)\big)=0,
+  ∂_tη+∂_x m=0,\\[1ex]
+  ∂_tm-\tfrac{1}{\sqrtμ ν} T^μ\big(η+\frac{ϵ}{ν}(L^μ m)^2\big)+\frac{ϵ}{ν}\big(η∂_xη+T^μ(η ∂_x T^μ η)\big)=0,
   \end{array}\right.
 ```
 with notations as above, ``L^μ=\frac{ν\sqrtμ D}{\tanh(\sqrtμ D)}`` and where ``m=-\frac1{\sqrtμ ν} T^μψ  + \frac{ϵ}{ν} \big(η ∂_xψ +  T^μ(η T^μ ∂_xψ)\big)`` represents the vertically integrated horizontal momentum.
