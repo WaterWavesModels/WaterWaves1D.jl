@@ -255,6 +255,22 @@ and may be valid in shallow water as well as deep water configurations.
 
 **Descriptions under completion**
 
+#### The Airy equations
+
+The simplest small-steepness model is the linear [Airy](https://en.wikipedia.org/wiki/Airy_wave_theory) water waves obtained by setting ``ϵ=0`` in the water waves system:
+```math
+  \left\{\begin{array}{l}
+  ∂_tη-\tfrac{1}{\sqrt μ ν} T^μv =0,\\[1ex]
+  ∂_tv+∂_xη=0,
+  \end{array}\right.
+```
+with ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface,
+and ``T^μ=-i\tanh(\sqrt\mu D)`` the "Tilbert transform"
+(related to the [Hilbert transform](https://en.wikipedia.org/wiki/Hilbert_transform#Relationship_with_the_Fourier_transform);
+here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
+
+The associated code is [`Airy`](@ref WaterWaves1D.Airy).
+
 
 #### The spectral systems
 
@@ -275,10 +291,7 @@ The first nonlinear system of the hierarchy, incorporating only quadratic nonlin
   ∂_tv+∂_xη+\frac{ϵ}{2ν}∂_x\big( v^2-(T^μv)^2\big)=0,
   \end{array}\right.
 ```
-with ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface,
-and ``T^μ=-i\tanh(\sqrt\mu D)`` the "Tilbert transform"
-(related to the [Hilbert transform](https://en.wikipedia.org/wiki/Hilbert_transform#Relationship_with_the_Fourier_transform);
-here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
+with notations as above.
 
 Higher order systems can be constructed using recursive formula.
 Explicit expressions up to quintic nonlinearities are given in
@@ -306,9 +319,6 @@ with notations as above and ``J^δ=J_0(δD)`` where ``J_0(k)`` approaches ``1`` 
 J_0(k)=\min(1,1/|k|).
 ```
 
-#### The deep quadratic system
-
-***Under redaction***
 
 #### The Matsuno system
 
@@ -319,7 +329,7 @@ The model introduced by [Matsuno](https://doi.org/10.1103/PhysRevLett.69.609) is
   ∂_tu+\big(1-ϵ\sqrt μ T^μ∂_xη\big)∂_xη+\frac{ϵ}{2ν}∂_x\big( u^2\big)=0,
   \end{array}\right.
 ```
-where ``u=∂_xψ-ϵ\sqrt μ(T^μ∂_xψ)(∂_xη)`` represents the horizontal velocity at the free surface.
+with notations as above and where ``u=∂_xψ-ϵ\sqrt μ(T^μ∂_xψ)(∂_xη)`` represents the horizontal velocity at the free surface.
 
 The associated codes are [`Matsuno`](@ref WaterWaves1D.Matsuno), and [`Matsuno_fast`](@ref WaterWaves1D.Matsuno_fast) for a less human-readable but more efficient version.
 
@@ -339,13 +349,27 @@ proposed a modified Matsuno system:
 
 The associated codes is [`modifiedMatsuno`](@ref WaterWaves1D.modifiedMatsuno).
 
+#### The Akers and Nicholls system
+
+The model introduced in [Akers and Nicholls](https://doi.org/10.1137/090771351)
+(see also [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s42286-019-00005-w))
+can be written as
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+∂_x m=0u  + \tfrac{ϵ}{ν} ∂_x(η u) +  \tfrac{ϵ}{ν} T^μ(η ∂_x T^μ u) =0,\\[1ex]
+  ∂_tu-\tfrac{1}{\sqrt μ ν} T^μ\big(η+\frac{ϵ}{2ν}(L^μ m)^2+\frac{ϵμν}{2}(∂_x m)^2\big)+\frac{ϵ}{ν}\big(η∂_xη-T^μ(η ∂_x T^μ η)-(∂_x m)(L^μ m)\big)=0,
+  \end{array}\right.
+```
+with notations as above, ``L^μ=\frac{ν\sqrtμ D}{\tanh(\sqrtμ D)}`` and where ``m=-\frac1{\sqrtμ ν} T^μψ  + \frac{ϵ}{ν} \big(η ∂_xψ +  T^μ(η T^μ ∂_xψ)\big)`` represents the vertically integrated horizontal momentum.
+
+The associated codes is [`AkersNicholls`](@ref WaterWaves1D.AkersNicholls), and [`AkersNicholls_fast`](@ref WaterWaves1D.AkersNicholls_fast) for a less human-readable but more efficient version.
 
 
 ## Pseudospectral methods
 
-Although this is not imperative of the package, all the codes mentioned above use Fourier-based pseudospectral methods for spatial discretization. This method is particularly suitable for data which are either periodic or decaying at infinity (in which case the function at stake is considered as periodic on a sufficiently large period), and fairly regular. In this framework one approaches ``2L``-periodic functions by *finite* Fourier sums of the form
+Although this is not imperative of the package, all the codes mentioned above use Fourier-based pseudospectral methods for spatial discretization. This method is particularly suitable for data which are either periodic or decaying at infinity (in which case the function at stake is considered as periodic on a sufficiently large period), and fairly regular. In this framework one approaches ``2L``-periodic functions by *finite* Fourier sums of the form (assuming ``N`` even)
 ```math
-u(t,x)≈\sum_{k=1}^{N} a_k(t) e^{{\rm i} \tfrac{π}{L}k x},
+u(t,x)≈\sum_{k=-N/2}^{N/2-1} a_k(t) e^{{\rm i} \tfrac{π}{L}k x},
 ```
 and seek a system of ordinary differential equations on the coefficients ``a_k(t)`` (which are then discretized in time by your favorite time solver).
 
@@ -366,10 +390,11 @@ When using the finite spectral decomposition, the action of [Fourier multipliers
 (that is up to machine precision rounding errors) through corresponding multiplication on the discrete coefficients ``a_k``, and only nonlinear contributions require some attention. The simplest way to approximately compute products (or any pointwise operations in the space variable) is by performing
 pointwise operations on values at collocation points which are obtained from the discrete coefficients using discrete inverse Fourier transform. For the sake of discussion, consider
 ```math
- u^2(x_j,t) ≈ \big(\sum_{k=1}^{N} a_k(t) e^{{\rm i} \tfrac{π}{L}k x_j}\big)^2 = \sum_{m=1}^N\sum_{n=1}^N a_m a_n e^{{\rm i} \tfrac{π}{L}(m+n) x_j}.
+ u^2(x_j,t) ≈ \big(\sum_{k=-N/2}^{N/2-1} a_k(t) e^{{\rm i} \tfrac{π}{L}k x_j}\big)^2
+ = \sum_{m=-N/2}^{N/2-1}\sum_{n=-N/2}^{N/2-1} a_m a_n e^{{\rm i} \tfrac{π}{L}(m+n) x_j}.
 ```
 One infers
 ```math
-u^2(x_j,t) ≈ \sum_{k=1}^{N} b_k(t) e^{{\rm i} \tfrac{π}{L}k x_j}, \qquad b_k = \sum_{m+n-k\in N\mathbb{Z} }a_m a_n.
+u^2(x_j,t) ≈ \sum_{k=-N/2}^{N/2-1} b_k(t) e^{{\rm i} \tfrac{π}{L}k x_j}, \qquad b_k = \sum_{m+n\in \{k-N,k,k+N\}}a_m a_n.
 ```
 In the above formula for ``b_k``, some of the summands are spurious effects from aliasing, which sometimes contribute to numerical instabilities. In order to suppress such terms the so-called *dealiasing* consists in adding a sufficient number of modes with coefficients set to zero (in practice one often uses ideal low-pass filters, that is set to zero extreme modes, so as to always work with vectors with a fixed given length). The so-called [Orszag](https://doi.org/10.1175/1520-0469(1971)028<1074:oteoai>2.0.co;2)'s `3/2` rule states that, in the presence of quadratic nonlinearities, padding `3/2` modes (or zero-ing `1/3` modes) is sufficient to discard all spurious aliasing contributions, and provides in particular a [Galerkin](https://en.wikipedia.org/wiki/Galerkin_method) approximation since the error is orthogonal to all expansion functions.
