@@ -54,21 +54,24 @@ end
 @testset "Tests on problems" begin
     param = (L=10, N=20, ϵ = 0.1, μ = 0.1, T=1, dt=1/30)
     init = Random(param)
-    model1 = WWn(param;n=1)
-    model2 = WWn(param;n=2)
-    #solver=RK4(model1)
     solver=Euler_naive()
-    problem1 = Problem(model1, init, merge(param,(ns=2,)); solver=solver, label = "problem 1")
-    problem2 = Problem(model2, init, param; solver=solver,label = "problem 2")
-    pb1 = Problem(model1, init, merge(param,(ns=2,));solver=solver)
-    pb2 = Problem(model2, init, param; solver=solver)
+    #solver=RK4(model1)  # the tests will fail with this solver, since it uses pre-allocation
+    # the tests also fail if we define  model=WWn(param;n=1), and use model to build the problems
+    pb1  = Problem(WWn(param;n=1), init, param; solver=solver)
+    pb1a = Problem(WWn(param;n=1), init, param; solver=solver)
+    pb1b = Problem(WWn(param;n=1), init, param; solver=solver)
+    pb2  = Problem(WWn(param;n=2), init, merge(param,(ns=2,)); solver=solver)
+    pb2a = Problem(WWn(param;n=2), init, merge(param,(ns=2,)); solver=solver)
+    pb2b = Problem(WWn(param;n=2), init, merge(param,(ns=2,)); solver=solver)
 
-    #solve!([pb1 pb2];verbose=true);solve!(problem1;verbose=true);solve!(problem2;verbose=true);
-    solve!([pb1 pb2 problem1 problem2];verbose=true);
+    solve!([pb1a pb2a pb1b pb2b];verbose=false);
+    solve!(pb1;verbose=false);solve!(pb2;verbose=false);
 
     for i in 1:2
-        @test solution(pb1)[i]==solution(problem1)[i]
-        @test solution(pb2)[i]==solution(problem2)[i]
+        @test solution(pb1)[i]==solution(pb1a)[i]
+        @test solution(pb1)[i]==solution(pb1b)[i]
+        @test solution(pb2)[i]==solution(pb2a)[i]
+        @test solution(pb2)[i]==solution(pb2b)[i]
     end
 end
 
