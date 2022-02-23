@@ -15,7 +15,7 @@ function interpolate(mesh::Mesh,vector;n=2^3::Int)
     new_fourier = [fourier[1:m] ;zeros((n-1)*2*m) ;fourier[m+1:end]]
 
 
-    new_mesh = Mesh(mesh.xmin,mesh.xmax,n*mesh.N)
+    new_mesh = Mesh((xmin=mesh.xmin,xmax=mesh.xmax,N=n*mesh.N))
     new_vector=ifft(new_fourier)*n
     if all((vector[i] isa Real) for i in length(vector))
         new_vector=real.(new_vector)
