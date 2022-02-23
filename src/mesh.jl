@@ -3,16 +3,14 @@ export Mesh
 """
     Mesh(args)
 
-Constructs a mesh of collocation points and associated Fourier modes.
+Construct a periodic mesh of `N` collocation points regularly spaced between
+`xmin` (included) and `xmax` (excluded), and associated Fourier modes.
 
 # Arguments
 Can be either
-- `xmin`, `xmax`, and `N`; or
-- `L`, `N` (same as above with `xmin=-L` and `xmax=L`); or
-- `param :: NamedTuple`, a `NamedTuple` containing `N` and `L` or `xmin` and `xmax`, then same as above; or
-- `x` a vector of regularly spaced collocation points`.
-
-The mesh as `N` collocation points regularly spaced between `xmin` (included) and `xmax` (excluded)
+- a `NamedTuple` containing `N` and `xmin` and `xmax`; or
+- a `NamedTuple` containing `N` and `L` (in which case `xmin=-L` and `xmax=L`); or
+- a vector of regularly spaced collocation points.
 
 # Return values
 `m=Mesh(args)` is of parametric type and offers
@@ -22,10 +20,10 @@ with
 - `m.xmax`: maximum of the mesh (excluded in the vector of collocation points);
 - `m.dx`: distance between two collocation points;
 - `m.x`: the vector of collocation points;
-- `m.kmin`: minimum of Fourier modes (included in the vector of Fourier modes);
-- `m.kmax`: maximum of Fourier modes (included in the vector of Fourier modes);;
-- `m.dk`: distance between two Fourier modes;
-- `m.k`: the vector of Fourier modes.
+- `m.k`: the vector of wavenumbers;
+- `m.kmin`: minimum of wavenumbers (included in the vector of wavenumbers);
+- `m.kmax`: maximum of wavenumbers (included in the vector of wavenumbers);
+- `m.dk`: distance between two Fourier modes.
 
 """
 struct Mesh
@@ -40,42 +38,6 @@ struct Mesh
     dk   :: Float64
     k    :: Vector{Float64}
 
-    function Mesh( xmin , xmax , N :: Int64)
-
-        dx   = (xmax-xmin)/N
-        x    = zeros(Float64, N)
-        x   .= range(xmin, stop=xmax, length=N+1)[1:end-1]
-        dk   = 2π/(N*dx)
-        kmin = -N÷2*dk
-        kmax = (N-1)÷2*dk
-        k    = zeros(Float64, N)
-        k   .= dk .* vcat(0:(N-1)÷2, -N÷2:-1)
-
-        new( N, xmin, xmax, dx, x, kmin, kmax, dk, k)
-
-    end
-
-    function Mesh(L , N :: Int64)
-
-        xmin = - L
-        xmax =   L
-        N    =   N
-
-        Mesh( xmin, xmax, N)
-
-    end
-
-    function Mesh( x )
-
-        N    =   length(x)
-        dx   =   (x[end]-x[1])/(N-1)
-        xmin = x[1]
-        xmax = x[end]+dx
-
-        Mesh( xmin, xmax, N)
-
-    end
-
     function Mesh(param :: NamedTuple)
 
         if :xmin in keys(param) && :xmax in keys(param)
@@ -89,14 +51,31 @@ struct Mesh
         end
         N    =   param.N
 
-        Mesh( xmin, xmax, N)
+        x    = zeros(Float64, N)
+        x   .= range(xmin, stop=xmax, length=N+1)[1:end-1]
+        dx=x[2]-x[1]
+        dk   = 2π/(N*dx)
+        kmin = -N÷2*dk
+        kmax = (N-1)÷2*dk
+        k    = zeros(Float64, N)
+        k   .= dk .* vcat(0:(N-1)÷2, -N÷2:-1)
 
+        new( N, xmin, xmax, dx, x, kmin, kmax, dk, k)
+    end
+
+
+    function Mesh( x )
+        if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
+            @error("Collocation points must be equally spaced.")
+        else
+            Mesh( (xmin=x[1], xmax=x[end]+(x[2]-x[1]), N=length(x)) )
+        end
     end
 end
 
 show(io::IO, m::Mesh) =
     print(io,"One-dimensional grid of $(m.N) collocation points on [$(m.xmin), $(m.xmax)].\n\
-    Grid spacing dx=$(m.dx).")
+    ├─Grid spacing dx=$(m.dx).\n└─Maximal wavenumber k=$(-m.kmin).")
 
 function dump( h5file :: String, mesh :: Mesh )
 
@@ -112,7 +91,7 @@ function load_mesh( h5file :: String )
     xmax = h5read(joinpath(h5file * ".h5"), "/mesh/xmax")
     N = h5read(joinpath(h5file * ".h5"), "/mesh/N")
 
-    return Mesh( xmin, xmax, N)
+    return Mesh( (xmin=xmin, xmax=xmax, N=N) )
 
 end
 
