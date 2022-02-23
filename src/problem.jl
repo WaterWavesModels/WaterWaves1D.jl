@@ -48,11 +48,11 @@ mutable struct Problem
         mesh  = Mesh(param)
 
         if in(:Ns,keys(param))
-            times = Times(param.dt, param.T; Ns = param.Ns)
+            times = Times(param; Ns = param.Ns)
         elseif in(:ns,keys(param))
-            times = Times(param.dt, param.T; ns = param.ns)
+            times = Times(param; ns = param.ns)
         else
-            times = Times(param.dt, param.T)
+            times = Times(param)
         end
 
         data  = Data(model.mapto(initial))
@@ -170,7 +170,7 @@ function solve!(problems; verbose=true::Bool)
                 and N=$(problems[i].mesh.N) collocation points on [$(problems[i].mesh.xmin),$(problems[i].mesh.xmax)]."
         end
 
-        if problems[i].times.ns == 1
+        if problems[i].times.tc == problems[i].times.ts
 
             for j in 1:problems[i].times.Ns-1
                 step!(problems[i].solver, problems[i].model, U[i], problems[i].times.dt)
@@ -209,7 +209,7 @@ end
 function load_param( h5file :: String )
 
     h5open(joinpath(h5file * ".h5")) do f
-         param = read(f["param"]) 
+         param = read(f["param"])
          return (; (Symbol(k) => v for (k,v) in param)...)
     end
 
