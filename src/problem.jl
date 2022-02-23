@@ -157,12 +157,28 @@ The argument `problems` should be a collection (list, array...) of elements of t
 Information are not printed if keyword argument `verbose = false` (default is `true`).
 """
 function solve!(problems; verbose=true::Bool)
-    U=[];nsteps=0
+
+    ci = get(ENV, "CI", nothing) == "true"
+
+    # Set up
+    U=[];nsteps=0;flag = false;
     for problem in problems
+        for p in problems # Check whether multi-threading is at risk, using same allocations
+            if !(p===problem) && ( p.model===problem.model || p.solver===problem.solver )
+                flag = true
+            end
+        end
         push!(U,copy(last(problem.data.U)))
         nsteps+=problem.times.Ns-1
     end
-    pg=Progress(nsteps;dt=1)
+    if flag
+        @warn "`solve!(problems)` uses multi-threading. \
+        It is ill-advised to use it with problems sharing the same model or the same solver. \
+        Re-define model/solver when building your problems, or solve them independently \
+        via `for problem in problems solve!(problem) end`."
+    end
+    
+    pg=Progress(nsteps;dt=1,enabled = !ci)
     @threads for i in 1:length(problems)
         if verbose == true
             @info "Now solving the initial-value problem $(problems[i].label)\n\
