@@ -1,14 +1,11 @@
 using Test
 
 #--- test meshes
-m1a = Mesh( -2*π , π , 3 )
-m1b = Mesh( (xmin=-2*π,xmax=π,N=3) )
-m1c = Mesh( [-2*π -π 0 ] )
+m1a = Mesh( (xmin=-2*π,xmax=π,N=3) )
+m1b = Mesh( [-2*π -π 0 ] )
 
-m2a = Mesh( -2*π , 2*π , 2 )
-m2b = Mesh( (xmin=-2*π,xmax=2π,N=2) )
-m2c = Mesh( [-2*π 0 ] )
-m2d = Mesh( 2π , 2 )
+m2a = Mesh( (xmin=-2*π,xmax=2π,N=2) )
+m2b = Mesh( [-2*π 0 ] )
 
 
 function the_mesh(m::Mesh)
@@ -18,20 +15,17 @@ end
 @testset "Tests on Mesh" begin
     @test the_mesh(m1a) ≈ [3,-2π,π,π,[-2π; -π; 0],-2/3,2/3,2/3,[0; 2/3; -2/3]]
     @test the_mesh(m1a) == the_mesh(m1b)
-    @test the_mesh(m1a) == the_mesh(m1c)
 
     @test the_mesh(m2a) ≈ [2,-2π,2π,2π,[-2π; 0],-1//2,0,1//2,[0; -1/2]]
     @test the_mesh(m2a) == the_mesh(m2b)
-    @test the_mesh(m2a) == the_mesh(m2c)
-    @test the_mesh(m2a) == the_mesh(m2d)
 
 end
 
 #--- test times
-t1a = Times( 1//10 , 1; ns=3 )
+t1a = Times( 0:0.1:1; ns=3 )
 t1b = Times( (dt=0.1 , T=1); ns=3 )
 
-t2a = Times( 1//10 , 1; Ns=3 )
+t2a = Times( 0:1//10:1 ; Ns=3 )
 t2b = Times( (dt=0.1 , T=1); Ns=3 )
 
 function the_times(t::Times)
@@ -62,13 +56,17 @@ end
     init = Random(param)
     model1 = WWn(param;n=1)
     model2 = WWn(param;n=2)
-    problem1 = Problem(model1, init, merge(param,(ns=2,)); label = "problem 1")
-    problem2 = Problem(model2, init, param; label = "problem 2")
-    pb1 = Problem(model1, init, merge(param,(ns=2,)))
-    pb2 = Problem(model2, init, param)
+    #solver=RK4(model1)
+    solver=Euler_naive()
+    problem1 = Problem(model1, init, merge(param,(ns=2,)); solver=solver, label = "problem 1")
+    problem2 = Problem(model2, init, param; solver=solver,label = "problem 2")
+    pb1 = Problem(model1, init, merge(param,(ns=2,));solver=solver)
+    pb2 = Problem(model2, init, param; solver=solver)
 
-    solve!([pb1 pb2]);solve!(problem1);solve!(problem2);
-    for i in 1:4
+    #solve!([pb1 pb2];verbose=true);solve!(problem1;verbose=true);solve!(problem2;verbose=true);
+    solve!([pb1 pb2 problem1 problem2];verbose=true);
+
+    for i in 1:2
         @test solution(pb1)[i]==solution(problem1)[i]
         @test solution(pb2)[i]==solution(problem2)[i]
     end
