@@ -21,11 +21,9 @@ solve!(pb0,verbose=false)
 @testset "RK4 solvers" begin
     # different ways to build RK4 solver
     solvers = []
-    push!(solvers, RK4(model) )
-    push!(solvers, RK4(paraX) )
-    push!(solvers, RK4(paraX.N) )
     push!(solvers, RK4(model.mapto(init)) )
-    push!(solvers, RK4((paraX.N,2)) )
+    push!(solvers, RK4(paraX) )
+    push!(solvers, RK4(paraX,2) )
     push!(solvers, RK4_naive() )
 
     # check all RK4 solvers generate the same data
@@ -51,10 +49,9 @@ end
 
     # different ways to build explicit Euler solver
     solvers = []
-    push!(solvers, Euler(paraX) )
-    push!(solvers, Euler(paraX.N) )
     push!(solvers, Euler(model.mapto(init)) )
-    push!(solvers, Euler((paraX.N,2)) )
+    push!(solvers, Euler(paraX) )
+    push!(solvers, Euler(paraX,2) )
     push!(solvers, Euler_naive() )
 
     # check all Euler solvers generate the same data
@@ -80,9 +77,8 @@ end
 
     # different ways to build symplectic Euler solver
     solvers = []
-    push!(solvers, EulerSymp(paraX) )
-    push!(solvers, EulerSymp(paraX.N ) )
     push!(solvers, EulerSymp(model.mapto(init)) )
+    push!(solvers, EulerSymp(paraX) )
 
     # check all symplectic Euler solvers generate the same data
     for solver in solvers

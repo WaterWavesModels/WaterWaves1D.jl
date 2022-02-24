@@ -10,13 +10,11 @@ Construct an object of type `TimeSolver` to be used in `Problem(model, initial, 
 
 Arguments can be either
 0. an object of type `AbstractModel`;
-1. an `Array` of size `(N,m)` where `N` is the number of collocation points and `m` the number of data (equations solved);
-2. a `Tuple` `(N,m)` as above;
-3. an integer `N` and an integer `m` as above (the latter is optional, by default `m=2`).
-4. a `NamedTuple` containing a key `N` and an integer `m` (the latter is optional, by default `m=2`).
+1. an `Array` of size `(N,datasize)` where `N` is the number of collocation points and `datasize` the number of equations solved;
+2. `(param,datasize)` where `param is a `NamedTuple` containing a key `N`, and `datasize` a integer (optional, by default `datasize=2`).
 
 The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
-By default, they are either determined by the model in case `1.`, complex-valued otherwise.
+By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
 
 """
 struct RK4 <: TimeSolver
@@ -39,20 +37,10 @@ struct RK4 <: TimeSolver
 
     function RK4( model :: AbstractModel; realdata=nothing )
         U=model.mapto(Init(x->0*x,x->0*x))
-        RK4(U; realdata=realdata)
+        RK4( U; realdata=realdata)
     end
-    function RK4( datasize; realdata=false )
-        U = zeros(Float64, datasize)
-        RK4(U; realdata=realdata)
-    end
-
-    function RK4( N::Int, m=2::Int; realdata=false )
-        datasize = (N,m)
-        RK4(datasize; realdata=realdata)
-    end
-    function RK4( param::NamedTuple, datasize=2::Int; realdata=false )
-        datasize = (param.N,datasize)
-        RK4(datasize; realdata=realdata)
+    function RK4( param::NamedTuple, datasize=2::Int; realdata=nothing )
+        RK4( zeros(Complex{Float64}, (param.N,datasize)) ; realdata=realdata)
     end
 end
 
@@ -94,7 +82,7 @@ A naive version of `RK4`, without argument since no pre-allocation is performed.
 struct RK4_naive <: TimeSolver
 
     label :: String
-    
+
     function RK4_naive() new("RK4 (naive)") end
 end
 

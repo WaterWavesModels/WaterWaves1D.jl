@@ -14,13 +14,12 @@ Construct an object of type `TimeSolver` to be used in `Problem(model, initial, 
 Arguments can be either
 0. an object of type `AbstractModel`;
 1. an `Array` of size `(N,2)` where `N` is the number of collocation points;
-2. an integer `N` being the number of collocation points;
-3. a `NamedTuple` containing a key `N`.
+2. a `NamedTuple` containing a key `N`.
 
 The keyword argument `Niter` (optional, defaut value = 10) determines the number of steps in the Neumann iteration solver of the implicit step.
 The keyword argument `implicit` (optional, defaut value = 1) determines which equation is implicit (must be `1` or `2`).
 The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
-By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued otherwise.
+By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
 
 
 """
@@ -55,14 +54,10 @@ struct EulerSymp <: TimeSolver
 
     function EulerSymp( model :: AbstractModel; Niter = 10, implicit = 1, realdata=nothing )
         U=model.mapto(Init(x->0*x,x->0*x))
-        EulerSymp(U; Niter = Niter, realdata=realdata, implicit=implicit)
+        EulerSymp( U; Niter = Niter, realdata=realdata, implicit=implicit)
     end
-    function EulerSymp( N::Int; Niter=10, implicit = 1, realdata=false )
-        U = zeros(Float64, (N,2))
-        EulerSymp(U; Niter = Niter, realdata=realdata,implicit=implicit)
-    end
-    function EulerSymp( param::NamedTuple; Niter = 10, implicit = 1, realdata=false )
-        EulerSymp(param.N; Niter = Niter, realdata=realdata,implicit=implicit)
+    function EulerSymp( param::NamedTuple; Niter = 10, implicit = 1, realdata=nothing )
+        EulerSymp( zeros(Complex{Float64}, (param.N,2)) ; Niter = Niter, realdata=realdata,implicit=implicit)
     end
 end
 
