@@ -1,16 +1,19 @@
 export Airy
 
 """
-	Airy(param;label)
+	Airy(param;mesh,label)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the linear ([Airy](https://en.wikipedia.org/wiki/Airy_wave_theory)) water waves equations.
 
 # Arguments
-`param` is of type `NamedTuple` and must contain
-- the shallowness parameter `μ` (set the infinite-layer case if `μ=Inf`);
-- optionally, `ν` the shallow/deep water scaling factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise.
-- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
+- `param::NamedTuple` must contain
+    - the shallowness parameter `μ` (set the infinite-layer case if `μ=Inf`);
+    - optionally, `ν` the shallow/deep water scaling factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise;
+    - numerical parameters to construct the mesh of collocation points, if `mesh` is not provided.
+- `mesh  :: Mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`.
+- `label :: String`: a label for future references (default is `"linear (Airy)"`).
+
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
@@ -29,6 +32,7 @@ mutable struct Airy <: AbstractModel
 	mapfro	:: Function
 
     function Airy(param::NamedTuple; # param is a NamedTuple containing all necessary parameters
+		mesh = Mesh(param),
 		label = "linear (Airy)"  # using a keyword argument allows the user to supersede the default label.
 		 )
 
@@ -40,8 +44,7 @@ mutable struct Airy <: AbstractModel
 			ν = param.ν
 		end
 		# Collocation points and Fourier modes
-		m = Mesh(param)
-		x, k = m.x, m.k
+		x, k = mesh.x, mesh.k
 		# Fourier multipliers
     	∂ₓ	 = 1im * k            # Differentiation
 		if μ == Inf || ν == 0
@@ -50,8 +53,8 @@ mutable struct Airy <: AbstractModel
 			∂ₓF₁ = 1im * tanh.(√μ*k)/(√μ*ν)
 		end
 		# Pre-allocation
-		fftη = zeros(Complex{Float64}, m.N)
-        fftv = zeros(Complex{Float64}, m.N)
+		fftη = zeros(Complex{Float64}, mesh.N)
+        fftv = zeros(Complex{Float64}, mesh.N)
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)

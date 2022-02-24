@@ -1,7 +1,7 @@
 export Matsuno_fast,Matsuno
 
 """
-	Matsuno_fast(param;dealias,label)
+	Matsuno_fast(param;kwargs)
 
 Same as `Matsuno`, but faster.
 """
@@ -14,8 +14,9 @@ mutable struct Matsuno_fast <: AbstractModel
 	info	:: String
 
     function Matsuno_fast(param::NamedTuple;
+							mesh = Mesh(param),
 							IL	    = false,
-							dealias=false,
+							dealias = false,
 							label = "Matsuno" )
 
 		# Set-up
@@ -37,7 +38,6 @@ mutable struct Matsuno_fast <: AbstractModel
 			IL = true;  # IL (=Infinite layer) is a flag to be used thereafter
 			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		end
-		mesh = Mesh(param)
 
 		# Print information
 		info = "Matsuno model.\n"
@@ -180,10 +180,11 @@ the quadratic deep-water model proposed by [Matsuno](https://doi.org/10.1103/Phy
 `param` is of type `NamedTuple` and must contain
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
 - optionally, `ν` the shallow/deep water scaling factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0`, or `μ=Inf`.
-- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
+- numerical parameters to construct the mesh of collocation points, if `mesh` is not provided as a keyword argument.
 
 ## Optional keyword arguments
 - `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
+- `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `dealias`: dealiasing with `1/3` Orlicz rule if `true` or no dealiasing if `false` (by default);
 - `label`: a label for future references (default is `"Matsuno"`);
 
@@ -206,8 +207,9 @@ mutable struct Matsuno <: AbstractModel
 
 
     function Matsuno(param::NamedTuple ;
+						mesh = Mesh(param),
 						IL	    = false,
-						dealias=false,
+						dealias = false,
 						label = "Matsuno" )
 
 		# Set up
@@ -229,7 +231,6 @@ mutable struct Matsuno <: AbstractModel
 			IL = true;  # IL (=Infinite layer) is a flag to be used thereafter
 			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		end
-		mesh = Mesh(param)
 
 		# Print information
 		info = "Matsuno model.\n"

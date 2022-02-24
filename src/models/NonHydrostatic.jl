@@ -9,9 +9,10 @@ the "Non-hydrostatic" model proposed by [Bristeau, Mangeney, Sainte-Marie and Se
 # Argument
 `param` is of type `NamedTuple` and must contain
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
-- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
+- numerical parameters to construct the mesh of collocation points, if `mesh` is not provided as a keyword argument.
 
 ## Optional keyword arguments
+- `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `iterative`: solve the elliptic problem through GMRES if `true`, LU decomposition if `false` (default is `true`);
 - `precond`: use a (left) preconditioner for GMRES if `true` (default), choose `precond` as the preconditioner if provided;
 - `gtol`: relative tolerance of the GMRES algorithm (default is `1e-14`);
@@ -42,6 +43,7 @@ mutable struct NonHydrostatic <: AbstractModel
 	info	:: String
 
     function NonHydrostatic(param::NamedTuple;
+							mesh = Mesh(param),
 							dealias = 0,
 							ktol	= 0,
 							iterate = true,
@@ -55,7 +57,6 @@ mutable struct NonHydrostatic <: AbstractModel
 		# Set up
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		mesh = Mesh(param)
 
 		if isnothing(maxiter) maxiter = mesh.N end
 		if isnothing(restart) restart = min(20,mesh.N) end

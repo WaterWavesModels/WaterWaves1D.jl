@@ -9,8 +9,7 @@ a Boussinesq-type model with full-dispersion property.
 # Argument
 `param` is of type `NamedTuple` and must contain
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
-- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
-
+- numerical parameters to construct the mesh of collocation points, if `mesh` is not provided as a keyword argument.
 
 ## Optional keyword arguments
 - `Boussinesq`: if `true` (default is `false`), compute the standard Boussinesq system instead (see `Boussinesq(param;kwargs)`);
@@ -18,6 +17,7 @@ a Boussinesq-type model with full-dispersion property.
     - If `α = 1` (default), then the model has been introduced in [Dinvay, Dutykh and Kalisch](https://doi.org/10.1016/j.apnum.2018.09.016);
     - If `α = 1/2`, then the model is a quasilinear version;
     - If `α < 1/2`, then expect instabilities stemming from ill-posedness of the model.
+- `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"Whitham-Boussinesq"`);
@@ -41,6 +41,7 @@ mutable struct WhithamBoussinesq <: AbstractModel
 	info 	:: String
 
     function WhithamBoussinesq(param::NamedTuple;Boussinesq=false,
+								mesh = Mesh(param),
 								α = 1, a = -1//3, b = 1//3,
 								dealias = 0,
 								ktol	= 0,
@@ -50,7 +51,6 @@ mutable struct WhithamBoussinesq <: AbstractModel
 		# Set up
 		μ 	= param.μ
 		ϵ 	= param.ϵ
-		mesh = Mesh(param)
 
 		if Boussinesq == true
 			if isnothing(label) label = "Boussinesq" end

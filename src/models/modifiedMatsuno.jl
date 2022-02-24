@@ -10,10 +10,11 @@ the modified Matsuno model
 `param` is of type `NamedTuple` and must contain
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
 - optionally, `ν` the shallow/deep water scaling factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0`, or `μ=Inf`.
-- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
+- numerical parameters to construct the mesh of collocation points, if `mesh` is not provided as a keyword argument.
 
 ## Optional keyword arguments
 - `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
+- `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"modified Matsuno"`);
@@ -36,6 +37,7 @@ mutable struct modifiedMatsuno <: AbstractModel
 	info	:: String
 
     function modifiedMatsuno(param::NamedTuple;
+							mesh = Mesh(param),
 							IL	    = false,
 							ktol	= 0,
 							dealias	= 0,
@@ -62,7 +64,6 @@ mutable struct modifiedMatsuno <: AbstractModel
 			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		else IL = false
 		end
-		mesh = Mesh(param)
 
 		# Print information
 		info = "Modified 'exponential' Matsuno model of Duchêne and Melinand.\n"

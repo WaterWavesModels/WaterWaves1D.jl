@@ -9,9 +9,10 @@ Saint-Venant (or shallow water) model.
 # Argument
 `param` is of type `NamedTuple` and must contain
 - the dimensionless parameter `ϵ` (nonlinearity);
-- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`.
+- numerical parameters to construct the mesh of collocation points, if `mesh` is not provided as a keyword argument.
 
 ## Optional keyword arguments
+- `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"Saint-Venant"`);
@@ -34,11 +35,13 @@ mutable struct SaintVenant <: AbstractModel
 	info	:: String
 
     function SaintVenant(param::NamedTuple;
+						mesh = Mesh(param),
 						dealias=0,ktol=0,
 						label="Saint-Venant"
 						)
 
 		m=WhithamBoussinesq(merge(param,(μ=1,));Boussinesq=true,
+							mesh=mesh,
 							a=0,b=0,
 							dealias=dealias,ktol=ktol,
 							label=label)
@@ -55,7 +58,6 @@ mutable struct SaintVenant <: AbstractModel
 		else
 			info *= "Krasny filter with tolerance $ktol."
 		end
-		mesh=Mesh(param)
 		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
 

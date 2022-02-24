@@ -57,7 +57,7 @@ end
     solver=Euler_naive()
     #solver=RK4(model1)  # the tests will fail with this solver, since it uses pre-allocation
     # the tests also fail if we define  model=WWn(param;n=1), and use model to build the problems
-    pb1  = Problem(WWn(param;n=1), init, param; solver=solver)
+    pb1  = Problem(WWn(param;n=1,mesh=Mesh(param)), init, param; solver=solver)
     pb1a = Problem(WWn(param;n=1), init, param; solver=solver)
     pb1b = Problem(WWn(param;n=1), init, param; solver=solver)
     pb2  = Problem(WWn(param;n=2), init, merge(param,(ns=2,)); solver=solver)

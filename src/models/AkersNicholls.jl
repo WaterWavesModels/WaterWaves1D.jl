@@ -1,7 +1,7 @@
 export AkersNicholls_fast,AkersNicholls
 
 """
-    AkersNicholls_fast(param;dealias,label)
+    AkersNicholls_fast(param;kwargs)
 
 Same as `AkersNicholls`, but faster.
 """
@@ -14,6 +14,7 @@ mutable struct AkersNicholls_fast <: AbstractModel
 	info    :: String
 
     function AkersNicholls_fast( param::NamedTuple;
+									mesh = Mesh(param),
 									IL	    = false,
 									dealias=false,
 									label="Akers-Nicholls" )
@@ -37,7 +38,6 @@ mutable struct AkersNicholls_fast <: AbstractModel
 			IL = true;  # IL (=Infinite layer) is a flag to be used thereafter
 			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		end
-		mesh = Mesh(param)
 
 		# Print information
 		info = "Akers-Nicholls model.\n"
@@ -151,9 +151,10 @@ and [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s
 `param` is of type `NamedTuple` and must contain
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
 - optionally, `ν` the shallow/deep water scaling factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0`, or `μ=Inf`.
-- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
+- numerical parameters to construct the mesh of collocation points, if `mesh` is not provided as a keyword argument.
 
 ## Optional keyword arguments
+- `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
 - `dealias`: dealiasing with `1/3` Orlicz rule if `true` or no dealiasing if `false` (by default);
 - `label`: a label for future references (default is `"deep quadratic"`);
@@ -176,8 +177,9 @@ mutable struct AkersNicholls <: AbstractModel
 	info 	:: String
 
     function AkersNicholls( param::NamedTuple;
+							mesh = Mesh(param),
 							IL	    = false,
-							dealias=false,
+							dealias = false,
 							label="Akers-Nicholls")
 
 		# Set up
@@ -199,7 +201,6 @@ mutable struct AkersNicholls <: AbstractModel
 			IL = true;  # IL (=Infinite layer) is a flag to be used thereafter
 			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		end
-		mesh = Mesh(param)
 
 		# Print information
 		info = "Akers-Nicholls model.\n"

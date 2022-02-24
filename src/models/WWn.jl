@@ -13,13 +13,14 @@ with the "rectification" method proposed by Duchêne and Melinand.
 `param` is of type `NamedTuple` and must contain
 - dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
 - optionally, `ν` the shallow/deep water scaling factor. By default, `ν=1` if `μ≦1` and `ν=1/√μ` otherwise. Set the infinite-layer case if `ν=0`, or `μ=Inf`.
-- numerical parameters to construct the mesh of collocation points as `mesh = Mesh(param)`
+- numerical parameters to construct the mesh of collocation points, if `mesh` is not provided as a keyword argument.
 
 ## Optional keyword arguments
 - `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
 - `n :: Int`: the order of the expansion; linear system if `1`, quadratic if `2`, cubic if `3`, quartic if `4` (default and other values yield `2`);
 - `δ` and `m`: parameters of the rectifier operator, set as `k->min(1,|δ*k|^m)` or `k->min(1,|δ*k|^m[1]*exp(1-|δ*k|^m[2]))` if `m` is a couple
 (by default is `δ=0`, i.e. no regularization and `m=-1`. Notice `m=-Inf` and `δ>0` yields a cut-off filter);
+- `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"WWn"` with `n` the order of the expansion);
@@ -44,6 +45,7 @@ mutable struct WWn <: AbstractModel
 	info 	:: String
 
     function WWn(param::NamedTuple;
+							mesh = Mesh(param),
 							IL	    = false,
 							n		= 2,
 							δ		= 0,
@@ -74,7 +76,6 @@ mutable struct WWn <: AbstractModel
 			IL = true;  # IL (=Infinite layer) is a flag to be used thereafter
 			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
 		end
-		mesh = Mesh(param)
 
 		# Print information
 		info = "Spectral model of order $n.\n"
