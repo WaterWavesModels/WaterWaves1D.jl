@@ -1,11 +1,12 @@
-export interpolate,solution
+export interpolate,solution,mass,momentum,energy,massdiff,momentumdiff,energydiff
+using Statistics
 
 """
     interpolate(mesh,vector;n=2^3)
 
-Interpolate a vector `vector` defined on a uniform collocation grid defined by `mesh`.
+Interpolate a vector `vector` of values on a uniform collocation grid defined by `mesh`.
 
-Returns `(new_mesh,new_vector)` a new uniform mesh with `n` times as many values, and the vector of values on collocation points.
+Return `(new_mesh,new_vector)` a new uniform mesh with `n` times as many values, and the vector of values at these collocation points.
 
 """
 function interpolate(mesh::Mesh,vector;n=2^3::Int)
@@ -26,12 +27,12 @@ end
 """
     interpolate(mesh,vector,x;fast)
 
-Interpolate a vector `vector` defined on a uniform collocation grid defined by `mesh`, on collocation points given by `x`.
+Interpolate a vector `vector` of values on a uniform collocation grid defined by `mesh`, on collocation points given by `x`.
 
 If the collocation points `x` are regularly spaced and the optional keyword argument `fast` is set to `true` (default is `false`),
 then the algorithm is faster and uses less allocations, but is less precise.
 
-Returns the vector of values on collocation points.
+Return the vector of values on collocation points.
 
 """
 function interpolate(mesh::Mesh,vector,x;fast=false)
@@ -67,19 +68,19 @@ end
 
 
 """
-    solution(p::Problem;t,x,interpolation)
+    solution(pb::Problem;t,x,interpolation)
 
-Gives the solution of a solved initial-value at a given time `t`.
+Give the solution of a solved initial-value problem at a given time `t`.
 
 # Arguments
-- Argument `p` is of type `Problem`.
+- Argument `pb` is of type `Problem`.
 - Keyword argument `t` is optional, the last computed time is returned by default.
 - Keyword argument `x` is optional, if provided the solution is interpolated to the collocation vector `x`.
 - Keyword argument `interpolation` is optional, if an integer is provided the solution is interpolated on as many collocation points (if `true`, then the default value `2^3` is chosen).
 
 
 # Return values
-Provides `(η,v,x,t)` where
+Return `(η,v,x,t)` where
 - `η` is the surface deformation at collocation points;
 - `v` is the tangential velocity (derivative of the trace of the velocity potential) at collocation points;
 - `x` is the vector of collocation points;
@@ -89,7 +90,7 @@ Provides `(η,v,x,t)` where
 function solution(p::Problem; t=nothing, x=nothing, interpolation = false)
 	if isnothing(t) t = p.times.ts[end] end
 	t=min(max(t,0),p.times.ts[end])
-	index = indexin(false,p.times.ts.<t)[1]
+	index = findfirst(p.times.ts.>=t)
 	t=p.times.ts[index]
 	if Symbol(typeof(p.model)) == :WaterWaves
 		if !isnothing(x) || interpolation != false
@@ -117,4 +118,112 @@ function solution(p::Problem; t=nothing, x=nothing, interpolation = false)
 		end
 	end
 	return η,v,x,t
+end
+
+"""
+    mass(pb::Problem;t)
+
+Compute the excess of mass of a solved initial-value problem `pb` at a given time `t`.
+
+Keyword argument `t` is optional, the last computed time is used by default.
+
+"""
+function mass(p::Problem; t=nothing)
+	η,v,x,t = solution(p;t=t)
+	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
+		@error("The excess of mass cannot be computed because the solution is defined on a non-regularly spaced mesh.")
+	else
+		return mean(η)
+	end
+end
+
+"""
+    momentum(pb::Problem;t)
+
+Compute the horizontal impulse of a solved initial-value problem `pb` at a given time `t`.
+
+Keyword argument `t` is optional, the last computed time is used by default.
+
+"""
+function momentum(p::Problem; t=nothing)
+	η,v,x,t = solution(p;t=t)
+	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
+		@error("The horizontal impulse cannot be computed because the solution is defined on a non-regularly spaced mesh.")
+	else
+		return mean(η.*v)
+	end
+end
+
+"""
+    energy(pb::Problem;t)
+
+Compute the excess of mass of a solved initial-value problem `pb` at a given time `t`.
+
+Keyword argument `t` is optional, the last computed time is used by default.
+
+"""
+function energy(p::Problem; t=nothing)
+	η,v,x,t = solution(p;t=t)
+	e = try p.model.energy(η,v)
+	catch
+		 @error("The energy cannot be computed: the model does not implement it.")
+	end
+	return e
+end
+
+"""
+    massdiff(pb::Problem;t,rel)
+
+Compute the difference of excess of mass of a solved initial-value problem `pb` between given time `t` and initial time.
+
+Keyword argument `t` is optional, the last computed time is used by default.
+
+If keyword argument `rel=true` (default is false), then compute the relative difference (with initial value as reference).
+
+"""
+function massdiff(p::Problem; t=nothing,rel=false)
+	η,v,x,t = solution(p;t=t)
+	η0,v0,x0,t0 = solution(p;t=0)
+	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
+		@error("The excess of mass difference cannot be computed because the solution is defined on a non-regularly spaced mesh.")
+	else
+		if rel==false return mean(η-η0) else return sum(η-η0)/sum(η0) end
+	end
+end
+
+"""
+    momentumdiff(pb::Problem;t)
+
+Compute the difference of horizontal impulse of a solved initial-value problem `pb` between given time `t` and initial time.
+
+Keyword argument `t` is optional, the last computed time is used by default.
+
+If keyword argument `rel=true` (default is false), then compute the relative difference (with initial value as reference).
+
+"""
+function momentumdiff(p::Problem; t=nothing,rel=false)
+	η,v,x,t = solution(p;t=t)
+	η0,v0,x0,t0 = solution(p;t=0)
+	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
+		@error("The horizontal impulse difference cannot be computed because the solution is defined on a non-regularly spaced mesh.")
+	else
+		if rel==false return mean((η-η0).*v+η0.*(v-v0)) else return sum((η-η0).*v+η0.*(v-v0))/sum(η0.*v0) end
+	end
+end
+
+"""
+    energydiff(pb::Problem;t)
+
+Compute the excess of mass of a solved initial-value problem `pb` at a given time `t`.
+
+"""
+function energydiff(p::Problem; t=nothing)
+	η,v,x,t = solution(p;t=t)
+	η0,v0,x0,t0 = solution(p;t=0)
+
+	e = try p.model.energydiff(η,v,η0,v0)
+	catch
+		@error("The energy difference cannot be computed: the model does not implement it.")
+	end
+	return e
 end
