@@ -38,3 +38,14 @@ end
     f4 = interpolate(mesh,f1,x4;fast=true)
     @test f4≈f(x4)
 end
+
+@testset "Preserved quantities" begin
+    pb=Problem(Airy(param;mesh=Mesh(paramX)),Init(x->exp.(-x.^2),x->exp.(-x.^2)),merge(paramT,paramX))
+    solve!(pb)
+    @test isapprox(mass(pb),mass(pb;t=0),rtol=1e-5)
+    @test isapprox(momentum(pb),momentum(pb;t=0),rtol=1e-5)
+    #@test isapprox(energy(pb),energy(pb;t=0),rtol=1e-5)
+    @test isapprox(massdiff(pb),0,atol=1e-10)
+    @test isapprox(momentumdiff(pb),0,atol=1e-6)
+    #@test isapprox(energydiff(pb),0,atol=1e-5)
+end
