@@ -82,11 +82,8 @@ end
     f(x) = exp.(-x.^2);g(x) = x.*exp.(-(x.-1).^2);
     inits=[]
     push!(inits, Init(f , g) )
-    push!(inits, Init((η=f,v=g)) )
     push!(inits, Init( mesh, f(x) , g(x); fast = false ) )
-    push!(inits, Init( mesh, (η=f(x) , v=g(x)); fast = true ) )
     push!(inits, Init( x, f(x) , g(x); fast = false ) )
-    push!(inits, Init( x, (η=f(x) , v=g(x)); fast = true ) )
     init = inits[1]
     for i in 2:3
         @test init.η([π])≈inits[i].η([π])
