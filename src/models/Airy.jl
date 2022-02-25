@@ -19,9 +19,9 @@ the linear ([Airy](https://en.wikipedia.org/wiki/Airy_wave_theory)) water waves 
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
 1. a function `Airy.f!` to be called in explicit time-integration solvers;
 2. a function `Airy.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
-3. a function `Airy.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
-    - `η` is the surface deformation;
-    - `v` is a velocity variable which is *not* the derivative of the trace of the velocity potential (if not null).
+3. a function `Airy.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
+    - `η` is the values of surface deformation at collocation points `x`;
+    - `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
 mutable struct Airy <: AbstractModel
@@ -72,9 +72,13 @@ mutable struct Airy <: AbstractModel
 			U = [fft(data.η(x)) fft(data.v(x))]
 		end
 
-		# Return physical data `(η,v)` from raw data
+		# Reconstruct physical variables from raw data
+		# Return `(η,v,x)`, where
+		# - `η` is the surface deformation;
+		# - `v` is the derivative of the trace of the velocity potential;
+		# - `x` is the vector of collocation points
 		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2]))
+			real(ifft(U[:,1])),real(ifft(U[:,2])),mesh.x
 		end
 
         new(label, f!, mapto, mapfro )

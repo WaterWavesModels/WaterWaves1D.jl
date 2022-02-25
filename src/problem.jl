@@ -29,11 +29,10 @@ mutable struct Problem
 
     model   :: AbstractModel
     initial :: InitialData
-    param   :: NamedTuple
     solver  :: TimeSolver
     times   :: Times
-    mesh    :: Mesh
     data    :: Data
+    param   :: NamedTuple
     label   :: String
 
     function Problem(model   :: AbstractModel,
@@ -45,8 +44,6 @@ mutable struct Problem
 
         if isnothing(label)   label = model.label end
 
-        mesh  = Mesh(param)
-
         if in(:Ns,keys(param))
             times = Times(param; Ns = param.Ns)
         elseif in(:ns,keys(param))
@@ -55,8 +52,15 @@ mutable struct Problem
             times = Times(param)
         end
 
-        data  = Data(model.mapto(initial))
+        U = model.mapto(initial)
+        data  = Data(U)
 
+        #try
+        #    mesh  = Mesh(param)
+        #catch
+        #    η,v,x = model.mapro(U)
+        #    mesh = Mesh(x)
+        #end
 
         # A basic check
         try
@@ -65,7 +69,7 @@ mutable struct Problem
             @warn "The model and the solver are incompatible. `solve!` will not work."
         end
 
-        new(model, initial, param, solver, times, mesh, data, label)
+        new(model, initial, solver, times, data, param, label)
 
     end
 
@@ -73,11 +77,11 @@ end
 
 show(io::IO, p::Problem) =
     print(io,"Initial-value problem with...\n\
-    ├─Model: $(p.model.label).\n├─Initial data: $(p.initial.label).\n└─Solver: $(p.solver.label).\n\
-    Discretized with $(p.mesh.N) collocation points on [$(p.mesh.xmin), $(p.mesh.xmax)],\n\
-    and $(p.times.Nc) computed times on [0, $(p.times.tfin)] (timestep dt=$(p.times.dt)), \
+    ├─Model: $(p.model.label).\n├─Initial data: $(p.initial.label).\n├─Solver: $(p.solver.label).\n\
+    └─Grid of times: $(p.times.Nc) computed times on [0, $(p.times.tfin)] (timestep dt=$(p.times.dt)), \
     among which $(p.times.Ns) will be stored.")
 
+#     Discretized with $(p.mesh.N) collocation points on [$(p.mesh.xmin), $(p.mesh.xmax)],\n\
 
 export solve!
 
@@ -96,18 +100,19 @@ function solve!(problem :: Problem; verbose=true::Bool)
 
     ci = get(ENV, "CI", nothing) == "true"
 
-    if verbose == true
-        @info "Now solving the initial-value problem $(problem.label)\n\
-            with timestep dt=$(problem.times.dt), final time T=$(problem.times.tfin),\n\
-            and N=$(problem.mesh.N) collocation points on [$(problem.mesh.xmin),$(problem.mesh.xmax)]."
-    end
-
     U = copy(last(problem.data.U))
 
     dt     = problem.times.dt
     solver = problem.solver
     model  = problem.model
     data   = problem.data.U
+
+    if verbose == true
+        @info "Now solving the initial-value problem $(problem.label)\n\
+            with timestep dt=$(problem.times.dt), final time T=$(problem.times.tfin),\n\
+            and N=$(size(U)[1]) collocation points."
+    end
+
 
     if problem.times.tc == problem.times.ts
         pbar = Progress(problem.times.Ns-1; enabled = !ci)
@@ -177,13 +182,13 @@ function solve!(problems; verbose=true::Bool)
         Re-define model/solver when building your problems, or solve them independently \
         via `for problem in problems solve!(problem) end`."
     end
-    
+
     pg=Progress(nsteps;dt=1,enabled = !ci)
     @threads for i in 1:length(problems)
         if verbose == true
             @info "Now solving the initial-value problem $(problems[i].label)\n\
                 with timestep dt=$(problems[i].times.dt), final time T=$(problems[i].times.tfin),\n\
-                and N=$(problems[i].mesh.N) collocation points on [$(problems[i].mesh.xmin),$(problems[i].mesh.xmax)]."
+                and N=$(size(problems[i].data.U)[1]) collocation points."
         end
 
         if problems[i].times.tc == problems[i].times.ts

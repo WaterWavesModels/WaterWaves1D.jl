@@ -37,7 +37,10 @@ Our purpose is to provide
 - `label`, a string used in subsequent informational messages, plots, etc.
 - `f!` a function to be called in explicit time-integration solvers such as [`Euler`](@ref WaterWaves1D.Euler) or [`RK4`](@ref WaterWaves1D.RK4) (one may provide other functions to be used with other solvers such as [`EulerSymp`](@ref WaterWaves1D.EulerSymp))
 - `WhithamBoussinesq.mapto` a function which from  a couple `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed
-- `WhithamBoussinesq.mapfro` the inverse function which from raw data returns `(η,v)`.
+- `WhithamBoussinesq.mapfro` a function which from raw data returns `(η,v,x)` where
+    - `η` is the values of surface deformation at collocation points `x`;
+    - `v` is the derivative of the trace of the velocity potential at `x`.
+
 
 To this aim, in place of the commented line, we write
 ```julia
@@ -76,9 +79,9 @@ function Airy(param::NamedTuple; # param is a NamedTuple containing all necessar
     U = [fft(data.η(x)) fft(data.v(x))]
   end
 
-  # Return physical data `(η,v)` from raw data
+  # Return physical data `(η,v,x)` from raw data
   function mapfro(U)
-    real(ifft(U[:,1])),real(ifft(U[:,2]))
+    real(ifft(U[:,1])),real(ifft(U[:,2])),x
   end
 
   new( label, f!, mapto, mapfro )

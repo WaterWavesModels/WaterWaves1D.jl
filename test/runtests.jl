@@ -40,7 +40,7 @@ end
 end
 
 @testset "Preserved quantities" begin
-    pb=Problem(Airy(param;mesh=Mesh(paramX)),Init(x->exp.(-x.^2),x->exp.(-x.^2)),merge(paramT,paramX))
+    pb=Problem(Airy(param;mesh=Mesh(paramX)),Init(x->exp.(-x.^2),x->exp.(-x.^2)),paramT)
     solve!(pb)
     @test isapprox(mass(pb),mass(pb;t=0),rtol=1e-5)
     @test isapprox(momentum(pb),momentum(pb;t=0),rtol=1e-5)

@@ -29,9 +29,9 @@ with the "rectification" method proposed by Duchêne and Melinand.
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
 1. a function `WWn.f!` to be called in explicit time-integration solvers (also `WWn.f1!` and `WWn.f2!` for the symplectic Euler solver);
 2. a function `WWn.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
-3. a function `WWn.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
-    - `η` is the surface deformation;
-    - `v` is the derivative of the trace of the velocity potential.
+3. a function `WWn.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
+	- `η` is the values of surface deformation at collocation points `x`;
+	- `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
 mutable struct WWn <: AbstractModel
@@ -136,12 +136,13 @@ mutable struct WWn <: AbstractModel
 			return U
 		end
 
-		# Return `(η,v)`, where
+		# Reconstruct physical variables from raw data
+		# Return `(η,v,x)`, where
 		# - `η` is the surface deformation;
-		# - `v` is the derivative of the trace of the velocity potential.
-		# Inverse Fourier transform and takes the real part.
+		# - `v` is the derivative of the trace of the velocity potential;
+		# - `x` is the vector of collocation points
 		function mapfro(U)
-			real( ifft(U[:,1]) ),real( ifft(U[:,2]) )
+			real( ifft(U[:,1]) ),real( ifft(U[:,2]) ), mesh.x
 		end
 
 		# Evolution equations are ∂t U = f(U)

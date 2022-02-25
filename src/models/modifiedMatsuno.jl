@@ -23,9 +23,9 @@ the modified Matsuno model
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
 1. a function `modifiedMatsuno.f!` to be called in explicit time-integration solvers;
 2. a function `modifiedMatsuno.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
-3. a function `modifiedMatsuno.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
-    - `η` is the surface deformation;
-    - `v` is the derivative of the trace of the velocity potential.
+3. a function `modifiedMatsuno.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
+    - `η` is the values of surface deformation at collocation points `x`;
+    - `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
 mutable struct modifiedMatsuno <: AbstractModel
@@ -115,16 +115,18 @@ mutable struct modifiedMatsuno <: AbstractModel
 			return U
 		end
 
-		# Take raw data and return `(η,v)`, where
+		# Reconstruct physical variables from raw data
+		# Return `(η,v,x)`, where
 		# - `η` is the surface deformation;
-		# - `v` is the velocity variable.
+		# - `v` is the derivative of the trace of the velocity potential;
+		# - `x` is the vector of collocation points
 		function mapfro(U;n=10)
 			∂ζ=ifft(∂ₓ.*U[:,1]);
 			z.=U[:,2];v.=U[:,2];
 			for j=1:n
 				v.=z+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*v))
 			end
-			real(ifft(U[:,1])),real(ifft(v))
+			real(ifft(U[:,1])),real(ifft(v)),mesh.x
 		end
 
 		# Evolution equations are ∂t U = f(U)

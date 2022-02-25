@@ -117,22 +117,23 @@ mutable struct AkersNicholls_fast <: AbstractModel
 		end
 
 		# Build raw data from physical data.
-		# Discrete Fourier transform with, possibly, dealiasing.
 		function mapto(data::InitialData)
 			ζ.=data.η(x);v=data.v(x);
 			fftv=fft(v);
 			[Π⅔ .* fft(ζ)  Π⅔ .* (fftv./Lμ+ϵ*fft(ζ.*v)+ ϵ*Tμ.*fft(ζ.*ifft(Tμ.*fftv)))/ν]
 		end
 
-		# Return `(η,v)`, where
+		# Reconstruct physical variables from raw data
+		# Return `(η,v,x)`, where
 		# - `η` is the surface deformation;
-		# - `v` is detemined by ∂t η + ∂x v = 0.
+		# - `v` is the derivative of the trace of the velocity potential;
+		# - `x` is the vector of collocation points
 		function mapfro(U;n=10)
 			ζ.=ifft(view(U,:,1));I₁.=ν*view(U,:,2);I₂.=Lμ.*I₁;
 			for j=1:n
 				I₂.=Lμ.*(I₁-ϵ*Π⅔ .* ( fft(ζ.*ifft(I₂)) + Tμ.*fft(ζ.*ifft(Tμ.*I₂))) )
 			end
-			real(ζ),real(ifft(I₂))
+			real(ζ),real(ifft(I₂)),mesh.x
 		end
 
 		new(label, f!, mapto, mapfro, info )
@@ -163,9 +164,9 @@ and [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
 1. a function `AkersNicholls.f!` to be called in explicit time-integration solvers;
 2. a function `AkersNicholls.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
-3. a function `AkersNicholls.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
-    - `η` is the surface deformation;
-    - `v` is given by `∂t η = - ∂x v`.
+3. a function `AkersNicholls.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
+    - `η` is the values of surface deformation at collocation points `x`;
+    - `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
 mutable struct AkersNicholls <: AbstractModel
@@ -261,22 +262,23 @@ mutable struct AkersNicholls <: AbstractModel
 		end
 
 		# Build raw data from physical data.
-		# Discrete Fourier transform with, possibly, dealiasing.
 		function mapto(data::InitialData)
 			ζ.=data.η(x);v=data.v(x);
 			fftv=fft(v);
 			[Π⅔ .* fft(ζ)  Π⅔ .* (fftv./Lμ+ϵ*fft(ζ.*v)+ ϵ*Tμ.*fft(ζ.*ifft(Tμ.*fftv)))/ν]
 		end
 
-		# Return `(η,v)`, where
+		# Reconstruct physical variables from raw data
+		# Return `(η,v,x)`, where
 		# - `η` is the surface deformation;
-		# - `v` is detemined by ∂t η + ∂x v = 0.
+		# - `v` is the derivative of the trace of the velocity potential;
+		# - `x` is the vector of collocation points
 		function mapfro(U;n=10)
 			ζ.=ifft(U[:,1]);I₁.=ν*U[:,2];I₂.=Lμ.*I₁;
 			for j=1:n
 				I₂.=Lμ.*(I₁-ϵ*Π⅔ .* ( fft(ζ.*ifft(I₂)) + Tμ.*fft(ζ.*ifft(Tμ.*I₂))) )
 			end
-			real(ζ),real(ifft(I₂))
+			real(ζ),real(ifft(I₂)),mesh.x
 		end
 
 		new(label, f!, mapto, mapfro, info )

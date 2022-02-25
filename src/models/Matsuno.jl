@@ -154,16 +154,18 @@ mutable struct Matsuno_fast <: AbstractModel
 			return U
 		end
 
-		# Take raw data and return `(η,v)`, where
+		# Reconstruct physical variables from raw data
+		# Return `(η,v,x)`, where
 		# - `η` is the surface deformation;
-		# - `v` is the velocity variable.
+		# - `v` is the derivative of the trace of the velocity potential;
+		# - `x` is the vector of collocation points
 		function mapfro(U;n=10)
 			∂ζ=ifft(∂ₓ.*U[:,1]);
 			I₁.=view(U,:,2);I₂.=view(U,:,2);
 			for j=1:n
 				I₂.=I₁+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*I₂))
 			end
-			real(ifft(view(U,:,1))),real(ifft(I₂))
+			real(ifft(view(U,:,1))),real(ifft(I₂)),mesh.x
 		end
 
 		new(label, f!, mapto, mapfro, info )
@@ -190,11 +192,11 @@ the quadratic deep-water model proposed by [Matsuno](https://doi.org/10.1103/Phy
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
-1. a function `DeepQuadratic.f!` to be called in explicit time-integration solvers;
-2. a function `DeepQuadratic.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
-3. a function `DeepQuadratic.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
-    - `η` is the surface deformation;
-    - `v` is a velocity variable which is *not* the derivative of the trace of the velocity potential (if not null).
+1. a function `Matsuno.f!` to be called in explicit time-integration solvers;
+2. a function `Matsuno.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
+3. a function `Matsuno.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
+    - `η` is the values of surface deformation at collocation points `x`;
+    - `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
 mutable struct Matsuno <: AbstractModel
@@ -294,16 +296,18 @@ mutable struct Matsuno <: AbstractModel
 			return U
 		end
 
-		# Take raw data and return `(η,v)`, where
+		# Reconstruct physical variables from raw data
+		# Return `(η,v,x)`, where
 		# - `η` is the surface deformation;
-		# - `v` is the velocity variable.
+		# - `v` is the derivative of the trace of the velocity potential;
+		# - `x` is the vector of collocation points
 		function mapfro(U;n=10)
 			∂ζ=ifft(∂ₓ.*U[:,1]);
 			I₁.=U[:,2];I₂.=U[:,2];
 			for j=1:n
 				I₂.=I₁+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*I₂))
 			end
-			real(ifft(U[:,1])),real(ifft(I₂))
+			real(ifft(U[:,1])),real(ifft(I₂)),mesh.x
 		end
 
 

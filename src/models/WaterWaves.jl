@@ -30,10 +30,10 @@ the water waves system (via conformal mapping, see [Zakharov, Dyachenko and Vasi
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
 1. a function `WaterWaves.f!` to be called in the explicit time-integration solver (also `WaterWaves.f1!` and `WaterWaves.f2!` for the symplectic Euler solver);
 2. a function `WaterWaves.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
-3. a function `WaterWaves.mapfro` which from such data matrix returns the Tuple of real vectors `(x,η,v)`, where
+3. a function `WaterWaves.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
     - `x` is a vector of collocation points (non-regularly spaced);
-    - `η` is the surface deformation at points `x`;
-    - `v` is the derivative of the trace of the velocity potential at points `x`.
+	- `η` is the values of surface deformation at collocation points `x`;
+    - `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
 mutable struct WaterWaves <: AbstractModel
@@ -258,14 +258,15 @@ mutable struct WaterWaves <: AbstractModel
 		end
 
 		# Reconstruct physical variables from raw data
-		# Return `(η,v)`, where
+		# Return `(η,v,x)`, where
 		# - `η` is the surface deformation;
-		# - `v` is the derivative of the trace of the velocity potential.
+		# - `v` is the derivative of the trace of the velocity potential;
+		# - `x` is the vector of collocation points
 		function mapfro(U)
 		   	ξ  .= real.(sqrt(μ)*(1+ϵ*meanf(U[:,1]))*k)
 	       	xv .= real.(-1im*sqrt(μ)*ifft( Π⅔ .*cotanh(ξ) .*  U[:,1] ))
 
-		   return x + ϵ*xv, real.( ifft(U[:,1]) ) , real.( ifft(U[:,2])./(1 .+ ϵ*real.(ifft(∂ₓ.*fft(xv)) )) )
+		   return real.( ifft(U[:,1]) ) , real.( ifft(U[:,2])./(1 .+ ϵ*real.(ifft(∂ₓ.*fft(xv)) )) ), x + ϵ*xv
 		end
 
 		# Water Waves equations are ∂t U = f(U)

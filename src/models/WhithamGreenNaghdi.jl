@@ -27,9 +27,9 @@ the fully dispersive Green-Naghdi model proposed by [Duchêne, Israwi and Talhou
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
 1. a function `WhithamGreenNaghdi.f!` to be called in explicit time-integration solvers;
 2. a function `WhithamGreenNaghdi.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
-3. a function `WhithamGreenNaghdi.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
-    - `η` is the surface deformation;
-    - `v` is the derivative of the trace of the velocity potential;
+3. a function `WhithamGreenNaghdi.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
+	- `η` is the values of surface deformation at collocation points `x`;
+	- `v` is the derivative of the trace of the velocity potential at `x`;
 4. additionally, a handy function `WhithamGreenNaghdi.mapfrofull` which from data matrix returns the Tuple of real vectors `(η,v,u)`, where
     - `u` corresponds to the layer-averaged velocity.
 
@@ -162,12 +162,13 @@ mutable struct WhithamGreenNaghdi <: AbstractModel
 			return U
 		end
 
-		# Return `(η,v)`, where
+		# Reconstruct physical variables from raw data
+		# Return `(η,v,x)`, where
 		# - `η` is the surface deformation;
-		# - `v` is the derivative of the trace of the velocity potential.
-		# Inverse Fourier transform and takes the real part.
+		# - `v` is the derivative of the trace of the velocity potential;
+		# - `x` is the vector of collocation points
 		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2]))
+			real(ifft(U[:,1])),real(ifft(U[:,2])),mesh.x
 		end
 		# Return `(η,v,u)`, where
 		# - `η` is the surface deformation;

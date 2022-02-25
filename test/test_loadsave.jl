@@ -10,7 +10,7 @@ import WaterWaves1D: load_model
 import WaterWaves1D: load_init
 
 @testset "LoadSave" begin
- 
+
     init  = Init(x->exp.(-1/8*x.^4),x-> 0. * x )
 
     para  = ( ϵ  = 0.01, μ = 0.01)  # physical parameters
@@ -55,13 +55,13 @@ import WaterWaves1D: load_init
     times = load_times(save_filename)
     @test times == problem.times
 
-    dump(save_filename, problem.mesh)
-    mesh = load_mesh(save_filename)
-    @test mesh == problem.mesh
+    #dump(save_filename, problem.mesh)
+    #mesh = load_mesh(save_filename)
+    #@test mesh == problem.mesh
 
     dump(save_filename, problem.data)
     data = load_data(save_filename)
     @test length(data) == length(problem.data)
 
- 
+
 end

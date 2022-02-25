@@ -26,11 +26,9 @@ the Isobe-Kakinuma model proposed by [Isobe](https://doi.org/10.1061/97807844008
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
 1. a function `IsobeKakinuma.f!` to be called in explicit time-integration solvers;
 2. a function `IsobeKakinuma.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
-3. a function `IsobeKakinuma.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
-    - `η` is the surface deformation;
-    - `v` is the derivative of the trace of the velocity potential;
-4. additionally, a handy function `IsobeKakinuma.mapfrofull` which from data matrix returns the Tuple of real vectors `(η,v,Φ)`, where
-    - `Φ` is the Vector of the basis functions `ϕi` (`i∈{0,...,N}`).
+3. a function `IsobeKakinuma.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
+    - `η` is the values of surface deformation at collocation points `x`;
+    - `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
 mutable struct IsobeKakinuma <: AbstractModel
@@ -39,7 +37,6 @@ mutable struct IsobeKakinuma <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	mapfrofull	:: Function
 	info	:: String
 
     function IsobeKakinuma(param::NamedTuple;
@@ -157,26 +154,15 @@ mutable struct IsobeKakinuma <: AbstractModel
 			return U
 		end
 
-		# Return `(η,v)`, where
-		# - `η` is the surface deformation;
-		# - `v` is the derivative of the trace of the velocity potential.
-		# Inverse Fourier transform and takes the real part.
-		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2]))
-		end
-		# Returns `(η,v,u)`, where
+		# Reconstruct physical variables from raw data
+		# Return `(η,v,x)`, where
 		# - `η` is the surface deformation;
 		# - `v` is the derivative of the trace of the velocity potential;
-		# - `u` corresponds to the layer-averaged velocity.
-		# Inverse Fourier transform and take the real part, plus solves the costly elliptic problem for `u`.
-		function mapfrofull(U)   # remains to be done
-				fftη .= U[:,1]
-			   	h .= 1 .+ ϵ*ifft(fftη)
-				L .= Id - 1/3 * Diagonal(Π⅔) * FFT * Diagonal( 1 ./h ) * M₀ * Diagonal( h.^3 ) * IFFTF₀
-
-				   real(ifft(U[:,1])),real(ifft(U[:,2])),real(ifft(L \ U[:,2]))
+		# - `x` is the vector of collocation points
+		function mapfro(U)
+			real(ifft(U[:,1])),real(ifft(U[:,2])),mesh.x
 		end
 
-        new(label, f!, mapto, mapfro, mapfrofull, info)
+        new(label, f!, mapto, mapfro, info)
     end
 end

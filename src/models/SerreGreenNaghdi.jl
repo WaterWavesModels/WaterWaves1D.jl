@@ -26,9 +26,9 @@ the Serre-Green-Naghdi model ([Serre](https://10.1051/lhb/1953058), [Su and Gard
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
 1. a function `SerreGreenNaghdi.f!` to be called in explicit time-integration solvers;
 2. a function `SerreGreenNaghdi.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
-3. a function `SerreGreenNaghdi.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v)`, where
-    - `η` is the surface deformation;
-    - `v` is the derivative of the trace of the velocity potential;
+3. a function `SerreGreenNaghdi.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
+    - `η` is the values of surface deformation at collocation points `x`;
+    - `v` is the derivative of the trace of the velocity potential at `x`;
 4. additionally, a handy function `SerreGreenNaghdi.mapfrofull` which from data matrix returns the Tuple of real vectors `(η,v,u)`, where
     - `u` corresponds to the layer-averaged velocity.
 

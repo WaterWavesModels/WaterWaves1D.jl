@@ -92,20 +92,21 @@ function solution(p::Problem; t=nothing, x=nothing, interpolation = false)
 	t=min(max(t,0),p.times.ts[end])
 	index = findfirst(p.times.ts.>=t)
 	t=p.times.ts[index]
+
 	if Symbol(typeof(p.model)) == :WaterWaves
 		if !isnothing(x) || interpolation != false
-			@warn "cannot interpolate non-regularly spaced mesh."
+			@warn "Cannot interpolate non-regularly spaced mesh."
 		end
-		(x,η,v) = (p.model.mapfro)(p.data.U[index])
+		(η,v,x) = (p.model.mapfro)(p.data.U[index])
 
 	else
-    	(η,v) = (p.model.mapfro)(p.data.U[index])
-		mesh=p.mesh
-		if !isnothing(x)
+		(η,v,y) = (p.model.mapfro)(p.data.U[index])
+		mesh=Mesh(y)
+		if isnothing(x)
+			x = y
+		else
 			η = interpolate(mesh,η,x)
 			v = interpolate(mesh,v,x)
-		else
-			x=mesh.x
 		end
 		if interpolation == true
 			new_mesh,η = interpolate(mesh,η)
