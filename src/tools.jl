@@ -164,11 +164,15 @@ Keyword argument `t` is optional, the last computed time is used by default.
 """
 function energy(p::Problem; t=nothing)
 	η,v,x,t = solution(p;t=t)
-	e = try p.model.energy(η,v)
-	catch
-		 @error("The energy cannot be computed: the model does not implement it.")
+	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
+		@error("The energy cannot be computed because the solution is defined on a non-regularly spaced mesh.")
 	end
-	return e
+	mesh=Mesh(x)
+	U=p.model.mapto(Init(mesh,η,v));
+	∂ₓ=1im*mesh.k;
+	p.model.f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
+	m=real(ifft(fftm));
+	@. mesh.dx/2*($sum(η^2) + $sum(v*m))
 end
 
 """
@@ -224,10 +228,19 @@ If keyword argument `rel=true` (default is false), then compute the relative dif
 function energydiff(p::Problem; t=nothing, rel=false)
 	η,v,x,t = solution(p;t=t)
 	η0,v0,x0,t0 = solution(p;t=0)
-
-	e = try p.model.energydiff(η,v,η0,v0;rel=rel)
-	catch
-		@error("The energy difference cannot be computed: the model does not implement it.")
+	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
+		@error("The energy difference cannot be computed because the solution is defined on a non-regularly spaced mesh.")
 	end
-	return e
+	mesh=Mesh(x)
+	U=p.model.mapto(Init(mesh,η,v)); 
+	U0=p.model.mapto(Init(mesh,η0,v0));
+	∂ₓ=1im*mesh.k;
+	p.model.f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
+	p.model.f!(U0);fftm0=-U0[:,1]./∂ₓ;fftm0[1]=0;
+	m=real(ifft(fftm));	m0=real(ifft(fftm0));
+	if rel == false
+		return @. mesh.dx/2*($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*m+v0*(m-m0)))
+	else
+		return @. ($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*m+v0*(m-m0)))/($sum(η0^2) + $sum(v0*m0))
+	end
 end
