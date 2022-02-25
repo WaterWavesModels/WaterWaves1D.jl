@@ -116,11 +116,11 @@ function plot_solution!( plt, problems; t=nothing,x=nothing,interpolation=false,
 		end
 		# retrieve the solution to be plotted
 		if !isnothing(x)  # interpolate the solution to collocation points x
-			(η,v) = solution(p;t=t)
+			(η,v,y) = solution(p;t=t)
 			fftη = fft(η); fftv = fft(v)
 			(η,v,X,t) = solution(p;t=t,x=x)
 		else
-			(η,v) = solution(p;t=t)
+			(η,v,y) = solution(p;t=t)
 			fftη = fft(η); fftv = fft(v)
 			(η,v,X,t) = solution(p;t=t,interpolation=interpolation)
 		end
@@ -149,7 +149,7 @@ function plot_solution!( plt, problems; t=nothing,x=nothing,interpolation=false,
 		# plot the discrete fourier coefficients (in log scale)
 		if fourier
 			if !all(isnan,fftη)
-	    		plot!(plt[n,1], fftshift(p.mesh.k)[indices],
+	    		plot!(plt[n,1], fftshift(Mesh(y).k)[indices],
 	          		eps(1.).+abs.(fftshift(fftη))[indices];
 			  		title="Fourier coefficients (log scale)",
 			  		#yaxis="log scale",
@@ -213,13 +213,13 @@ function plot_difference!( plt, problems; t=nothing,x=nothing,interpolation=fals
 		end
 		# retrieve the solution to be plotted
 		if !isnothing(x)  # interpolate the solution to collocation points x
-			(η1,v1) = solution(p1;t=t); (η2,v2) = solution(p2;t=t);
+			(η1,v1,x1) = solution(p1;t=t); (η2,v2) = solution(p2;t=t);
 			fftη1 = fft(η1); fftv1 = fft(v1); fftη2 = fft(η2); fftv2 = fft(v2);
 			(η1,v1,X1,t) = solution(p1;t=t,x=x)
 			(η2,v2,X2,t) = solution(p2;t=t,x=x)
 
 		else
-			(η1,v1) = solution(p1;t=t); (η2,v2) = solution(p2;t=t);
+			(η1,v1,x1) = solution(p1;t=t); (η2,v2) = solution(p2;t=t);
 			fftη1 = fft(η1); fftv1 = fft(v1); fftη2 = fft(η2); fftv2 = fft(v2);
 			(η1,v1,X1,t) = solution(p1;t=t,interpolation=interpolation)
 			if fast==true #will not interpolate to X1 if fast == true
@@ -256,7 +256,7 @@ function plot_difference!( plt, problems; t=nothing,x=nothing,interpolation=fals
 		# plot the discrete fourier coefficients (in log scale)
 		if fourier
 			if !all(isnan,fftη1-fftη2)
-	    		plot!(plt[n,1], fftshift(p1.mesh.k)[indices],
+	    		plot!(plt[n,1], fftshift(Mesh(x1).k)[indices],
 	          		eps(1.).+abs.(fftshift(fftη1-fftη2))[indices];
 			  		title="Fourier coefficients (log scale)",
 			  		#yaxis="log scale",
