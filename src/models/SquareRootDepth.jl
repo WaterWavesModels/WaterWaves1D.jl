@@ -40,6 +40,8 @@ mutable struct SquareRootDepth <: AbstractModel
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
+	energy	:: Function
+	energydiff	:: Function
 	info	:: String
 
     function SquareRootDepth(param::NamedTuple;
@@ -167,6 +169,28 @@ mutable struct SquareRootDepth <: AbstractModel
 				   real(ifft(U[:,1])),real(ifft(U[:,2])),real(ifft(L \ U[:,2]))
 		end
 
-        new(label, f!, mapto, mapfro, mapfrofull, info)
+		function energy(η,v)
+			U=mapto(Init(mesh,η,v));
+			f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
+			m=real(ifft(fftm));
+			@. mesh.dx/2*($sum(η^2) + $sum(v*m))
+
+		end
+
+		function energydiff(η,v,η0,v0;rel=nothing)
+			U=mapto(Init(mesh,η,v)); U0=mapto(Init(mesh,η0,v0));
+			f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
+			f!(U0);fftm0=-U0[:,1]./∂ₓ;fftm0[1]=0;
+			m=real(ifft(fftm));	m0=real(ifft(fftm0));
+			if rel == true
+				δE = @. ($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*m+v0*(m-m0)))/($sum(η0^2) + $sum(v0*m0))
+			else
+				δE = @. mesh.dx/2*($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*m+v0*(m-m0)))
+			end
+			return δE
+		end
+
+
+        new(label, f!, mapto, mapfro, mapfrofull, energy, energydiff, info)
     end
 end

@@ -38,6 +38,8 @@ mutable struct WhithamBoussinesq <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	energy	:: Function
+	energydiff	:: Function
 	info 	:: String
 
     function WhithamBoussinesq(param::NamedTuple;Boussinesq=false,
@@ -131,6 +133,27 @@ mutable struct WhithamBoussinesq <: AbstractModel
 			real(ifft(U[:,1])),real(ifft(U[:,2])),mesh.x
 		end
 
-        new(label, f!, mapto, mapfro, info )
+		function energy(η,v)
+			U=mapto(Init(mesh,η,v));
+			f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
+			m=real(ifft(fftm))
+			@. mesh.dx/2*($sum(η^2) + $sum(v*m))
+
+		end
+
+		function energydiff(η,v,η0,v0;rel=nothing)
+			U=mapto(Init(mesh,η,v)); U0=mapto(Init(mesh,η0,v0));
+			f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
+			f!(U0);fftm0=-U0[:,1]./∂ₓ;fftm0[1]=0;
+			m=real(ifft(fftm));	m0=real(ifft(fftm0));
+			if rel == true
+				δE = @. ($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*m+v0*(m-m0)))/($sum(η0^2) + $sum(v0*m0))
+			else
+				δE = @. mesh.dx/2*($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*m+v0*(m-m0)))
+			end
+			return δE
+		end
+
+        new(label, f!, mapto, mapfro, energy, energydiff, info )
     end
 end

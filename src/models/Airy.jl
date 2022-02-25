@@ -32,24 +32,49 @@ mutable struct Airy <: AbstractModel
 	mapfro	:: Function
 	energy	:: Function
 	energydiff	:: Function
+	info 	:: String
+
 
     function Airy(param::NamedTuple; # param is a NamedTuple containing all necessary parameters
 		mesh = Mesh(param),
+		IL	    = false,
 		label = "linear (Airy)"  # using a keyword argument allows the user to supersede the default label.
 		 )
 
 		# Set up
 		μ = param.μ
-		if !in(:ν,keys(param)) # set default ν if it is not provided
-			ν = min(1,1/√μ)
+		if !in(:ν,keys(param))
+			if μ > 1
+				ν = 1/sqrt(μ)
+				nu = "1/√μ (deep water case)"
+			else
+				ν = 1
+				nu = "1 (shallow water case)"
+			end
 		else
 			ν = param.ν
+			nu = "$ν"
 		end
+		if μ == Inf || ν==0 || IL == true # infinite layer case
+			IL = true;  # IL (=Infinite layer) is a flag to be used thereafter
+			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
+		end
+
+		# Print information
+		info = "$label model.\n"
+		if IL == true
+			info *= "├─Infinite depth case.\n"
+		else
+			info *= "├─Shallowness parameter μ=$μ, \
+					scaling parameter ν=$nu.\n"
+		end
+		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
+		
 		# Collocation points and Fourier modes
 		x, k = mesh.x, mesh.k
 		# Fourier multipliers
     	∂ₓ	 = 1im * k            # Differentiation
-		if μ == Inf || ν == 0
+		if IL == true
 			∂ₓF₁ = 1im * sign.(k)
 		else
 			∂ₓF₁ = 1im * tanh.(√μ*k)/(√μ*ν)
@@ -84,19 +109,27 @@ mutable struct Airy <: AbstractModel
 		end
 
 		function energy(η,v)
-			F₁=∂ₓF₁./∂ₓ;F₁[1]=1;
-			Fv = real.(ifft(sqrt.(F₁).*fft(v))) ;
-			@. mesh.dx/2*($sum(η^2) + $sum(Fv^2))
+			U=mapto(Init(mesh,η,v));
+			f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
+			m=real(ifft(fftm))
+			@. mesh.dx/2*($sum(η^2) + $sum(v*m))
+
 		end
 
 		function energydiff(η,v,η0,v0;rel=nothing)
-			F₁=∂ₓF₁./∂ₓ;F₁[1]=1;
-			Fv = real.(ifft(sqrt.(F₁).*fft(v)) ) ;
-			Fv0= real.(ifft(sqrt.(F₁).*fft(v0))) ;
-			@. mesh.dx/2*($sum((η-η0)*η+η0*(η-η0)) + $sum((Fv-Fv0)*Fv+Fv0*(Fv-Fv0)))
+			U=mapto(Init(mesh,η,v)); U0=mapto(Init(mesh,η0,v0));
+			f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
+			f!(U0);fftm0=-U0[:,1]./∂ₓ;fftm0[1]=0;
+			m=real(ifft(fftm));	m0=real(ifft(fftm0));
+			if rel == true
+				δE = @. ($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*m+v0*(m-m0)))/($sum(η0^2) + $sum(v0*m0))
+			else
+				δE = @. mesh.dx/2*($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*m+v0*(m-m0)))
+			end
+			return δE
 		end
 
-        new(label, f!, mapto, mapfro, energy, energydiff )
+        new(label, f!, mapto, mapfro, energy, energydiff, info )
 
     end
 end
