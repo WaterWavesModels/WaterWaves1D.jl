@@ -32,8 +32,6 @@ mutable struct SaintVenant <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	energy	:: Function
-	energydiff	:: Function
 	info	:: String
 
     function SaintVenant(param::NamedTuple;
@@ -63,6 +61,6 @@ mutable struct SaintVenant <: AbstractModel
 		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
 
-		new(m.label, m.f!, m.mapto, m.mapfro, m.energy, m.energydiff, info)
+		new(m.label, m.f!, m.mapto, m.mapfro, info)
     end
 end

@@ -40,8 +40,6 @@ mutable struct NonHydrostatic <: AbstractModel
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
-	energy	:: Function
-	energydiff	:: Function
 	info	:: String
 
     function NonHydrostatic(param::NamedTuple;
@@ -175,28 +173,6 @@ mutable struct NonHydrostatic <: AbstractModel
 				   real(ifft(U[:,1])),real(ifft(U[:,2])),real(ifft(L \ U[:,2]))
 		end
 
-		function energy(η,v)
-			U=mapto(Init(mesh,η,v));
-			f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
-			mm=real(ifft(fftm))
-			@. mesh.dx/2*($sum(η^2) + $sum(v*mm))
-
-		end
-
-		function energydiff(η,v,η0,v0;rel=nothing)
-			U=mapto(Init(mesh,η,v)); U0=mapto(Init(mesh,η0,v0));
-			f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
-			f!(U0);fftm0=-U0[:,1]./∂ₓ;fftm0[1]=0;
-			mm=real(ifft(fftm));	mm0=real(ifft(fftm0));
-			if rel == true
-				δE = @. ($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*mm+v0*(mm-mm0)))/($sum(η0^2) + $sum(v0*mm0))
-			else
-				δE = @. mesh.dx/2*($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*mm+v0*(mm-mm0)))
-			end
-			return δE
-		end
-
-
-        new(label, f!, mapto, mapfro, mapfrofull, energy, energydiff, info)
+        new(label, f!, mapto, mapfro, mapfrofull, info)
     end
 end

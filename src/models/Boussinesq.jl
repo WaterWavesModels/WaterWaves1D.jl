@@ -34,8 +34,6 @@ mutable struct Boussinesq <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	energy	:: Function
-	energydiff	:: Function
 	info	:: String
 
     function Boussinesq(param::NamedTuple;
@@ -51,6 +49,6 @@ mutable struct Boussinesq <: AbstractModel
 							dealias=dealias,ktol=ktol,
 							label=label)
 
-		new(m.label, m.f!, m.mapto, m.mapfro, m.energy, m.energydiff, m.info)
+		new(m.label, m.f!, m.mapto, m.mapfro, m.info)
     end
 end

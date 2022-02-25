@@ -40,8 +40,6 @@ mutable struct SerreGreenNaghdi <: AbstractModel
 	mapto	:: Function
 	mapfro	:: Function
 	mapfrofull	:: Function
-	energy	:: Function
-	energydiff	:: Function
 	info	:: String
 
     function SerreGreenNaghdi(param::NamedTuple;
@@ -68,6 +66,6 @@ mutable struct SerreGreenNaghdi <: AbstractModel
 							label=label
 							)
 
-		new(m.label, m.f!, m.mapto, m.mapfro, m.mapfrofull, m.energy, m.energydiff, m.info )
+		new(m.label, m.f!, m.mapto, m.mapfro, m.mapfrofull, m.info )
     end
 end

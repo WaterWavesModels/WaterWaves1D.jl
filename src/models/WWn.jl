@@ -42,8 +42,6 @@ mutable struct WWn <: AbstractModel
 	f2!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
-	energy	:: Function
-	energydiff	:: Function
 	info 	:: String
 
     function WWn(param::NamedTuple;
@@ -130,6 +128,22 @@ mutable struct WWn <: AbstractModel
 		η = copy(z) ; v = copy(z) ; Lphi = copy(z) ; LzLphi = copy(z) ; dxv = copy(z) ;
 		fftη = copy(z) ; fftv = copy(z) ; Q = copy(z) ; R = copy(z) ;
 
+		# Build raw data from physical data.
+		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
+		function mapto(data::InitialData)
+			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
+			U[ abs.(U).< ktol ].=0
+			return U
+		end
+
+		# Reconstruct physical variables from raw data
+		# Return `(η,v,x)`, where
+		# - `η` is the surface deformation;
+		# - `v` is the derivative of the trace of the velocity potential;
+		# - `x` is the vector of collocation points
+		function mapfro(U)
+			real( ifft(U[:,1]) ),real( ifft(U[:,2]) ), mesh.x
+		end
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
@@ -231,46 +245,8 @@ mutable struct WWn <: AbstractModel
 
 		end
 
-		# Build raw data from physical data.
-		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
-		function mapto(data::InitialData)
-			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
-			U[ abs.(U).< ktol ].=0
-			return U
-		end
-
-		# Reconstruct physical variables from raw data
-		# Return `(η,v,x)`, where
-		# - `η` is the surface deformation;
-		# - `v` is the derivative of the trace of the velocity potential;
-		# - `x` is the vector of collocation points
-		function mapfro(U)
-			real( ifft(U[:,1]) ),real( ifft(U[:,2]) ), mesh.x
-		end
 
 
-		function energy(η,v)
-			U=mapto(Init(mesh,η,v));
-			f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
-			m=real(ifft(fftm))
-			@. mesh.dx/2*($sum(η^2) + $sum(v*m))
-
-		end
-
-		function energydiff(η,v,η0,v0;rel=nothing)
-			U=mapto(Init(mesh,η,v)); U0=mapto(Init(mesh,η0,v0));
-			f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
-			f!(U0);fftm0=-U0[:,1]./∂ₓ;fftm0[1]=0;
-			m=real(ifft(fftm));	m0=real(ifft(fftm0));
-			if rel == true
-				δE = @. ($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*m+v0*(m-m0)))/($sum(η0^2) + $sum(v0*m0))
-			else
-				δE = @. mesh.dx/2*($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*m+v0*(m-m0)))
-			end
-			return δE
-		end
-
-
-        new(label, f!, f1!, f2! , mapto, mapfro, energy, energydiff, info )
+        new(label, f!, f1!, f2! , mapto, mapfro, info )
     end
 end
