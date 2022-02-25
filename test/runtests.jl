@@ -42,10 +42,10 @@ end
 @testset "Preserved quantities" begin
     pb=Problem(Airy(param;mesh=Mesh(paramX)),Init(x->exp.(-x.^2),x->exp.(-x.^2)),paramT)
     solve!(pb)
-    @test isapprox(mass(pb),mass(pb;t=0),rtol=1e-5)
-    @test isapprox(momentum(pb),momentum(pb;t=0),rtol=1e-5)
-    #@test isapprox(energy(pb),energy(pb;t=0),rtol=1e-5)
-    @test isapprox(massdiff(pb),0,atol=1e-10)
-    @test isapprox(momentumdiff(pb),0,atol=1e-6)
-    #@test isapprox(energydiff(pb),0,atol=1e-5)
+    @test isapprox(mass(pb),mass(pb;t=0),rtol=1e-16)
+    @test isapprox(momentum(pb),momentum(pb;t=0),rtol=1e-6)
+    @test isapprox(energy(pb),energy(pb;t=0),rtol=1e-6)
+    @test abs(massdiff(pb))<1e-10
+    @test abs(momentumdiff(pb))<2e-6
+    @test abs(energydiff(pb))<1e-6
 end

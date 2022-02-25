@@ -30,6 +30,8 @@ mutable struct Airy <: AbstractModel
 	f!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
+	energy	:: Function
+	energydiff	:: Function
 
     function Airy(param::NamedTuple; # param is a NamedTuple containing all necessary parameters
 		mesh = Mesh(param),
@@ -81,6 +83,20 @@ mutable struct Airy <: AbstractModel
 			real(ifft(U[:,1])),real(ifft(U[:,2])),mesh.x
 		end
 
-        new(label, f!, mapto, mapfro )
+		function energy(η,v)
+			F₁=∂ₓF₁./∂ₓ;F₁[1]=1;
+			Fv = real.(ifft(sqrt.(F₁).*fft(v))) ;
+			@. mesh.dx/2*($sum(η^2) + $sum(Fv^2))
+		end
+
+		function energydiff(η,v,η0,v0;rel=nothing)
+			F₁=∂ₓF₁./∂ₓ;F₁[1]=1;
+			Fv = real.(ifft(sqrt.(F₁).*fft(v)) ) ;
+			Fv0= real.(ifft(sqrt.(F₁).*fft(v0))) ;
+			@. mesh.dx/2*($sum((η-η0)*η+η0*(η-η0)) + $sum((Fv-Fv0)*Fv+Fv0*(Fv-Fv0)))
+		end
+
+        new(label, f!, mapto, mapfro, energy, energydiff )
+
     end
 end

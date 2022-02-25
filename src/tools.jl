@@ -1,5 +1,4 @@
 export interpolate,solution,mass,momentum,energy,massdiff,momentumdiff,energydiff
-using Statistics
 
 """
     interpolate(mesh,vector;n=2^3)
@@ -134,7 +133,7 @@ function mass(p::Problem; t=nothing)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
 		@error("The excess of mass cannot be computed because the solution is defined on a non-regularly spaced mesh.")
 	else
-		return mean(η)
+		return sum(η)*(x[2]-x[1])
 	end
 end
 
@@ -151,7 +150,7 @@ function momentum(p::Problem; t=nothing)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
 		@error("The horizontal impulse cannot be computed because the solution is defined on a non-regularly spaced mesh.")
 	else
-		return mean(η.*v)
+		return sum(η.*v)*(x[2]-x[1])
 	end
 end
 
@@ -188,7 +187,7 @@ function massdiff(p::Problem; t=nothing,rel=false)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
 		@error("The excess of mass difference cannot be computed because the solution is defined on a non-regularly spaced mesh.")
 	else
-		if rel==false return mean(η-η0) else return sum(η-η0)/sum(η0) end
+		if rel==false return sum(η-η0)*(x[2]-x[1]) else return sum(η-η0)/sum(η0) end
 	end
 end
 
@@ -208,21 +207,25 @@ function momentumdiff(p::Problem; t=nothing,rel=false)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
 		@error("The horizontal impulse difference cannot be computed because the solution is defined on a non-regularly spaced mesh.")
 	else
-		if rel==false return mean((η-η0).*v+η0.*(v-v0)) else return sum((η-η0).*v+η0.*(v-v0))/sum(η0.*v0) end
+		if rel==false return sum((η-η0).*v+η0.*(v-v0))*(x[2]-x[1]) else return sum((η-η0).*v+η0.*(v-v0))/sum(η0.*v0) end
 	end
 end
 
 """
     energydiff(pb::Problem;t)
 
-Compute the excess of mass of a solved initial-value problem `pb` at a given time `t`.
+Compute the difference of energy of a solved initial-value problem `pb` between given time `t` and initial time.
+
+Keyword argument `t` is optional, the last computed time is used by default.
+
+If keyword argument `rel=true` (default is false), then compute the relative difference (with initial value as reference).
 
 """
-function energydiff(p::Problem; t=nothing)
+function energydiff(p::Problem; t=nothing, rel=false)
 	η,v,x,t = solution(p;t=t)
 	η0,v0,x0,t0 = solution(p;t=0)
 
-	e = try p.model.energydiff(η,v,η0,v0)
+	e = try p.model.energydiff(η,v,η0,v0;rel=rel)
 	catch
 		@error("The energy difference cannot be computed: the model does not implement it.")
 	end
