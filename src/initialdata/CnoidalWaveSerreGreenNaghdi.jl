@@ -7,7 +7,7 @@ using Elliptic
 Compute the Serre-Green-Naghdi cnoidal wave with prescribed `h₀<h₁<h₂`.
 `h₁` is the minimum, `h₂` is the maximum of the wave.
 As `h₀ -> h₁`, the cnoidal wave converges towards the solitary wave.
-See for instance Gavrilyuk, Nkonga, Shyue and Truskinovsky, doi:10.1088/1361-6544/ab95ac
+See for instance [Gavrilyuk, Nkonga, Shyue and Truskinovsky](https://doi.org/10.1088/1361-6544/ab95ac).
 
 # Arguments
 - `param :: NamedTuple`: parameters of the problem containing `h₀<h₁<h₂` and dimensionless parameters `ϵ` and `μ`, and number of collocation points `N`.

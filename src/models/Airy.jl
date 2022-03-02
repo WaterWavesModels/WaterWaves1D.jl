@@ -61,9 +61,9 @@ mutable struct Airy <: AbstractModel
 		# Print information
 		info = "$label model.\n"
 		if IL == true
-			info *= "├─Infinite depth case.\n"
+			info *= "└─Infinite depth case.\n"
 		else
-			info *= "├─Shallowness parameter μ=$μ, \
+			info *= "└─Shallowness parameter μ=$μ, \
 					scaling parameter ν=$nu.\n"
 		end
 		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
