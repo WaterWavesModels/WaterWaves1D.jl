@@ -366,6 +366,24 @@ with notations as above, ``L^μ=\frac{ν\sqrtμ D}{\tanh(\sqrtμ D)}`` and where
 
 The associated codes is [`AkersNicholls`](@ref WaterWaves1D.AkersNicholls), and [`AkersNicholls_fast`](@ref WaterWaves1D.AkersNicholls_fast) for a less human-readable but more efficient version.
 
+## Mass, momentum, energy
+
+Solutions to the water waves equations preserve along time (among other integrals of motion listed by [Benjamin and Olver](https://doi.org/10.1017/S0022112082003292))
+- the excess of mass,
+```math
+\int η(t,x)\, {\rm d}x\ ;
+```
+- the momentum (or rather the horizontal impulse),
+```math
+\int (η ∂_xψ)(t,x)\, {\rm d}x\ ;
+```
+- the total energy,
+```math
+\frac12 \int (η^2 + \tfrac{1}{μν} ψ G^μ[ϵη]ψ)(t,x)\, {\rm d}x\ .
+```
+Such is also the case for solutions to all models cited above using as velocity variable ``v=∂_xψ`` (with analogous formula).
+
+The numerical discretization of these preserved quantities, coded in [`mass`](@ref WaterWaves1D.mass), [`momentum`](@ref WaterWaves1D.momentum), [`energy`](@ref WaterWaves1D.energy) (and [`massdiff`](@ref WaterWaves1D.massdiff), [`momentumdiff`](@ref WaterWaves1D.momentumdiff), [`energydiff`](@ref WaterWaves1D.energydiff)) provide valuable insights at the precision of a computed numerical solution.
 
 ## Pseudospectral methods
 
