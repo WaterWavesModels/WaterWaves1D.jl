@@ -1,5 +1,7 @@
 # Code basics
 
+## Structures
+
 Under construction
 
 ## How to...
@@ -8,7 +10,7 @@ Under construction
 and integrating new blocks to the package is easy. If you ever do so, please do not hesitate to contact the
 [developers](home.md#Developers) to either get help, or report on your advances.
 
-### add your model
+### build your model
 
 Let us add the linear ([Airy](https://en.wikipedia.org/wiki/Airy_wave_theory)) water waves model whose equations are (using the same notations as [here](background.md))
 ```math
@@ -17,7 +19,7 @@ Let us add the linear ([Airy](https://en.wikipedia.org/wiki/Airy_wave_theory)) w
   ∂_tv+∂_xη=0,
   \end{array}\right.
 ```
-where ``F_1^μ=`` (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
+where we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space.
 
 In a dedicated file we write
 ```julia
@@ -35,9 +37,9 @@ end
 
 Our purpose is to provide
 - `label`, a string used in subsequent informational messages, plots, etc.
-- `f!` a function to be called in explicit time-integration solvers such as [`Euler`](@ref WaterWaves1D.Euler) or [`RK4`](@ref WaterWaves1D.RK4) (one may provide other functions to be used with other solvers such as [`EulerSymp`](@ref WaterWaves1D.EulerSymp))
-- `WhithamBoussinesq.mapto` a function which from  a couple `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed
-- `WhithamBoussinesq.mapfro` a function which from raw data returns `(η,v,x)` where
+- `f!`, a function to be called in explicit time-integration solvers such as [`Euler`](@ref WaterWaves1D.Euler) or [`RK4`](@ref WaterWaves1D.RK4) (one may provide other functions to be used with other solvers such as [`EulerSymp`](@ref WaterWaves1D.EulerSymp))
+- `mapto`, a function which from  a couple `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed
+- `mapfro`, a function which from raw data returns `(η,v,x)` where
     - `η` is the values of surface deformation at collocation points `x`;
     - `v` is the derivative of the trace of the velocity potential at `x`.
 
@@ -100,6 +102,12 @@ using WaterWaves1D
 model = Airy((μ=1,L=2π,N=2^8))
 ```
 
-### add your initial data
+### build your initial data
 
-### add your solver
+### build your time solver
+
+### access to and manage your data
+
+### plot your data
+
+### save and load your data
