@@ -10,7 +10,6 @@ para = ( ϵ  = 0.01, μ = 0.01)  # physical parameters
 paraX= ( N  = 2^6, L  = 4)   # mesh with 64 collocation points on [-4,4]
 paraT= ( T  = 1e-1, dt = 1e-2) # timegrid with 10 instants: t=[0.0:1.0:10.0]/100
 param = merge(para,paraX)  # used to construct models
-parap = merge(paraX,paraT) # used to construct problems
 
 models=[];precisions=[]
 
@@ -202,14 +201,14 @@ modelWW =  WaterWaves(merge(param,(ν=1,));
 					ktol	= 1e-10,
 					label	= "water waves (shallow water)",
 					verbose	= false)
-pbWW = Problem( modelWW, init, parap )
+pbWW = Problem( modelWW, init, paraT )
 solve!(pbWW;verbose=false)
 ηWW,vWW,xWW=solution(pbWW)
 
 realp=[]
 for i in 1:length(models)
     # build the initial-value problem
-    problem = Problem( models[i], init, parap )
+    problem = Problem( models[i], init, paraT )
     # solve the initial-value problem
     solve!(problem ; verbose=false)
     # check the order of magnitude of the precision is correct (from above and from below)
@@ -227,7 +226,6 @@ para = ( ϵ  = 0.1, μ = 100)  # physical parameters
 paraX= ( N  = 2^6, L  = 4)   # mesh with 64 collocation points on [-4,4]
 paraT= ( T  = 1e-1, dt = 1e-2) # timegrid with 10 instants: t=[0.0:1.0:10.0]/100
 param = merge(para,paraX)  # used to construct models
-parap = merge(paraX,paraT) # used to construct problems
 
 # Build deep layer models
 push!(models, modifiedMatsuno(merge(param,(ν=1/√para.μ,));
@@ -282,14 +280,14 @@ modelWW = WaterWaves(param;
 					ktol	= 1e-10,
 					label	= "water waves (deep water)",
 					verbose	= false)
-pbWW = Problem( modelWW, init, parap )
+pbWW = Problem( modelWW, init, paraT )
 solve!(pbWW;verbose=false)
 ηWW,vWW,xWW=solution(pbWW)
 
 
 for i in 1:length(models)
     # build the initial-value problem
-    problem = Problem( models[i], init, parap )
+    problem = Problem( models[i], init, paraT )
     # solve the initial-value problem
     solve!(problem ; verbose=false)
     # check the order of magnitude of the precision is correct (from above and from below)
@@ -307,8 +305,6 @@ para = ( ϵ  = 0.1, μ = Inf)  # physical parameters
 paraX= ( N  = 2^6, L  = 4)   # mesh with 64 collocation points on [-4,4]
 paraT= ( T  = 1e-1, dt = 1e-2) # timegrid with 10 instants: t=[0.0:1.0:10.0]/100
 param = merge(para,paraX)  # used to construct models
-parap = merge(paraX,paraT) # used to construct problems
-
 
 # Build infinite layer models
 push!(models, modifiedMatsuno(param;
@@ -374,13 +370,13 @@ modelWW =  WaterWaves(param;
 					ktol	= 1e-14,
 					label	= "water waves (infinite layer)",
 					verbose	= false)
-pbWW = Problem( modelWW, init, parap )
+pbWW = Problem( modelWW, init, paraT )
 solve!(pbWW;verbose=false)
 ηWW,vWW,xWW=solution(pbWW)
 
 for i in 1:length(models)
     # build the initial-value problem
-    problem = Problem( models[i], init, parap )
+    problem = Problem( models[i], init, paraT )
     # solve the initial-value problem
     solve!(problem ; verbose=false)
     # check the order of magnitude of the precision is correct (from above and from below)

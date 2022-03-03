@@ -11,17 +11,16 @@ May be built, e.g., by `WaterWaves(param)`;
 - `initial :: InitialData`, the initial data.
 May be buit, e.g., by `Init(η,v)` where
 `η` is the surface deformation and `v` the derivative of the trace of the velocity potential at the surface;
-- `param   :: NamedTuple`, must contain values for
-    - `N`, the number of collocation points of the spatial grid
-    - `L`, the half-length of the spatial grid
+- `times :: Times` is the time grid, and may be built using the function `Times`. 
+Alternatively one can simply provide a `NamedTuple` with
     - `T`, the final time of integration
     - `dt`, the timestep
-    - additionally, it may contain `Ns` the number of computed data or `ns` for storing data every `ns` computation steps (by default, every computed data is stored).
+    - optionally, `Ns` the number of computed data or `ns` for storing data every `ns` computation steps (by default, every computed data is stored).
 
 ## Optional keyword arguments
 - `solver :: TimeSolver`, the solver for time integration (default is explicit Runge-Kutta fourth order solver).
 May be built, e.g., by `RK4(model)` or `RK4_naive()`.
-- label   :: String ` is used in future references (e.g. `plot_solution`).
+- `label   :: String ` is used in future references (e.g. `plot_solution`).
 - Information are not printed if `verbose = false` (default is `true`).
 
 """
@@ -32,25 +31,16 @@ mutable struct Problem
     solver  :: TimeSolver
     times   :: Times
     data    :: Data
-    param   :: NamedTuple
     label   :: String
 
     function Problem(model   :: AbstractModel,
-                     initial :: InitialData,
-                     param   :: NamedTuple;
-                     solver = RK4(model)  :: TimeSolver,
-                     label = nothing
-                     )
-
+        initial :: InitialData,
+        times   :: Times;
+        solver = RK4(model)  :: TimeSolver,
+        label = nothing
+        )
+        
         if isnothing(label)   label = model.label end
-
-        if in(:Ns,keys(param))
-            times = Times(param; Ns = param.Ns)
-        elseif in(:ns,keys(param))
-            times = Times(param; ns = param.ns)
-        else
-            times = Times(param)
-        end
 
         U = model.mapto(initial)
         data  = Data(U)
@@ -69,7 +59,29 @@ mutable struct Problem
             @warn "The model and the solver are incompatible. `solve!` will not work."
         end
 
-        new(model, initial, solver, times, data, param, label)
+        new(model, initial, solver, times, data, label)
+
+    end
+
+    function Problem(model   :: AbstractModel,
+        initial :: InitialData,
+        param   :: NamedTuple;
+        solver = RK4(model)  :: TimeSolver,
+        label = nothing
+        )
+
+
+        if in(:Ns,keys(param))
+        times = Times(param; Ns = param.Ns)
+        elseif in(:ns,keys(param))
+        times = Times(param; ns = param.ns)
+        else
+        times = Times(param)
+        end
+
+        p = Problem(model, initial, times; solver = solver, label = label)
+
+        new(p.model, p.initial, p.solver, p.times, p.data, p.label)
 
     end
 

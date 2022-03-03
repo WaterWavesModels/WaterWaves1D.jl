@@ -5,7 +5,6 @@ para = ( ϵ  = 0.1, μ = 0.1)  # physical parameters
 paraX= ( N  = 6, L  = 3)   # mesh with 6 collocation points: x=[-3.0, -2.0, -1.0, 0.0, 1.0, 2.0]
 paraT= ( T  = 2.5, dt = 1) # timegrid with three instants: t=[0.0, 1.0, 2.0]
 param = merge(para,paraX)  # used to construct models
-parap = merge(paraX,paraT) # used to construct problems
 
 #--- initial data
 init     = Init(x->exp.(-x.^2),x-> x )
@@ -257,7 +256,7 @@ push!(models, WaterWaves(merge(param,(ν=1/2,));
 #--- tests
 for model in models
     # build the initial-value problem
-    problem = Problem( model, init, parap )
+    problem = Problem( model, init, paraT )
     # solve the initial-value problem
     solve!(problem ; verbose=false)
     # check everything went well

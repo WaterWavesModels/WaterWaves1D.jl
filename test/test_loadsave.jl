@@ -43,9 +43,9 @@ import WaterWaves1D: load_init
     dump(save_filename, init)
     @test load_init(save_filename) == "user-defined"
 
-    dump(save_filename, param)
-    saved_param = load_param( save_filename )
-    @test saved_param ≈ param
+    #dump(save_filename, param)
+    #saved_param = load_param( save_filename )
+    #@test saved_param ≈ param
 
     dump(save_filename, problem.solver)
     solver = load_timesolver(save_filename)
