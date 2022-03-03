@@ -160,6 +160,45 @@ using WaterWaves1D
 init = Heap(1)
 ```
 
+### build your time solver
+
+As an example, let us review how the explicit Euler solver, [`Euler`](@ref WaterWaves1D.Euler), is built.
+
+
+In a dedicated file we write
+```julia
+struct Euler <: TimeSolver
+    U1 :: Array
+    label :: String
+
+    function Euler( U :: Array; realdata=nothing )
+        U1 = copy(U)
+        if realdata==true
+            U1 = real.(U1);
+        end
+        if realdata==false
+            U1 = complex.(U1);
+        end
+        new( U1, "Euler" )
+    end
+end
+```
+
+Here, `Euler.U1` is a pre-allocated vector which can be used to speed-up calculations, and `Euler-label` is the string `"Euler"`, used for future references. The optional keyword argument `realdata` allows to specify the type of data which the solver will take as arguments: either complex or real vectors. 
+
+We shall now add one method to the function `step!`, performing the explicit Euler step: that is replacing a vector `U` with `U+dt*f(U)` where `f` is provided by the model at stake.
+```julia
+export step!
+function step!(solver :: Euler,
+                model :: AbstractModel,
+                U  ,
+                dt )
+
+    solver.U1 .= U        # allocate U to U1
+    model.f!( solver.U1 ) # model.f!(U) replaces its argument U with f(U)
+    U .+= dt .* solver.U1 # update U
+end
+```
 
 ### access to and manage your data
 
