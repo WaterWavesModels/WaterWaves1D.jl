@@ -1,8 +1,32 @@
 # Code basics
 
-## Structures
+## Problems
 
-Under construction
+A central object in [`WaterWaves1D.jl`](https://github.com/WaterWavesModels/WaterWaves1D.jl/) is the [`Problem`](@ref WaterWaves1D.Problem)) structure, which contains all information on a numerically discretized initial-value problem. In practice, a problem is generated as 
+```
+  problem = Problem( model, initial, times ; solver, label )
+```
+ where
+ - `model` is related to the (spatially discretized) equation at stake. [Built-in models](index.md#Models) are typically generated as 
+```
+  model = TheModel( param ; kwargs )
+```
+where `param` is a `NamedTuple` containing relevant parameters of the model and of the spatial grid,  and `kwargs` are some optional arguments allowing some choices in the discretization (for instance [dealiasing](background.md#Pseudospectral-methods)), and a label for future references.
+- `inital` is the couple of initial data. It can be generated for instance using the function [`Init`](@ref WaterWaves1D.Init) as  
+```
+  initial = Init( η, v )
+```
+where `η` and `v` are two functions (representing respectively the surface deformation and the derivative of the trave of the velocity potential at the surface). Alternatively, it can also be built from the values of these functions at equally-spaced collocation points.
+- `times` contains relevant parameters of the time integration: in particular the final time  `T` and the time-step `dt`. It can be a `NamedTuple` with these informations or generated via the function [`Times`](@ref WaterWaves1D.Times).
+- optionally, the time-solver `solver` can be provided (built-in solvers are the explicit Euler solver, [`Euler`](@ref WaterWaves1D.Euler) and [`Euler_naive`](@ref WaterWaves1D.Euler_naive), a symplectic Euler solver, [`EulerSymp`](@ref WaterWaves1D.EulerSymp), and the explicit Runge-Kutta 4 solver, [`RK4`](@ref WaterWaves1D.RK4) and [`RK4_naive`](@ref WaterWaves1D.RK4_naive)). By default the RK4 solver is used.
+- optionally, a string `label` can be provided for future reference. It is inferred from the model if not provided.
+
+The container `problem` then 
+Once it has been built, `problem` contains, in addition to `model`, `initial`, `times`, `solver` and `label`, the raw data `data` (initially just the initial data). The initial-value problem is then numerically integrated (filling `data`) simply using
+```
+  solve!(problem)
+```
+
 
 ## How to...
 
@@ -12,7 +36,7 @@ and integrating new blocks to the package is easy. If you ever do so, please do 
 
 ### build your model
 
-Let us add the linear ([Airy](https://en.wikipedia.org/wiki/Airy_wave_theory)) water waves model whose equations are (using the same notations as [here](background.md))
+Let us add the linear ([Airy](https://en.wikipedia.org/wiki/Airy_wave_theory)) water waves model whose equations are (using the notations introduced [here](background.md))
 ```math
   \left\{\begin{array}{l}
   ∂_tη+\frac{\tanh(\sqrt{μ} D)}{ν\sqrt{μ} D}∂_xv=0,\\[1ex]
@@ -96,7 +120,7 @@ and the (half-)size of the domain and provides the vector of collocations points
 and Fourier wavenumbers (see [this discussion](background.md#Pseudospectral-methods)).
 
 The Airy model can now be built as follows
-```@example 2
+```julia
 using WaterWaves1D
 # include your file
 model = Airy((μ=1,L=2π,N=2^8))
@@ -104,7 +128,6 @@ model = Airy((μ=1,L=2π,N=2^8))
 
 ### build your initial data
 
-### build your time solver
 
 ### access to and manage your data
 
