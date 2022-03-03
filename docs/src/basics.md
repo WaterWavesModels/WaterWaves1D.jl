@@ -128,6 +128,38 @@ model = Airy((μ=1,L=2π,N=2^8))
 
 ### build your initial data
 
+The simplest way to build an initial data is to use the function [`Init`](@ref WaterWaves1D.Init), which takes as argument either
+- a function `η` and a function `v` (in this order);
+- an array of collocation points and two vectors representing `η(x)` and `v(x)` (in this order);
+- a `mesh` (generated with [`Mesh`](@ref WaterWaves1D.Mesh)) and two vectors representing `η(mesh.x)` and `v(mesh.x)` (in this order).
+
+Some relevant initial data (e.g. travelling waves) are built-in; see [the index section](index.md#Initial-data). You can build your own in the following lines.
+```julia
+struct Heap <: InitialData
+	η
+	v
+	label :: String
+	info  :: String
+
+	function Heap(L)
+		η=x->exp.(-(L*x).^2)
+    v=x->zero(x)
+		init = Init(η,v)
+		label = "Heap"
+		info = "Heap of water, with length L=$L."
+
+		new( init.η,init.v,label,info  )
+	end
+end
+```
+
+The corresponding initial data can now be built as follows
+```julia
+using WaterWaves1D
+# include your file
+init = Heap(1)
+```
+
 
 ### access to and manage your data
 
