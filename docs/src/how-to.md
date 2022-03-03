@@ -184,4 +184,27 @@ Using `(η,v,x)` one can compute other quantities such as the [mass, momentum, e
 
 ## plot your data
 
+Once `(η,v,x)` is obtained as above, producing plots is as simple as
+```julia
+using Plots
+plot(x, [ η v ])
+```
+One can also plot the amplitude of [discrete Fourier coefficients](background.md#Pseudospectral-methods) (in semi-log scale) as follows:
+```julia
+using FFTW
+k=fftshift(Mesh(x).k);fftη=fftshift(fft(η));fftv=fftshift(fft(v));
+indices = (fftη .!=0) .& (fftv .!=0 )
+plot(k[indices], [ abs.(fftη)[indices] abs.(fftv)[indices] ], yscale=:log10)
+```
+
+The convenient built-in function [`plot_solution`](@ref WaterWaves1D.plot_solution) produces such plots, allowing in addition interpolations or compression.
+
+A similar function is [`plot_difference`](@ref WaterWaves1D.plot_difference) which allows to plot the difference between the outcome of several problems.
+
+Finally, [`create_animation`](@ref WaterWaves1D.create_animation) allows to produce an animation with, for instance,
+```julia
+anim = create_animation(problem)
+gif(anim, "my_animation.gif", fps=15)
+```
+
 ## save and load your data
