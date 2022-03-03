@@ -24,15 +24,15 @@ param = (
                 );
 ```
 
-Now we define initial data (the "heap of water"). The function [`Init`](@ref WaterWaves1D.Init) may take either functions, or vectors (values at collocation points) as arguments.
+Now we define [initial data solver](index.md#Initial-data) (the "heap of water"). The function [`Init`](@ref WaterWaves1D.Init) may take either functions, or vectors (values at collocation points) as arguments.
 
 ```@example 1
 z(x) = exp.(-abs.(x).^4); # surface deformation
-v(x) = 0*exp.(-x.^2);     # zero initial velocity
+v(x) = zero(x);     # zero initial velocity
 init = Init(z,v);         # generate the initial data with correct type
 ```
 
-Then we build the different models to compare (see [`WaterWaves`](@ref WaterWaves1D.WaterWaves) and [`WWn`](@ref WaterWaves1D.WWn)).
+Then we build the different [models](index.md#Models) to compare (see [`WaterWaves`](@ref WaterWaves1D.WaterWaves) and [`WWn`](@ref WaterWaves1D.WWn)).
 
 ```@example 1
 WW_model=WaterWaves(param) # The water waves system
@@ -60,7 +60,7 @@ Plot solutions at final time ([`plot_solution`](@ref WaterWaves1D.plot_solution)
 plot_solution([WW_problem WW2_problem];fourier=false)
 ```
 
-Generate an animation ([`plot_solution`](@ref WaterWaves1D.create_animation) has many options).
+Generate an animation ([`create_animation`](@ref WaterWaves1D.create_animation) has many options).
 
 
 ```@example 1
