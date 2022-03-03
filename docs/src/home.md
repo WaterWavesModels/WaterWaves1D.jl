@@ -1,4 +1,4 @@
-# WaterWaves1D.jl
+# WaterWaves1D.jl documentation
 
 
 
@@ -17,7 +17,7 @@ using WaterWaves1D
 
 ## Quick start
 
-A simple example is [documented here](example.md). More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples) and [notebooks](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/notebooks) section.
+A simple example is [documented here](example.md). More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples) and [notebooks](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/notebooks) folders.
 
 
 ## Developers

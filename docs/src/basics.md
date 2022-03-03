@@ -1,6 +1,4 @@
-# Code basics
-
-## Problems
+# Problems
 
 A central object in [`WaterWaves1D.jl`](https://github.com/WaterWavesModels/WaterWaves1D.jl/) is the [`Problem`](@ref WaterWaves1D.Problem)) structure, which contains all information on a numerically discretized initial-value problem. In practice, a problem is generated as 
 ```
@@ -28,13 +26,13 @@ Once it has been built, `problem` contains, in addition to `model`, `initial`, `
 ```
 
 
-## How to...
+# How to...
 
 [`WaterWaves1D.jl`](https://github.com/WaterWavesModels/WaterWaves1D.jl/) is meant to be versatile,
 and integrating new blocks to the package is easy. If you ever do so, please do not hesitate to contact the
 [developers](home.md#Developers) to either get help, or report on your advances.
 
-### build your model
+## build your model
 
 Let us add the linear ([Airy](https://en.wikipedia.org/wiki/Airy_wave_theory)) water waves model whose equations are (using the notations introduced [here](background.md))
 ```math
@@ -126,7 +124,7 @@ using WaterWaves1D
 model = Airy((μ=1,L=2π,N=2^8))
 ```
 
-### build your initial data
+## build your initial data
 
 The simplest way to build an initial data is to use the function [`Init`](@ref WaterWaves1D.Init), which takes as argument either
 - a function `η` and a function `v` (in this order);
@@ -160,7 +158,7 @@ using WaterWaves1D
 init = Heap(1)
 ```
 
-### build your time solver
+## build your time solver
 
 As an example, let us review how the explicit Euler solver, [`Euler`](@ref WaterWaves1D.Euler), is built.
 
@@ -200,8 +198,8 @@ function step!(solver :: Euler,
 end
 ```
 
-### access to and manage your data
+## access to and manage your data
 
-### plot your data
+## plot your data
 
-### save and load your data
+## save and load your data

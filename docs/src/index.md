@@ -44,18 +44,25 @@ Modules = [WaterWaves1D]
 Filter = t -> typeof(t) === DataType && t <: TimeSolver
 ```
 
+## Structures
+
+```@autodocs
+Modules = [WaterWaves1D]
+Pages   = [
+"WaterWaves1D.jl",
+"init.jl",
+"mesh.jl",
+"problem.jl",
+"data.jl",
+"times.jl"]
+```
+
 
 ## Tools
 
 ```@autodocs
 Modules = [WaterWaves1D]
-Pages   = [
-"init.jl",
-"tools.jl",
-"mesh.jl",
-"problem.jl",
-"data.jl",
-"times.jl"]
+Pages   = ["tools.jl"]
 ```
 
 ## Graphics
