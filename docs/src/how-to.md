@@ -172,7 +172,15 @@ end
 
 ## access to and manage your data
 
+Once an initial-value problem `problem` has been solved (i.e. [numerically integrated](problems.md)), the raw data is stored in `problem.data.U`, which is an array whose elements correspond (in chronological order) to values at the different computed times, `problem.times.ts`. Physical data (say at final computed time) can be reconstructed using the model as follows: 
+```julia
+η,v,x = problem.model.mapfro(last(problem.data.U))
+```
+where  `η` and `v` are respectively the values of the surface deformation and of the derivative of the trace of the velocity potential at the surface, at collocation points `x`.
 
+This procedure is carried out by the function [`solution`](@ref WaterWaves1D.solution), which allows in addition to perform some interpolations (making use of the otherwise helpful function [`interpolate`](@ref WaterWaves1D.interpolate)).
+
+Using `(η,v,x)` one can compute other quantities such as the [mass, momentum, energy](background.md#Mass,-momentum,-energy); for instance for the purpose of testing how well these quantities are numerically perserved (when the quantities are first integrals of the considered model). Built-in functions [`mass`](@ref WaterWaves1D.mass), [`momentum`](@ref WaterWaves1D.momentum), [`energy`](@ref WaterWaves1D.energy) (and [`massdiff`](@ref WaterWaves1D.massdiff), [`momentumdiff`](@ref WaterWaves1D.momentumdiff), [`energydiff`](@ref WaterWaves1D.energydiff)) compute such quantities (or their variation).
 
 ## plot your data
 
