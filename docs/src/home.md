@@ -31,7 +31,8 @@ Depth = 3
 Pages = [
         "home.md",
         "background.md",
-        "basics.md",
+        "problems.md",
+        "how-to.md",
         "example.md",
         "index.md"
         ]
