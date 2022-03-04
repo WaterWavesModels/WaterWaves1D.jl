@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>How-to... · WaterWaves1D.jl</title><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../home/"><img src="../assets/logo.png" alt="WaterWaves1D.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../home/">WaterWaves1D.jl</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../home/">Home</a></li><li><a class="tocitem" href="../background/">Background</a></li><li><a class="tocitem" href="../problems/">Problems</a></li><li class="is-active"><a class="tocitem" href>How-to...</a><ul class="internal"><li><a class="tocitem" href="#build-your-model"><span>build your model</span></a></li><li><a class="tocitem" href="#build-your-initial-data"><span>build your initial data</span></a></li><li><a class="tocitem" href="#build-your-time-solver"><span>build your time solver</span></a></li><li><a class="tocitem" href="#access-to-and-manage-your-data"><span>access to and manage your data</span></a></li><li><a class="tocitem" href="#plot-your-data"><span>plot your data</span></a></li><li><a class="tocitem" href="#save-and-load-your-data"><span>save and load your data</span></a></li></ul></li><li><a class="tocitem" href="../example/">Example</a></li><li><a class="tocitem" href="../">Index</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>How-to...</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>How-to...</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/WaterWavesModels/WaterWaves1D.jl/blob/master/docs/src/how-to.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="How-to..."><a class="docs-heading-anchor" href="#How-to...">How to...</a><a id="How-to...-1"></a><a class="docs-heading-anchor-permalink" href="#How-to..." title="Permalink"></a></h1><p><a href="https://github.com/WaterWavesModels/WaterWaves1D.jl/"><code>WaterWaves1D.jl</code></a> is meant to be versatile, and integrating new blocks to the package is easy. If you ever do so, please do not hesitate to contact the <a href="../home/#Developers">developers</a> to either get help, or report on your advances.</p><h2 id="build-your-model"><a class="docs-heading-anchor" href="#build-your-model">build your model</a><a id="build-your-model-1"></a><a class="docs-heading-anchor-permalink" href="#build-your-model" title="Permalink"></a></h2><p>Let us add the linear (<a href="https://en.wikipedia.org/wiki/Airy_wave_theory">Airy</a>) water waves model whose equations are (using the notations introduced <a href="../background/">here</a>)</p><p class="math-container">\[  \left\{\begin{array}{l}
+  ∂_tη+\frac{\tanh(\sqrt{μ} D)}{ν\sqrt{μ} D}∂_xv=0,\\[1ex]
+  ∂_tv+∂_xη=0,
+  \end{array}\right.\]</p><p>where we use the notation <span>$F(D)$</span> for the <a href="https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)">action</a> of pointwise multiplying by the function <span>$F$</span> in the Fourier space.</p><p>In a dedicated file we write</p><pre><code class="language-julia hljs">export Airy
+mutable struct Airy &lt;: AbstractModel
+  label   :: String
+  f!      :: Function
+  mapto   :: Function
+  mapfro  :: Function
+
+  # We build our model here.
+
+end</code></pre><p>Our purpose is to provide</p><ul><li><code>label</code>, a string used in subsequent informational messages, plots, etc.</li><li><code>f!</code>, a function to be called in explicit time-integration solvers such as <a href="../#WaterWaves1D.Euler"><code>Euler</code></a> or <a href="../#WaterWaves1D.RK4"><code>RK4</code></a> (one may provide other functions to be used with other solvers such as <a href="../#WaterWaves1D.EulerSymp"><code>EulerSymp</code></a>)</li><li><code>mapto</code>, a function which from  a couple <code>(η,v)</code> of type <code>InitialData</code> provides the raw data matrix on which computations are to be executed</li><li><code>mapfro</code>, a function which from raw data returns <code>(η,v,x)</code> where<ul><li><code>η</code> is the values of surface deformation at collocation points <code>x</code>;</li><li><code>v</code> is the derivative of the trace of the velocity potential at <code>x</code>.</li></ul></li></ul><p>To this aim, in place of the commented line, we write</p><pre><code class="language-julia hljs">function Airy(param::NamedTuple; # param is a NamedTuple containing all necessary parameters
+  label = &quot;linear (Airy)&quot;  # using a keyword argument allows the user to supersede the default label.
+   )
+
+  # Set up
+  μ = param.μ
+  if !in(:ν,keys(param)) # set default ν if it is not provided
+    ν = min(1,1/√μ)
+  else
+    ν = param.ν
+  end
+  # Collocation points and Fourier modes
+  m = Mesh(param)
+  x, k = m.x, m.k
+  # Fourier multipliers
+  ∂ₓ	 = 1im * k            # Differentiation
+  ∂ₓF₁ = 1im * tanh.(√μ*k)/(√μ*ν)
+  # Pre-allocation
+  fftη = zeros(Complex{Float64}, m.N)
+  fftv = zeros(Complex{Float64}, m.N)
+
+  # Evolution equations are ∂t U = f(U)
+  function f!(U)
+    fftη .= U[:,1]
+    fftv .= U[:,2]
+
+    U[:,1] .= -∂ₓF₁.*fftv
+    U[:,2] .= -∂ₓ.*fftη
+  end
+
+  # Build raw data from physical data (discrete Fourier transform)
+  function mapto(data::InitialData)
+    U = [fft(data.η(x)) fft(data.v(x))]
+  end
+
+  # Return physical data `(η,v,x)` from raw data
+  function mapfro(U)
+    real(ifft(U[:,1])),real(ifft(U[:,2])),x
+  end
+
+  new( label, f!, mapto, mapfro )
+end</code></pre><p>A useful tool used in the above was the function <a href="../#WaterWaves1D.Mesh"><code>Mesh</code></a>. It takes as argument a <code>NamedTuple</code> containing typically a number of points/modes and the (half-)size of the domain and provides the vector of collocations points and Fourier wavenumbers (see <a href="../background/#Pseudospectral-methods">this discussion</a>).</p><p>The Airy model can now be built as follows</p><pre><code class="language-julia hljs">using WaterWaves1D
+# include your file
+model = Airy((μ=1,L=2π,N=2^8))</code></pre><h2 id="build-your-initial-data"><a class="docs-heading-anchor" href="#build-your-initial-data">build your initial data</a><a id="build-your-initial-data-1"></a><a class="docs-heading-anchor-permalink" href="#build-your-initial-data" title="Permalink"></a></h2><p>The simplest way to build an initial data is to use the function <a href="../#WaterWaves1D.Init"><code>Init</code></a>, which takes as argument either</p><ul><li>a function <code>η</code> and a function <code>v</code> (in this order);</li><li>an array of collocation points and two vectors representing <code>η(x)</code> and <code>v(x)</code> (in this order);</li><li>a <code>mesh</code> (generated with <a href="../#WaterWaves1D.Mesh"><code>Mesh</code></a>) and two vectors representing <code>η(mesh.x)</code> and <code>v(mesh.x)</code> (in this order).</li></ul><p>Some relevant initial data (e.g. travelling waves) are built-in; see <a href="../#Initial-data">the index section</a>. You can build your own in the following lines.</p><pre><code class="language-julia hljs">struct Heap &lt;: InitialData
+	η
+	v
+	label :: String
+	info  :: String
+
+	function Heap(L)
+		η=x-&gt;exp.(-(L*x).^2)
+    v=x-&gt;zero(x)
+		init = Init(η,v)
+		label = &quot;Heap&quot;
+		info = &quot;Heap of water, with length L=$L.&quot;
+
+		new( init.η,init.v,label,info  )
+	end
+end</code></pre><p>The corresponding initial data can now be built as follows</p><pre><code class="language-julia hljs">using WaterWaves1D
+# include your file
+init = Heap(1)</code></pre><h2 id="build-your-time-solver"><a class="docs-heading-anchor" href="#build-your-time-solver">build your time solver</a><a id="build-your-time-solver-1"></a><a class="docs-heading-anchor-permalink" href="#build-your-time-solver" title="Permalink"></a></h2><p>As an example, let us review how the explicit Euler solver, <a href="../#WaterWaves1D.Euler"><code>Euler</code></a>, is built.</p><p>In a dedicated file we write</p><pre><code class="language-julia hljs">struct Euler &lt;: TimeSolver
+    U1 :: Array
+    label :: String
+
+    function Euler( U :: Array; realdata=nothing )
+        U1 = copy(U)
+        if realdata==true
+            U1 = real.(U1);
+        end
+        if realdata==false
+            U1 = complex.(U1);
+        end
+        new( U1, &quot;Euler&quot; )
+    end
+end</code></pre><p>Here, <code>Euler.U1</code> is a pre-allocated vector which can be used to speed-up calculations, and <code>Euler-label</code> is the string <code>&quot;Euler&quot;</code>, used for future references. The optional keyword argument <code>realdata</code> allows to specify the type of data which the solver will take as arguments: either complex or real vectors. </p><p>We shall now add one method to the function <code>step!</code>, performing the explicit Euler step: that is replacing a vector <code>U</code> with <code>U+dt*f(U)</code> where <code>f</code> is provided by the model at stake.</p><pre><code class="language-julia hljs">export step!
+function step!(solver :: Euler,
+                model :: AbstractModel,
+                U  ,
+                dt )
+
+    solver.U1 .= U        # allocate U to U1
+    model.f!( solver.U1 ) # model.f!(U) replaces its argument U with f(U)
+    U .+= dt .* solver.U1 # update U
+end</code></pre><h2 id="access-to-and-manage-your-data"><a class="docs-heading-anchor" href="#access-to-and-manage-your-data">access to and manage your data</a><a id="access-to-and-manage-your-data-1"></a><a class="docs-heading-anchor-permalink" href="#access-to-and-manage-your-data" title="Permalink"></a></h2><p>Once an initial-value problem <code>problem</code> has been solved (i.e. <a href="../problems/">numerically integrated</a>), the raw data is stored in <code>problem.data.U</code>, which is an array whose elements correspond (in chronological order) to values at the different computed times, <code>problem.times.ts</code>. Physical data (say at final computed time) can be reconstructed using the model as follows: </p><pre><code class="language-julia hljs">η,v,x = problem.model.mapfro(last(problem.data.U))</code></pre><p>where  <code>η</code> and <code>v</code> are respectively the values of the surface deformation and of the derivative of the trace of the velocity potential at the surface, at collocation points <code>x</code>.</p><p>This procedure is carried out by the function <a href="../#WaterWaves1D.solution-Tuple{Problem}"><code>solution</code></a>, which allows in addition to perform some interpolations (making use of the otherwise helpful function <a href="../#WaterWaves1D.interpolate-Tuple{Mesh, Any, Any}"><code>interpolate</code></a>).</p><p>Using <code>(η,v,x)</code> one can compute other quantities such as the <a href="../background/#Mass,-momentum,-energy">mass, momentum, energy</a>; for instance for the purpose of testing how well these quantities are numerically perserved (when the quantities are first integrals of the considered model). Built-in functions <a href="../#WaterWaves1D.mass-Tuple{Problem}"><code>mass</code></a>, <a href="../#WaterWaves1D.momentum-Tuple{Problem}"><code>momentum</code></a>, <a href="../#WaterWaves1D.energy-Tuple{Problem}"><code>energy</code></a> (and <a href="../#WaterWaves1D.massdiff-Tuple{Problem}"><code>massdiff</code></a>, <a href="../#WaterWaves1D.momentumdiff-Tuple{Problem}"><code>momentumdiff</code></a>, <a href="../#WaterWaves1D.energydiff-Tuple{Problem}"><code>energydiff</code></a>) compute such quantities (or their variation).</p><h2 id="plot-your-data"><a class="docs-heading-anchor" href="#plot-your-data">plot your data</a><a id="plot-your-data-1"></a><a class="docs-heading-anchor-permalink" href="#plot-your-data" title="Permalink"></a></h2><p>Once <code>(η,v,x)</code> is obtained as above, producing plots is as simple as</p><pre><code class="language-julia hljs">using Plots
+plot(x, [ η v ])</code></pre><p>One can also plot the amplitude of <a href="../background/#Pseudospectral-methods">discrete Fourier coefficients</a> (in semi-log scale) as follows:</p><pre><code class="language-julia hljs">using FFTW
+k=fftshift(Mesh(x).k);fftη=fftshift(fft(η));fftv=fftshift(fft(v));
+indices = (fftη .!=0) .&amp; (fftv .!=0 )
+plot(k[indices], [ abs.(fftη)[indices] abs.(fftv)[indices] ], yscale=:log10)</code></pre><p>The convenient built-in function <a href="../#WaterWaves1D.plot_solution-Tuple{Any}"><code>plot_solution</code></a> produces such plots, allowing in addition interpolations or compression.</p><p>A similar function is <a href="../#WaterWaves1D.plot_difference-Tuple{Any}"><code>plot_difference</code></a> which allows to plot the difference between the outcome of several problems.</p><p>Finally, <a href="../#WaterWaves1D.create_animation-Tuple{Any}"><code>create_animation</code></a> allows to produce an animation with, for instance,</p><pre><code class="language-julia hljs">anim = create_animation(problem)
+gif(anim, &quot;my_animation.gif&quot;, fps=15)</code></pre><h2 id="save-and-load-your-data"><a class="docs-heading-anchor" href="#save-and-load-your-data">save and load your data</a><a id="save-and-load-your-data-1"></a><a class="docs-heading-anchor-permalink" href="#save-and-load-your-data" title="Permalink"></a></h2></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../problems/">« Problems</a><a class="docs-footer-nextpage" href="../example/">Example »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.14 on <span class="colophon-date" title="Friday 4 March 2022 09:03">Friday 4 March 2022</span>. Using Julia version 1.7.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
