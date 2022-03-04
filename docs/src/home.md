@@ -10,10 +10,16 @@ Several models are already implemented, including ([but not limited to](backgrou
 
 ## Installation
 
+Enter the Pkg REPL by pressing `]` from the Julia REPL.
 ~~~
 (v1.0) pkg> add https://github.com/WaterWavesModels/WaterWaves1D.jl.git
-using WaterWaves1D
+(v1.0) pkg> build WaterWaves1D
 ~~~
+
+Once installed, load the package with
+```julia
+using WaterWaves1D
+```
 
 ## Quick start
 
