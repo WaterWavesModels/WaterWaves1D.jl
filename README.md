@@ -1,8 +1,8 @@
 # WaterWaves1D.jl
 
 [![Build Status](https://github.com/WaterWavesModels/WaterWaves1D.jl/workflows/CI/badge.svg)](https://github.com/WaterWavesModels/WaterWaves1D.jl/actions)
-<!-- [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://waterwavesmodels.github.io/WaterWaves1D.jl/stable) -->
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev)
+<!-- [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://waterwavesmodels.github.io/WaterWaves1D.jl/stable/home/) -->
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/home/)
 
 [![codecov](https://codecov.io/gh/WaterWavesModels/WaterWaves1D.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/WaterWavesModels/WaterWaves1D.jl)
 
@@ -17,7 +17,7 @@ using WaterWaves1D
 
 `WaterWaves1D.jl` is a [Julia](https://julialang.org/) package providing a framework to study and compare several models for the propagation of unidimensional surface gravity waves (a.k.a. ["water waves"](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/background/#Water-waves)).
 
-Several models are already implemented, including ([but not limited to](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/background/#Models)) the so-called water waves system, its truncated spectral expansion, the Green-Naghdi system, the Matsuno system, and so on. You may easily add your favorite one to the gang: see the [how-to guide](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/basics/#add-your-model).
+Several models are already implemented, including ([but not limited to](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/background/#Models)) the so-called water waves system, its truncated spectral expansion, the Green-Naghdi system, the Matsuno system, and so on. You may easily add your favorite one to the gang: see the [how-to guide](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/how-to/#build-your-model).
 
 ## Documentation
 
