@@ -309,7 +309,7 @@ The associated code is [`WWn`](@ref WaterWaves1D.WWn).
 It turns out the spectral models above suffer from spurious instabilities; see
 [Ambrose, Bona and Nicholls](https://doi.org/10.1098/rspa.2013.0849).
 
-[Duchêne and Melinand](to be submitted) proposed a "rectified" quadratic model:
+[Duchêne and Melinand](https://arxiv.org/abs/2203.03277) proposed a "rectified" quadratic model:
 ```math
   \left\{\begin{array}{l}
   ∂_tη-\tfrac{1}{\sqrtμ ν} T^μv  + \tfrac{ϵ}{ν} ∂_x\big((J^δη) v +  T^μ((J^δη) T^μ v)\big) =0,\\[1ex]
@@ -340,7 +340,7 @@ The associated codes are [`Matsuno`](@ref WaterWaves1D.Matsuno), and [`Matsuno_f
 
 
 In view of ensuring the stability of the equations,
-[Duchêne and Melinand](to be submitted)
+[Duchêne and Melinand](https://arxiv.org/abs/2203.03277)
 proposed a modified Matsuno system:
 ```math
   \left\{\begin{array}{l}
