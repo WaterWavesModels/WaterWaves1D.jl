@@ -1,8 +1,16 @@
 # How to...
 
+```@contents
+Depth = 2
+Pages = [
+        "how-to.md"
+        ]
+```
+
+
 [`WaterWaves1D.jl`](https://github.com/WaterWavesModels/WaterWaves1D.jl/) is meant to be versatile,
 and integrating new blocks to the package is easy. If you ever do so, please do not hesitate to contact the
-[developers](home.md#Developers) to either get help, or report on your advances.
+[developers](index.md#Developers) to either get help, or report on your advances.
 
 ## build your model
 
@@ -103,7 +111,7 @@ The simplest way to build an initial data is to use the function [`Init`](@ref W
 - an array of collocation points and two vectors representing `η(x)` and `v(x)` (in this order);
 - a `mesh` (generated with [`Mesh`](@ref WaterWaves1D.Mesh)) and two vectors representing `η(mesh.x)` and `v(mesh.x)` (in this order).
 
-Some relevant initial data (e.g. travelling waves) are built-in; see [the index section](index.md#Initial-data). You can build your own in the following lines.
+Some relevant initial data (e.g. travelling waves) are built-in; see [the library section](library.md#Initial-data). You can build your own in the following lines.
 ```julia
 struct Heap <: InitialData
 	η

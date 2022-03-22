@@ -21,7 +21,7 @@ Several models are already implemented, including ([but not limited to](https://
 
 ## Documentation
 
-See [here](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/home/).
+See [here](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/).
 
 
 ## Example

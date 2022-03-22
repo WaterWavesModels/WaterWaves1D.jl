@@ -5,7 +5,7 @@ A central object in [`WaterWaves1D.jl`](https://github.com/WaterWavesModels/Wate
 problem = Problem( model, initial, times ; solver, label )
 ```
  where
- - `model` is related to the (spatially discretized) equation at stake. [Built-in models](index.md#Models) are typically generated as 
+ - `model` is related to the (spatially discretized) equation at stake. [Built-in models](library.md#Models) are typically generated as 
 ```julia
 model = TheModel( param ; kwargs )
 ```

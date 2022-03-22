@@ -26,12 +26,12 @@ makedocs(modules=[WaterWaves1D],
          #linkcheck = true,
          #checkdocs = :all,
          pages = [
-            "Home" => "home.md",
+            "Home" => "index.md",
             "Background" => "background.md",
             "Problems" => "problems.md",
             "How-to..." => "how-to.md",
             "Example" => "example.md",
-            "Index" => "index.md"
+            "Library" => "library.md"
                    ])
 
 #                  "Animation"     => "examples/animation.md",
