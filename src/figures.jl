@@ -1,5 +1,6 @@
 export create_animation,plot_solution!,plot_solution,plot_difference!,plot_difference
 using Plots
+using Printf
 
 """
 	create_animation( problems; name::String, kwargs... )
@@ -135,7 +136,7 @@ function plot_solution!( plt, problems; t=nothing,x=nothing,interpolation=false,
 		# plot the surface deformation
 		if surface
 	    	plot!(plt[n,1], X[indices], η[indices];
-			  title=string("surface deformation at t=",t),
+		      title= @sprintf("surface deformation at t= %7.3f", t), 
 		      label=lbl)
 			n+=1
 		end
@@ -278,3 +279,42 @@ function plot_difference( problems; t=nothing,x=nothing,interpolation=false,comp
 	plot_difference!( plt, problems; t=t,x=x, interpolation=interpolation, compression=compression, fast=fast, surface=surface,fourier=fourier, velocity=velocity, label=label )
 	return plt
 end
+
+using RecipesBase
+
+@recipe function f(problem::Problem; compression = 1)
+
+    (η,v,X,t) = solution(problem)
+    x := X[begin:compression:end]
+    y := η[begin:compression:end]
+    title := @sprintf("surface deformation at t= %7.3f", t)
+    label := problem.label
+    ()
+
+end
+
+#=
+function plot_problems( problems::Vector{Problem}, compression )
+    px, py, labels = [], [], []
+    t = 0.0
+    for problem in problems
+        (η,v,X,t) = solution(problem)
+	push!(px, X[begin:compression:end])
+	push!(py, η[begin:compression:end])
+	push!(labels, problem.label)
+    end
+    px, py, labels, t
+end
+
+@recipe function f(problems::Vector{Problem}; compression = 1)
+
+    px, py, labels, t = plot_problems(problems, compression)
+
+    x := px
+    y := py
+    title := @sprintf("surface deformation at t= %7.3f", t)
+    label := labels
+    ()
+
+end
+=#
