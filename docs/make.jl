@@ -31,6 +31,7 @@ makedocs(modules=[WaterWaves1D],
             "Problems" => "problems.md",
             "How-to..." => "how-to.md",
             "Example" => "example.md",
+            "Plot recipes" => "plot_recipes.md",
             "Library" => "library.md"
                    ])
 

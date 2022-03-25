@@ -23,5 +23,7 @@ problem2 = Problem(model2, init, param) ;
 
 solve!([problem1 problem2]; verbose=false);
 
-plot(problem1)
-plot!(problem2; legend = :bottomright)
+#plot(problem1)
+#plot!(problem2; legend = :bottomright)
+
+plot([problem1, problem2])
