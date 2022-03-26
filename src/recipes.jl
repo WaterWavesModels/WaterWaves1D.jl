@@ -3,73 +3,133 @@ using RecipesBase
 
 function solution_surface( problem :: Problem)
 
-    (η, v, x, t) = solution(problem)
+    η, v, x, t = solution(problem)
     x, η, t
 
 end
 
 function solution_fourier(problem)
 
-    (η, v, y) = solution(problem)
+    η, v, y, t = solution(problem)
     fftη = fft(η)
     fftshift(Mesh(y).k), eps(1.0) .+ abs.(fftshift(fftη))
 
 end
 
-@recipe f(::Type{Problem}, problem::Problem) = first(solution(problem))
+function solution_velocity(problem)
+
+    η, v, x, t = solution(problem)
+	x, v, t
+
+end
    
 
-@recipe function f(problem::Problem; fourier = false)
+@recipe function f(problem::Problem; var = :surface)
 
-    if fourier
+	if var == :fourier
 
-        title --> "Fourier coefficients (log scale)"
-        label --> problem.label
-        xlabel --> "frequency"
-        ylabel --> "amplitude"
-        yscale := :log10
+		@series begin 
 
-        solution_fourier( problem) 
+            title --> "Fourier coefficients (log scale)"
+            label --> problem.label
+            xlabel --> "frequency"
+            ylabel --> "amplitude"
+            yscale := :log10
 
-    else
+            solution_fourier( problem) 
 
-        x, η, t = solution_surface( problem) 
+		end
 
-        title --> @sprintf("surface deformation at t= %7.3f", t)
-        label --> problem.label
-        xlabel --> "x"
-        ylabel --> "η"
+	end
 
-        x, η
+	if var == :surface
 
-    end
+		@series begin 
+
+            x, η, t = solution_surface( problem) 
+
+            title --> @sprintf("surface deformation at t= %7.3f", t)
+            label --> problem.label
+            xlabel --> "x"
+            ylabel --> "η"
+
+            x, η
+
+		end
+
+	end
+
+	if var == :velocity
+
+		@series begin 
+
+            x, v, t = solution_velocity( problem) 
+
+            title --> @sprintf("Tangential velocity at t= %7.3f", t)
+            label --> problem.label
+            xlabel --> "x"
+            ylabel --> "v"
+
+            x, v
+
+		end
+
+	end
 
 end
 
-@recipe function f(problems::Vector{Problem}; fourier = false)
+@recipe function f(problems::Vector{Problem})
 
-    layout := (fourier+1, 1)
+	surface = get(plotattributes, :surface, true)
+	fourier = get(plotattributes, :fourier, false)
+	velocity = get(plotattributes, :velocity, false)
+
+	println(velocity)
+
+	delete!(plotattributes, :surface)
+	delete!(plotattributes, :velocitx)
+	delete!(plotattributes, :fourier)
+
+    layout := (surface+velocity+fourier, 1)
 
     for (i,p) in enumerate(problems)
 
-       @series begin
-           x, η, t = solution_surface(p)
-           title --> @sprintf("Surface deformation at t= %7.3f", t)
-           xlabel --> "x"
-           ylabel --> "η"
-           label --> p.label
-           subplot := 1
-           x, η
-       end
+	   n = 0
+
+       if surface
+		   n += 1
+           @series begin
+               x, η, t = solution_surface(p)
+               title --> @sprintf("Surface deformation at t=%7.3f", t)
+               xlabel --> "x"
+               ylabel --> "η"
+               label --> p.label
+               subplot := n
+               x, η
+           end
+	   end
+
+	   if velocity
+		   n += 1
+           @series begin
+		       x, v, t = solution_velocity(p)
+		       title --> @sprintf("Tangential velocity at t=%7.3f",t)
+               xlabel --> "x"
+               ylabel --> "v"
+               subplot := n
+		       x, v
+	       end
+	   end
 
        if fourier
+		   n += 1
            @series begin
-               title --> "Fourier coefficients (log scale)"
                x, y = solution_fourier(p)
+               title --> "Fourier coefficients (log scale)"
                xlabel --> "frequency"
                ylabel --> "amplitude"
                label --> p.label
-               subplot := 2
+               subplot := n
                yscale := :log10
                x, y
            end
