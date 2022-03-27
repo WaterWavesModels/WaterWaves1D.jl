@@ -82,13 +82,7 @@ end
 
 	surface = get(plotattributes, :surface, true)
 	fourier = get(plotattributes, :fourier, false)
-	velocity = get(plotattributes, :velocity, false)
-
-	println(velocity)
-
-	delete!(plotattributes, :surface)
-	delete!(plotattributes, :velocitx)
-	delete!(plotattributes, :fourier)
+	velocity = get(plotattributes, :quiver, false)
 
     layout := (surface+velocity+fourier, 1)
 

@@ -194,7 +194,7 @@ If a collection of problems are provided, then all possible pairs are compared.
 
 """
 function plot_difference!( plt, problems; t=nothing,x=nothing,interpolation=false,compression=false, fast=false, surface=true, fourier=false, velocity=false, label=nothing)
-	if typeof(problems[1])==Problem
+	if problems[1] isa Problem
 		pairs=[]
 		for i in 1:length(problems)
 			for j in i+1:length(problems)

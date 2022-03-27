@@ -26,6 +26,11 @@ plot!(problem2; legend = :bottomright)
 ```
 
 ```@example surface
+plot(problem1, var = :velocity)
+plot!(problem2; var = :velocity, legend = :bottomright)
+```
+
+```@example surface
 plot([problem1, problem2])
 ```
 
@@ -52,8 +57,11 @@ plot!(problem2; fourier = true)
 ```
 
 ```@example fourier
-plot([problem1, problem2]; fourier = true, label = :none)
+plot([problem1, problem2]; velocity = true, label = :none)
 ```
 
+```@example fourier
+plot([problem1, problem2]; velocity = true, fourier = true, label = :none)
+```
 
 
