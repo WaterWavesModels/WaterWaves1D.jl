@@ -132,3 +132,43 @@ end
     end
 
 end
+
+
+
+@userplot PlotDifferences
+
+@recipe function f(e::PlotDifferences)
+
+    pairs, problems = _differences_args( e.args )
+
+    for (i, j) in pairs
+
+	    x1, η1, t = solution_surface(problems[i])
+	    x2, η2, t = solution_surface(problems[j])
+
+        @series begin
+            xlabel := "x"
+            ylabel := "η"
+	        label := "$(problems[i].label) - $(problems[j].label)"
+	        title := @sprintf("difference (surface deformation) at t=%7.3f", t)
+
+            x1, η1 .- η2
+        end
+
+    end
+
+end
+
+function _differences_args( (problem1, problem2 ) :: Tuple{Problem, Problem})
+		
+     [(1,2)], (problem1, problem2)
+           
+end
+
+function _differences_args( (problems,) :: Tuple{Vector{Problem}})
+		
+	@show pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
+    
+    pairs, problems
+
+end
