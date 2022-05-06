@@ -34,3 +34,8 @@ plot(problem2, x̃, shape = :circle)
 plot(problem1; time = 1)
 plot!(problem2; time = 1, legend = :bottomright)
 plot([problem1, problem2], time = 2)
+
+
+@gif for t in LinRange(0,param.T,100)
+	plot(problem1, time = t)
+end
