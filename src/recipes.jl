@@ -1,22 +1,41 @@
 using Printf
 using RecipesBase
 
-function solution_surface( problem :: Problem)
+function indices(compression, x) 
 
-    η, v, x, t = solution(problem)
-    x, η, t
+    step = compression ? 8 : 1
+    1:step:length(x)
 
 end
 
-function solution_fourier(problem)
+function solution_surface( problem :: Problem, compression )
+
+    η, v, x, t = solution(problem)
+    i = indices(compression, x)
+    x[i], η[i], t
+
+end
+
+function solution_surface( problem :: Problem, x̃ :: AbstractArray, compression )
+
+    η, v, x, t = solution(problem; x = x̃, interpolation = false)
+    i = indices(compression, x)
+    x[i], η[i], t
+
+end
+
+function solution_fourier( problem, compression )
 
     η, v, y, t = solution(problem)
     fftη = fft(η)
-    fftshift(Mesh(y).k), eps(1.0) .+ abs.(fftshift(fftη))
+    x = fftshift(Mesh(y).k)
+    y = eps(1.0) .+ abs.(fftshift(fftη))
+    i = indices(compression, x)
+    x[i], y[i]
 
 end
 
-function solution_velocity(problem)
+function solution_velocity(problem, compression )
 
     η, v, x, t = solution(problem)
 	x, v, t
@@ -24,7 +43,7 @@ function solution_velocity(problem)
 end
    
 
-@recipe function f(problem::Problem; var = :surface)
+@recipe function f(problem::Problem; var = :surface, compression = false)
 
 	if var == :fourier
 
@@ -36,7 +55,7 @@ end
             ylabel --> "amplitude"
             yscale := :log10
 
-            solution_fourier( problem) 
+            solution_fourier( problem, compression ) 
 
 		end
 
@@ -46,7 +65,7 @@ end
 
 		@series begin 
 
-            x, η, t = solution_surface( problem) 
+            x, η, t = solution_surface( problem, compression ) 
 
             title --> @sprintf("surface deformation at t= %7.3f", t)
             label --> problem.label
@@ -63,7 +82,7 @@ end
 
 		@series begin 
 
-            x, v, t = solution_velocity( problem) 
+            x, v, t = solution_velocity( problem, compression ) 
 
             title --> @sprintf("Tangential velocity at t= %7.3f", t)
             label --> problem.label
@@ -78,7 +97,29 @@ end
 
 end
 
-@recipe function f(problems::Vector{Problem})
+@recipe function f(problem::Problem, x̃::AbstractArray; var = :surface)
+
+    if var == :surface
+
+		@series begin 
+
+            x, η, t = solution_surface( problem, x̃, false )
+
+            title --> @sprintf("surface deformation at t= %7.3f", t)
+            label --> problem.label
+            xlabel --> "x"
+            ylabel --> "η"
+
+            x, η
+
+		end
+
+	end
+
+end
+
+
+@recipe function f(problems::Vector{Problem}; compression = false)
 
 	surface = get(plotattributes, :surface, true)
 	fourier = get(plotattributes, :fourier, false)
@@ -93,7 +134,7 @@ end
        if surface
 		   n += 1
            @series begin
-               x, η, t = solution_surface(p)
+               x, η, t = solution_surface(p, compression)
                title --> @sprintf("Surface deformation at t=%7.3f", t)
                xlabel --> "x"
                ylabel --> "η"
@@ -106,7 +147,7 @@ end
 	   if velocity
 		   n += 1
            @series begin
-		       x, v, t = solution_velocity(p)
+		       x, v, t = solution_velocity(p, compression)
 		       title --> @sprintf("Tangential velocity at t=%7.3f",t)
                xlabel --> "x"
                ylabel --> "v"
@@ -118,7 +159,7 @@ end
        if fourier
 		   n += 1
            @series begin
-               x, y = solution_fourier(p)
+               x, y = solution_fourier(p, compression)
                title --> "Fourier coefficients (log scale)"
                xlabel --> "frequency"
                ylabel --> "amplitude"
@@ -143,15 +184,14 @@ end
 
     for (i, j) in pairs
 
-	    x1, η1, t = solution_surface(problems[i])
-	    x2, η2, t = solution_surface(problems[j])
+	    x1, η1, t = solution_surface(problems[i], false)
+	    x2, η2, t = solution_surface(problems[j], false)
 
         @series begin
             xlabel := "x"
             ylabel := "η"
 	        label := "$(problems[i].label) - $(problems[j].label)"
 	        title := @sprintf("difference (surface deformation) at t=%7.3f", t)
-
             x1, η1 .- η2
         end
 

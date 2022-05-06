@@ -15,7 +15,7 @@ z(x) = exp.(-abs.(x).^4); # surface deformation
 v(x) = zero(x);     # zero initial velocity
 init = Init(z,v);         # generate the initial data with correct type
 
-model1 = WaterWaves(param) # The water waves system
+model1 = WaterWaves(param, tol = 1e-15) # The water waves system
 model2 = WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
 
 problem1 = Problem(model1, init, param) ;
@@ -23,7 +23,10 @@ problem2 = Problem(model2, init, param) ;
 
 solve!([problem1 problem2]; verbose=false);
 
-#plot(problem1)
-#plot!(problem2; legend = :bottomright)
-
+plot(problem1)
+plot!(problem2; legend = :bottomright)
 plot([problem1, problem2])
+
+x̃ = LinRange(-5, 5, 128)
+
+plot(problem2, x̃, shape = :circle)

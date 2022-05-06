@@ -14,7 +14,7 @@ z(x) = exp.(-abs.(x).^4)
 v(x) = zero(x)
 init = Init(z,v)
 
-model1 = WaterWaves(param) # The water waves system
+model1 = WaterWaves(param; tol = 1e-15) # The water waves system
 model2 = WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
 
 problem1 = Problem(model1, init, param) ;
@@ -96,7 +96,14 @@ solve!([problem1 problem2]; verbose=false)
 plotdifferences(problem1, problem2)
 ```
 
-
 ```@example fourier
 plotdifferences([problem1, problem2])
+```
+
+## Interpolation
+
+```@example fourier
+x̃ = LinRange(-5, 5, 128)
+
+plot(problem2, x̃, shape = :circle)
 ```
