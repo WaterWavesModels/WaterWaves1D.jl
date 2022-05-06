@@ -111,7 +111,7 @@ plot(problem2, x̃, shape = :circle)
 
 ## Plots at different times
 
-```
+```@example fourier
 plot(problem1, time = 0, label = "t = 0")
 for t in 1:5
     plot!(problem1, time = t, label = "t = $t")
@@ -121,12 +121,9 @@ title!("surface deformation for t ∈ [0,5]")
 
 ## Create animation
 
-```@example
-anim = @animate for t in LinRange(0,param.T,100)
+```@example fourier
+@gif for t in LinRange(0,param.T,100)
     plot(problem1, time = t)
     ylims!(-0.5, 1)
 end
-gif(anim, "assets/anim.gif", fps=10)
 ``` 
-
-![](assets/anim.gif)
