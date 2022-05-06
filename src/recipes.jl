@@ -8,25 +8,25 @@ function indices(compression, x)
 
 end
 
-function solution_surface( problem :: Problem, compression )
+function solution_surface( problem :: Problem, time, compression )
 
-    η, v, x, t = solution(problem)
+    η, v, x, t = solution(problem, t = time)
     i = indices(compression, x)
     x[i], η[i], t
 
 end
 
-function solution_surface( problem :: Problem, x̃ :: AbstractArray, compression )
+function solution_surface( problem :: Problem, x̃ :: AbstractArray, time, compression )
 
-    η, v, x, t = solution(problem; x = x̃, interpolation = false)
+    η, v, x, t = solution(problem; x = x̃, t = time, interpolation = false)
     i = indices(compression, x)
     x[i], η[i], t
 
 end
 
-function solution_fourier( problem, compression )
+function solution_fourier( problem, time, compression )
 
-    η, v, y, t = solution(problem)
+    η, v, y, t = solution(problem, t = time)
     fftη = fft(η)
     x = fftshift(Mesh(y).k)
     y = eps(1.0) .+ abs.(fftshift(fftη))
@@ -35,15 +35,15 @@ function solution_fourier( problem, compression )
 
 end
 
-function solution_velocity(problem, compression )
+function solution_velocity(problem, time, compression )
 
-    η, v, x, t = solution(problem)
+    η, v, x, t = solution(problem, t = time)
 	x, v, t
 
 end
    
 
-@recipe function f(problem::Problem; var = :surface, compression = false)
+@recipe function f(problem::Problem; time = nothing, var = :surface, compression = false)
 
 	if var == :fourier
 
@@ -55,7 +55,7 @@ end
             ylabel --> "amplitude"
             yscale := :log10
 
-            solution_fourier( problem, compression ) 
+            solution_fourier( problem, time, compression ) 
 
 		end
 
@@ -65,7 +65,7 @@ end
 
 		@series begin 
 
-            x, η, t = solution_surface( problem, compression ) 
+            x, η, t = solution_surface( problem, time, compression ) 
 
             title --> @sprintf("surface deformation at t= %7.3f", t)
             label --> problem.label
@@ -82,7 +82,7 @@ end
 
 		@series begin 
 
-            x, v, t = solution_velocity( problem, compression ) 
+            x, v, t = solution_velocity( problem, time, compression ) 
 
             title --> @sprintf("Tangential velocity at t= %7.3f", t)
             label --> problem.label
@@ -97,13 +97,13 @@ end
 
 end
 
-@recipe function f(problem::Problem, x̃::AbstractArray; var = :surface)
+@recipe function f(problem::Problem, x̃::AbstractArray; t = nothing, var = :surface)
 
     if var == :surface
 
 		@series begin 
 
-            x, η, t = solution_surface( problem, x̃, false )
+            x, η, t = solution_surface( problem, x̃, t, false )
 
             title --> @sprintf("surface deformation at t= %7.3f", t)
             label --> problem.label
@@ -119,7 +119,7 @@ end
 end
 
 
-@recipe function f(problems::Vector{Problem}; compression = false)
+@recipe function f(problems::Vector{Problem}; time = nothing, compression = false)
 
 	surface = get(plotattributes, :surface, true)
 	fourier = get(plotattributes, :fourier, false)
@@ -134,7 +134,7 @@ end
        if surface
 		   n += 1
            @series begin
-               x, η, t = solution_surface(p, compression)
+               x, η, t = solution_surface(p, time, compression)
                title --> @sprintf("Surface deformation at t=%7.3f", t)
                xlabel --> "x"
                ylabel --> "η"
@@ -147,7 +147,7 @@ end
 	   if velocity
 		   n += 1
            @series begin
-		       x, v, t = solution_velocity(p, compression)
+		       x, v, t = solution_velocity(p, time, compression)
 		       title --> @sprintf("Tangential velocity at t=%7.3f",t)
                xlabel --> "x"
                ylabel --> "v"
@@ -159,7 +159,7 @@ end
        if fourier
 		   n += 1
            @series begin
-               x, y = solution_fourier(p, compression)
+               x, y = solution_fourier(p, time, compression)
                title --> "Fourier coefficients (log scale)"
                xlabel --> "frequency"
                ylabel --> "amplitude"
@@ -174,18 +174,16 @@ end
 
 end
 
-
-
 @userplot PlotDifferences
 
 @recipe function f(e::PlotDifferences)
 
-    pairs, problems = _differences_args( e.args )
+    pairs, problems, time = _differences_args( e.args )
 
     for (i, j) in pairs
 
-	    x1, η1, t = solution_surface(problems[i], false)
-	    x2, η2, t = solution_surface(problems[j], false)
+	    x1, η1, t = solution_surface(problems[i], time, false)
+	    x2, η2, t = solution_surface(problems[j], time, false)
 
         @series begin
             xlabel := "x"
@@ -201,7 +199,13 @@ end
 
 function _differences_args( (problem1, problem2 ) :: Tuple{Problem, Problem})
 		
-     [(1,2)], (problem1, problem2)
+     [(1,2)], (problem1, problem2), nothing
+           
+end
+
+function _differences_args( (problem1, problem2, time ) :: Tuple{Problem, Problem, Real})
+		
+     [(1,2)], (problem1, problem2), time
            
 end
 
@@ -209,6 +213,14 @@ function _differences_args( (problems,) :: Tuple{Vector{Problem}})
 		
 	@show pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
     
-    pairs, problems
+    pairs, problems, nothing
+
+end
+
+function _differences_args( (problems, time) :: Tuple{Vector{Problem}, Real})
+		
+	@show pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
+    
+    pairs, problems, time
 
 end

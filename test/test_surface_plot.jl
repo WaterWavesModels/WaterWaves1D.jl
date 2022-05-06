@@ -30,3 +30,7 @@ plot([problem1, problem2])
 x̃ = LinRange(-5, 5, 128)
 
 plot(problem2, x̃, shape = :circle)
+
+plot(problem1; time = 1)
+plot!(problem2; time = 1, legend = :bottomright)
+plot([problem1, problem2], time = 2)

@@ -107,3 +107,14 @@ x̃ = LinRange(-5, 5, 128)
 
 plot(problem2, x̃, shape = :circle)
 ```
+
+
+## Plots at different times
+
+```
+plot(problem1, time = 0, label = "t = 0")
+for t in 1:5
+    plot!(problem1, time = t, label = "t = $t")
+end
+title!("surface deformation for t ∈ [0,5]")
+```
