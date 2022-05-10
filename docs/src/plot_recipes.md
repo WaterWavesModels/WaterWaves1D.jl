@@ -64,7 +64,9 @@ l = @layout [a ; b; c]
 p1 = plot(problem1, var = :surface)
 p2 = plot(problem1, var = :velocity)
 p3 = plot(problem1, var = :fourier)
-plot(p1, p2, p3, layout = l)
+plot(p1, p2, p3, layout = l, 
+	 titlefontsize=10, 
+	 labelfontsize=8)
 ```
 
 ## Velocity
