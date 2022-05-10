@@ -53,8 +53,18 @@ problem2 = Problem( WWn(param2, dealias = 1), init, param2 )
 
 solve!([problem1, problem2])
 
-plot(problem1; fourier = true)
-plot!(problem2; fourier = true)
+plot(problem1; var = :fourier)
+plot!(problem2; var = :fourier)
+```
+
+## Subplots with layout
+
+```@example fourier
+l = @layout [a ; b; c]
+p1 = plot(problem1, var = :surface)
+p2 = plot(problem1, var = :velocity)
+p3 = plot(problem1, var = :fourier)
+plot(p1, p2, p3, layout = l)
 ```
 
 ## Velocity

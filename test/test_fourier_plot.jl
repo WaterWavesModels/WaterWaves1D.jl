@@ -15,8 +15,8 @@ problem2 = Problem( WWn(param2, dealias = 1), init, param2 )
 
 solve!([problem1, problem2])
 
-plot(problem1; fourier = true)
-plot!(problem2; fourier = true)
+plot(problem1; var = :surface)
+plot!(problem2; var = :fourier)
 
-#plot([problem1, problem2]; fourier = true, label = :none)
+#plot([problem1, problem2]; var = :fourier, label = :none)
 
