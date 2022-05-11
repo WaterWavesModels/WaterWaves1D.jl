@@ -45,53 +45,70 @@ end
 
 @recipe function f(problem::Problem; time = nothing, var = :surface, compression = false)
 
-	if var == :fourier
+	titlefontsize --> 10
 
-		@series begin 
-
-            title --> "Fourier coefficients (log scale)"
-            label --> problem.label
-            xlabel --> "frequency"
-            ylabel --> "amplitude"
-            yscale := :log10
-
-            solution_fourier( problem, time, compression ) 
-
-		end
-
+	if var isa Vector{Symbol}
+		variables = var
+		layout := (length(var), 1)
+	else
+        layout := (1, 1)
+		variables = [var]
 	end
 
-	if var == :surface
+	for (n, variable) in enumerate(variables)
 
-		@series begin 
+	    if variable == :fourier
 
-            x, η, t = solution_surface( problem, time, compression ) 
+	    	@series begin 
 
-            title --> @sprintf("surface deformation at t= %7.3f", t)
-            label --> problem.label
-            xlabel --> "x"
-            ylabel --> "η"
+                title --> "Fourier coefficients (log scale)"
+                label --> problem.label
+                xlabel --> "frequency"
+                ylabel --> "amplitude"
+                yscale := :log10
+	    		subplot := n
 
-            x, η
+                solution_fourier( problem, time, compression ) 
 
-		end
+	    	end
 
-	end
+	    end
 
-	if var == :velocity
+	    if variable == :surface
 
-		@series begin 
+	    	@series begin 
 
-            x, v, t = solution_velocity( problem, time, compression ) 
+                x, η, t = solution_surface( problem, time, compression ) 
 
-            title --> @sprintf("Tangential velocity at t= %7.3f", t)
-            label --> problem.label
-            xlabel --> "x"
-            ylabel --> "v"
+                title --> @sprintf("surface deformation at t= %7.3f", t)
+                label --> problem.label
+                xlabel --> "x"
+                ylabel --> "η"
+	    		subplot := n
 
-            x, v
+                x, η
 
-		end
+	    	end
+
+	    end
+
+	    if variable == :velocity
+
+	    	@series begin 
+
+                x, v, t = solution_velocity( problem, time, compression ) 
+
+                title --> @sprintf("Tangential velocity at t= %7.3f", t)
+                label --> problem.label
+                xlabel --> "x"
+                ylabel --> "v"
+	    		subplot := n
+
+                x, v
+
+	    	end
+
+	    end
 
 	end
 
@@ -118,20 +135,24 @@ end
 
 end
 
+@recipe function f(problems::Vector{Problem}; var = :surface, time = nothing, compression = false)
 
-@recipe function f(problems::Vector{Problem}; time = nothing, compression = false)
+	if var isa Vector{Symbol}
+		variables = var
+		layout := (length(var), 1)
+	else
+        layout := (1, 1)
+		variables = [var]
+	end
 
-	surface = get(plotattributes, :surface, true)
-	fourier = get(plotattributes, :fourier, false)
-	velocity = get(plotattributes, :quiver, false)
-
-    layout := (surface+velocity+fourier, 1)
+	layout := (length(variables), 1)
+	titlefontsize --> 10
 
     for (i,p) in enumerate(problems)
 
 	   n = 0
 
-       if surface
+       if :surface in variables
 		   n += 1
            @series begin
                x, η, t = solution_surface(p, time, compression)
@@ -144,7 +165,7 @@ end
            end
 	   end
 
-	   if velocity
+	   if :velocity in variables
 		   n += 1
            @series begin
 		       x, v, t = solution_velocity(p, time, compression)
@@ -156,7 +177,7 @@ end
 	       end
 	   end
 
-       if fourier
+       if :fourier in variables
 		   n += 1
            @series begin
                x, y = solution_fourier(p, time, compression)
@@ -171,6 +192,24 @@ end
        end
 
     end
+
+	if :difference in variables
+
+		x1, η1, t = solution_surface(problems[1], time, false)
+	    x2, η2, t = solution_surface(problems[2], time, false)
+
+		n += 1
+
+        @series begin
+            xlabel := "x"
+            ylabel := "Δη"
+	        label := "$(problems[1].label) - $(problems[2].label)"
+	        title := @sprintf("difference (surface deformation) at t=%7.3f", t)
+            subplot := n
+            x1, η1 .- η2
+        end
+
+	end
 
 end
 

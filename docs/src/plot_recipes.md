@@ -32,6 +32,14 @@ plot!(problem2; var = :velocity, legend = :bottomright)
 ```
 
 ```@example surface
+plot(problem1, var = [:surface, :velocity])
+```
+
+```@example surface
+plot(problem2, var = [:surface, :fourier])
+```
+
+```@example surface
 plot([problem1, problem2])
 ```
 
@@ -69,16 +77,11 @@ plot(p1, p2, p3, layout = l,
 	 labelfontsize=8)
 ```
 
-## Velocity
-
-```@example fourier
-plot([problem1, problem2]; velocity = true, label = :none)
-```
 
 ## Frequency
 
 ```@example fourier
-plot([problem1, problem2]; velocity = true, fourier = true, label = :none)
+plot([problem1, problem2]; var = [:velocity, :fourier], label = :none)
 ```
 
 ## Differences
@@ -110,6 +113,10 @@ plotdifferences(problem1, problem2)
 
 ```@example fourier
 plotdifferences([problem1, problem2])
+```
+
+```@example fourier
+plot([problem1, problem2]; var = [:surface, :difference])
 ```
 
 ## Interpolation
