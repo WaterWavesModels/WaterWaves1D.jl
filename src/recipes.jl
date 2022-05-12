@@ -24,21 +24,31 @@ function solution_surface( problem :: Problem, x̃ :: AbstractArray, time, compr
 
 end
 
-function solution_fourier( problem, time, compression )
+function solution_fourier( problem :: Problem, time, compression )
 
     η, v, y, t = solution(problem, t = time)
     fftη = fft(η)
     x = fftshift(Mesh(y).k)
     y = eps(1.0) .+ abs.(fftshift(fftη))
     i = indices(compression, x)
-    x[i], y[i]
+    x[i], y[i], t
 
 end
 
-function solution_velocity(problem, time, compression )
+function solution_velocity(problem :: Problem, time, compression )
 
     η, v, x, t = solution(problem, t = time)
-	x, v, t
+    i = indices(compression, x)
+    x[i], v[i], t
+
+
+end
+
+function solution_velocity( problem :: Problem, x̃ :: AbstractArray, time, compression )
+
+    η, v, x, t = solution(problem; x = x̃, t = time, interpolation = false)
+    i = indices(compression, x)
+    x[i], v[i], t
 
 end
    
@@ -61,14 +71,16 @@ end
 
 	    	@series begin 
 
+                x, y, t = solution_fourier( problem, time, compression ) 
+
                 title --> "Fourier coefficients (log scale)"
                 label --> problem.label
-                xlabel --> "frequency"
+                xlabel --> "wavenumber"
                 ylabel --> "amplitude"
                 yscale := :log10
 	    		subplot := n
 
-                solution_fourier( problem, time, compression ) 
+                x, y
 
 	    	end
 
@@ -98,7 +110,7 @@ end
 
                 x, v, t = solution_velocity( problem, time, compression ) 
 
-                title --> @sprintf("Tangential velocity at t= %7.3f", t)
+                title --> @sprintf("Velocity at t= %7.3f", t)
                 label --> problem.label
                 xlabel --> "x"
                 ylabel --> "v"
@@ -169,9 +181,10 @@ end
 		   n += 1
            @series begin
 		       x, v, t = solution_velocity(p, time, compression)
-		       title --> @sprintf("Tangential velocity at t=%7.3f",t)
+		       title --> @sprintf("Velocity at t=%7.3f",t)
                xlabel --> "x"
                ylabel --> "v"
+               label --> p.label
                subplot := n
 		       x, v
 	       end
@@ -180,7 +193,7 @@ end
        if :fourier in variables
 		   n += 1
            @series begin
-               x, y = solution_fourier(p, time, compression)
+               x, y, t = solution_fourier(p, time, compression)
                title --> "Fourier coefficients (log scale)"
                xlabel --> "frequency"
                ylabel --> "amplitude"
@@ -193,10 +206,10 @@ end
 
     end
 
-	if :difference in variables
+	if :difference in variables || :difference_surface in variables
 
-		x1, η1, t = solution_surface(problems[1], time, false)
-	    x2, η2, t = solution_surface(problems[2], time, false)
+		x1, η1, t = solution_surface(problems[1], time, compression)
+	    x2, η2, t = solution_surface(problems[2], time, compression)
 
 		n += 1
 
@@ -204,9 +217,46 @@ end
             xlabel := "x"
             ylabel := "Δη"
 	        label := "$(problems[1].label) - $(problems[2].label)"
-	        title := @sprintf("difference (surface deformation) at t=%7.3f", t)
+	        title := @sprintf("Difference (surface deformation) at t=%7.3f", t)
             subplot := n
             x1, η1 .- η2
+        end
+
+	end
+
+    if :difference_velocity in variables
+
+		x1, v1, t = solution_velocity(problems[1], time, compression)
+	    x2, v2, t = solution_velocity(problems[2], time, compression)
+
+		n += 1
+
+        @series begin
+            xlabel := "x"
+            ylabel := "Δv"
+	        label := "$(problems[1].label) - $(problems[2].label)"
+	        title := @sprintf("Difference (velocity) at t=%7.3f", t)
+            subplot := n
+            x1, v1 .- v2
+        end
+
+    end
+
+    if :difference_fourier in variables
+
+        x1, y1, t = solution_fourier(problems[1], time, compression)
+        x2, y2, t = solution_fourier(problems[2], time, compression)
+    
+        n += 1
+    
+        @series begin
+            xlabel := "frequency"
+            ylabel := "amplitude"
+            label := "$(problems[1].label) - $(problems[2].label)"
+            title := "Difference (Fourier coefficients in log scale)"
+            subplot := n
+            yscale := :log10
+            x1, abs.(y1 .- y2)
         end
 
 	end
@@ -228,7 +278,7 @@ end
             xlabel := "x"
             ylabel := "η"
 	        label := "$(problems[i].label) - $(problems[j].label)"
-	        title := @sprintf("difference (surface deformation) at t=%7.3f", t)
+	        title := @sprintf("Difference (surface deformation) at t=%7.3f", t)
             x1, η1 .- η2
         end
 
