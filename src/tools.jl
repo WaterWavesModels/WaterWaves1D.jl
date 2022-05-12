@@ -67,13 +67,13 @@ end
 
 
 """
-    solution(pb::Problem;t,x,interpolation)
+    solution(pb::Problem;T,x,interpolation)
 
-Give the solution of a solved initial-value problem at a given time `t`.
+Give the solution of a solved initial-value problem at a given time `T`.
 
 # Arguments
 - Argument `pb` is of type `Problem`.
-- Keyword argument `t` is optional, the last computed time is returned by default.
+- Keyword argument `T` is optional, the last computed time is returned by default.
 - Keyword argument `x` is optional, if provided the solution is interpolated to the collocation vector `x`.
 - Keyword argument `interpolation` is optional, if an integer is provided the solution is interpolated on as many collocation points (if `true`, then the default value `2^3` is chosen).
 
@@ -83,13 +83,13 @@ Return `(η,v,x,t)` where
 - `η` is the surface deformation at collocation points;
 - `v` is the tangential velocity (derivative of the trace of the velocity potential) at collocation points;
 - `x` is the vector of collocation points;
-- `t` the time (first computed time greater or equal to provided `t`).
+- `t` the time (first computed time greater or equal to provided `T`).
 
 """
-function solution(p::Problem; t=nothing, x=nothing, interpolation = false)
-	if isnothing(t) t = p.times.ts[end] end
-	t=min(max(t,0),p.times.ts[end])
-	index = findfirst(p.times.ts.>=t)
+function solution(p::Problem; T=nothing, x=nothing, interpolation = false)
+	if isnothing(T) T = p.times.ts[end] end
+	T=min(max(T,0),p.times.ts[end])
+	index = findfirst(p.times.ts.>=T)
 	t=p.times.ts[index]
 
 	if Symbol(typeof(p.model)) == :WaterWaves
@@ -121,15 +121,15 @@ function solution(p::Problem; t=nothing, x=nothing, interpolation = false)
 end
 
 """
-    mass(pb::Problem;t)
+    mass(pb::Problem;T)
 
-Compute the excess of mass of a solved initial-value problem `pb` at a given time `t`.
+Compute the excess of mass of a solved initial-value problem `pb` at a given time `T`.
 
-Keyword argument `t` is optional, the last computed time is used by default.
+Keyword argument `T` is optional, the last computed time is used by default.
 
 """
-function mass(p::Problem; t=nothing)
-	η,v,x,t = solution(p;t=t)
+function mass(p::Problem; T=nothing)
+	η,v,x = solution(p;T=T)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
 		@error("The excess of mass cannot be computed because the solution is defined on a non-regularly spaced mesh.")
 	else
@@ -138,15 +138,15 @@ function mass(p::Problem; t=nothing)
 end
 
 """
-    momentum(pb::Problem;t)
+    momentum(pb::Problem;T)
 
-Compute the horizontal impulse of a solved initial-value problem `pb` at a given time `t`.
+Compute the horizontal impulse of a solved initial-value problem `pb` at a given time `T`.
 
-Keyword argument `t` is optional, the last computed time is used by default.
+Keyword argument `T` is optional, the last computed time is used by default.
 
 """
-function momentum(p::Problem; t=nothing)
-	η,v,x,t = solution(p;t=t)
+function momentum(p::Problem; T=nothing)
+	η,v,x = solution(p;T=T)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
 		@error("The horizontal impulse cannot be computed because the solution is defined on a non-regularly spaced mesh.")
 	else
@@ -155,15 +155,15 @@ function momentum(p::Problem; t=nothing)
 end
 
 """
-    energy(pb::Problem;t)
+    energy(pb::Problem;T)
 
-Compute the excess of mass of a solved initial-value problem `pb` at a given time `t`.
+Compute the excess of mass of a solved initial-value problem `pb` at a given time `T`.
 
-Keyword argument `t` is optional, the last computed time is used by default.
+Keyword argument `T` is optional, the last computed time is used by default.
 
 """
-function energy(p::Problem; t=nothing)
-	η,v,x,t = solution(p;t=t)
+function energy(p::Problem; T=nothing)
+	η,v,x = solution(p;T=T)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
 		@error("The energy cannot be computed because the solution is defined on a non-regularly spaced mesh.")
 	end
@@ -176,18 +176,18 @@ function energy(p::Problem; t=nothing)
 end
 
 """
-    massdiff(pb::Problem;t,rel)
+    massdiff(pb::Problem;T,rel)
 
-Compute the difference of excess of mass of a solved initial-value problem `pb` between given time `t` and initial time.
+Compute the difference of excess of mass of a solved initial-value problem `pb` between given time `T` and initial time.
 
-Keyword argument `t` is optional, the last computed time is used by default.
+Keyword argument `T` is optional, the last computed time is used by default.
 
 If keyword argument `rel=true` (default is false), then compute the relative difference (with initial value as reference).
 
 """
-function massdiff(p::Problem; t=nothing,rel=false)
-	η,v,x,t = solution(p;t=t)
-	η0,v0,x0,t0 = solution(p;t=0)
+function massdiff(p::Problem; T=nothing,rel=false)
+	η,v,x = solution(p;T=T)
+	η0,v0,x0 = solution(p;T=0)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
 		@error("The excess of mass difference cannot be computed because the solution is defined on a non-regularly spaced mesh.")
 	else
@@ -196,18 +196,18 @@ function massdiff(p::Problem; t=nothing,rel=false)
 end
 
 """
-    momentumdiff(pb::Problem;t)
+    momentumdiff(pb::Problem;T,rel)
 
-Compute the difference of horizontal impulse of a solved initial-value problem `pb` between given time `t` and initial time.
+Compute the difference of horizontal impulse of a solved initial-value problem `pb` between given time `T` and initial time.
 
-Keyword argument `t` is optional, the last computed time is used by default.
+Keyword argument `T` is optional, the last computed time is used by default.
 
 If keyword argument `rel=true` (default is false), then compute the relative difference (with initial value as reference).
 
 """
-function momentumdiff(p::Problem; t=nothing,rel=false)
-	η,v,x,t = solution(p;t=t)
-	η0,v0,x0,t0 = solution(p;t=0)
+function momentumdiff(p::Problem; T=nothing,rel=false)
+	η,v,x = solution(p;T=T)
+	η0,v0,x0 = solution(p;T=0)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
 		@error("The horizontal impulse difference cannot be computed because the solution is defined on a non-regularly spaced mesh.")
 	else
@@ -216,18 +216,18 @@ function momentumdiff(p::Problem; t=nothing,rel=false)
 end
 
 """
-    energydiff(pb::Problem;t)
+    energydiff(pb::Problem;T,rel)
 
-Compute the difference of energy of a solved initial-value problem `pb` between given time `t` and initial time.
+Compute the difference of energy of a solved initial-value problem `pb` between given time `T` and initial time.
 
-Keyword argument `t` is optional, the last computed time is used by default.
+Keyword argument `T` is optional, the last computed time is used by default.
 
 If keyword argument `rel=true` (default is false), then compute the relative difference (with initial value as reference).
 
 """
-function energydiff(p::Problem; t=nothing, rel=false)
-	η,v,x,t = solution(p;t=t)
-	η0,v0,x0,t0 = solution(p;t=0)
+function energydiff(p::Problem; T=nothing, rel=false)
+	η,v,x = solution(p;T=T)
+	η0,v0,x0 = solution(p;T=0)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
 		@error("The energy difference cannot be computed because the solution is defined on a non-regularly spaced mesh.")
 	end

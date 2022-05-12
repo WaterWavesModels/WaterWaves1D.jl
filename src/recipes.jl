@@ -17,13 +17,13 @@ end
 
 function solution_time(problem :: Problem, T)
 
-    η, v, x, time = solution(problem; t = T)
+    η, v, x, time = solution(problem; T = T)
     time
 
 end
 function solution_surface( problem :: Problem, T, x̃, interpolation, compression )
 
-    η, v, x = solution(problem; x = x̃, t = T, interpolation = interpolation)
+    η, v, x = solution(problem; x = x̃, T = T, interpolation = interpolation)
     i = indices(compression, x)
     x[i], η[i]
 
@@ -31,7 +31,7 @@ end
 
 function solution_velocity( problem :: Problem, T, x̃, interpolation, compression )
 
-    η, v, x = solution(problem; x = x̃, t = T, interpolation = interpolation)
+    η, v, x = solution(problem; x = x̃, T = T, interpolation = interpolation)
     i = indices(compression, x)
     x[i], v[i]
 
@@ -39,7 +39,7 @@ end
 
 function solution_fourier( problem :: Problem, T, x̃, interpolation, compression )
 
-    η, v, x = solution(problem; x = x̃, t = T, interpolation = interpolation)
+    η, v, x = solution(problem; x = x̃, T = T, interpolation = interpolation)
     fftη = fft(η)
     k = fftshift(Mesh(x).k)
     y = abs.(fftshift(fftη))
@@ -49,20 +49,20 @@ function solution_fourier( problem :: Problem, T, x̃, interpolation, compressio
 end
 
 function difference( problems :: Vector{Problem}, T, x̃, interpolation )
-    η1, v1, x1 = solution(problems[1]; x = x̃, t = T, interpolation = interpolation)
-    η2, v2, x2 = solution(problems[2]; x = x̃, t = T, interpolation = interpolation)
+    η1, v1, x1 = solution(problems[1]; x = x̃, T = T, interpolation = interpolation)
+    η2, v2, x2 = solution(problems[2]; x = x̃, T = T, interpolation = interpolation)
 
     if !(x1 ≈ x2)
 
         if Symbol(typeof(problems[2].model)) !== :WaterWaves
-            η2, v2, x2, t2 = solution(problems[2]; x = x1, t = T, interpolation = interpolation)
+            η2, v2, x2, t2 = solution(problems[2]; x = x1, T = T, interpolation = interpolation)
 
         elseif Symbol(typeof(problems[1].model)) !== :WaterWaves
-            η1, v1, x1, t1 = solution(problems[1]; x = x2, t = T, interpolation = interpolation)
+            η1, v1, x1, t1 = solution(problems[1]; x = x2, T = T, interpolation = interpolation)
 
         else
             @warn("The difference is computed on different collocation points.")
-            η2, v2, x2, t2 = solution(problems[2]; x = x1, t = T, interpolation = interpolation)
+            η2, v2, x2, t2 = solution(problems[2]; x = x1, T = T, interpolation = interpolation)
         end
 
     end
@@ -123,7 +123,7 @@ end
 		variables = [var]
 	end
 
-    layout := (length(var), 1)
+    layout := (length(variables), 1)
 	titlefontsize --> 10
 
 

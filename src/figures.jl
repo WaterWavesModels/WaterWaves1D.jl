@@ -38,17 +38,17 @@ function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
 	end
 
 	if isnothing(ylims)
-		(η,v) = solution(problems[1];t=0)
+		(η,v) = solution(problems[1];T=0)
 		y0 = minimum(η);y1 = maximum(η);
 		ylims=(y0-(y1-y0)/10,y1+(y1-y0)/10)
 	end
 	if isnothing(vlims)
-		(η,v) = solution(problems[1];t=0)
+		(η,v) = solution(problems[1];T=0)
 		y0 = minimum(v);y1 = maximum(v);
 		vlims=(y0-(y1-y0)/10,y1+(y1-y0)/10)
 	end
 	if isnothing(flims)
-		(η,v) = solution(problems[1];t=0)
+		(η,v) = solution(problems[1];T=0)
 		f=(abs.(fft(η)))
 		y0 = minimum(f)+eps();y1 = maximum(f);
 		flims=(y0/(y1/y0)^0.1,y1*(y1/y0)^0.1)
@@ -117,13 +117,13 @@ function plot_solution!( plt, problems; t=nothing,x=nothing,interpolation=false,
 		end
 		# retrieve the solution to be plotted
 		if !isnothing(x)  # interpolate the solution to collocation points x
-			(η,v,y) = solution(p;t=t)
+			(η,v,y) = solution(p;T=t)
 			fftη = fft(η); fftv = fft(v)
-			(η,v,X,t) = solution(p;t=t,x=x)
+			(η,v,X,t) = solution(p;T=t,x=x)
 		else
-			(η,v,y) = solution(p;t=t)
+			(η,v,y) = solution(p;T=t)
 			fftη = fft(η); fftv = fft(v)
-			(η,v,X,t) = solution(p;t=t,interpolation=interpolation)
+			(η,v,X,t) = solution(p;T=t,interpolation=interpolation)
 		end
 		# generate the indices to be plotted (all if compression = false)
 		if compression == false
@@ -214,19 +214,19 @@ function plot_difference!( plt, problems; t=nothing,x=nothing,interpolation=fals
 		end
 		# retrieve the solution to be plotted
 		if !isnothing(x)  # interpolate the solution to collocation points x
-			(η1,v1,x1) = solution(p1;t=t); (η2,v2) = solution(p2;t=t);
+			(η1,v1,x1) = solution(p1;T=t); (η2,v2) = solution(p2;T=t);
 			fftη1 = fft(η1); fftv1 = fft(v1); fftη2 = fft(η2); fftv2 = fft(v2);
-			(η1,v1,X1,t) = solution(p1;t=t,x=x)
-			(η2,v2,X2,t) = solution(p2;t=t,x=x)
+			(η1,v1,X1,t) = solution(p1;T=t,x=x)
+			(η2,v2,X2,t) = solution(p2;T=t,x=x)
 
 		else
-			(η1,v1,x1) = solution(p1;t=t); (η2,v2) = solution(p2;t=t);
+			(η1,v1,x1) = solution(p1;T=t); (η2,v2) = solution(p2;T=t);
 			fftη1 = fft(η1); fftv1 = fft(v1); fftη2 = fft(η2); fftv2 = fft(v2);
-			(η1,v1,X1,t) = solution(p1;t=t,interpolation=interpolation)
+			(η1,v1,X1,t) = solution(p1;T=t,interpolation=interpolation)
 			if fast==true #will not interpolate to X1 if fast == true
-				(η2,v2,X2,t) = solution(p2;t=t,interpolation=interpolation)
+				(η2,v2,X2,t) = solution(p2;T=t,interpolation=interpolation)
 			else
-				(η2,v2,X2,t) = solution(p2;t=t,x=X1)
+				(η2,v2,X2,t) = solution(p2;T=t,x=X1)
 			end
 		end
 		if X1!=X2

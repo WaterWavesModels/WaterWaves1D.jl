@@ -9,6 +9,7 @@ include("./testmodels.jl")
 include("./testsolvers.jl")
 include("./testinit.jl")
 
+include("./test_notebooks.jl")
 
 param = ( ϵ  = 1/2, μ = 1)
 paramX= ( N  = 2^8, L  = 10)
@@ -59,9 +60,9 @@ for model in models
     @testset "Preserved quantities : $(model.label)" begin
     pb=Problem(model,Init(x->exp.(-x.^2),x->(x.+1).*exp.(-(x.+1).^2)),paramT)
     solve!(pb;verbose=false)
-    @test isapprox(mass(pb),mass(pb;t=0),rtol=1e-10)
-    @test isapprox(momentum(pb),momentum(pb;t=0),rtol=1e-10)
-    @test isapprox(energy(pb),energy(pb;t=0),rtol=1e-8)
+    @test isapprox(mass(pb),mass(pb;T=0),rtol=1e-10)
+    @test isapprox(momentum(pb),momentum(pb;T=0),rtol=1e-10)
+    @test isapprox(energy(pb),energy(pb;T=0),rtol=1e-8)
     @test abs(massdiff(pb))<1e-10
     @test abs(momentumdiff(pb))<1e-10
     @test abs(energydiff(pb;rel=true))<1e-8

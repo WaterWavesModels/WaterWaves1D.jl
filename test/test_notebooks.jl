@@ -18,7 +18,7 @@ import LinearAlgebra.norm
     solve!(WW2_unstable);
     WW2_rectified = Problem( WWn(param_unstable,dealias = 1,δ=0.01), init, param_unstable,label="rWW2" ) # δ is the strength of the regularization
     solve!(WW2_rectified);
-    WW2η,=solution(WW2_unstable;t=1);rWW2η,=solution(WW2_rectified;t=1);
+    WW2η,=solution(WW2_unstable;T=1);rWW2η,=solution(WW2_rectified;T=1);
     errWW2=norm(WW2η-rWW2η)/sqrt(length(WW2η))
     @test errWW2 ≈ 4.21076939181685e-5
     WW2η,=solution(WW2_unstable)
@@ -74,7 +74,7 @@ import LinearAlgebra.norm
     Matη,=solution(Matsuno_rand,x=WWx);errMat=norm(WWη-Matη)/sqrt(length(WWx))
     ANη,=solution(AkersNicholls_rand,x=WWx);errAN=norm(WWη-ANη)/sqrt(length(WWx))
 
-    @test 1e-4< errWW2 <1e-3
-    @test 1e-4< errMat <1e-3 
-    @test 1e-4< errAN  <1e-3  
+    @test 1e-4< errWW2 <2*1e-3
+    @test 1e-4< errMat <2*1e-3 
+    @test 1e-4< errAN  <2*1e-3  
 end
