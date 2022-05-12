@@ -15,31 +15,31 @@ function indices(compression :: Int, x)
 
 end
 
-function solution_time(problem :: Problem, time)
+function solution_time(problem :: Problem, T)
 
-    η, v, x, t = solution(problem; t = time)
-    t
+    η, v, x, time = solution(problem; t = T)
+    time
 
 end
-function solution_surface( problem :: Problem, time, x̃, interpolation, compression )
+function solution_surface( problem :: Problem, T, x̃, interpolation, compression )
 
-    η, v, x = solution(problem; x = x̃, t = time, interpolation = interpolation)
+    η, v, x = solution(problem; x = x̃, t = T, interpolation = interpolation)
     i = indices(compression, x)
     x[i], η[i]
 
 end
 
-function solution_velocity( problem :: Problem, time, x̃, interpolation, compression )
+function solution_velocity( problem :: Problem, T, x̃, interpolation, compression )
 
-    η, v, x = solution(problem; x = x̃, t = time, interpolation = interpolation)
+    η, v, x = solution(problem; x = x̃, t = T, interpolation = interpolation)
     i = indices(compression, x)
     x[i], v[i]
 
 end
 
-function solution_fourier( problem :: Problem, time, x̃, interpolation, compression )
+function solution_fourier( problem :: Problem, T, x̃, interpolation, compression )
 
-    η, v, x = solution(problem; x = x̃, t = time, interpolation = interpolation)
+    η, v, x = solution(problem; x = x̃, t = T, interpolation = interpolation)
     fftη = fft(η)
     k = fftshift(Mesh(x).k)
     y = abs.(fftshift(fftη))
@@ -48,21 +48,21 @@ function solution_fourier( problem :: Problem, time, x̃, interpolation, compres
 
 end
 
-function difference( problems :: Vector{Problem}, time, x̃, interpolation )
-    η1, v1, x1 = solution(problems[1]; x = x̃, t = time, interpolation = interpolation)
-    η2, v2, x2 = solution(problems[2]; x = x̃, t = time, interpolation = interpolation)
+function difference( problems :: Vector{Problem}, T, x̃, interpolation )
+    η1, v1, x1 = solution(problems[1]; x = x̃, t = T, interpolation = interpolation)
+    η2, v2, x2 = solution(problems[2]; x = x̃, t = T, interpolation = interpolation)
 
     if !(x1 ≈ x2)
 
         if Symbol(typeof(problems[2].model)) !== :WaterWaves
-            η2, v2, x2, t2 = solution(problems[2]; x = x1, t = time, interpolation = interpolation)
+            η2, v2, x2, t2 = solution(problems[2]; x = x1, t = T, interpolation = interpolation)
 
         elseif Symbol(typeof(problems[1].model)) !== :WaterWaves
-            η1, v1, x1, t1 = solution(problems[1]; x = x2, t = time, interpolation = interpolation)
+            η1, v1, x1, t1 = solution(problems[1]; x = x2, t = T, interpolation = interpolation)
 
         else
             @warn("The difference is computed on different collocation points.")
-            η2, v2, x2, t2 = solution(problems[2]; x = x1, t = time, interpolation = interpolation)
+            η2, v2, x2, t2 = solution(problems[2]; x = x1, t = T, interpolation = interpolation)
         end
 
     end
@@ -70,25 +70,25 @@ function difference( problems :: Vector{Problem}, time, x̃, interpolation )
 
 end
 
-function difference_surface( problems :: Vector{Problem}, time, x̃, interpolation, compression )
+function difference_surface( problems :: Vector{Problem}, T, x̃, interpolation, compression )
 
-    η1, v1, η2, v2, x = difference( problems :: Vector{Problem}, time, x̃, interpolation )
+    η1, v1, η2, v2, x = difference( problems :: Vector{Problem}, T, x̃, interpolation )
     i = indices(compression, x)
     x[i], η1[i].-η2[i]
 
 end
 
-function difference_velocity( problems :: Vector{Problem}, time, x̃, interpolation, compression )
+function difference_velocity( problems :: Vector{Problem}, T, x̃, interpolation, compression )
 
-    η1, v1, η2, v2, x = difference( problems :: Vector{Problem}, time, x̃, interpolation )
+    η1, v1, η2, v2, x = difference( problems :: Vector{Problem}, T, x̃, interpolation )
     i = indices(compression, x)
     x[i], v1[i].-v2[i]
 
 end
 
-function difference_fourier( problems :: Vector{Problem}, time, x̃, interpolation, compression )
+function difference_fourier( problems :: Vector{Problem}, T, x̃, interpolation, compression )
 
-    η1, v1, η2, v2, x = difference( problems :: Vector{Problem}, time, x̃, interpolation )
+    η1, v1, η2, v2, x = difference( problems :: Vector{Problem}, T, x̃, interpolation )
     if (x[2:end].-x[2]≈x[1:end-1].-x[1])
         k = fftshift(Mesh(x).k)
         
@@ -109,7 +109,7 @@ end
 
 @recipe function f(problem::Problem; 
                         var = :surface, 
-                        t = nothing, 
+                        T = nothing, 
                         x = nothing, 
                         interpolation = false, 
                         compression = false)
@@ -127,14 +127,13 @@ end
 	titlefontsize --> 10
 
 
-    x̃ = deepcopy(x)
-    t = solution_time( problem, time )
+    time = solution_time( problem, T )
 
 
 	for (n, variable) in enumerate(variables)
 
         if n == 1 
-            string_title = @sprintf(" at t= %7.3f", t)
+            string_title = @sprintf(" at t= %7.3f", time)
         else
             string_title = ""
         end
@@ -149,7 +148,7 @@ end
                 ylabel --> "η"
 	    		subplot := n
 
-                solution_surface( problem, time, x̃, interpolation, compression ) 
+                solution_surface( problem, T, x, interpolation, compression ) 
 	    	end
 
 	    end
@@ -165,7 +164,7 @@ end
                 ylabel --> "v"
 	    		subplot := n
 
-                solution_velocity( problem, time, x̃, interpolation, compression ) 
+                solution_velocity( problem, T, x, interpolation, compression ) 
 
 	    	end
 
@@ -183,7 +182,7 @@ end
                 yscale --> :log10
 	    		subplot := n
 
-                solution_fourier( problem, time, x̃, interpolation, compression ) 
+                solution_fourier( problem, T, x, interpolation, compression ) 
 
 	    	end
 
@@ -195,7 +194,7 @@ end
 
 @recipe function f(problems::Vector{Problem}; 
                     var = :surface, 
-                    t = nothing, 
+                    T = nothing, 
                     x = nothing, 
                     interpolation = false, 
                     compression = false)
@@ -209,13 +208,12 @@ end
 	layout := (length(variables), 1)
 	titlefontsize --> 10
 
-    x̃ = deepcopy(x)
-    t = solution_time( problems[1], time )
+    time = solution_time( problems[1], T )
 
     for (n, variable) in enumerate(variables)
 
         if n == 1 
-            string_title = @sprintf(" at t= %7.3f", t)
+            string_title = @sprintf(" at t= %7.3f", time)
         else
             string_title = ""
         end
@@ -232,7 +230,7 @@ end
                     ylabel --> "η"
                     subplot := n
     
-                    solution_surface( problem, time, x̃, interpolation, compression ) 
+                    solution_surface( problem, T, x, interpolation, compression ) 
     
                 end
     
@@ -253,7 +251,7 @@ end
                     ylabel --> "v"
                     subplot := n
     
-                    solution_velocity( problem, time, x̃, interpolation, compression ) 
+                    solution_velocity( problem, T, x, interpolation, compression ) 
     
                 end
     
@@ -275,7 +273,7 @@ end
                     yscale --> :log10
                     subplot := n
     
-                    solution_fourier( problem, time, x̃, interpolation, compression ) 
+                    solution_fourier( problem, T, x, interpolation, compression ) 
 
     
                 end
@@ -293,7 +291,7 @@ end
 	            title --> string("Difference (surface deformation)", string_title)
                 subplot := n
                 
-                difference_surface( [problems[1],problems[2]], time, x̃, interpolation, compression ) 
+                difference_surface( [problems[1],problems[2]], T, x, interpolation, compression ) 
 
             end
 
@@ -310,7 +308,7 @@ end
                 title --> string("Difference (velocity)", string_title)
                 subplot := n
                 
-                difference_velocity( [problems[1],problems[2]], time, x̃, interpolation, compression ) 
+                difference_velocity( [problems[1],problems[2]], T, x, interpolation, compression ) 
 
             end
 
@@ -328,7 +326,7 @@ end
                 yscale --> :log10
                 subplot := n
                 
-                difference_fourier( [problems[1],problems[2]], time, x̃, interpolation, compression ) 
+                difference_fourier( [problems[1],problems[2]], T, x, interpolation, compression ) 
 
             end
 
@@ -346,7 +344,7 @@ end
                     title --> string("Difference (surface deformation)", string_title)
                     subplot := n
                     
-                    difference_surface( [problems[i],problems[j]], time, x̃, interpolation, compression ) 
+                    difference_surface( [problems[i],problems[j]], T, x, interpolation, compression ) 
 
                 end
 
@@ -367,7 +365,7 @@ end
                     title --> string("Difference (velocity)", string_title)
                     subplot := n
                     
-                    difference_velocity( [problems[i],problems[j]], time, x̃, interpolation, compression ) 
+                    difference_velocity( [problems[i],problems[j]], T, x, interpolation, compression ) 
 
                 end
 
@@ -389,7 +387,7 @@ end
                     yscale --> :log10
                     subplot := n
                     
-                    difference_fourier( [problems[i],problems[j]], time, x̃, interpolation, compression ) 
+                    difference_fourier( [problems[i],problems[j]], T, x, interpolation, compression ) 
 
                 end
 
@@ -404,7 +402,7 @@ end
 
 @recipe function f(pairs::Vector{Tuple{Problem, Problem}};
                     var = :difference, 
-                    t = nothing, 
+                    T = nothing, 
                     x = nothing, 
                     interpolation = false, 
                     compression = false)
@@ -419,16 +417,14 @@ end
 	layout := (length(variables), 1)
 	titlefontsize --> 10
 
-    x̃ = deepcopy(x)
-
     for problems in pairs
 
-        t = solution_time( problems[1], time )
+        time = solution_time( problems[1], T )
 
         for (n, variable) in enumerate(variables)
 
             if n == 1 
-                string_title = @sprintf(" at t= %7.3f", t)
+                string_title = @sprintf(" at t= %7.3f", time)
             else
                 string_title = ""
             end
@@ -443,7 +439,7 @@ end
                     title --> string("Difference (surface deformation)", string_title)
                     subplot := n
                     
-                    difference_surface( [problems[1],problems[2]], time, x̃, interpolation, compression ) 
+                    difference_surface( [problems[1],problems[2]], T, x, interpolation, compression ) 
 
                 end
 
@@ -460,7 +456,7 @@ end
                     title --> string("Difference (velocity)", string_title)
                     subplot := n
                     
-                    difference_velocity( [problems[1],problems[2]], time, x̃, interpolation, compression ) 
+                    difference_velocity( [problems[1],problems[2]], T, x, interpolation, compression ) 
 
                 end
 
@@ -478,7 +474,7 @@ end
                     yscale --> :log10
                     subplot := n
                     
-                    difference_fourier( [problems[1],problems[2]], time, x̃, interpolation, compression ) 
+                    difference_fourier( [problems[1],problems[2]], T, x, interpolation, compression ) 
 
                 end
 
