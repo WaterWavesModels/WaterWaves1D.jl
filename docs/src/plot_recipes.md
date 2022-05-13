@@ -17,10 +17,10 @@ init = Init(z,v)
 model1 = WaterWaves(param; tol = 1e-15) # The water waves system
 model2 = WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
 
-problem1 = Problem(model1, init, param) ;
-problem2 = Problem(model2, init, param) ;
+problem1 = Problem(model1, init, param)
+problem2 = Problem(model2, init, param)
 
-solve!([problem1 problem2]; verbose=false);
+solve!([problem1 problem2]; verbose=false)
 
 plot(problem1)
 plot!(problem2; legend = :bottomright)
@@ -108,14 +108,6 @@ problem2 = Problem(model2, init, param)
 
 solve!([problem1 problem2]; verbose=false)
 
-plotdifferences(problem1, problem2)
-```
-
-```@example fourier
-plotdifferences([problem1, problem2])
-```
-
-```@example fourier
 plot([problem1, problem2]; var = [:surface, :difference])
 ```
 
@@ -124,7 +116,7 @@ plot([problem1, problem2]; var = [:surface, :difference])
 ```@example fourier
 x̃ = LinRange(-5, 5, 128)
 
-plot(problem2, x̃, shape = :circle)
+# plot(problem2, x = x̃, interpolation = true, shape = :circle)
 ```
 
 
