@@ -70,4 +70,4 @@ Generate an animation.
 end
 ```
 
-See the [recipes](plot_recipes.md) for many more plotting possibilities.
+See the [plot recipes](plot_recipes.md) for many more plotting possibilities.

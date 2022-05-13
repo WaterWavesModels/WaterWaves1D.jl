@@ -16,7 +16,7 @@ Enter the Pkg REPL by pressing `]` from the Julia REPL.
 ~~~
 
 Once installed, load the package with
-```julia
+```@repl
 using WaterWaves1D
 ```
 

@@ -18,14 +18,13 @@ model0 = WaterWaves(param; tol = 1e-15)  # The water waves system
 model1 = Airy(param)                     # The linear model (Airy)
 model2 = WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
 
-problem0 = Problem(model0, init, param) ;
-problem1 = Problem(model1, init, param) ;
-problem2 = Problem(model2, init, param) ;
+problem0 = Problem(model0, init, param);
+problem1 = Problem(model1, init, param);
+problem2 = Problem(model2, init, param);
 
 solve!([problem0 problem1 problem2]; verbose=false);
-```
 
-```@example surface
+
 plot(problem0)
 plot!(problem1)
 plot!(problem2; var = :surface, legend = :bottomright)
@@ -71,9 +70,7 @@ param2 = ( ϵ = 1/4, μ = Inf, N = 2^9, L = 2*π, T = 5, dt = 0.001 )
 problem2 = Problem( WWn(param2, dealias = 1), init, param2 ) 
 
 solve!([problem1, problem2])
-```
 
-```@example fourier
 plot([problem1, problem2]; T=5, var = :fourier)
 ```
 

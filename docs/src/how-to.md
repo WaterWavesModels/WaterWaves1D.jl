@@ -205,5 +205,5 @@ indices = (fftη .!=0) .& (fftv .!=0 )
 plot(k[indices], [ abs.(fftη)[indices] abs.(fftv)[indices] ], yscale=:log10)
 ```
 
-Built-in [recipes](plot_recipes.md) provide convenient ways of producing such plots, and animations.
+Built-in [plot recipes](plot_recipes.md) provide convenient ways of producing such plots, and animations.
 ## save and load your data
