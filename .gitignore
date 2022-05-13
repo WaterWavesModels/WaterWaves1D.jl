@@ -8,3 +8,5 @@ Project.toml
 .vscode/extensions.json
 docs/build/
 *.swp
+.vscode/launch.json
+.vscode/settings.json

@@ -1,9 +1,9 @@
 # Plot recipes
 
-There some [recipes](https://docs.juliaplots.org/latest/recipes/) available to visualize
-problems solution. You need to import the package [Plots.jl](https://github.com/JuliaPlots/Plots.jl).
+Some [recipes](https://docs.juliaplots.org/latest/recipes/) are available to visualize
+computed problems solution. You need to import the package [Plots.jl](https://github.com/JuliaPlots/Plots.jl).
 
-## Surface deformation
+## Surface deformation and velocity
 
 ```@example surface
 using Plots
@@ -14,34 +14,52 @@ z(x) = exp.(-abs.(x).^4)
 v(x) = zero(x)
 init = Init(z,v)
 
-model1 = WaterWaves(param; tol = 1e-15) # The water waves system
+model0 = WaterWaves(param; tol = 1e-15)  # The water waves system
+model1 = Airy(param)                     # The linear model (Airy)
 model2 = WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
 
+<<<<<<< Updated upstream
 problem1 = Problem(model1, init, param)
 problem2 = Problem(model2, init, param)
 
 solve!([problem1 problem2]; verbose=false)
+=======
+problem0 = Problem(model0, init, param) ;
+problem1 = Problem(model1, init, param) ;
+problem2 = Problem(model2, init, param) ;
 
-plot(problem1)
-plot!(problem2; legend = :bottomright)
+solve!([problem0 problem1 problem2]; verbose=false);
+```
+>>>>>>> Stashed changes
+
+```@example surface
+plot(problem0)
+plot!(problem1)
+plot!(problem2; var = :surface, legend = :bottomright)
+```
+
+
+```@example surface
+plot([problem0, problem1, problem2]; var = :velocity, legend = :bottomright)
+```
+
+## Differences
+
+```@example surface
+plot([problem0, problem1], var = :difference)
+plot!([problem0, problem2], var = :difference)
 ```
 
 ```@example surface
-plot(problem1, var = :velocity)
-plot!(problem2; var = :velocity, legend = :bottomright)
+plot([(problem0, problem1), (problem0, problem2)])
 ```
 
 ```@example surface
-plot(problem1, var = [:surface, :velocity])
+plot([(problem0, problem1), (problem0, problem2)], var = :difference_velocity)
 ```
 
-```@example surface
-plot(problem2, var = [:surface, :fourier])
-```
 
-```@example surface
-plot([problem1, problem2])
-```
+## Fourier coefficients
 
 ```@example fourier
 using Plots
@@ -60,12 +78,15 @@ param2 = ( ϵ = 1/4, μ = Inf, N = 2^9, L = 2*π, T = 5, dt = 0.001 )
 problem2 = Problem( WWn(param2, dealias = 1), init, param2 ) 
 
 solve!([problem1, problem2])
-
-plot(problem1; var = :fourier)
-plot!(problem2; var = :fourier)
 ```
 
-## Subplots with layout
+```@example fourier
+plot([problem1, problem2]; T=5, var = :fourier)
+```
+
+
+
+## Subplots
 
 ```@example fourier
 l = @layout [a ; b; c]
@@ -77,6 +98,7 @@ plot(p1, p2, p3, layout = l,
 	 labelfontsize=8)
 ```
 
+<<<<<<< Updated upstream
 
 ## Frequency
 
@@ -110,22 +132,32 @@ solve!([problem1 problem2]; verbose=false)
 
 plot([problem1, problem2]; var = [:surface, :difference])
 ```
+=======
+```@example fourier
+plot(problem1, var = [:surface,:velocity,:fourier])
+```
+
+>>>>>>> Stashed changes
 
 ## Interpolation
 
 ```@example fourier
 x̃ = LinRange(-5, 5, 128)
 
+<<<<<<< Updated upstream
 # plot(problem2, x = x̃, interpolation = true, shape = :circle)
+=======
+plot(problem2, x = x̃, shape = :circle)
+>>>>>>> Stashed changes
 ```
 
 
 ## Plots at different times
 
 ```@example fourier
-plot(problem1, time = 0, label = "t = 0")
+plot(problem1, T = 0, label = "t = 0")
 for t in 1:5
-    plot!(problem1, time = t, label = "t = $t")
+    plot!(problem1, T = t, label = "t = $t")
 end
 title!("surface deformation for t ∈ [0,5]")
 ```
@@ -133,8 +165,8 @@ title!("surface deformation for t ∈ [0,5]")
 ## Create animation
 
 ```@example fourier
-@gif for t in LinRange(0,param.T,100)
-    plot(problem1, time = t)
+@gif for t in LinRange(0,param1.T,100)
+    plot(problem1, T = t)
     ylims!(-0.5, 1)
 end
 ``` 

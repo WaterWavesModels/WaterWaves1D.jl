@@ -205,14 +205,5 @@ indices = (fftη .!=0) .& (fftv .!=0 )
 plot(k[indices], [ abs.(fftη)[indices] abs.(fftv)[indices] ], yscale=:log10)
 ```
 
-The convenient built-in function [`plot_solution`](@ref WaterWaves1D.plot_solution) produces such plots, allowing in addition interpolations or compression.
-
-A similar function is [`plot_difference`](@ref WaterWaves1D.plot_difference) which allows to plot the difference between the outcome of several problems.
-
-Finally, [`create_animation`](@ref WaterWaves1D.create_animation) allows to produce an animation with, for instance,
-```julia
-anim = create_animation(problem)
-gif(anim, "my_animation.gif", fps=15)
-```
-
+Built-in [recipes](plot_recipes.md) provide convenient ways of producing such plots, and animations.
 ## save and load your data

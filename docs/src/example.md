@@ -9,7 +9,6 @@ More advanced examples can be found in the package's [examples](https://github.c
 First we define parameters of our problem.
 
 ```@example 1
-using Plots
 using WaterWaves1D
 
 param = (
@@ -54,18 +53,21 @@ solve!([WW_problem WW2_problem];verbose=false);
 ```
 ## Generate graphics
 
-Plot solutions at final time ([`plot_solution`](@ref WaterWaves1D.plot_solution) has many options).
+Plot solutions at final time.
 
 ```@example 1
-plot_solution([WW_problem WW2_problem];fourier=false)
+using Plots
+plot([WW_problem, WW2_problem])
 ```
 
-Generate an animation ([`create_animation`](@ref WaterWaves1D.create_animation) has many options).
+Generate an animation.
 
 
 ```@example 1
-anim = create_animation([WW_problem WW2_problem];fourier=false,ylims=(-0.5,1))
-gif(anim, "assets/example.gif", fps=15); nothing # hide
+@gif for t in LinRange(0,param.T,100)
+    plot([WW_problem, WW2_problem], T = t)
+    ylims!(-0.5, 1)
+end
 ```
 
-![](assets/example.gif)
+See the [recipes](plot_recipes.md) for many more plotting possibilities.
