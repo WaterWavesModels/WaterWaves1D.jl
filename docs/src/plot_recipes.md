@@ -18,19 +18,12 @@ model0 = WaterWaves(param; tol = 1e-15)  # The water waves system
 model1 = Airy(param)                     # The linear model (Airy)
 model2 = WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
 
-<<<<<<< Updated upstream
-problem1 = Problem(model1, init, param)
-problem2 = Problem(model2, init, param)
-
-solve!([problem1 problem2]; verbose=false)
-=======
 problem0 = Problem(model0, init, param) ;
 problem1 = Problem(model1, init, param) ;
 problem2 = Problem(model2, init, param) ;
 
 solve!([problem0 problem1 problem2]; verbose=false);
 ```
->>>>>>> Stashed changes
 
 ```@example surface
 plot(problem0)
@@ -98,57 +91,16 @@ plot(p1, p2, p3, layout = l,
 	 labelfontsize=8)
 ```
 
-<<<<<<< Updated upstream
-
-## Frequency
-
-```@example fourier
-plot([problem1, problem2]; var = [:velocity, :fourier], label = :none)
-```
-
-## Differences
-
-```@example fourier
-
-param = (
-    μ  = 1, 
-    ϵ  = 1/4, 
-    N  = 2^10,
-    L  = 10, 
-    T  = 5, 
-    dt = 0.01)
-
-z(x) = exp.(-abs.(x).^4)
-v(x) = zero(x)
-init = Init(z,v)
-
-model1 = WaterWaves(param, tol = 1e-15)
-model2 = WWn(param; n = 2, dealias = 1, δ = 1/10)
-
-problem1 = Problem(model1, init, param)
-problem2 = Problem(model2, init, param)
-
-solve!([problem1 problem2]; verbose=false)
-
-plot([problem1, problem2]; var = [:surface, :difference])
-```
-=======
 ```@example fourier
 plot(problem1, var = [:surface,:velocity,:fourier])
 ```
 
->>>>>>> Stashed changes
 
 ## Interpolation
 
 ```@example fourier
 x̃ = LinRange(-5, 5, 128)
-
-<<<<<<< Updated upstream
-# plot(problem2, x = x̃, interpolation = true, shape = :circle)
-=======
 plot(problem2, x = x̃, shape = :circle)
->>>>>>> Stashed changes
 ```
 
 
