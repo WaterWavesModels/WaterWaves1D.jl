@@ -206,19 +206,19 @@ end
     solve!(WW);solve!(GN);solve!(NH);solve!(SRD);solve!(WGN);solve!(IK);
 
     WWη,WWv,WWx,=solution(WW)
-    GNη,=solution(GN,x=WWx);errGN=norm(WWη-GNη)/sqrt(length(x))
-    SRDη,=solution(SRD,x=WWx);errSRD=norm(WWη-SRDη)/sqrt(length(x))
-    NHη,=solution(NH,x=WWx);errNH=norm(WWη-NHη)/sqrt(length(x))
-    WGNη,=solution(WGN,x=WWx);errWGN=norm(WWη-WGNη)/sqrt(length(x))
-    IKη,=solution(IK,x=WWx);errIK=norm(WWη-IKη)/sqrt(length(x))
+    GNη,=solution(GN,x=WWx);errGN=norm(WWη-GNη)/norm(WWη)
+    SRDη,=solution(SRD,x=WWx);errSRD=norm(WWη-SRDη)/norm(WWη)
+    NHη,=solution(NH,x=WWx);errNH=norm(WWη-NHη)/norm(WWη)
+    WGNη,=solution(WGN,x=WWx);errWGN=norm(WWη-WGNη)/norm(WWη)
+    IKη,=solution(IK,x=WWx);errIK=norm(WWη-IKη)/norm(WWη)
 
 
 
-    @test errGN > 2*1e-3 && errGN < 2*1e-2
-    @test errSRD > 2*1e-3 && errSRD < 2*1e-2
-    @test errNH > 2*1e-3 && errNH < 2*1e-2
-    @test errWGN > 2*1e-4 && errWGN < 2*1e-3    
-    @test errIK > 2*1e-4 && errIK < 2*1e-3
+    @test  5*1e-3 < errGN  < 5*1e-2
+    @test  5*1e-3 < errSRD < 5*1e-2
+    @test  5*1e-3 < errNH  < 5*1e-2
+    @test  1e-3 < errWGN < 1e-2    
+    @test  1e-3 < errIK  < 1e-2
 
 end
 
