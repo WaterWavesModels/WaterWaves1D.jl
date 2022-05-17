@@ -214,9 +214,9 @@ end
 
 
 
-    @test  5*1e-3 < errGN  < 5*1e-2
-    @test  5*1e-3 < errSRD < 5*1e-2
-    @test  5*1e-3 < errNH  < 5*1e-2
+    @test  1e-2 < errGN  < 1e-1
+    @test  1e-2 < errSRD < 1e-1
+    @test  1e-2 < errNH  < 1e-1
     @test  1e-3 < errWGN < 1e-2    
     @test  1e-3 < errIK  < 1e-2
 
