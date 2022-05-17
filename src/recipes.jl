@@ -192,7 +192,7 @@ end
 
 end
 
-@recipe function f(problems::Vector{Problem}; 
+@recipe function f(problems::Vector{Any}; 
                     var = :surface, 
                     T = nothing, 
                     x = nothing, 
