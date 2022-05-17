@@ -1,7 +1,6 @@
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
-*.h5
 deps/deps.jl
 Manifest.toml
 Project.toml

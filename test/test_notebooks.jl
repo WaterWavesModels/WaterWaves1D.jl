@@ -213,11 +213,11 @@ end
 
 
 
-    @test  1e-2 < errGN  < 2e-2
-    @test  2e-2 < errSRD < 4e-2
-    @test  1e-2 < errNH  < 2e-2
-    @test  4e-3 < errWGN < 8e-3    
-    @test  2e-3 < errIK  < 4e-3
+    @test  errGN  ≈ 0.019492085082947582
+    @test  errSRD ≈ 0.032762377673748344
+    @test  errNH  ≈ 0.019380927144301712
+    @test  errWGN ≈ 0.004015850164345053   
+    @test  errIK  ≈ 0.002501413432973788
 
 end
 
@@ -253,14 +253,12 @@ end
 
     solve!(WW2);#solve!(SGN);solve!(WGN);
 
-    using DelimitedFiles
-    data2a = readdlm("./notebooks/Hammack-Segur/Fig2aFixed.out",'\t'); 
-    data2b = readdlm("./notebooks/Hammack-Segur/Fig2bFixed.out",'\t');
-    data2c = readdlm("./notebooks/Hammack-Segur/Fig2cFixed.out",'\t');
-    data2d = readdlm("./notebooks/Hammack-Segur/Fig2dFixed.out",'\t');
-    data2e = readdlm("./notebooks/Hammack-Segur/Fig2eFixed.out",'\t');   
-
-
+    using HDF5
+    data2a = h5read("./HammackSegur.h5","data2a")
+    data2b = h5read("./HammackSegur.h5","data2b")
+    data2c = h5read("./HammackSegur.h5","data2c")
+    data2d = h5read("./HammackSegur.h5","data2d")
+    data2e = h5read("./HammackSegur.h5","data2e")
     
 
     function gauge(p::Problem;x=0,T=nothing)
@@ -281,33 +279,33 @@ end
     ηa=data2a[:,2]*d*2/3
     ga=interpolate(mesh_of_times,gauge(WW2,x=1)[2],ta)
 
-    @test norm(ηa-ga)/norm(ηa) <0.2
+    @test norm(ηa-ga)/norm(ηa) ≈ 0.1672677795663852
 
     tb=(data2b[:,1].+50)/sqrt(g*d)*λ
     ηb=data2b[:,2]*d*2/3
     gb=interpolate(mesh_of_times,gauge(WW2,x=51)[2],tb)
 
-    @test norm(ηb-gb)/norm(ηb) <0.2
+    @test norm(ηb-gb)/norm(ηb) ≈ 0.13526329598410575
 
 
     tc=(data2c[:,1].+100)/sqrt(g*d)*λ
     ηc=data2c[:,2]*d*2/3
     gc=interpolate(mesh_of_times,gauge(WW2,x=101)[2],tc)
 
-    @test norm(ηc-gc)/norm(ηc) <0.3
+    @test norm(ηc-gc)/norm(ηc) ≈ 0.2599790311975911
 
 
     td=(data2d[:,1].+150)/sqrt(g*d)*λ
     ηd=data2d[:,2]*d*2/3
     gd=interpolate(mesh_of_times,gauge(WW2,x=151)[2],td)
 
-    @test norm(ηd-gd)/norm(ηd) <0.5
+    @test norm(ηd-gd)/norm(ηd) ≈ 0.4981462329721109
 
 
     te=(data2e[:,1].+200)/sqrt(g*d)*λ
     ηe=data2e[:,2]*d*2/3
     ge=interpolate(mesh_of_times,gauge(WW2,x=201)[2],te)
 
-    @test norm(ηe-ge)/norm(ηe) <0.5
+    @test norm(ηe-ge)/norm(ηe) ≈ 0.4921927105753341
 
 end
