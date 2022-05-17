@@ -94,7 +94,7 @@ function Integrate(scenario;μ=.1,ϵ=.1,p=2,N=2^10,L=15,T=10,dt=0.001,dealias=0,
 
 	#---- plots
 	# solutions at final time
-	plt = plot_solution(problems;fourier=true)
+	plt = plot(problems)
 	display(plt)
 
 
@@ -111,7 +111,7 @@ function Integrate(scenario;μ=.1,ϵ=.1,p=2,N=2^10,L=15,T=10,dt=0.001,dealias=0,
 		end
 
 		# Plot and save the solutions at final time
-		plot_solution(problems;fourier=false)
+		plot(problems;fourier=false)
 		plot!(xlims=xlims,legend=:topleft)
 		savefig(string(name,".pdf"));
 
@@ -126,7 +126,10 @@ function Integrate(scenario;μ=.1,ϵ=.1,p=2,N=2^10,L=15,T=10,dt=0.001,dealias=0,
 		savefig(string(name,"-differences.pdf"));
 
 		# Generate and save an animation of the evolution in time
-		create_animation(problems;fourier=false,xlims=xlims,ylims=(-0.5,1),name=name)
+		anim = @animate for time in LinRange(0,param.T,100)
+			plot(problems; T = time, xlims=xlims,ylims=(-0.5,1))
+		end
+		gif(anim,string(name,".gif"))
 
 	end
 
