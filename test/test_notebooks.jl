@@ -192,8 +192,7 @@ end
         dt = 0.01, # timestep
                     );
 
-    random = Random(param;L=1);     # randomly generate initial data. Type `?random` for possible parameterization.
-    init= Init(random.η,zero); # we set the initial velocity as zero to avoid inconsistencies among different models.
+    init= Init(x->exp.(-x.^4),zero); # we set the initial velocity as zero to avoid inconsistencies among different models.
 
     WW = Problem( WaterWaves(param,dealias = 1, verbose=false), init, param ) 
     GN = Problem( SerreGreenNaghdi(param; dealias = 0, iterate = true, precond = true), init, param )
@@ -214,11 +213,11 @@ end
 
 
 
-    @test  1e-2 < errGN  < 1e-1
-    @test  1e-2 < errSRD < 1e-1
-    @test  1e-2 < errNH  < 1e-1
-    @test  1e-3 < errWGN < 1e-2    
-    @test  1e-3 < errIK  < 1e-2
+    @test  1e-2 < errGN  < 2e-2
+    @test  2e-2 < errSRD < 4e-2
+    @test  1e-2 < errNH  < 2e-2
+    @test  4e-3 < errWGN < 8e-3    
+    @test  2e-3 < errIK  < 4e-3
 
 end
 
