@@ -144,8 +144,8 @@ end
 
                 title --> string("Surface deformation", string_title)
                 label --> problem.label
-                xlabel --> "x"
-                ylabel --> "η"
+                xguide --> "x"
+                yguide --> "η"
 	    		subplot := n
 
                 solution_surface( problem, T, x, interpolation, compression ) 
@@ -160,8 +160,8 @@ end
 
                 title --> string("Velocity",string_title)
                 label --> problem.label
-                xlabel --> "x"
-                ylabel --> "v"
+                xguide --> "x"
+                yguide --> "v"
 	    		subplot := n
 
                 solution_velocity( problem, T, x, interpolation, compression ) 
@@ -177,8 +177,8 @@ end
 
                 title --> string("Fourier coefficients (log scale)",string_title)
                 label --> problem.label
-                xlabel --> "wavenumber"
-                ylabel --> "amplitude"
+                xguide --> "wavenumber"
+                yguide --> "amplitude"
                 yscale --> :log10
 	    		subplot := n
 
@@ -226,8 +226,8 @@ end
         
                     title --> string("Surface deformation", string_title)
                     label --> problem.label
-                    xlabel --> "x"
-                    ylabel --> "η"
+                    xguide --> "x"
+                    yguide --> "η"
                     subplot := n
     
                     solution_surface( problem, T, x, interpolation, compression ) 
@@ -247,8 +247,8 @@ end
     
                     title --> string("Velocity", string_title)
                     label --> problem.label
-                    xlabel --> "x"
-                    ylabel --> "v"
+                    xguide --> "x"
+                    yguide --> "v"
                     subplot := n
     
                     solution_velocity( problem, T, x, interpolation, compression ) 
@@ -268,8 +268,8 @@ end
     
                     title --> string("Fourier coefficients (log scale)", string_title)
                     label --> problem.label
-                    xlabel --> "wavenumber"
-                    ylabel --> "amplitude"
+                    xguide --> "wavenumber"
+                    yguide --> "amplitude"
                     yscale --> :log10
                     subplot := n
     
@@ -285,8 +285,8 @@ end
 
 
             @series begin
-                xlabel --> "x"
-                ylabel --> "Δη"
+                xguide --> "x"
+                yguide --> "Δη"
 	            label --> "$(problems[1].label) - $(problems[2].label)"
 	            title --> string("Difference (surface deformation)", string_title)
                 subplot := n
@@ -302,8 +302,8 @@ end
 
 
             @series begin
-                xlabel --> "x"
-                ylabel --> "Δv"
+                xguide --> "x"
+                yguide --> "Δv"
                 label --> "$(problems[1].label) - $(problems[2].label)"
                 title --> string("Difference (velocity)", string_title)
                 subplot := n
@@ -319,8 +319,8 @@ end
 
                 
             @series begin
-                xlabel --> "frequency"
-                ylabel --> "amplitude"
+                xguide --> "frequency"
+                yguide --> "amplitude"
                 label --> "$(problems[1].label) - $(problems[2].label)"
                 title --> string("Difference (Fourier coefficients in log scale)", string_title)
                 yscale --> :log10
@@ -338,8 +338,8 @@ end
 
             for (i, j) in pairs
                 @series begin
-                    xlabel --> "x"
-                    ylabel --> "Δη"
+                    xguide --> "x"
+                    yguide --> "Δη"
                     label --> "$(problems[i].label) - $(problems[j].label)"
                     title --> string("Difference (surface deformation)", string_title)
                     subplot := n
@@ -359,8 +359,8 @@ end
             for (i, j) in pairs
 
                 @series begin
-                    xlabel --> "x"
-                    ylabel --> "Δv"
+                    xguide --> "x"
+                    yguide --> "Δv"
                     label --> "$(problems[i].label) - $(problems[j].label)"
                     title --> string("Difference (velocity)", string_title)
                     subplot := n
@@ -380,8 +380,8 @@ end
             for (i, j) in pairs
                 
                 @series begin
-                    xlabel --> "frequency"
-                    ylabel --> "amplitude"
+                    xguide --> "frequency"
+                    yguide --> "amplitude"
                     label --> "$(problems[i].label) - $(problems[j].label)"
                     title --> string("Difference (Fourier coefficients in log scale)", string_title)
                     yscale --> :log10
@@ -433,8 +433,8 @@ end
 
 
                 @series begin
-                    xlabel --> "x"
-                    ylabel --> "Δη"
+                    xguide --> "x"
+                    yguide --> "Δη"
                     label --> "$(problems[1].label) - $(problems[2].label)"
                     title --> string("Difference (surface deformation)", string_title)
                     subplot := n
@@ -450,8 +450,8 @@ end
 
 
                 @series begin
-                    xlabel --> "x"
-                    ylabel --> "Δv"
+                    xguide --> "x"
+                    yguide --> "Δv"
                     label --> "$(problems[1].label) - $(problems[2].label)"
                     title --> string("Difference (velocity)", string_title)
                     subplot := n
@@ -467,8 +467,8 @@ end
 
                     
                 @series begin
-                    xlabel --> "frequency"
-                    ylabel --> "amplitude"
+                    xguide --> "frequency"
+                    yguide --> "amplitude"
                     label --> "$(problems[1].label) - $(problems[2].label)"
                     title --> string("Difference (Fourier coefficients in log scale)", string_title)
                     yscale --> :log10
