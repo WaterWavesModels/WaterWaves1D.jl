@@ -43,7 +43,6 @@ include("problem.jl")
 
 # tools
 include("tools.jl")
-include("figures.jl")
 include("recipes.jl")
 
 # initial data, models, solvers
