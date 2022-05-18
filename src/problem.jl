@@ -231,23 +231,14 @@ function solve!(problems; verbose=true::Bool)
 end
 
 
-function dump( h5file :: String, param :: NamedTuple )
-
-    for (k,v) in pairs(param)
-        h5write(joinpath(h5file * ".h5"), "/param/$k", v)
-    end
-
-end
-
-function load_param( h5file :: String )
-
-    h5open(joinpath(h5file * ".h5")) do f
-         param = read(f["param"])
-         return (; (Symbol(k) => v for (k,v) in param)...)
-    end
-
-end
-
 Base.:(≈)(x::NamedTuple{N,T}, y::NamedTuple{N2,T2}) where {N,T,N2,T2} =
-  length(N) === length(union(N,N2)) &&
-  all(k->getfield(x,k) == getfield(y,k), keys(x))
+    length(N) === length(union(N,N2)) && all(k->getfield(x,k) == getfield(y,k), keys(x))
+
+
+Base.:(==)(p1::Problem, p2::Problem) =
+    p1.model == p2.model &&
+    p1.initial == p2.initial &&
+    p1.solver == p2.solver &&
+    p1.times == p2.times &&
+    p1.data == p2.data &&
+    p1.label == p2.label

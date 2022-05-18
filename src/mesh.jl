@@ -77,22 +77,5 @@ show(io::IO, m::Mesh) =
     print(io,"One-dimensional grid of $(m.N) collocation points on [$(m.xmin), $(m.xmax)].\n\
     ├─Grid spacing dx=$(m.dx).\n└─Maximal wavenumber k=$(-m.kmin).")
 
-function dump( h5file :: String, mesh :: Mesh )
-
-    h5write(joinpath(h5file * ".h5"), "/mesh/xmin", mesh.xmin)
-    h5write(joinpath(h5file * ".h5"), "/mesh/xmax", mesh.xmax)
-    h5write(joinpath(h5file * ".h5"), "/mesh/N", mesh.N)
-
-end
-
-function load_mesh( h5file :: String )
-
-    xmin = h5read(joinpath(h5file * ".h5"), "/mesh/xmin")
-    xmax = h5read(joinpath(h5file * ".h5"), "/mesh/xmax")
-    N = h5read(joinpath(h5file * ".h5"), "/mesh/N")
-
-    return Mesh( (xmin=xmin, xmax=xmax, N=N) )
-
-end
 
 Base.:(==)(a::Mesh, b::Mesh) = ( a.N == b.N && a.xmin == a.xmin && a.xmax == b.xmax )

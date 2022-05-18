@@ -65,24 +65,11 @@ show(io::IO, t::Times) =
     ├─Number of computed times: $(t.Nc),\n\
     └───Number of stored times: $(t.Ns).")
 
-function dump( h5file :: String, times :: Times )
-
-    h5write(joinpath(h5file * ".h5"), "/times/dt", times.dt)
-    h5write(joinpath(h5file * ".h5"), "/times/tfin", times.tfin)
-    h5write(joinpath(h5file * ".h5"), "/times/ns", times.ns)
-    h5write(joinpath(h5file * ".h5"), "/times/Ns", times.Ns)
-
-end
-
-function load_times( h5file :: String )
-
-    dt = h5read(joinpath(h5file * ".h5"),   "/times/dt")
-    tfin = h5read(joinpath(h5file * ".h5"), "/times/tfin")
-    ns = h5read(joinpath(h5file * ".h5"),   "/times/ns")
-    Ns = h5read(joinpath(h5file * ".h5"),   "/times/Ns")
-
-    return Times( (dt=dt, T=tfin); ns = ns, Ns=Ns)
-
-end
-
-Base.:(==)(a::Times, b::Times) = ( a.dt == b.dt && a.tfin == a.tfin && a.ns == b.ns )
+Base.:(==)(a::Times, b::Times) = 
+     a.dt == b.dt && 
+     a.tfin == a.tfin && 
+     a.ns == b.ns &&
+     a.Ns == b.Ns &&
+     a.Nc == b.Nc &&
+     a.tc == b.tc &&
+     a.ts == b.ts 

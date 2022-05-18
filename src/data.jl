@@ -1,7 +1,7 @@
 export Data
 
 """
-    Data( mm :: Matrix )
+    Data( m :: Matrix )
 
 Data structure to store the solution of an initial-value problem along time.
 
@@ -28,45 +28,11 @@ mutable struct Data
 
 end
 
-import Base.length
+Base.:length( data :: Data ) = length( data.U )
 
-length( data :: Data ) = length( data.U )
+Base.:size( data :: Data ) = size( first(data.U) )
 
-import Base.size
-
-size( data :: Data ) = size( first(data.U) )
-
-function dump( h5file :: String, data :: Data )
-
-    h5write(joinpath(h5file * ".h5"), "/data/size", collect(size(first(data.U))))
-    h5write(joinpath(h5file * ".h5"), "/data/length", length(data.U))
-
-    for (i,u) in enumerate(data.U)
-       h5write(joinpath(h5file * ".h5"), "/data/U$i", u)
-    end
-
-end
-
- 
- 
-function load_data( h5file :: String )
-
-    nsteps = h5read(h5file * ".h5", "/data/length")
-    np, nv = h5read(h5file * ".h5", "/data/size")
-
-    v = zeros(ComplexF64, np, nv)
-
-    data = Data(v)
-
-    @assert length( data ) == 1
-    @assert np == size(first(data.U))[1]
-    @assert nv == size(first(data.U))[2]
-     
-    data.U[1] .= h5read(h5file * ".h5", "/data/U1")
-    for i in 2:nsteps
-        push!(data.U, h5read(h5file * ".h5", "/data/U$i"))
-    end
-
-    return data
-
-end
+Base.:(==)(d1::Data, d2::Data) =
+    d1.datalength == d2.datalength &&
+    d1.datasize == d2.datasize &&
+    d1.U == d2.U
