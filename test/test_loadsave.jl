@@ -1,6 +1,6 @@
 using Test
 
-@testset "LoadSave" begin
+@testset "Tests on LoadSave" begin
  
     save_filename = "testsave"
     rm(joinpath(save_filename * ".h5"), force=true) # delete pre-existing file
@@ -8,7 +8,8 @@ using Test
 
     param  = ( c = 1.1, ϵ = 1, μ = 1, N  = 2^6, L = 4, T = 1, dt = 0.1)
     init = SolitaryWhitham(param)
-    dump(save_filename, Mesh(param).x, init)
+    x = Mesh(param).x
+    dump(save_filename, x, init)
 
     model = Airy(param)
     problem = Problem( model, init, param )

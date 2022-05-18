@@ -3,12 +3,14 @@ ENV["GKSwstype"]="100"
 using Test
 using WaterWaves1D
 
+
 include("./test_loadsave.jl")
 include("./testtypes.jl")
 include("./testmodels.jl")
 include("./testsolvers.jl")
 include("./testinit.jl")
 
+include("./test_examples.jl")
 include("./test_notebooks.jl")
 
 param = ( ϵ  = 1/2, μ = 1)
