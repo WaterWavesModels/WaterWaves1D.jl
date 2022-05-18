@@ -1,4 +1,4 @@
-# Index
+# Library (index)
 
 ```@index
 ```
@@ -65,9 +65,9 @@ Modules = [WaterWaves1D]
 Pages   = ["tools.jl"]
 ```
 
-## Graphics
+## Load and save
 
 ```@autodocs
 Modules = [WaterWaves1D]
-Pages   = ["figures.jl"]
+Pages   = ["loadsave.jl"]
 ```

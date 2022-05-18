@@ -180,25 +180,40 @@ end
 
 ## access to and manage your data
 
-Once an initial-value problem `problem` has been solved (i.e. [numerically integrated](problems.md)), the raw data is stored in `problem.data.U`, which is an array whose elements correspond (in chronological order) to values at the different computed times, `problem.times.ts`. Physical data (say at final computed time) can be reconstructed using the model as follows: 
-```julia
+Once an initial-value problem `problem` has been solved (i.e. [numerically integrated](problems.md)), the raw data is stored in `problem.data.U`, which is an array whose elements correspond (in chronological order) to values at the different computed times, `problem.times.ts`. 
+```@example data
+using WaterWaves1D #hide
+param  = ( c = 1.1, ϵ = 1, μ = 1, N  = 2^8, L = 16, T = 1, dt = 0.1)
+init = SolitaryWhitham(param)
+model = Airy(param)
+problem = Problem( model, init, param )
+solve!(problem; verbose=false)
+
+problem.data.U
+```
+
+Physical data (say at final computed time) can be reconstructed using the model as follows: 
+```@example data
 η,v,x = problem.model.mapfro(last(problem.data.U))
 ```
 where  `η` and `v` are respectively the values of the surface deformation and of the derivative of the trace of the velocity potential at the surface, at collocation points `x`.
 
 This procedure is carried out by the function [`solution`](@ref WaterWaves1D.solution), which allows in addition to perform some interpolations (making use of the otherwise helpful function [`interpolate`](@ref WaterWaves1D.interpolate)).
+```@example data
+η,v,x = solution(problem)
+```
 
 Using `(η,v,x)` one can compute other quantities such as the [mass, momentum, energy](background.md#Mass,-momentum,-energy); for instance for the purpose of testing how well these quantities are numerically perserved (when the quantities are first integrals of the considered model). Built-in functions [`mass`](@ref WaterWaves1D.mass), [`momentum`](@ref WaterWaves1D.momentum), [`energy`](@ref WaterWaves1D.energy) (and [`massdiff`](@ref WaterWaves1D.massdiff), [`momentumdiff`](@ref WaterWaves1D.momentumdiff), [`energydiff`](@ref WaterWaves1D.energydiff)) compute such quantities (or their variation).
 
 ## plot your data
 
 Once `(η,v,x)` is obtained as above, producing plots is as simple as
-```julia
+```@example data
 using Plots
-plot(x, [ η v ])
+plot(x, [ η v ], label = ["η" "v"])
 ```
 One can also plot the amplitude of [discrete Fourier coefficients](background.md#Pseudospectral-methods) (in semi-log scale) as follows:
-```julia
+```@example data
 using FFTW
 k=fftshift(Mesh(x).k);fftη=fftshift(fft(η));fftv=fftshift(fft(v));
 indices = (fftη .!=0) .& (fftv .!=0 )
@@ -206,4 +221,51 @@ plot(k[indices], [ abs.(fftη)[indices] abs.(fftv)[indices] ], yscale=:log10)
 ```
 
 Built-in [plot recipes](plot_recipes.md) provide convenient ways of producing such plots, and animations.
+```@example data
+plot(problem;var=[:surface,:velocity,:fourier])
+```
 ## save and load your data
+
+Thanks to the package [`HDF5.jl`](https://juliaio.github.io/HDF5.jl/stable/) it is possible to save (raw) data to a local file, and then load them for future analyses.
+
+Built-in [functions](library.md#load-and-save) ease the process. Here is a typical example.
+
+Build and solve a problem.
+```@example loadsave
+using WaterWaves1D #hide
+param  = ( c = 1.1, ϵ = 1, μ = 1, N  = 2^8, L = 16, T = 1, dt = 0.1)
+init = SolitaryWhitham(param)
+model = Airy(param)
+problem = Problem( model, init, param )
+solve!(problem; verbose=false)
+nothing
+```
+
+Save the initial data.
+```@example loadsave
+x = Mesh(param).x
+rm("file_name.h5", force=true) # hide
+dump("file_name", x, init)
+```
+
+Save the time-integrated (raw) data.
+```@example loadsave
+dump("file_name", problem) # or dump("file_name", problem.data)
+```
+
+Reconstruct the problem, without solving it.
+```@example loadsave
+loaded_init = load_init("file_name") # load initial data
+new_problem = Problem( model, loaded_init, param ) # re-build problem
+load_data!("file_name", new_problem) # incorporate time-integrated data
+
+problem.data == new_problem.data
+```
+
+!!! note 
+    Initial data are functions. The `dump` function saves values at some collocation points. Hence the loaded initial data typically differs from the original one by machine epsilon rounding errors.
+
+
+!!! note 
+    It is not possible to save models, solvers, or problems.
+    Hence the user needs to store separately the parameters and information required to build them.

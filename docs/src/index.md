@@ -39,6 +39,7 @@ Pages = [
         "problems.md",
         "how-to.md",
         "example.md",
+        "plot_recipes.md",
         "library.md"
         ]
 ```
