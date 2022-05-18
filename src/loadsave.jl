@@ -1,6 +1,6 @@
-export dump, load_data, load_data!, load_init
-
 import Base.dump
+
+export dump, load_data, load_data!, load_init
 
 """
     dump(file_name :: String, data :: Data)
@@ -9,7 +9,7 @@ Save `data` to the file with name `file_name` (and extension ".h5").
 
 """
 function dump( h5file :: String, data :: Data )
-    h5open(joinpath(h5file * ".h5"), "w") do file  #"w" for write ("r" for read) 
+    h5open(joinpath(h5file * ".h5"), "cw") do file  #"w" for write ("r" for read) 
         write(file,  "/data/size", collect(size(first(data.U))) )
         write(file, "/data/length", length(data.U) )
 
@@ -76,7 +76,7 @@ Save the values of the initial data `init` at collocation points `x` to the file
 
 """
 function dump( h5file :: String, x::Vector, init::InitialData) 
-    h5open(joinpath(h5file * ".h5"), "w") do file  #"w" for write ("r" for read) 
+    h5open(joinpath(h5file * ".h5"), "cw") do file  #"w" for write ("r" for read) 
 
         write(file, "/init/x", x )
         write(file, "/init/η", init.η(x) )
