@@ -21,3 +21,13 @@ import LinearAlgebra.norm
         
 
 end
+@testset "Example: ManyModelsforWaterWaves" begin
+    include("../examples/SolitaryWaveWhitham.jl")
+
+    a=PlotSolitaryWaveKdV(3)
+    @test a ≈ 4.5488501854151764e-11
+
+    b=PlotSolitaryWaveWhitham(1.17)
+    @test b ≈  0.06741522566084218
+
+end
