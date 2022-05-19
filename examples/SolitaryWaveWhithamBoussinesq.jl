@@ -24,10 +24,10 @@ All keyword arguments are optional.
 function PlotSolitaryWaveWhithamBoussinesq(;c=1.05,α=1,L=20,N=2^9,μ=0.1,ϵ=0.1)
 	param = ( μ  = μ, ϵ = ϵ,
 			N = N, L = L,
-			c = c, α = α)
+			c = c)
 
 	(η,v,mesh) = SolitaryWaveWhithamBoussinesq( param;
-										α = 1, model  = α, iterative = false, max_iter=30)
+										β = 1, α  = α, iterative = false, max_iter=30)
 
 	ηSGN = (c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*(mesh.x)).^2
 	uSGN = c*η./(1 .+ ϵ*η)
@@ -40,25 +40,27 @@ function PlotSolitaryWaveWhithamBoussinesq(;c=1.05,α=1,L=20,N=2^9,μ=0.1,ϵ=0.1
 
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [η v];
-     title=string("initial data"),
-     label=["η" "v"])
+    	title=string("initial data"),
+    	label=["η" "v"])
 	plot!(plt[1,1], mesh.x, [ηSGN vSGN];
-      title=string("initial data"),
-      label=["ηSGN" "vSGN"])
+    	title=string("initial data"),
+      	label=["ηSGN" "vSGN"])
 
 
     plot!(plt[1,2], fftshift(mesh.k),
-     [abs.(fftshift(fft(η))).+eps() abs.(fftshift(fft(v))).+eps()];
-     yscale=:log10,
-	 title="frequency",
-	 label=["|η̂|" "|v̂|"])
+    	[abs.(fftshift(fft(η))).+eps() abs.(fftshift(fft(v))).+eps()];
+     	yscale=:log10,
+	 	title="frequency",
+	 	label=["|η̂|" "|v̂|"])
 	plot!(plt[1,2], fftshift(mesh.k),
-      [abs.(fftshift(fft(ηSGN))).+eps() abs.(fftshift(fft(vSGN))).+eps()];
-	  yscale=:log10,
-	  title="frequency",
- 	 label=["|η̂SGN|" "|v̂SGN|"])
+      	[abs.(fftshift(fft(ηSGN))).+eps() abs.(fftshift(fft(vSGN))).+eps()];
+	  	yscale=:log10,
+	  	title="frequency",
+ 	 	label=["|η̂SGN|" "|v̂SGN|"])
 
-	 display(plt)
+	display(plt)
+	return 	maximum(abs.(η-ηSGN))
+
 end
 
 """
@@ -66,20 +68,29 @@ end
 
 Integrate in time a Whitham-Boussinesq equation with a solitary wave initial data
 """
-function IntegrateSolitaryWaveWhithamBoussinesq()
-	param = ( μ  = 1,
-			ϵ  = 1,
-			c = 1.05,
-        	N  = 2^9,
-            L  = 20,
-			T  = 40/1.05,
-            dt = 0.001/1.05,
-			ns = 200
+function IntegrateSolitaryWaveWhithamBoussinesq(; 
+	μ  = 1,
+	ϵ  = 1,
+	c = 1.05,
+	N  = 2^9,
+	L  = 20,
+	T  = 40/1.05,
+	dt = 0.001/1.05,
+	ns = 200,
+	anim = true)
+	param = ( μ  = μ,
+			ϵ  = ϵ,
+			c = c,
+        	N  = N,
+            L  = L,
+			T  = T,
+            dt = dt,
+			ns = ns
 			)
 	α = 1/2 # determines the model
 
 	(η,v,mesh) = SolitaryWaveWhithamBoussinesq( param;
-										α = 1, model  = α, iterative = false, max_iter=30)
+										β = 1, α  = α, iterative = false, max_iter=30)
 
 	init=Init(mesh,η,v)
 
@@ -98,17 +109,23 @@ function IntegrateSolitaryWaveWhithamBoussinesq()
 	problem = Problem(model, init, param);
 
 	solve!( problem )
-	ηf = model.mapfro(problem.data.U[end])[1]
+	ηf, = solution(problem)
 	p = plot(layout=(1,2))
 	plot!(p[1,1],mesh.x,[η ηf];
-	title="surface deformation",
-	label=["initial" "final"])
+		title="surface deformation",
+		label=["initial" "final"])
 	plot!(p[1,2],mesh.x,η-ηf;
-	title="difference",
-	label="")
+		title="difference",
+		label="")
 	display(p)
+	if anim ==true
+		@gif for t in problem.times.ts
+			plot(problem, T = t)
+		end
+	end
+	
+	return 	maximum(abs.(ηf-η))
 
-	anim = create_animation( problem )
-	gif(anim, fps=15)
+
 end
 nothing
