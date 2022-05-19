@@ -40,7 +40,7 @@ function run_simulation()
         init = Init(g,z);
 
         #---- models to compare
-        models=[]
+        models=AbstractModel[]
         push!(models,WaterWaves(param))
         push!(models,PseudoSpectral(param;order=2,dealias=1,lowpass=1/100))
         push!(models,PseudoSpectral(param;order=3,dealias=1,lowpass=1/100))

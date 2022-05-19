@@ -43,7 +43,7 @@ end
 end
 
 ### Preserved quantities
-models=[];
+models=AbstractModel[];
 #push!(models,WaterWaves(param;mesh=Mesh(paramX))); # will error if uncommented (because water waves generates non-equidistant meshes)
 #push!(models,Matsuno(param;mesh=Mesh(paramX))); # will fail if uncommented (because Matsuno model does not preserve momentum and energy)
 

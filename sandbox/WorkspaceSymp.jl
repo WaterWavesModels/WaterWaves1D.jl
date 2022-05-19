@@ -39,7 +39,7 @@ solver3=EulerSymp(model,Niter=5,implicit=2)
 solver=RK4(model)
 
 
-problems = []
+problems = Problem[]
 push!(problems, Problem(model, init, param, solver=solver ))
 push!(problems, Problem(model, init, param, solver=solver1 ))
 push!(problems, Problem(model, init, param, solver=solver2 ))

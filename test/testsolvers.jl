@@ -20,7 +20,7 @@ solve!(pb0,verbose=false)
 #--- tests on Runge-Kutta 4 solvers
 @testset "RK4 solvers" begin
     # different ways to build RK4 solver
-    solvers = []
+    solvers = TimeSolver[]
     push!(solvers, RK4(model.mapto(init)) )
     push!(solvers, RK4(paraX) )
     push!(solvers, RK4(paraX,2) )
@@ -48,7 +48,7 @@ end
 
 
     # different ways to build explicit Euler solver
-    solvers = []
+    solvers = TimeSolver[]
     push!(solvers, Euler(model.mapto(init)) )
     push!(solvers, Euler(paraX) )
     push!(solvers, Euler(paraX,2) )
@@ -76,7 +76,7 @@ end
 
 
     # different ways to build symplectic Euler solver
-    solvers = []
+    solvers = TimeSolver[]
     push!(solvers, EulerSymp(model.mapto(init)) )
     push!(solvers, EulerSymp(paraX) )
 

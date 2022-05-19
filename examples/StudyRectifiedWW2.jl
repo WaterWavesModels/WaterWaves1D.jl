@@ -257,7 +257,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		return problem0,problem1,plt0,plt1
 
 	elseif scenario == 8
-		blowups0=[];blowups1=[];
+		blowups0=Real[];blowups1=Real[];
 		K=100:20:800;iter=0;
 		for k in K
 			iter+=1;@info string("K=",k," (iteration ",iter,"/",length(K),")\n")
@@ -279,7 +279,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 
 	elseif scenario == 8.5
 		K=100:20:800;
-		blowups0=[];blowups1=[];iter=0;
+		blowups0=Real[];blowups1=Real[];iter=0;
 		for k in K
 			iter+=1;@info string("K=",k," (iteration ",iter,"/",length(K),")\n")
 			N=2^14;d=N*π/k/20 # useful to define truncation at frequency K
@@ -301,7 +301,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 
 	elseif scenario == 9
 		Eps=10 .^(-1:0.02:0)
-		blowups1=[];blowups2=[];blowups3=[];blowups4=[];iter=0;
+		blowups1=Real[];blowups2=Real[];blowups3=Real[];blowups4=Real[];iter=0;
 		for eps in Eps
 			iter+=1;@info string("ϵ=",eps," (iteration ",iter,"/",length(Eps),")\n")
 			~,blowup1=IntegrateWW2(init=2,K=100,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
@@ -354,7 +354,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 
 	elseif scenario == 11
 		Eps=[0.01 0.0125 0.015 0.02 0.025 0.03 0.04 0.05 0.06 0.08 0.1 0.125 0.15 0.2 0.25 0.3 0.4 0.5 0.6 0.8]
-		δc2=[];δc10=[];i=0;
+		δc2=Real[];δc10=Real[];i=0;
 		for eps in Eps
 			i+=1
 			#T=2
@@ -408,9 +408,9 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 
 		Eps=[0.2,0.1,0.05]
 		Delta=10 .^ (-2:0.1:0)
-		Norms=[];j=0;
+		Norms=Vector{Real}[];j=0;
 		for eps in Eps
-			norms=[];i=0;j+=1;
+			norms=Real[];i=0;j+=1;
 			for delta in Delta
 				i+=1
 				@info string("ϵ=",eps,", δ=",delta," (iteration ",(j-1)*length(Delta)+i,"/",length(Eps)*length(Delta),")")

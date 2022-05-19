@@ -80,7 +80,7 @@ end
     param = (L=10, N=2^8)
     mesh=Mesh(param);x=mesh.x;
     f(x) = exp.(-x.^2);g(x) = x.*exp.(-(x.-1).^2);
-    inits=[]
+    inits=InitialData[]
     push!(inits, Init(f , g) )
     push!(inits, Init( mesh, f(x) , g(x); fast = false ) )
     push!(inits, Init( x, f(x) , g(x); fast = false ) )

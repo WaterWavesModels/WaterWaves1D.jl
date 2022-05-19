@@ -70,7 +70,7 @@ end
 @testset "Whitham-Boussinesq solitary wave" begin
     # Build a solitary wave with different parameters
     param = (ϵ  = 0.1, μ = 0.1, c=1.1, L = 10, N=2^8)
-    waves = []
+    waves = Tuple[]
     push!(waves,SolitaryWaveWhithamBoussinesq(param))
     push!(waves,SolitaryWaveWhithamBoussinesq(param;iterative=true))
     push!(waves,SolitaryWaveWhithamBoussinesq(param;
@@ -140,7 +140,7 @@ end
 @testset "Whitham-Green-Naghdi solitary wave" begin
     # Build a solitary wave with different parameters
     param = (ϵ  = 0.1, μ = 0.1, c=1.1, L = 10, N=2^8)
-    waves = []
+    waves = Tuple[]
     push!(waves,SolitaryWaveWhithamGreenNaghdi(param))
     push!(waves,SolitaryWaveWhithamGreenNaghdi(param;iterative=true))
     push!(waves,SolitaryWaveWhithamGreenNaghdi(param;
@@ -210,7 +210,7 @@ end
 @testset "Whitham solitary wave" begin
     # Build a solitary wave with different parameters
     param = (ϵ  = 0.1, μ = 0.1, c=1.1, L = 10, N=2^9)
-    waves = []
+    waves = Tuple[]
     push!(waves,SolitaryWaveWhitham(param;α=1))
     push!(waves,SolitaryWaveWhitham(param;iterative=true))
     push!(waves,SolitaryWaveWhitham(param;
@@ -248,7 +248,7 @@ end
 @testset "Random initial data" begin
     param=(N=20,L=2);mesh=Mesh(param);x=mesh.x;
     # Build initial data
-    inits=[]
+    inits=InitialData[]
     push!(inits,Random(param;L=1,s=Inf,λ=Inf,a=(1,1)))
     push!(inits,Random(param;L=1,s=2,λ=Inf,a=(1,1)))
     push!(inits,Random(param;L=1,s=Inf,λ=1,a=(1,1)))

@@ -47,7 +47,7 @@ init = Init(ζ, v2);
 
 
 #---- models to compare
-models = []
+models = AbstractModel[]
 push!(models, WaterWaves(param; dealias = 1))  # dealias = 1 pour dealiasing
 #push!(models, Boussinesq(param; dealias = 1))  # dealias = 1 pour dealiasing
 #push!(models, WhithamBoussinesq(param; dealias = 1))  # dealias = 1 pour dealiasing
@@ -59,7 +59,7 @@ push!(models, WWn(param; n=3,δ=0.01, dealias = 1, label = "WW3, δ=0.01"))  # d
 push!(models, WWn(param; n=3,δ=0.001, dealias = 1, label = "WW3, δ=0.001"))  # dealias = 1 pour dealiasing
 
 
-problems = []
+problems = Problem[]
 for model in models
     push!(problems, Problem(model, init, param))
 end
@@ -73,7 +73,7 @@ end
 
 plt = plot_solution(problems[2:end]; fourier = true)
 savefig(plt,"plotWWn.pdf") # ou "plot.png" par exemple
-pairs=[]
+pairs=Tuple{Problem, Problem}[]
 for i in 2:5
     push!(pairs,(problems[1],problems[i]))
 end

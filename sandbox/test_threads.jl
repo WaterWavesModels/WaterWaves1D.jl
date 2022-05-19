@@ -24,14 +24,14 @@ function run_models()
     init = Init(g,z);
 
     #---- models to compare
-    models=[]
+    models=AbstractModel[]
     push!(models,WaterWaves(param))
     push!(models,PseudoSpectral(param;order=2,dealias=1,lowpass=1/100))
     push!(models,PseudoSpectral(param;order=3,dealias=1,lowpass=1/100))
 
     #---- Initialize
     function Problems(models)
-    	problems = []
+    	problems = Problem[]
     	for model in models
     		push!(problems, Problem(model, init, param) )
     	end

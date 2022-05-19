@@ -10,7 +10,7 @@ param = merge(para,paraX)  # used to construct models
 init     = Init(x->exp.(-x.^2),x-> x )
 
 #--- models
-models=[]
+models=AbstractModel[]
 
 push!(models,Airy(param;
                     label="Airy"

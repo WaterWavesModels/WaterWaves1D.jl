@@ -11,7 +11,7 @@ paraX= ( N  = 2^6, L  = 4)   # mesh with 64 collocation points on [-4,4]
 paraT= ( T  = 1e-1, dt = 1e-2) # timegrid with 10 instants: t=[0.0:1.0:10.0]/100
 param = merge(para,paraX)  # used to construct models
 
-models=[];precisions=[]
+models=AbstractModel[];precisions=Real[]
 
 # Build shallow water models
 push!(models,SerreGreenNaghdi(param;
@@ -205,7 +205,6 @@ pbWW = Problem( modelWW, init, paraT )
 solve!(pbWW;verbose=false)
 ηWW,vWW,xWW=solution(pbWW)
 
-realp=[]
 for i in 1:length(models)
     # build the initial-value problem
     problem = Problem( models[i], init, paraT )
@@ -220,7 +219,7 @@ end
 
 
 #--- Tests on deep water models
-models=[];precisions=[]
+models=AbstractModel[];precisions=Real[]
 
 para = ( ϵ  = 0.1, μ = 100)  # physical parameters
 paraX= ( N  = 2^6, L  = 4)   # mesh with 64 collocation points on [-4,4]
@@ -299,7 +298,7 @@ for i in 1:length(models)
 end
 
 #--- Tests on infinite layer models
-models=[];precisions=[]
+models=AbstractModel[];precisions=Real[]
 
 para = ( ϵ  = 0.1, μ = Inf)  # physical parameters
 paraX= ( N  = 2^6, L  = 4)   # mesh with 64 collocation points on [-4,4]

@@ -69,7 +69,7 @@ function Integrate(scenario;μ=.1,ϵ=.1,p=2,N=2^10,L=15,T=10,dt=0.001,dealias=0,
 	modelIK2 = IsobeKakinuma(param; ktol=0, gtol=1e-14, iterate=iterate, precond = precond, dealias = dealias[4])
 
 	# construct the associated problems
-	problems = []
+	problems = Problem[]
 	push!(problems, Problem(modelWW, init, param) )
 	push!(problems, Problem(modelSGN, init, param) )
 	push!(problems, Problem(modelWGN, init, param) )

@@ -67,14 +67,16 @@ solve!([problem_WW problem_WW2]);
 
 Plot solutions at final time.
 ```julia
-plot_solution([problem_WW problem_WW2];fourier=false)
+using Plots
+plot([problem_WW, problem_WW2])
 ```
 ![](./notebooks/Example.png)
 
 Generate an animation.
 ```julia
-anim = create_animation([problem_WW problem_WW2];fourier=false,ylims=(-0.5,1))
-import Plots.gif
+anim = @anim for t = LinRange(0,5,101)
+    plot([problem_WW, problem_WW2];T=t,ylims=(-0.5,1))
+end
 gif(anim, "Example.gif", fps=15)
 ```
 ![](./notebooks/Example.gif)
