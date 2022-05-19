@@ -26,10 +26,10 @@ end
     include("../examples/SolitaryWaveWhitham.jl")
 
     a=PlotSolitaryWaveKdV(3)
-    @test 4.5e-11 <a < 4.6e-11
+    @test 4e-11 < a < 5e-11
 
     b=PlotSolitaryWaveWhitham(1.17)
-    @test b ≈  0.06741522566084218
+    @test 0.0674 < b <  0.0675
 
 end
 
@@ -40,7 +40,7 @@ end
     @test 9.9e-11 < b < 10e-11
 
     a=PlotSolitaryWaveWhithamBoussinesq(;c=1.1,α=1,L=20,N=2^9,μ=0.1,ϵ=0.1)
-    @test a ≈ 0.031638234910189356
+    @test 0.0316 < a < 0.0317
 
 end
 
@@ -64,7 +64,7 @@ end
     include("../examples/StudyRectifiedWW2.jl")
     problem,blowup_time,blowup,error_energy=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^6,T=1,dt = 0.01,dealias=0,δ=0,m=-1)
     @test (blowup_time,blowup) == (1.,false)
-    @test 9.3e-7 < error_energy < 9.4e-7
+    @test 9e-7 < error_energy < 10e-7
 
     problem,blowup_time,blowup,error_energy=IntegrateWW2(init=1,μ=1,ϵ=10,L=20,N=2^14,T=0.1,dt = 0.01,dealias=0,δ=0,m=-1)
     @test (blowup_time,blowup) == (0.07,true)
@@ -99,15 +99,11 @@ end
 
     pb = StabilitySolitaryWaveWGN(;p=2,c=2,N=2^6,L=5*π,T=1,dt=10/10^3,SGN=true,precond=true,iterate=true,dealias=0,name=nothing)
     η,v=solution(pb)
-    @test norm(η)/√(2^6) ≈ 0.7150680699199008 || norm(v)/√(2^6) ≈ 0.6351032600783317
+    @test norm(η) ≈ 5.720544559359206 || norm(v) ≈ 5.080826080626654
 
-    pb = IntegrateWGN(2;δ=0.1,N=2^6,L=3*π,x₀=-3,T= 1,dt = 1/10^3,SGN=false,dealias=0,iterate=true,precond=true,name=nothing)
+    pb = IntegrateWGN(2;δ=0.1,N=2^6,L=3*π,x₀=-3,T= 1,dt = 10/10^3,SGN=false,dealias=0,iterate=true,precond=true,name=nothing)
     η,v=solution(pb)
-    @test norm(η)/√(2^6) ≈ 0.13510938498462427 || norm(v)/√(2^6) ≈ 0.12411816656683075
+    @test norm(η) ≈ 1.0808748139030515 || norm(v) ≈ 0.9929455087249658
     
-
-
-
-
 
 end
