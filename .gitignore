@@ -9,3 +9,4 @@ docs/build/
 *.swp
 .vscode/launch.json
 .vscode/settings.json
+test/testsave.h5
