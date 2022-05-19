@@ -117,7 +117,7 @@ end
 
 
 
-	if var isa Vector{Symbol}
+	if var isa Array{Symbol}
 		variables = var
 	else
 		variables = [var]
@@ -192,14 +192,14 @@ end
 
 end
 
-@recipe function f(problems::Vector; 
+@recipe function f(problems::Array{Problem}; 
                     var = :surface, 
                     T = nothing, 
                     x = nothing, 
                     interpolation = false, 
                     compression = false)
     
-	if var isa Vector{Symbol}
+	if var isa Array{Symbol}
 		variables = var
 	else
 		variables = [var]
@@ -259,7 +259,7 @@ end
 
         end
     
-        if variable == :fourier || variable == :Fourier
+        if variable in (:fourier , :Fourier)
 
             for problem in problems
     
@@ -281,7 +281,7 @@ end
             end
         end
 
-	    if variable == :difference  || variable == :difference_surface
+	    if variable in ( :difference , :difference_surface)
 
 
             @series begin
@@ -314,7 +314,7 @@ end
 
         end
 
-        if variable == :difference_fourier || variable == :difference_Fourier
+        if variable in ( :difference_fourier , :difference_Fourier )
 
 
                 
@@ -332,7 +332,7 @@ end
 
         end
 
-        if variable == :differences || variable == :differences_surface
+        if variable in ( :differences, :differences_surface )
 
             pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
 
@@ -400,7 +400,7 @@ end
 
 end
 
-@recipe function f(pairs::Vector{Tuple{Problem, Problem}};
+@recipe function f(pairs::Array{Tuple{Problem, Problem}};
                     var = :difference, 
                     T = nothing, 
                     x = nothing, 
@@ -408,7 +408,8 @@ end
                     compression = false)
 
 
-    if var isa Vector{Symbol}
+
+    if var isa Array{Symbol}
 		variables = var
 	else
 		variables = [var]
@@ -429,7 +430,7 @@ end
                 string_title = ""
             end
 
-            if variable == :difference  || variable == :difference_surface
+            if variable in ( :difference  , :difference_surface, :surface, :surface_difference )
 
 
                 @series begin
@@ -445,7 +446,7 @@ end
 
             end
 
-            if variable == :difference_velocity
+            if variable in ( :difference_velocity, :velocity, :velocity_difference)
 
 
 
@@ -462,7 +463,7 @@ end
 
             end
 
-            if variable == :difference_fourier || variable == :difference_Fourier
+            if variable in ( :difference_fourier , :difference_Fourier , :fourier, :Fourier, :Fourier_difference, :fourier_difference )
 
 
                     
