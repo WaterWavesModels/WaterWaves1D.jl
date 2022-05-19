@@ -192,109 +192,232 @@ end
 
 end
 
-@recipe function f(pairs::Vector{Tuple{Problem,Problem}};
-    var = :difference, 
-    T = nothing, 
-    x = nothing, 
-    interpolation = false, 
-    compression = false)
-
-
-if var isa Vector{Symbol}
-variables = var
-else
-variables = [var]
-end
-
-layout := (length(variables), 1)
-titlefontsize --> 10
-
-for problems in pairs
-
-time = solution_time( problems[1], T )
-
-for (n, variable) in enumerate(variables)
-
-if n == 1 
-string_title = @sprintf(" at t= %7.3f", time)
-else
-string_title = ""
-end
-
-if variable == :difference  || variable == :difference_surface
-
-
-@series begin
-    xguide --> "x"
-    yguide --> "Δη"
-    label --> "$(problems[1].label) - $(problems[2].label)"
-    title --> string("Difference (surface deformation)", string_title)
-    subplot := n
-    
-    difference_surface( [problems[1],problems[2]], T, x, interpolation, compression ) 
-
-end
-
-end
-
-if variable == :difference_velocity
-
-
-
-@series begin
-    xguide --> "x"
-    yguide --> "Δv"
-    label --> "$(problems[1].label) - $(problems[2].label)"
-    title --> string("Difference (velocity)", string_title)
-    subplot := n
-    
-    difference_velocity( [problems[1],problems[2]], T, x, interpolation, compression ) 
-
-end
-
-end
-
-if variable == :difference_fourier || variable == :difference_Fourier
-
-
-    
-@series begin
-    xguide --> "frequency"
-    yguide --> "amplitude"
-    label --> "$(problems[1].label) - $(problems[2].label)"
-    title --> string("Difference (Fourier coefficients in log scale)", string_title)
-    yscale --> :log10
-    subplot := n
-    
-    difference_fourier( [problems[1],problems[2]], T, x, interpolation, compression ) 
-
-end
-
-end
-
-end
-
-end
-
-end
-
-@recipe function f(problems::Vector{Union{Any,Problem}}; 
+@recipe function f(problems::Vector; 
                     var = :surface, 
                     T = nothing, 
                     x = nothing, 
                     interpolation = false, 
-                    compression = false) 
+                    compression = false)
     
-    if typeof(problems[1])==Problem   
+	if var isa Vector{Symbol}
+		variables = var
+	else
+		variables = [var]
+	end
 
-        if var isa Vector{Symbol}
-            variables = var
+	layout := (length(variables), 1)
+	titlefontsize --> 10
+
+    time = solution_time( problems[1], T )
+
+    for (n, variable) in enumerate(variables)
+
+        if n == 1 
+            string_title = @sprintf(" at t= %7.3f", time)
         else
-            variables = [var]
+            string_title = ""
         end
 
-        layout := (length(variables), 1)
-        titlefontsize --> 10
+        if variable == :surface
+
+            for problem in problems
+
+                @series begin 
+        
+                    title --> string("Surface deformation", string_title)
+                    label --> problem.label
+                    xguide --> "x"
+                    yguide --> "η"
+                    subplot := n
+    
+                    solution_surface( problem, T, x, interpolation, compression ) 
+    
+                end
+    
+            end
+
+        end
+    
+        if variable == :velocity
+
+            for problem in problems
+    
+                @series begin 
+    
+    
+                    title --> string("Velocity", string_title)
+                    label --> problem.label
+                    xguide --> "x"
+                    yguide --> "v"
+                    subplot := n
+    
+                    solution_velocity( problem, T, x, interpolation, compression ) 
+    
+                end
+    
+            end
+
+        end
+    
+        if variable == :fourier || variable == :Fourier
+
+            for problem in problems
+    
+                @series begin 
+    
+    
+                    title --> string("Fourier coefficients (log scale)", string_title)
+                    label --> problem.label
+                    xguide --> "wavenumber"
+                    yguide --> "amplitude"
+                    yscale --> :log10
+                    subplot := n
+    
+                    solution_fourier( problem, T, x, interpolation, compression ) 
+
+    
+                end
+    
+            end
+        end
+
+	    if variable == :difference  || variable == :difference_surface
+
+
+            @series begin
+                xguide --> "x"
+                yguide --> "Δη"
+	            label --> "$(problems[1].label) - $(problems[2].label)"
+	            title --> string("Difference (surface deformation)", string_title)
+                subplot := n
+                
+                difference_surface( [problems[1],problems[2]], T, x, interpolation, compression ) 
+
+            end
+
+	    end
+
+        if variable == :difference_velocity
+
+
+
+            @series begin
+                xguide --> "x"
+                yguide --> "Δv"
+                label --> "$(problems[1].label) - $(problems[2].label)"
+                title --> string("Difference (velocity)", string_title)
+                subplot := n
+                
+                difference_velocity( [problems[1],problems[2]], T, x, interpolation, compression ) 
+
+            end
+
+        end
+
+        if variable == :difference_fourier || variable == :difference_Fourier
+
+
+                
+            @series begin
+                xguide --> "frequency"
+                yguide --> "amplitude"
+                label --> "$(problems[1].label) - $(problems[2].label)"
+                title --> string("Difference (Fourier coefficients in log scale)", string_title)
+                yscale --> :log10
+                subplot := n
+                
+                difference_fourier( [problems[1],problems[2]], T, x, interpolation, compression ) 
+
+            end
+
+        end
+
+        if variable == :differences || variable == :differences_surface
+
+            pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
+
+            for (i, j) in pairs
+                @series begin
+                    xguide --> "x"
+                    yguide --> "Δη"
+                    label --> "$(problems[i].label) - $(problems[j].label)"
+                    title --> string("Difference (surface deformation)", string_title)
+                    subplot := n
+                    
+                    difference_surface( [problems[i],problems[j]], T, x, interpolation, compression ) 
+
+                end
+
+            end
+
+        end
+
+        if variable == :differences_velocity
+
+            pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
+
+            for (i, j) in pairs
+
+                @series begin
+                    xguide --> "x"
+                    yguide --> "Δv"
+                    label --> "$(problems[i].label) - $(problems[j].label)"
+                    title --> string("Difference (velocity)", string_title)
+                    subplot := n
+                    
+                    difference_velocity( [problems[i],problems[j]], T, x, interpolation, compression ) 
+
+                end
+
+            end
+
+        end
+
+        if variable == :differences_fourier || variable == :differences_Fourier
+
+            pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
+
+            for (i, j) in pairs
+                
+                @series begin
+                    xguide --> "frequency"
+                    yguide --> "amplitude"
+                    label --> "$(problems[i].label) - $(problems[j].label)"
+                    title --> string("Difference (Fourier coefficients in log scale)", string_title)
+                    yscale --> :log10
+                    subplot := n
+                    
+                    difference_fourier( [problems[i],problems[j]], T, x, interpolation, compression ) 
+
+                end
+
+            end
+
+        end
+
+
+    end
+
+end
+
+@recipe function f(pairs::Vector{Tuple{Problem, Problem}};
+                    var = :difference, 
+                    T = nothing, 
+                    x = nothing, 
+                    interpolation = false, 
+                    compression = false)
+
+
+    if var isa Vector{Symbol}
+		variables = var
+	else
+		variables = [var]
+	end
+
+	layout := (length(variables), 1)
+	titlefontsize --> 10
+
+    for problems in pairs
 
         time = solution_time( problems[1], T )
 
@@ -304,69 +427,6 @@ end
                 string_title = @sprintf(" at t= %7.3f", time)
             else
                 string_title = ""
-            end
-
-            if variable == :surface
-
-                for problem in problems
-
-                    @series begin 
-            
-                        title --> string("Surface deformation", string_title)
-                        label --> problem.label
-                        xguide --> "x"
-                        yguide --> "η"
-                        subplot := n
-        
-                        solution_surface( problem, T, x, interpolation, compression ) 
-        
-                    end
-        
-                end
-
-            end
-        
-            if variable == :velocity
-
-                for problem in problems
-        
-                    @series begin 
-        
-        
-                        title --> string("Velocity", string_title)
-                        label --> problem.label
-                        xguide --> "x"
-                        yguide --> "v"
-                        subplot := n
-        
-                        solution_velocity( problem, T, x, interpolation, compression ) 
-        
-                    end
-        
-                end
-
-            end
-        
-            if variable == :fourier || variable == :Fourier
-
-                for problem in problems
-        
-                    @series begin 
-        
-        
-                        title --> string("Fourier coefficients (log scale)", string_title)
-                        label --> problem.label
-                        xguide --> "wavenumber"
-                        yguide --> "amplitude"
-                        yscale --> :log10
-                        subplot := n
-        
-                        solution_fourier( problem, T, x, interpolation, compression ) 
-
-        
-                    end
-        
-                end
             end
 
             if variable == :difference  || variable == :difference_surface
@@ -420,158 +480,8 @@ end
 
             end
 
-            if variable == :differences || variable == :differences_surface
-
-                pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
-
-                for (i, j) in pairs
-                    @series begin
-                        xguide --> "x"
-                        yguide --> "Δη"
-                        label --> "$(problems[i].label) - $(problems[j].label)"
-                        title --> string("Difference (surface deformation)", string_title)
-                        subplot := n
-                        
-                        difference_surface( [problems[i],problems[j]], T, x, interpolation, compression ) 
-
-                    end
-
-                end
-
-            end
-
-            if variable == :differences_velocity
-
-                pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
-
-                for (i, j) in pairs
-
-                    @series begin
-                        xguide --> "x"
-                        yguide --> "Δv"
-                        label --> "$(problems[i].label) - $(problems[j].label)"
-                        title --> string("Difference (velocity)", string_title)
-                        subplot := n
-                        
-                        difference_velocity( [problems[i],problems[j]], T, x, interpolation, compression ) 
-
-                    end
-
-                end
-
-            end
-
-            if variable == :differences_fourier || variable == :differences_Fourier
-
-                pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
-
-                for (i, j) in pairs
-                    
-                    @series begin
-                        xguide --> "frequency"
-                        yguide --> "amplitude"
-                        label --> "$(problems[i].label) - $(problems[j].label)"
-                        title --> string("Difference (Fourier coefficients in log scale)", string_title)
-                        yscale --> :log10
-                        subplot := n
-                        
-                        difference_fourier( [problems[i],problems[j]], T, x, interpolation, compression ) 
-
-                    end
-
-                end
-
-            end
-
-
         end
-
-    elseif typeof(problems[1]) == Tuple{Problem,Problem};
-
-        pairs = copy(problems)
-
-        if var isa Vector{Symbol}
-            variables = var
-        else
-            variables = [var]
-        end
-
-        layout := (length(variables), 1)
-        titlefontsize --> 10
-
-        for problems in pairs
-
-            time = solution_time( problems[1], T )
-
-            for (n, variable) in enumerate(variables)
-
-                if n == 1 
-                    string_title = @sprintf(" at t= %7.3f", time)
-                else
-                    string_title = ""
-                end
-
-                if variable in (:surface,:difference,:difference_surface)
-
-
-                    @series begin
-                        xguide --> "x"
-                        yguide --> "Δη"
-                        label --> "$(problems[1].label) - $(problems[2].label)"
-                        title --> string("Difference (surface deformation)", string_title)
-                        subplot := n
-                        
-                        difference_surface( [problems[1],problems[2]], T, x, interpolation, compression ) 
-
-                    end
-
-                end
-
-                if variable in (:velocity,:difference_velocity)
-
-
-
-                    @series begin
-                        xguide --> "x"
-                        yguide --> "Δv"
-                        label --> "$(problems[1].label) - $(problems[2].label)"
-                        title --> string("Difference (velocity)", string_title)
-                        subplot := n
-                        
-                        difference_velocity( [problems[1],problems[2]], T, x, interpolation, compression ) 
-
-                    end
-
-                end
-
-                if variable in (:fourier,:Fourier,:difference_fourier,:difference_Fourier)
-
-
-                        
-                    @series begin
-                        xguide --> "frequency"
-                        yguide --> "amplitude"
-                        label --> "$(problems[1].label) - $(problems[2].label)"
-                        title --> string("Difference (Fourier coefficients in log scale)", string_title)
-                        yscale --> :log10
-                        subplot := n
-                        
-                        difference_fourier( [problems[1],problems[2]], T, x, interpolation, compression ) 
-
-                    end
-
-                end
-
-            end
-
-        end
-
-    else
-        @warn "Wrong argument types of the elements of the vector `V` in plot(V :: Vector)"
-
 
     end
 
 end
-
-
