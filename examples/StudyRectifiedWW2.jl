@@ -76,7 +76,7 @@ function IntegrateWW2(;init=1,μ=1,ϵ=0.1,L=20,N=2^10,T=10,dt = 0.001,dealias=1,
 	η0=init.η(x);v0=init.v(x)
 	#error_energy_1 = abs(sum(e(ηfin,vfin)-e(η0,v0))/sum(e(η0,v0)))
 	error_energy = abs(sum(e(ηfin,vfin,η0,v0))/sum(e(η0,v0)))
-	@info string("normalized preservation of the total energy: \n",error_energy)
+	@info "normalized preservation of the total energy: $error_energy\n"
 
 	# compute blowup time (if any)
 	blowup_index=0;blowup=false;
@@ -89,7 +89,7 @@ function IntegrateWW2(;init=1,μ=1,ϵ=0.1,L=20,N=2^10,T=10,dt = 0.001,dealias=1,
 	end
 	blowup_time=	problem.times.ts[blowup_index]
 	if blowup_time<T
-		@info string("The solution blowed at time t=",blowup_time," (first NaN occurence)\n")
+		@info "The solution blowed at time t=$blowup_time (first NaN occurence)\n"
 	end
 	#display(plt)
 	return problem,blowup_time,blowup,error_energy
@@ -135,60 +135,79 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 
 	if scenario == 1
 		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^9,T=10,dt = 0.001,dealias=0,δ=0,m=-1)
-		plt=plot_solution(problem;compression=compression,label="")
+		plt=plot(problem;var=[:surface,:fourier],compression=compression,label="")
 		if !isnothing(name)
-			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			savefig(plt,"$name.pdf");savefig(plt,"$name.svg");
 			if anim
-				create_animation(problem;ylims=(-0.5,1.1),compression=compression,name=name)
+				anim = @animate for t in LinRange(0,problem.times.tfin,101)
+					plt = plot(problem;var=[:surface,:fourier],T=t,compression=compression)
+					ylims!(plt[1],(-0.5,1.1))
+				end
+				gif(anim, "$name.gif", fps = 15)
 			end
  		end
 		return problem,plt
 
 	elseif scenario == 2
 		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^11,T=1.5,dt = 0.001,dealias=0,δ=0,m=-1)
-		plt=plot_solution(problem,t=1.2;compression=compression,label="")
+		plt=plot(problem,var=[:surface,:fourier],T=1.2;compression=compression,label="")
 		if !isnothing(name)
-			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			savefig(plt,"$name.pdf");savefig(plt,"$name.svg");
 			if anim
-				create_animation(problem;ylims=(-0.5,1.1),compression=compression,name=name)
+				anim = @animate for t in LinRange(0,problem.times.tfin,101)
+					plt = plot(problem;var=[:surface,:fourier],T=t,compression=compression)
+					ylims!(plt[1],(-0.5,1.1))
+				end
+				gif(anim, "$name.gif", fps = 15)			
 			end
 		end
 		return problem,plt
 
 	elseif scenario == 3
 		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^12,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
-		plt=plot_solution(problem;compression=compression,label="")
+		plt=plot(problem;var=[:surface,:fourier],compression=compression,label="")
 		if !isnothing(name)
-			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			savefig(plt,"$name.pdf");savefig(plt,"$name.svg");
 			if anim
-				create_animation(problem;ylims=(-0.5,1.1),compression=compression,name=name)
+				anim = @animate for t in LinRange(0,problem.times.tfin,101)
+					plt = plot(problem;var=[:surface,:fourier],T=t,compression=compression)
+					ylims!(plt[1],(-0.5,1.1))
+				end
+				gif(anim, "$name.gif", fps = 15)			
 			end
 		end
 		return problem,plt
 
 	elseif scenario == 4
 		problem,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^14,T=1.5,dt = 0.001,dealias=1,δ=0,m=-1)
-		plt=plot_solution(problem,t=1.3;compression=compression,label="")
+		plt=plot(problem,var=[:surface,:fourier],T=1.3;compression=compression,label="")
 		if !isnothing(name)
-			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			savefig(plt,"$name.pdf");savefig(plt,"$name.svg");
 			if anim
-				create_animation(problem;ylims=(-0.5,1.1),compression=compression,name=name)
+				anim = @animate for t in LinRange(0,problem.times.tfin,101)
+					plt = plot(problem;var=[:surface,:fourier],T=t,compression=compression)
+					ylims!(plt[1],(-0.5,1.1))
+				end
+				gif(anim, "$name.gif", fps = 15)			
 			end
  		end
 		return problem,plt
 
 	elseif scenario == 5
-			if anim Ns=nothing else Ns=1 end
+		if anim Ns=nothing else Ns=1 end
 		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,m=-1/2,Ns=Ns)
 		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=10,dt = 0.01,dealias=1,δ=0.01,m=-1,Ns=Ns)
-		plt0=plot_solution(problem0;compression=compression,label="")
-		plt1=plot_solution(problem1;compression=compression,label="")
+		plt0=plot(problem0;var=[:surface,:fourier],compression=compression,label="")
+		plt1=plot(problem1;var=[:surface,:fourier],compression=compression,label="")
 		if !isnothing(name)
-			savefig(plt0,string(name,"r12.pdf"));savefig(plt0,string(name,"r12.svg"));
-			savefig(plt1,string(name,"r1.pdf"));savefig(plt1,string(name,"r1.svg"));
+			savefig(plt0,"$name-r12.pdf");savefig(plt0,"$name-r12.svg");
+			savefig(plt1,"$name-r1.pdf");savefig(plt1,"$name-r1.svg");
 			if anim
-				create_animation(problem0;ylims=(-0.5,1.1),compression=compression,name=name)
-				create_animation(problem1;ylims=(-0.5,1.1),compression=compression,name=name)
+				anim = @animate for t in LinRange(0,problem0.times.tfin,101)
+					plt = plot([problem0,problem1];var=[:surface,:fourier],T=t,compression=compression,label=["m=-1/2" "m=-1"])
+					ylims!(plt[1],(-0.5,1.1))
+				end
+				gif(anim, "$name.gif", fps = 15)
 			end
 		end
 		return problem0,problem1,plt0,plt1
@@ -197,46 +216,53 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		if anim Ns=nothing else Ns=10 end
 		problem0,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^18,T=1,dt = 0.01,dealias=1,δ=0.01,m=-1/4,Ns=Ns)
 		problem1,=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^16,T=1,dt = 0.01,dealias=1,δ=0.01,m=-1/4,Ns=Ns)
-		plt0=plot_solution(problem0,t=0.6;compression=compression,label="")
-		plt1=plot_solution(problem1,t=0.6;compression=compression,label="")
+		plt0=plot(problem0,var=[:surface,:fourier],T=0.6;compression=compression,label="")
+		plt1=plot(problem1,var=[:surface,:fourier],T=0.6;compression=compression,label="")
 		if !isnothing(name)
-			savefig(plt0,string(name,"N18.pdf"));savefig(plt0,string(name,"N18.svg"));
-			savefig(plt1,string(name,"N16.pdf"));savefig(plt1,string(name,"N16.svg"));
+			savefig(plt0,"$name-N18.pdf");savefig(plt0,"$name-N18.svg");
+			savefig(plt1,"$name-N16.pdf");savefig(plt1,"$name-N16.svg");
 			if anim
-				create_animation(problem0;ylims=(-0.5,1.1),compression=compression,name=name)
-				create_animation(problem1;ylims=(-0.5,1.1),compression=compression,name=name)
+				anim = @animate for t in LinRange(0,problem0.times.tfin,101)
+					plt = plot([problem0,problem1];var=[:surface,:fourier],T=t,compression=compression,label=["N=2^18" "N=2^16"])
+					ylims!(plt[1],(-0.5,1.1))			
+				end	
+				gif(anim, "$name.gif", fps = 15)
 			end
 		end
 		return problem0,problem1,plt0,plt1
 
 	elseif scenario in [7,7.1,7.2,7.3]
+		if anim Ns=nothing else Ns=10 end
 		p=round((scenario-7)*10);if p==0 p=2 end
-		problem0,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=10,dt = 0.01,dealias=1,δ=0.01,m=-1,Ns=10)
-		problem1,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=10,dt = 0.01,dealias=1,δ=0.002,m=-1,Ns=10)
-		problem2,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=2,dt = 0.01,dealias=1,δ=0.001,m=-1)
-		plt0=plot_solution(problem0;compression=compression,label="t=10")
-		plot_solution!(plt0,problem0,t=2;compression=compression,label="t=2")
+		problem0,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=10,dt = 0.01,dealias=1,δ=0.01,m=-1,Ns=Ns)
+		problem1,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=10,dt = 0.01,dealias=1,δ=0.002,m=-1,Ns=Ns)
+		#problem2,=IntegrateWW2(init=1,p=p,μ=1,ϵ=0.1,L=20,N=2^14,T=2,dt = 0.01,dealias=1,δ=0.001,m=-1)
+		plt0=plot(problem0;var=[:surface,:fourier],compression=compression,label="t=10")
+		plot!(plt0,problem0,T=2;var=[:surface,:fourier],compression=compression,label="t=2")
 		title!(plt0[1,1],"surface deformation")
-		plt1=plot_solution(problem1;compression=compression,label="t=10")
-		plot_solution!(plt1,problem1,t=2;compression=compression,label="t=2")
+		plt1=plot(problem1;var=[:surface,:fourier],compression=compression,label="t=10")
+		plot!(plt1,problem1,T=2;var=[:surface,:fourier],compression=compression,label="t=2")
 		title!(plt1[1,1],"surface deformation")
 		if !isnothing(name)
-			savefig(plt0,string(name,"d01.pdf"));savefig(plt0,string(name,"d01.svg"));
-			savefig(plt1,string(name,"d002.pdf"));savefig(plt1,string(name,"d002.svg"));
+			savefig(plt0,"$name-d01.pdf");savefig(plt0,"$name-d01.svg");
+			savefig(plt1,"$name-d002.pdf");savefig(plt1,"$name-d002.svg");
 			if anim
-				create_animation(problem0;ylims=(-0.5,1.1),compression=compression,name=name)
-				create_animation(problem1;ylims=(-0.5,1.1),compression=compression,name=name)
+				anim = @animate for t in LinRange(0,problem0.times.tfin,101)
+					plt = plot([problem0,problem1];var=[:surface,:fourier],T=t,compression=compression,label=["δ=0.01" "δ=0.002"])
+					ylims!(plt[1],(-0.5,1.1))			
+				end	
+				gif(anim, "$name.gif", fps = 15)
 			end
 		end
-		return problem0,problem1,problem2,plt0,plt1
+		return problem0,problem1,plt0,plt1
 
 	elseif scenario == 8
 		blowups0=[];blowups1=[];
 		K=100:20:800;iter=0;
 		for k in K
 			iter+=1;@info string("K=",k," (iteration ",iter,"/",length(K),")\n")
-			problem0,blowup0=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.15,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
-			problem1,blowup1=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
+			~,blowup0=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.15,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
+			~,blowup1=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
 			push!(blowups0,blowup0);push!(blowups1,blowup1);
 		end
 		plt=scatter(K,[blowups0 blowups1],
@@ -246,7 +272,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 				ylabel="t (in log scale)",
 				xscale=:log10,yscale=:log10)
 		if !isnothing(name)
-			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			savefig(plt,"$name.pdf");savefig(plt,"$name.svg");
 			#@save(name,K,blowups0,blowups1)
 		end
 		return K,blowups0,blowups1,plt
@@ -257,8 +283,8 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		for k in K
 			iter+=1;@info string("K=",k," (iteration ",iter,"/",length(K),")\n")
 			N=2^14;d=N*π/k/20 # useful to define truncation at frequency K
-			problem0,blowup0=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
-			problem1,blowup1=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=3/4*d-2,δ=0,m=-1)
+			~,blowup0=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
+			~,blowup1=IntegrateWW2(init=2,K=k,μ=1,ϵ=0.2,L=20,N=N,T=10,dt = 0.001,dealias=3/4*d-2,δ=0,m=-1)
 			push!(blowups0,blowup0);push!(blowups1,blowup1);
 		end
 		plt=scatter(K,[blowups0 blowups1],
@@ -268,7 +294,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 				ylabel="t (in log scale)",
 				xscale=:log10,yscale=:log10)
 		if !isnothing(name)
-			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			savefig(plt,"$name.pdf");savefig(plt,"$name.svg");
 			#@save(name,K,blowups0,blowups1)
 		end
 		return K,blowups0,blowups1,plt
@@ -278,10 +304,10 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		blowups1=[];blowups2=[];blowups3=[];blowups4=[];iter=0;
 		for eps in Eps
 			iter+=1;@info string("ϵ=",eps," (iteration ",iter,"/",length(Eps),")\n")
-			problem1,blowup1=IntegrateWW2(init=2,K=100,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
-			problem2,blowup2=IntegrateWW2(init=2,K=200,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
-			problem3,blowup3=IntegrateWW2(init=2,K=400,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
-			problem4,blowup4=IntegrateWW2(init=2,K=800,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
+			~,blowup1=IntegrateWW2(init=2,K=100,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
+			~,blowup2=IntegrateWW2(init=2,K=200,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
+			~,blowup3=IntegrateWW2(init=2,K=400,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
+			~,blowup4=IntegrateWW2(init=2,K=800,μ=1,ϵ=eps,L=20,N=2^14,T=10,dt = 0.001,dealias=1,δ=0,m=-1)
 			push!(blowups1,blowup1);push!(blowups2,blowup2);
 			push!(blowups3,blowup3);push!(blowups4,blowup4);
 		end
@@ -292,7 +318,7 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 				ylabel="t (in log scale)",
 				xscale=:log10,yscale=:log10)
 		if !isnothing(name)
-			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			savefig(plt,"$name.pdf");savefig(plt,"$name.svg");
 			#@save(name,Eps,blowups1,blowups2,blowups3,blowups4)
  		end
 		return Eps,blowups1,blowups2,blowups3,blowups4,plt
@@ -303,21 +329,25 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		problem0,=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=2,dt = 0.001,dealias=1,δ=0,m=-1)
 		problem1,=IntegrateWW2(init=2,K=K,μ=1,ϵ=0.2,L=20,N=N,T=2,dt = 0.001,dealias=3/4*d-2,δ=0,m=-1)
 
-		plt0=plot_solution(problem0, t=0.1;compression=compression,label="t=0.1")
-		plot_solution!(plt0,problem0,t=0.3;compression=compression,label="t=0.3")
-		plot_solution!(plt0,problem0,t=0.5;compression=compression,label="t=0.5")
+		plt0=plot(problem0, T=0.1;var=[:surface,:fourier],compression=compression,label="t=0.1")
+		plot!(plt0,problem0,T=0.3;var=[:surface,:fourier],compression=compression,label="t=0.3")
+		plot!(plt0,problem0,T=0.5;var=[:surface,:fourier],compression=compression,label="t=0.5")
 		plot!(plt0[1,1],title="surface deformation")
 
-		plt1=plot_solution(problem1, t=0.1;compression=compression,label="t=0.1")
-		plot_solution!(plt1,problem1,t=0.3;compression=compression,label="t=0.3")
-		plot_solution!(plt1,problem1,t=0.5;compression=compression,label="t=0.5")
+		plt1=plot(problem1, T=0.1;var=[:surface,:fourier],compression=compression,label="t=0.1")
+		plot!(plt1,problem1,T=0.3;var=[:surface,:fourier],compression=compression,label="t=0.3")
+		plot!(plt1,problem1,T=0.5;var=[:surface,:fourier],compression=compression,label="t=0.5")
 		plot!(plt1[1,1],title="surface deformation")
 		if !isnothing(name)
-			savefig(plt0,string(name,"a.pdf"));savefig(plt0,string(name,"a.svg"));
-			savefig(plt1,string(name,"b.pdf"));savefig(plt1,string(name,"b.svg"));
+			savefig(plt0,"$name-a.pdf");savefig(plt0,"$name-a.svg");
+			savefig(plt1,"$name-b.pdf");savefig(plt1,"$name-b.svg");
 			if anim
-				create_animation(problem0;ylims=false,compression=compression,name=name)
-				create_animation(problem1;ylims=false,compression=compression,name=name)
+				anim = @animate for t in LinRange(0,problem0.times.tfin,101)
+					plt = plot([problem0,problem1];var=[:surface,:fourier],T=t,compression=compression,label=["dealiasing" "low-pass filter"])
+					ylims!(plt[1],(-0.5,1.1))			
+				end	
+				gif(anim, "$name.gif", fps = 15)
+
 			end
 		end
 		return problem0,problem1,plt0,plt1
@@ -368,13 +398,14 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		plot!(plt,log10.(Eps[:]),Eps[:].^2,label="δ=ϵ²",linecolor=:3)
 		plot!(yscale=:log10,legend=:topleft,ylabel="δ (in log scale)",xlabel="ϵ (in log scale)")
 		if !isnothing(name)
-			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			savefig(plt,"$name.pdf");savefig(plt,"$name.svg");
 			#@save(name,Eps,δc2,δc10)
 		end
 		return Eps,δc2,δc10,plt
 
-	elseif scenario in [12.1,12.2,12.3]
-		p=round((scenario-12)*10)
+	elseif scenario in [12,12.1,12.2,12.3]
+		p=round((scenario-12)*10);if p==0 p=2 end
+
 		Eps=[0.2,0.1,0.05]
 		Delta=10 .^ (-2:0.1:0)
 		Norms=[];j=0;
@@ -384,8 +415,9 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 				i+=1
 				@info string("ϵ=",eps,", δ=",delta," (iteration ",(j-1)*length(Delta)+i,"/",length(Eps)*length(Delta),")")
 				problem,=IntegrateWW2(init=1,p=p,μ=1,ϵ=eps,L=20,N=2^12,T=10,dt = 0.01,dealias=1,δ=delta,m=-1)
-				model = WaterWaves(problem.param; dealias = 1,method=1,maxiter=20)
-				problem0 = Problem(model, problem.initial, problem.param)
+				param = (μ=1,ϵ=eps,L=20,N=2^12,T=10,dt = 0.01)
+				model = WaterWaves(param; dealias = 1,method=1,maxiter=20)
+				problem0 = Problem(model, problem.initial, param)
 				solve!( problem0 )
 				(η0,v0,x0)=solution(problem0)
 				(η,v)=solution(problem,x=x0)
@@ -397,14 +429,14 @@ function Figure(scenario;compression=false,name=nothing,anim=false)
 		plt=plot()
 		markers=[:c :d :ut :s :r :lt :pent :hex :hep :oct :+ :x]
 		for i in 1:length(Eps)
-			scatter!(plt,Delta,Norms[i],label=string("ϵ=",Eps[i]),marker=markers[i])
+			scatter!(plt,Delta,Norms[i],label="ϵ=$Eps[i]",marker=markers[i])
 		end
 		plot!(plt,xlabel="δ",ylabel="error",legend=:topleft)
 		if !isnothing(name)
-			savefig(plt,string(name,".pdf"));savefig(plt,string(name,".svg"));
+			savefig(plt,"$name.pdf");savefig(plt,"$name.svg");
 			plot!(plt,xscale=:log10,yscale=:log10)
 			plot!(plt,xlabel="δ (in log scale)",ylabel="error (in log scale)")
-			savefig(plt,string(name,"-log.pdf"));savefig(plt,string(name,"-log.svg"));
+			savefig(plt,"$name-log.pdf");savefig(plt,"$name-log.svg");
 			#@save(name,Eps,Delta,Norms)
 		end
 		return Eps,Delta,Norms,plt
