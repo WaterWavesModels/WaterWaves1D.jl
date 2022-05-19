@@ -37,7 +37,7 @@ end
     include("../examples/SolitaryWaveWhithamBoussinesq.jl")
 
     b=IntegrateSolitaryWaveWhithamBoussinesq(N=2^6,dt=0.01/1.05)
-    @test b ≈  9.9e-11 < b < 10e-11
+    @test 9.9e-11 < b < 10e-11
 
     a=PlotSolitaryWaveWhithamBoussinesq(;c=1.1,α=1,L=20,N=2^9,μ=0.1,ϵ=0.1)
     @test a ≈ 0.031638234910189356
@@ -64,7 +64,7 @@ end
     include("../examples/StudyRectifiedWW2.jl")
     problem,blowup_time,blowup,error_energy=IntegrateWW2(init=1,μ=1,ϵ=0.1,L=20,N=2^6,T=1,dt = 0.01,dealias=0,δ=0,m=-1)
     @test (blowup_time,blowup) == (1.,false)
-    @test error_energy == 9.359379669291887e-7
+    @test 9.3e-7 < error_energy < 9.4e-7
 
     problem,blowup_time,blowup,error_energy=IntegrateWW2(init=1,μ=1,ϵ=10,L=20,N=2^14,T=0.1,dt = 0.01,dealias=0,δ=0,m=-1)
     @test (blowup_time,blowup) == (0.07,true)
