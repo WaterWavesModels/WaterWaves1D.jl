@@ -69,5 +69,45 @@ end
     problem,blowup_time,blowup,error_energy=IntegrateWW2(init=1,μ=1,ϵ=10,L=20,N=2^14,T=0.1,dt = 0.01,dealias=0,δ=0,m=-1)
     @test (blowup_time,blowup) == (0.07,true)
 
+end
+
+@testset "Study: Whitham-Green-Naghdi" begin
+    include("../examples/StudyWhithamGreenNaghdi.jl")
+
+    norms = (13.564148081919193, 13.564148081919193, 12.01160049359638)
+
+    η,u,v,mesh = PlotSolitaryWaveWGN1(c=2,N=2^9,L=7*π,verbose=false,name=nothing) 
+    @test all((norm(η),norm(η),norm(v)) .≈ norms )
+    @test mesh == Mesh((N=2^9,L=7*π))
+
+    η,u,v,mesh = PlotSolitaryWaveWGN2(c=2,N=2^9,L=7*π,verbose=false,name=nothing) 
+    @test all((norm(η),norm(η),norm(v)) .≈ norms )
+    @test mesh == Mesh((N=2^9,L=7*π))
+
+    η,u,v,mesh = PlotSolitaryWaveWGN3(c=2,N=2^9,L=7*π,verbose=false,name=nothing) 
+    @test all((norm(η),norm(η),norm(v)) .≈ norms )
+    @test mesh == Mesh((N=2^9,L=7*π))
+
+    Jac,Jacstar,FFT,IFFT = PlotJacobianWGN(;c=2,L=10*π,N=2^6,SGN=false,verbose=false,name=nothing)
+    @test norm(Jac) .≈ 98.38287473770893 || norm(Jacstar) .≈ 73.20464101226274
+    @test norm(FFT) == 2^6 || norm(IFFT) == 1
+
+    pb = IntegrateSolitaryWaveWGN(;SGN=true,c=2,N=2^8,L=8*π,T=1,dt=1/100,name=nothing)
+    η0,u0,v0=SolitaryWaveSerreGreenNaghdi((c=2,N=2^8,L=8*π,ϵ=1,μ=1); x₀ = 2)
+    η,v=solution(pb)
+    @test norm(η-η0)/norm(η) < 2e-7 || norm(v-v0)/norm(v) < 4e-8
+
+    pb = StabilitySolitaryWaveWGN(;p=2,c=2,N=2^6,L=5*π,T=1,dt=10/10^3,SGN=true,precond=true,iterate=true,dealias=0,name=nothing)
+    η,v=solution(pb)
+    @test norm(η)/√(2^6) ≈ 0.7150680699199008 || norm(v)/√(2^6) ≈ 0.6351032600783317
+
+    pb = IntegrateWGN(2;δ=0.1,N=2^6,L=3*π,x₀=-3,T= 1,dt = 1/10^3,SGN=false,dealias=0,iterate=true,precond=true,name=nothing)
+    η,v=solution(pb)
+    @test norm(η)/√(2^6) ≈ 0.13510938498462427 || norm(v)/√(2^6) ≈ 0.12411816656683075
+    
+
+
+
+
 
 end

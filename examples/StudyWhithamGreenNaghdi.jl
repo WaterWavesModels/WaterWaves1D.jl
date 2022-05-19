@@ -43,7 +43,7 @@ function PlotSolitaryWaveWGN1(;c=2,N=2^10,L=10*π,verbose=false,name=nothing)
 
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [u uGN];
-	  title=string("c=",c),
+	  title="c=$c",
 	  xlabel = "x",
 	  ylabel = "u",
 	  label=["WGN" "SGN"])
@@ -52,7 +52,7 @@ function PlotSolitaryWaveWGN1(;c=2,N=2^10,L=10*π,verbose=false,name=nothing)
 	  title="frequency",
 	  label=["WGN" "SGN"])
 	display(plt)
-	if !isnothing(name) savefig(string(name,".pdf")); end
+	if !isnothing(name) savefig("$name.pdf"); end
 	return (η,u,v,mesh)
 end
 
@@ -83,7 +83,7 @@ function PlotSolitaryWaveWGN2(;c=20,L=10*π,N=2^10,verbose=false,name=nothing)
 
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [u uGN];
-	  title=string("c=",c),
+	  title="c=$c",
 	  xlabel = "u",
 	  ylabel = "u/c",
 	  label=["WGN" "SGN"])
@@ -92,7 +92,7 @@ function PlotSolitaryWaveWGN2(;c=20,L=10*π,N=2^10,verbose=false,name=nothing)
 	  title="frequency",
 	  label=["WGN" "SGN"])
     display(plt)
-	if !isnothing(name) savefig(string(name,".pdf")); end
+	if !isnothing(name) savefig("$name.pdf"); end
 	return (η,u,v,mesh)
 end
 #---- Figure 4
@@ -121,7 +121,7 @@ function PlotSolitaryWaveWGN3(;c=100,L=10*π,N=2^10,verbose=false,name=nothing)
 
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1], mesh.x, [u/c uGN/c];
-	  title=string("c=",c),
+	  title="c=$c",
 	  xlabel = "x",
 	  ylabel = "u/c",
 	  label=["WGN" "SGN"])
@@ -130,7 +130,7 @@ function PlotSolitaryWaveWGN3(;c=100,L=10*π,N=2^10,verbose=false,name=nothing)
 	  title="frequency",
 	  label=["WGN" "SGN"])
 	display(plt)
-	if !isnothing(name) savefig(string(name,".pdf")); end
+	if !isnothing(name) savefig("$name.pdf"); end
 	return (η,u,v,mesh)
 end
 
@@ -193,7 +193,7 @@ function PlotJacobianWGN(;c=20,L=10*π,N=2^10,SGN=false,verbose=false,name=nothi
 		title = "non-diagonal part")
 	display(plt)
 
-	if !isnothing(name) savefig(string(name,".pdf")); end
+	if !isnothing(name) savefig("$name.pdf"); end
 	return (Jac,Jacstar,FFT,IFFT)
 end
 
@@ -241,8 +241,8 @@ function IntegrateSolitaryWaveWGN(;SGN=false,c=2,N=2^10,L=10*π,T=1,dt=1/2000,na
 	E(η,u,v) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.*v)
 	dE(η1,u1,v1,η2,u2,v2) = sum(η1.^2-η2.^2) + sum((1 .+ param.ϵ*η1).*u1.*v1 - (1 .+ param.ϵ*η2).*u2.*v2)
 
-	print(string("absolute energy difference: ",dE(ηinit,uinit,vinit,ηcomp,ucomp,vcomp),"\n"))
-	print(string("relative energy difference: ",dE(ηinit,uinit,vinit,ηcomp,ucomp,vcomp)/E(ηinit,uinit,vinit),"\n"))
+	print("absolute energy difference: $(dE(ηinit,uinit,vinit,ηcomp,ucomp,vcomp)) \n")
+	print("relative energy difference: $(dE(ηinit,uinit,vinit,ηcomp,ucomp,vcomp)/E(ηinit,uinit,vinit)) \n")
 
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(uinit))));
@@ -253,18 +253,22 @@ function IntegrateSolitaryWaveWGN(;SGN=false,c=2,N=2^10,L=10*π,T=1,dt=1/2000,na
 	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(ucomp))));
 			label = "final")
 	plot!(plt[1,2],mesh.x,ufin-ucomp;
-			title = string("error at time t=",problem.times.tfin),
+			title = "error at time t=$(problem.times.tfin)",
 			label="difference",
 			xlabel="x",
 			ylabel="δu")
 	display(plt)
 
 	if !isnothing(name)
-		savefig(string(name,".pdf"));
-		create_animation(problem;name=string(name,"-anim.pdf"))
-		plot_solution(problem)
-		savefig(string(name,"-final.pdf"));
-		#save(problem,name);
+		savefig("$name.pdf");
+		plot(problem;var=[:surface,:fourier])
+		savefig("$name-final.pdf");
+		anim = @animate for t in LinRange(0,T,101)
+			plot(problem;T=t)
+		end
+		gif(anim, "$name-anim.gif", fps = 15)
+
+		dump(name,problem);
 	end
 	return problem
 end
@@ -322,7 +326,7 @@ function StabilitySolitaryWaveWGN(;p=2,c=2,N=2^10,L=10*π,T=10,dt=10/10^4,SGN=fa
 				param; method = 3, tol=1e-14, max_iter=10,α=1,verbose=true)
 	end
 	k = mesh.k
-
+	μ = 1
 	if precond > 0
 		precond = Diagonal( 1 .+ μ/3*(precond^2*k).^2 )
 	elseif precond < 0
@@ -349,14 +353,12 @@ function StabilitySolitaryWaveWGN(;p=2,c=2,N=2^10,L=10*π,T=10,dt=10/10^4,SGN=fa
 	problem = Problem(model, init, param)
 	solve!( problem )
 
-	#if name != nothing save(problem,name); end
-
 	(ηfin,vfin,ufin)   =  model.mapfrofull(last(problem.data.U))
 
 	E(η,u,v) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.*v)
 	dE(η1,u1,v1,η2,u2,v2) = sum(η1.^2-η2.^2) + sum((1 .+ param.ϵ*η1).*u1.*v1 - (1 .+ param.ϵ*η2).*u2.*v2)
 
-	print(string("normalized error: ",dE(η,u,v,ηfin,ufin,vfin)/E(η,u,v),"\n"))
+	print("normalized error: $(dE(η,u,v,ηfin,ufin,vfin)/E(η,u,v)) \n")
 
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(η))));
@@ -365,12 +367,12 @@ function StabilitySolitaryWaveWGN(;p=2,c=2,N=2^10,L=10*π,T=10,dt=10/10^4,SGN=fa
 	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fft(ηfin))));
 			label = "final")
 	plot!(plt[1,2],mesh.x,[η ηfin];
-			title = string("at time t=",problem.times.tfin),
+			title = "at time t=$(problem.times.tfin)",
 			label=["zeta initial" "zeta final"])
 	plot!(plt[1,2],mesh.x,[u ufin];
 			label=["u initial" "u final"])
 	display(plt)
-	if !isnothing(name) savefig(string(name,"-final.pdf")); end
+	if !isnothing(name) savefig("$name-final.pdf"); end
 
 	ts = problem.times.ts
 	x = mesh.x
@@ -390,7 +392,7 @@ function StabilitySolitaryWaveWGN(;p=2,c=2,N=2^10,L=10*π,T=10,dt=10/10^4,SGN=fa
 
 
 	if !isnothing(name)
-		savefig(string(name,"-znorm.pdf"));
+		savefig("$name-znorm.pdf");
 
 		us=zeros(length(X),length(ts));
 		@showprogress 1 "Computing v..." for i in 1:length(ts)
@@ -402,16 +404,21 @@ function StabilitySolitaryWaveWGN(;p=2,c=2,N=2^10,L=10*π,T=10,dt=10/10^4,SGN=fa
 				label="",
 				xlabel="time t")
 		display(plt)
-		savefig(string(name,"-vnorm.pdf"));
+		savefig("$name-vnorm.pdf");
 
 
 		plt=plot()
 		my_cg = cgrad([:blue,:green])
-		#surface!(plt,X,ts,zs',view_angle=(20,30), color = my_cg)
+		surface!(plt,X,ts,zs',view_angle=(20,30), color = my_cg)
 		display(plt)
-		savefig(string(name,"-evol.pdf"));
+		savefig("$name-evol.png");
 
-		create_animation(problem;name=string(name,"-anim"))
+		anim = @animate for t in LinRange(0,T,101)
+			plot(problem;T=t)
+		end
+		gif(anim, "$name-anim.gif", fps = 15)
+
+		dump(name,problem);
 	end
 	return problem
 end
@@ -503,21 +510,15 @@ function IntegrateWGN(scenario;δ=0.1,N=2^11,L=3*π,x₀=-3,T= 5,dt = 5/10^4,SGN
 	E(η,u,v) = sum(η.^2 .+ (1 .+ param.ϵ*η).*u.*v)
 	dE(η1,u1,v1,η2,u2,v2) = sum(η1.^2-η2.^2) + sum((1 .+ param.ϵ*η1).*u1.*v1 - (1 .+ param.ϵ*η2).*u2.*v2)
 
-	print(string("normalized error: ",dE(η,u,v,ηfin,ufin,vfin)/E(η,u,v),"\n"))
+	print("normalized error: $(dE(η,u,v,ηfin,ufin,vfin)/E(η,u,v)) \n")
 
 	fftηfin=last(problem.data.U)[:,1]
 
-	plt = plot(layout=(1,2))
-	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fftηfin)));
-			title = "frequency",label="")
-	plot!(plt[1,2],mesh.x,real.(ifft(fftηfin));
-			title = string("surface deformation at time t=",problem.times.tfin),
-			label="")
+	plt = plot(problem,var=[:surface,:fourier],label="")
 	display(plt)
 
 	if !isnothing(name)
-		savefig(string(name,".pdf"));
-		#save(problem,name);
+		savefig("$name.pdf");
 		ts = problem.times.ts
 		x = mesh.x
 		k = mesh.k
@@ -529,11 +530,15 @@ function IntegrateWGN(scenario;δ=0.1,N=2^11,L=3*π,x₀=-3,T= 5,dt = 5/10^4,SGN
 		my_cg = cgrad([:blue,:green])
 		surface!(plt3,x,ts,zs',view_angle=(20,30), color = my_cg)
 		display(plt3)
-		savefig(string(name,"-evol.pdf"));
-		create_animation(problem;ylims=false,name=string(name,"-anim"))
+		savefig("$name-evol.png");
+		anim = @animate for t in LinRange(0,T,101)
+			plot(problem;T=t)
+		end
+		gif(anim, "$name-anim.gif", fps = 15)
+		dump(name,problem)
 
 	end
 	display(plt)
-	return problem,plt
+	return problem
 end
 nothing
