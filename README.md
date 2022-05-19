@@ -54,7 +54,7 @@ Set up initial-value problems for different models to compare.
 ```julia
 # Build models
 model_WW=WaterWaves(param,verbose=false) # The water waves system
-model_WW2=WWn(param;n=2,dealias=1,δ=1/10,verbose=false) # The quadratic model (WW2)
+model_WW2=WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
 # Build problems
 problem_WW=Problem(model_WW, init, param) ;
 problem_WW2=Problem(model_WW2, init, param) ;
@@ -74,7 +74,7 @@ plot([problem_WW, problem_WW2])
 
 Generate an animation.
 ```julia
-anim = @anim for t = LinRange(0,5,101)
+anim = @animate for t = LinRange(0,5,101)
     plot([problem_WW, problem_WW2];T=t,ylims=(-0.5,1))
 end
 gif(anim, "Example.gif", fps=15)
