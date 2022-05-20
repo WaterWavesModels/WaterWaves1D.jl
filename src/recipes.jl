@@ -400,7 +400,7 @@ end
 
 end
 
-@recipe function f(pairs::Array{Tuple{Problem, Problem}};
+@recipe function f(pairs::Union{Tuple{Problem, Problem},Array{Tuple{Problem, Problem}}};
                     var = :difference, 
                     T = nothing, 
                     x = nothing, 
@@ -408,6 +408,7 @@ end
                     compression = false)
 
 
+    if typeof(pairs) == Tuple{Problem, Problem} pairs = [pairs] end
 
     if var isa Array{Symbol}
 		variables = var
