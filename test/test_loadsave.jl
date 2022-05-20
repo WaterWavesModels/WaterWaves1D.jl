@@ -6,9 +6,11 @@ using Test
     rm(joinpath(save_filename * ".h5"), force=true) # delete pre-existing file
 
 
-    param  = ( c = 1.1, ϵ = 1, μ = 1, N  = 2^6, L = 4, T = 1, dt = 0.1)
-    init = SolitaryWhitham(param)
-    x = Mesh(param).x
+    param  = ( h₀ = 1, h₁ = 1.5, h₂ = 2, ϵ = 1, μ = 1, N  = 2^6)
+    (η,u,v,mesh,par) = CnoidalWaveSerreGreenNaghdi(param)
+    param=merge(par,param,( L=par.λ, T = 1, dt = 0.1))
+    init = Init(mesh,η,v;label = "SGN cnoidal wave")
+    x = mesh.x
     dump(save_filename, x, init)
 
     model = Airy(param)
@@ -19,7 +21,7 @@ using Test
 
     
     loaded_init = load_init(save_filename)
-    @test loaded_init.label == "Whitham solitary wave"
+    @test loaded_init.label == "SGN cnoidal wave"
     @test all( loaded_init.η(x) .≈ init.η(x) )
     @test all( loaded_init.v(x) .≈ init.v(x) )
 
