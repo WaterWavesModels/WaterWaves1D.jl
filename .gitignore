@@ -10,3 +10,5 @@ docs/build/
 .vscode/launch.json
 .vscode/settings.json
 test/testsave.h5
+testsave.h5
+notebooks/.ipynb_checkpoints
