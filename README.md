@@ -14,13 +14,13 @@ using WaterWaves1D
 
 ## Overview
 
-`WaterWaves1D.jl` is a [Julia](https://julialang.org/) package providing a framework to study and compare several models for the propagation of unidimensional surface gravity waves (a.k.a. ["water waves"](https://waterwavesmodels.github.io/WaterWaves1D.jl/stable/background/#Water-waves)).
+`WaterWaves1D.jl` is a [Julia](https://julialang.org/) package providing a framework to study and compare several models for the propagation of unidimensional surface gravity waves (a.k.a. ["water waves"](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/background/#Water-waves)).
 
-Several models are already implemented, including ([but not limited to](https://waterwavesmodels.github.io/WaterWaves1D.jl/stable/background/#Models)) the so-called water waves system, its truncated spectral expansion, the Green-Naghdi system, the Matsuno system, and so on. You may easily add your favorite one to the gang: see the [how-to guide](https://waterwavesmodels.github.io/WaterWaves1D.jl/stable/how-to/#build-your-model).
+Several models are already implemented, including ([but not limited to](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/background/#Models)) the so-called water waves system, its truncated spectral expansion, the Green-Naghdi system, the Matsuno system, and so on. You may easily add your favorite one to the gang: see the [how-to guide](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/how-to/#build-your-model).
 
 ## Documentation
 
-See [here](https://waterwavesmodels.github.io/WaterWaves1D.jl/stable/).
+See [here](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/).
 
 
 ## Example
