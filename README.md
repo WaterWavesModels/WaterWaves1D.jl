@@ -8,7 +8,7 @@
 ## Installation
 
 ```julia
-(v1.7) pkg> add https://github.com/WaterWavesModels/WaterWaves1D.jl.git
+(v1.7) pkg> add WaterWaves1D.jl
 using WaterWaves1D
 ```
 
