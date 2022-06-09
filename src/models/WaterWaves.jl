@@ -50,7 +50,7 @@ mutable struct WaterWaves <: AbstractModel
 						mesh = Mesh(param),
 						IL	    = false,
 						method  = 1,
-						tol	    = 1e-16,
+						tol	    = 1e-15,
 						maxiter = 100,
 						dealias	= 0,
 						ktol	= 0,
