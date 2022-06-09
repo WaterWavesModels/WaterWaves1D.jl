@@ -85,6 +85,60 @@ In the above formula,
 - $\mu$ is the *shallowness* dimensionless parameter, defined as the square of the ratio of the depth of the layer to the typical horizontal wavelength of the flow.
 - $\nu$ is a scaling parameter: in shallow water situations one typically sets $\nu=1$ while in deep water situations it is wise to set $\nu=1/\sqrt{\mu}$. In the latter case, $\epsilon\sqrt{\mu}$ being the *steepness* of the wave plays an important role. Especially, taking formally the limit $\mu \rightarrow \infty$ one obtains the infinite-depth situation where the wave steepness is the only remaining parameter.
 
+# Example
+
+In this example we shall observe the disintegration of a heap of water using the water-waves system as well as a second-order small-steepness model. 
+
+## Set up the initial-value problem
+
+First we define parameters of our problem.
+
+```julia
+using WaterWaves1D
+
+param = (
+    # Physical parameters. Variables are non-dimensionalized as in Lannes, The water waves problem, isbn:978-0-8218-9470-5
+    μ  = 1,     # shallow-water dimensionless parameter
+    ϵ  = 1/4,   # nonlinearity dimensionless parameter
+    # Numerical parameters
+    N  = 2^10,  # number of collocation points
+    L  = 10,    # half-length of the numerical tank (-L,L)
+    T  = 5,     # final time of computation
+    dt = 0.01,  # timestep
+                );
+```
+
+Now we define initial data solver (the "heap of water"). The function `Init` may take either functions, or vectors (values at collocation points) as arguments.
+
+```julia
+z(x) = exp.(-abs.(x).^4); # surface deformation
+v(x) = zero(x);     # zero initial velocity
+init = Init(z,v);         # generate the initial data with correct type
+```
+
+Then we build the different models `WaterWaves` and `WWn` to compare:
+
+```julia
+WW_model=WaterWaves(param) # The water waves system
+WW2_model=WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
+```
+
+Finally we set up initial-value problems. Optionally, one may specify a `time solver` to `Problem`, by default the standard explicit fourth order Runge Kutta method is used.
+
+```julia
+WW_problem=Problem(WW_model, init, param) ;
+WW2_problem=Problem(WW2_model, init, param) ;
+```
+## Solve the initial-value problem and generate graphics
+
+```julia
+using Plots
+
+solve!([WW_problem WW2_problem])
+
+plot([WW_problem, WW2_problem])
+```
+![Water waves system and the quadratic model](paper.png){ width=80% }
 
 # Citations
 
@@ -100,14 +154,5 @@ For a quick reference, the following citation commands can be used:
 - @Duchene:2020  ->  "Vincent Duchêne and Tatsuo Iguchi (2020)"
 - `[@author:2001]` -> "(Author et al., 2001)"
 - `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
-
-# Figures
-
-Figures can be included like this:
-![Caption for example figure.\label{fig:example}](figure.png)
-and referenced from text using \autoref{fig:example}.
-
-Figure sizes can be customized by adding an optional second parameter:
-![Caption for example figure.](figure.png){ width=20% }
 
 # References
