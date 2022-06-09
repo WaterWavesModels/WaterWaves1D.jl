@@ -105,29 +105,29 @@ param = (
     L  = 10,    # half-length of the numerical tank (-L,L)
     T  = 5,     # final time of computation
     dt = 0.01,  # timestep
-                );
+                )
 ```
 
 Now we define initial data solver (the "heap of water"). The function `Init` may take either functions, or vectors (values at collocation points) as arguments.
 
 ```julia
-z(x) = exp.(-abs.(x).^4); # surface deformation
-v(x) = zero(x);     # zero initial velocity
-init = Init(z,v);         # generate the initial data with correct type
+z(x) = exp.(-abs.(x).^4) # surface deformation
+v(x) = zero(x)           # zero initial velocity
+init = Init(z,v)         # generate the initial data with correct type
 ```
 
 Then we build the different models `WaterWaves` and `WWn` to compare:
 
 ```julia
-WW_model=WaterWaves(param) # The water waves system
-WW2_model=WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
+WW_model  = WaterWaves(param) # The water waves system
+WW2_model = WWn(param; n = 2, dealias = 1, δ = 1/10) # The quadratic model (WW2)
 ```
 
 Finally we set up initial-value problems. Optionally, one may specify a `time solver` to `Problem`, by default the standard explicit fourth order Runge Kutta method is used.
 
 ```julia
-WW_problem=Problem(WW_model, init, param) ;
-WW2_problem=Problem(WW2_model, init, param) ;
+WW_problem  = Problem(WW_model,  init, param)
+WW2_problem = Problem(WW2_model, init, param)
 ```
 ## Solve the initial-value problem and generate graphics
 
@@ -136,7 +136,7 @@ using Plots
 
 solve!([WW_problem WW2_problem])
 
-plot([WW_problem, WW2_problem])
+plot([WW_problem, WW2_problem], legend = :bottomright)
 ```
 ![Water waves system and the quadratic model](paper.png){ width=80% }
 

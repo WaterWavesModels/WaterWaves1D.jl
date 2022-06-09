@@ -11,14 +11,14 @@ param = (
     T  = 5,     # final time of computation
     dt = 0.01,  # timestep
                 );
-z(x) = exp.(-abs.(x).^4); # surface deformation
-v(x) = zero(x);     # zero initial velocity
-init = Init(z,v);         # generate the initial data with correct type
-WW_model=WaterWaves(param) # The water waves system
-WW2_model=WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
-WW_problem=Problem(WW_model, init, param) ;
-WW2_problem=Problem(WW2_model, init, param) ;
-solve!([WW_problem WW2_problem];verbose=false);
-plot([WW_problem, WW2_problem])
+z(x) = exp.(-abs.(x).^4)    # surface deformation
+v(x) = zero(x)              # zero initial velocity
+init = Init(z,v)            # generate the initial data with correct type
+WW_model = WaterWaves(param)  # The water waves system
+WW2_model = WWn(param; n = 2, dealias = 1, δ = 1/10) # The quadratic model (WW2)
+WW_problem = Problem(WW_model, init, param)
+WW2_problem = Problem(WW2_model, init, param)
+solve!([WW_problem WW2_problem])
+plot([WW_problem, WW2_problem], legend = :bottomright)
 
 png("paper")
