@@ -1,11 +1,11 @@
 using Luxor
 
-Drawing(400, 400, "logo.svg")
+Drawing(260, 260, "logo.svg")
 origin()
 background("white")
 sethue("black")
-squircle(Point(0,0), 150, 150, rt=0.3)
-strokepath()
+#squircle(Point(0,0), 150, 150, rt=0.3)
+#strokepath()
 hoffset = 6.25
 f(t) = Point(t-hoffset, cos(t)+3)
 g(t) = Point(t-hoffset, cos(t+π/2))
