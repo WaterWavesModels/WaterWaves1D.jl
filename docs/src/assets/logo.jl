@@ -1,6 +1,6 @@
 using Luxor
 
-Drawing(400, 400, "logo.png")
+Drawing(400, 400, "logo.svg")
 origin()
 background("white")
 sethue("black")
