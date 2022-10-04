@@ -1,13 +1,14 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
-- family-names: Duchêne 
-  given-names: Vincent
-  orcid: "https://orcid.org/0000-0002-8349-1284"
-- family-names: Navaro 
-  given-names: Pierre
-  orcid: "https://orcid.org/0000-0002-7372-3221"
-title: "Julia framework for studying unidimensional surface gravity waves propagation"
-version: 0.1.0
-date-released: 2022-10-04
+  - family-names: "Duchêne" 
+    given-names: "Vincent"
+    orcid: "https://orcid.org/0000-0002-8349-1284"
+  - family-names: "Navaro" 
+    given-names: "Pierre"
+    orcid: "https://orcid.org/0000-0002-7372-3221"
 url: "https://github.com/WaterWavesModels/WaterWaves1D.jl"
+title: "WaterWaves1D.jl"
+version: 0.1.0
+doi: 10.5281/zenodo.7142921
+date-released: 2022-10-04
