@@ -4,11 +4,13 @@
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://waterwavesmodels.github.io/WaterWaves1D.jl/stable/)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/)
 [![codecov](https://codecov.io/gh/WaterWavesModels/WaterWaves1D.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/WaterWavesModels/WaterWaves1D.jl)
+[![DOI](https://zenodo.org/badge/154723425.svg)](https://zenodo.org/badge/latestdoi/154723425)
+
 
 ## Installation
 
 ```julia
-(v1.7) pkg> add WaterWaves1D
+(v1.8) pkg> add WaterWaves1D
 using WaterWaves1D
 ```
 
@@ -85,3 +87,9 @@ gif(anim, "Example.gif", fps=15)
 ## Developers
 
 `WaterWaves1D.jl` is being developed by [Vincent Duchêne](https://perso.univ-rennes1.fr/vincent.duchene/) and [Pierre Navaro](https://github.com/pnavaro).
+
+## Citing
+
+The code is citable via [zenodo](https://zenodo.org). Please cite as:
+
+> V. Duchêne, P. Navaro. WaterWaves1D.jl (Version v0.1.0). Zenodo.  [https://doi.org/10.5281/zenodo.7142921](https://doi.org/10.5281/zenodo.7142921)
