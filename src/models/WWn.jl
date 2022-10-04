@@ -105,7 +105,11 @@ mutable struct WWn <: AbstractModel
 		x = mesh.x
 
 		if length(m) == 1
-			rectifier = k -> min(1,abs(k)^m)
+			if m==-Inf
+				rectifier = k -> k<1
+			else
+				rectifier = k -> min(1,abs(k)^m)
+			end
 		else
 			rectifier = k -> min(1,abs(k)^(m[1])*exp(1-abs(k)^m[2]))
 		end
