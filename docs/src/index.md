@@ -12,7 +12,7 @@ Several models are already implemented, including ([but not limited to](backgrou
 
 Enter the Pkg REPL by pressing `]` from the Julia REPL.
 ~~~
-(v1.7) pkg> add WaterWaves1D
+(v1.8) pkg> add WaterWaves1D
 ~~~
 
 Once installed, load the package with
