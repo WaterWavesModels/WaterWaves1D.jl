@@ -5,6 +5,7 @@ authors:
     given-names: "Vincent"
   - family-names: "Navaro" 
     given-names: "Pierre"
-title: WaterWavesModels/WaterWaves1D.jl: WaterWaves1D v0.1.0
-version: v0.1.0
+title: "WaterWaves1D.jl"
+version: 0.1.0
+doi: 10.5281/zenodo.7142921
 date-released: 2022-10-04
