@@ -6,7 +6,8 @@ authors:
   orcid: "https://orcid.org/0000-0002-8349-1284"
 - family-names: Navaro 
   given-names: Pierre
-title: "Julia framework to study unidimensional surface gravity waves propagation"
+  orcid: "https://orcid.org/0000-0002-7372-3221"
+title: "Julia framework for studying unidimensional surface gravity waves propagation"
 version: 0.1.0
 date-released: 2022-10-04
 url: "https://github.com/WaterWavesModels/WaterWaves1D.jl"
