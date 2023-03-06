@@ -43,9 +43,11 @@ include("models/WhithamBoussinesq.jl")
 include("models/WhithamGreenNaghdi.jl")
 include("models/WWn.jl")
 
+include("models/relaxedGreenNaghdi.jl")
+include("models/Toy.jl")
+
 include("solvers/Euler.jl")
 include("solvers/EulerSymp.jl")
 include("solvers/RK4.jl")
-
 
 end
