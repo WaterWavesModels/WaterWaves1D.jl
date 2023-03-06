@@ -76,6 +76,7 @@ Give the solution of a solved initial-value problem at a given time `T`.
 - Keyword argument `T` is optional, the last computed time is returned by default.
 - Keyword argument `x` is optional, if provided the solution is interpolated to the collocation vector `x`.
 - Keyword argument `interpolation` is optional, if an integer is provided the solution is interpolated on as many collocation points (if `true`, then the default value `2^3` is chosen).
+- Keyword argument `raw` is optional, if set to `true` then `(U,t)` with `U` the raw data and `t` the time is returned (default is `false`).
 
 
 # Return values
@@ -86,11 +87,14 @@ Return `(η,v,x,t)` where
 - `t` the time (first computed time greater or equal to provided `T`).
 
 """
-function solution(p::Problem; T=nothing, x=nothing, interpolation = false)
+function solution(p::Problem; T=nothing, x=nothing, interpolation = false, raw = false)
 	if isnothing(T) T = p.times.ts[end] end
 	T=min(max(T,0),p.times.ts[end])
 	index = findfirst(p.times.ts.>=T)
 	t=p.times.ts[index]
+	if raw
+		return p.data.U[index],t
+	end
 
 	if Symbol(typeof(p.model)) == :WaterWaves
 		if !isnothing(x) || interpolation != false
