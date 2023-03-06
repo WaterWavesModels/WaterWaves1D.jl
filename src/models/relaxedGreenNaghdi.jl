@@ -1,0 +1,232 @@
+export relaxedGreenNaghdi
+
+"""
+    relaxedGreenNaghdi(param;kwargs)
+
+Define an object of type `AbstractModel` in view of solving the initial-value problem for
+a relaxed Green-Naghdi model proposed by [N. Favrie and S. Gavrilyuk](https://doi.org/10.1088/1361-6544/aa712d) 
+or [C. Escalante, M. Dumbser and M. Castro](https://doi.org/10.1016/j.jcp.2019.05.035) 
+and [G. Richard](https://doi.org/10.1016/j.euromechflu.2021.05.011).
+
+# Argument
+`param` is of type `NamedTuple` and must contain
+- dimensionless parameters `ϵ` (nonlinearity) and `μ` (dispersion);
+- the relaxation parameter `a`;
+- numerical parameters to construct the mesh of collocation points, if `mesh` is not provided as a keyword argument.
+
+## Optional keyword arguments
+- `FG`: if `true` (default is `false`), compute the Favrie-Gavrilyuk model, otherwise compute the Escalante-Dumbser-Castro model;
+- `id`: `∈{0,1,2}` and represent the level of preparation of the initial data (default is `1`);
+- `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
+- `iterative`: solve the elliptic problem (to construct initial data) through GMRES if `true`, LU decomposition if `false` (default is `true`);
+- `precond`: use a (left) preconditioner for GMRES if `true` (default), choose `precond` as the preconditioner if provided;
+- `gtol`: relative tolerance of the GMRES algorithm (default is `1e-14`);
+- `restart`: the corresponding option of the GMRES algorithm (default is `100`);
+- `maxiter`: the corresponding option of GMRES (default is `nothing`);
+- `ktol`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
+- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `label`: a label for future references (default is `"Favrie-Gavrilyuk"` if `FG==true`, `"Escalante-Dumbser-Castro"` otherwise);
+
+# Return values
+Generate necessary ingredients for solving an initial-value problem via `solve!`:
+1. a function `relaxedGreenNaghdi.f!` to be called in explicit time-integration solvers;
+2. a function `relaxedGreenNaghdi.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
+3. a function `relaxedGreenNaghdi.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
+	- `η` is the values of surface deformation at collocation points `x`;
+	- `v` is the derivative of the trace of the velocity potential at `x`;
+4. additionally, a handy function `relaxedGreenNaghdi.mapfrofull` which from data matrix returns the Tuple of real vectors `(η,v,u,p,w)`, where
+	- `u` corresponds to the layer-averaged horizontal velocity.
+	- `p` corresponds to the relaxed (artificial) layer-averaged non-hydrostatic pressure;
+	- `w` corresponds to the relaxed (artificial) layer-averaged vertical velocity.
+
+"""
+mutable struct relaxedGreenNaghdi <: AbstractModel
+
+	label   :: String
+	f!		:: Function
+	mapto	:: Function
+	mapfro	:: Function
+	mapfrofull	:: Function
+	info    :: String
+
+    function relaxedGreenNaghdi(param::NamedTuple; FG = false,
+								id = 1,
+								mesh = Mesh(param),
+								dealias	= 0,
+								ktol	= 0,
+								iterate	= true,
+								gtol	= 1e-14,
+								precond	= true,
+								restart	= nothing,
+								maxiter	= nothing,
+								label	= nothing
+								)
+		# Set up
+		a	= param.a
+		μ 	= param.μ
+		ϵ 	= param.ϵ
+
+		if isnothing(maxiter) maxiter = mesh.N end
+		if isnothing(restart) restart = min(20,mesh.N) end
+		if isnothing(label)
+			if FG == true
+				label = "Favrie-Gavrilyuk"
+			else
+				label = "Escalante-Dumbser-Castro"
+			end
+		end
+
+
+		# Print information
+		info = "$label model.\n"
+		info *= "├─Relaxation parameter a=$a.\n"
+		info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ.\n"
+
+		if dealias == 0
+			info *= "├─No dealiasing. "
+		else
+			info *= "├─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
+		end
+		if ktol == 0
+			info *= "No Krasny filter. "
+		else
+			info *= "Krasny filter with tolerance $ktol."
+		end
+		if iterate == true
+			if precond == false out="out" else out="" end
+			info *= "\n└─Elliptic problem solved with GMRES method with$out preconditioning, \
+			tolerance $gtol, maximal number of iterations $maxiter, restart after $restart iterations \
+			(consider `iterate=false` for non-iterative method). "
+		else
+			info *= "\n└─Elliptic problem solved with standard LU factorization \
+			(consider `iterate=true` for faster results). "
+		end
+		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
+
+		# Pre-allocate useful data
+		k = mesh.k
+		x 	= mesh.x
+		x₀ = mesh.x[1]
+
+		∂ₓ	=  1im * k
+
+		if precond == true
+			Precond = Diagonal( 1 .+ μ/3*k.^2 )
+		elseif precond == false
+			Precond = Diagonal( ones(size(k)) )
+		else
+			Precond = precond
+		end
+		if dealias == 0
+			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
+		else
+			K = (mesh.kmax-mesh.kmin)/(2+dealias)
+			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
+		end
+		FFT = exp.(-1im*k*(x.-x₀)');
+        IFFT = exp.(1im*k*(x.-x₀)')/length(x);
+		Dx = IFFT * Diagonal( Π⅔ .* ∂ₓ)* FFT
+        Id = Diagonal(ones(size(x)));
+		h = zeros(Complex{Float64}, mesh.N)
+		u, p, w, fftη, fftu, fftv, fftp, fftw, hFG = (similar(h),).*ones(9)
+		L = similar(FFT)
+
+
+		# Evolution equations are ∂t U = f(U)
+		function f!(U)
+			fftη .= U[:,1]
+			h .= 1 .+ ϵ*ifft(fftη)
+			fftu .= U[:,2]; u.= ifft(fftu);
+			fftp .= U[:,3]; p.= ifft(fftp);
+			fftw .= U[:,4]; w.= ifft(fftw);
+			if FG == true
+				hFG .= h.*(1 .- ϵ*p/a)
+			else
+				hFG .= h
+			end
+
+			U[:,1] .= -∂ₓ.*Π⅔.*fft(h .* u)
+			U[:,2] .= -∂ₓ.*Π⅔.*(fftη .+ ϵ/2 * fft( u.^2) ) - a*μ * Π⅔.*fft(1 ./h .* ifft(∂ₓ.* fft( hFG.*p ) ) )
+			U[:,3] .= -a*Π⅔.*fft((2*w.+hFG.*ifft(∂ₓ.*fftu))./h) - ϵ*Π⅔.*fft( u .* ifft(∂ₓ.* fftp)  )
+			U[:,4] .= 3/2*a*Π⅔.*fft(p./h) - ϵ*Π⅔.*fft( u .* ifft(∂ₓ.* fftw ) )
+			U[abs.(U).< ktol ].=0
+		end
+
+		# Build raw data from physical data.
+		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
+		function mapto(data::InitialData)
+			fftη .= fft(data.η(x)) 
+			fftv .= fft(data.v(x)) 
+			h .= 1 .+ ϵ*ifft(fftη)
+			if iterate == false
+				L .= Id - μ/3 * Diagonal(Π⅔) * FFT * Diagonal( 1 ./h ) * Dx * Diagonal( h.^3 ) * IFFT * Diagonal( Π⅔ .* ∂ₓ )
+				fftu .= L \ fftv
+			elseif iterate == true
+		        function LL(hatu)
+		            hatu- μ/3 *Π⅔.*fft( 1 ./h .* ifft( Π⅔ .* ∂ₓ .*fft( h.^3 .* ifft( Π⅔ .* ∂ₓ .* hatu ) ) ) )
+				end
+				fftu .= gmres( LinearMap(LL, length(h); issymmetric=false, ismutating=false) , fftv ;
+						restart = restart, maxiter = maxiter, Pl = Precond, reltol = gtol )
+			end
+			if id >= 2
+				if iterate == false
+					L .= FFT* Diagonal( 3 ./h.^3 ) * IFFT - μ * Diagonal(  Π⅔ .* ∂ₓ ) * FFT *  Diagonal( 1 ./h ) * IFFT * Diagonal( Π⅔ .* ∂ₓ )
+					fftp .= fft(ifft(Π⅔ .*(L \ (Π⅔ .* ( ∂ₓ.^2 *fftη + 2 * fft(ifft(Π⅔ .* ∂ₓ.* fftu).^2)))) / a)./h)
+				elseif iterate == true
+					function ll(hatu)
+						Π⅔.*fft( 3 ./h.^3 .* ifft(hatu))- μ * Π⅔ .* ∂ₓ .*fft( 1 ./h .* ifft( Π⅔ .*∂ₓ .* hatu ) ) 
+					end
+					fftp .= fft(ifft(Π⅔ .* gmres( LinearMap(ll, length(h); issymmetric=false, ismutating=false) , Π⅔ .* (  ∂ₓ.^2 .*fftη + 2 * fft(ifft(Π⅔ .* ∂ₓ.* fftu).^2)) ;
+							restart = restart, maxiter = maxiter, Pl = Precond, reltol = gtol ) / a) ./h)
+				end
+				
+			else
+				fftp.=fft(zero(x))
+			end
+			if id == 0 
+				fftw = fft(zero(x))
+			else 
+				if FG == true
+					hFG .= h.*(1 .- ϵ*ifft(fftp))
+				else
+					hFG .= h
+				end	
+				fftw.=-1/2*fft(hFG.*ifft(∂ₓ.*fftu))
+			end
+			U = [Π⅔ .* fftη Π⅔ .* fftu Π⅔ .* fftp Π⅔ .* fftw]
+			U[abs.(U).< ktol ].=0
+			return U
+		end
+
+		# Reconstruct physical variables from raw data
+		# Return `(η,v,x)`, where
+		# - `η` is the surface deformation;
+		# - `v` is the derivative of the trace of the velocity potential;
+		# - `x` is the vector of collocation points
+		function mapfro(U)
+			fftη .= U[:,1]
+			h .= 1 .+ ϵ*ifft(fftη)
+			fftu .= U[:,2]
+			fftv .= fftu - μ/3 *Π⅔.*fft( 1 ./h .* ifft(  Π⅔.* ∂ₓ .* fft( h.^3 .* ifft(  Π⅔.* ∂ₓ .* fftu ) ) ) )
+			real(ifft(fftη)),real(ifft(fftv)),mesh.x
+		end
+		# Return `(η,v,u,p,w,x)`, where
+		# - `η` is the surface deformation;
+		# - `v` is the derivative of the trace of the velocity potential;
+		# - `u` corresponds to the layer-averaged horizontal velocity.
+		# - `p` corresponds to the relaxed (artificial) layer-averaged non-hydrostatic pressure;
+		# - `w` corresponds to the relaxed (artificial) layer-averaged vertical velocity.
+		# - `x` is the vector of collocation points
+function mapfrofull(U)
+			fftη .= U[:,1]
+			h .= 1 .+ ϵ*ifft(fftη)
+			fftu .= U[:,2]
+			fftv .= fftu - μ/3 *Π⅔.*fft( 1 ./h .* ifft(  Π⅔.* ∂ₓ .* fft( h.^3 .* ifft(  Π⅔.* ∂ₓ .* fftu ) ) ) )
+			real(ifft(fftη)),real(ifft(fftv)),real(ifft(fftu)),real(ifft(U[:,3])),real(ifft(U[:,4])),mesh.x
+		end
+
+        new(label, f!, mapto, mapfro, mapfrofull, info )
+    end
+
+
+end
