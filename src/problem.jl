@@ -200,7 +200,7 @@ function solve!(problems; verbose=true::Bool)
         if verbose == true
             @info "Now solving the initial-value problem $(problems[i].label)\n\
                 with timestep dt=$(problems[i].times.dt), final time T=$(problems[i].times.tfin),\n\
-                and N=$(size(problems[i].data.U)[1]) collocation points."
+                and N=$(size(problems[i].data.U[1])[1]) collocation points."
         end
 
         if problems[i].times.tc == problems[i].times.ts
