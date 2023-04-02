@@ -129,7 +129,7 @@ function Compute(scenario;WP=1,p=2,k=3)
         N = 2^10, # number of collocation points
         L = π, # size of the mesh (-L,L)
         T = 1, # final time of computation
-        dt = 0.0001,  # timestep
+        dt = 0.001,  # timestep
         );
 
     #---- initial data
@@ -202,8 +202,8 @@ function Compare(scenario;WP=1,p=Inf,k=0)
         ϵ = 1,
         N = 2^10, # number of collocation points
         L = π, # size of the mesh (-L,L)
-        T = 1, # final time of computation
-        dt = 0.0001,  # timestep
+        T = 0.5, # final time of computation
+        dt = 0.001,  # timestep
         );
 
     #---- initial data
@@ -260,7 +260,7 @@ function Compare(scenario;WP=1,p=Inf,k=0)
             push!(pLCT , Problem(relaxedGreenNaghdi(para;FG=false, id = WP-1, dealias = 1),init,para) )
             push!(pWW ,  Problem( WaterWaves(para; dealias = 1) , init, para) )
             push!(pGN ,  Problem( WhithamGreenNaghdi(para; SGN=true, dealias = 1) , init, para) )
-            push!(pSV ,  Problem( WhithamGreenNaghdi(para; SGN=true, dealias = 1) , init, para) )
+            push!(pSV ,  Problem( SaintVenant(para; dealias = 1) , init, para) )
 
         end
 
@@ -286,8 +286,8 @@ end
 
 
 
-
-
+scatter(mus,NWP3,xaxis=:log10,yaxis=:log10,label=["WW vs SV" "WW vs LCT" "WW vs GN" "LCT vs GN"],legend=:bottomright,title="WP3, a = 100",xlabel="mu",ylabel="difference (elevation, in \$L^\\infty\$)")
+plot!(mus,mus.^2,label="μ²",color=:3)
 
 
 

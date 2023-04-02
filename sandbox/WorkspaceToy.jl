@@ -10,16 +10,26 @@ gr();
 param = (
     δ = 0.1,
     a = 100,
-    N = 2^10, # number of collocation points
-    L = π,# size of the mesh (-L,L)
-    T = 1,# final time of computation
-    dt = 0.0001,  # timestep
+    N = 2^9, # number of collocation points
+    L = 10,# size of the mesh (-L,L)
+    T = 0.5,# final time of computation
+    dt = 0.00001,  # timestep
 );
 
 
 #---- initial data
-ζ(x) = 1 .+ sin.(x)/2;
-u(x) = -sin.(x);
+fh(x) = - 0.5*exp(-x^2);
+
+function Fh(x)
+    h = 1. ;
+    for i in -100:100
+        h += fh(x + 5*i ) 
+    end
+    return h
+end
+
+ζ(x) = 1 .+ fh.(x);
+u(x) = x.*exp.(-x.*x);
 init = Init(ζ, u);
 # ζ et v sont des fonctions.
 # Init les mets sous une forme utilisable par le programme
@@ -29,7 +39,7 @@ init = Init(ζ, u);
 #models = AbstractModel[]
 
 
-pb= Problem( Toy(param; dealias = 1) , init, param)
+pb= Problem( Toy(param; dealias = 0) , init, param)
 
 
 #problems = Problem[]
@@ -45,7 +55,7 @@ for problem in problems
 end
 
 #---- visualization
-plt=plot(pb;T=1,var=[:surface,:velocity])
+plt=plot(pb;T=0.5,var=[:velocity])
 plt=plot!(pb;T=0.0,var=[:surface,:velocity])
 
 
