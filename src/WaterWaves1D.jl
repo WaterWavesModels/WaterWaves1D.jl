@@ -44,6 +44,7 @@ include("models/WhithamGreenNaghdi.jl")
 include("models/WWn.jl")
 
 include("models/relaxedGreenNaghdi.jl")
+include("models/SVN.jl")
 include("models/Toy.jl")
 
 include("solvers/Euler.jl")
