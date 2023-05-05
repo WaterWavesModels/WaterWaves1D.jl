@@ -133,7 +133,7 @@ mutable struct relaxedGreenNaghdi <: AbstractModel
 
 
 		# Evolution equations are ∂t U = f(U)
-		function f!(U)
+		function f!(U;a=a)
 			fftη .= U[:,1]
 			h .= 1 .+ ϵ*ifft(fftη)
 			fftu .= U[:,2]; u.= ifft(fftu);
@@ -161,7 +161,7 @@ mutable struct relaxedGreenNaghdi <: AbstractModel
 			if iterate == false
 				L .= Id - μ/3 * Diagonal(Π⅔) * FFT * Diagonal( 1 ./h ) * Dx * Diagonal( h.^3 ) * IFFT * Diagonal( Π⅔ .* ∂ₓ )
 				fftu .= L \ fftv
-			elseif iterate == true
+			else#if iterate == true
 		        function LL(hatu)
 		            hatu- μ/3 *Π⅔.*fft( 1 ./h .* ifft( Π⅔ .* ∂ₓ .*fft( h.^3 .* ifft( Π⅔ .* ∂ₓ .* hatu ) ) ) )
 				end
@@ -171,13 +171,72 @@ mutable struct relaxedGreenNaghdi <: AbstractModel
 			if id >= 2
 				if iterate == false
 					L .= FFT* Diagonal( 3 ./h.^3 ) * IFFT - μ * Diagonal(  Π⅔ .* ∂ₓ ) * FFT *  Diagonal( 1 ./h ) * IFFT * Diagonal( Π⅔ .* ∂ₓ )
-					fftp .= fft(ifft(Π⅔ .*(L \ (Π⅔ .* ( ∂ₓ.^2 *fftη + 2 * fft(ifft(Π⅔ .* ∂ₓ.* fftu).^2)))) / a)./h)
+					fftp .= fft(ifft(Π⅔ .*(L \ (Π⅔ .* ( ∂ₓ.^2 .*fftη + 2 * fft(ifft(Π⅔ .* ∂ₓ.* fftu).^2)))) / a)./h)
 				elseif iterate == true
 					function ll(hatu)
 						Π⅔.*fft( 3 ./h.^3 .* ifft(hatu))- μ * Π⅔ .* ∂ₓ .*fft( 1 ./h .* ifft( Π⅔ .*∂ₓ .* hatu ) ) 
 					end
 					fftp .= fft(ifft(Π⅔ .* gmres( LinearMap(ll, length(h); issymmetric=false, ismutating=false) , Π⅔ .* (  ∂ₓ.^2 .*fftη + 2 * fft(ifft(Π⅔ .* ∂ₓ.* fftu).^2)) ;
 							restart = restart, maxiter = maxiter, Pl = Precond, reltol = gtol ) / a) ./h)
+				elseif iterate == 1/2
+					U₀ = [Π⅔ .* fftη Π⅔ .* fftu fft(zero(x)) Π⅔ .* (-1/2*fft(h.*ifft(∂ₓ.*fftu)))]
+					dt = param.dt.^2
+					# Calcul U(dt)
+					U0 = copy(U₀)
+    				f!( U0 ; a = a^2)
+    				U1 = copy(U0)
+
+    				U0 .= U₀ .+ dt/2 .* U1
+    				f!( U0 ; a = a^2)
+    				U2 = copy(U0)
+
+    				U0 .= U₀ .+ dt/2 .* U2
+    				f!( U0 ; a = a^2)
+    				U3 = copy(U0)
+
+    				U0 .= U₀ .+ dt .* U3
+    				f!( U0 ; a = a^2)
+    				U4 = copy(U0)
+
+    				U₊ = U₀ + dt/6 .* (U1 + 2*U2 + 2*U3 + U4 )
+
+					# Calcul U(-dt)
+					U0 = copy(U₀)
+    				f!( U0 ; a = a^2)
+    				U1 = -copy(U0)
+
+    				U0 .= U₀ .+ dt/2 .* U1
+    				f!( U0 ; a = a^2)
+    				U2 = -copy(U0)
+
+    				U0 .= U₀ .+ dt/2 .* U2
+    				f!( U0 ; a = a^2)
+    				U3 = -copy(U0)
+
+    				U0 .= U₀ .+ dt .* U3
+    				f!( U0 ; a = a^2)
+    				U4 = -copy(U0)
+
+    				U₋ = U₀ + dt/6 .* (U1 + 2*U2 + 2*U3 + U4 )
+
+					d2th = ifft(U₊[:,1]+U₋[:,1]-2*U₀[:,1])/dt^2
+					dth = ifft(U₊[:,1]-U₋[:,1])/(2*dt)
+					dtdxh = ifft(∂ₓ.*U₊[:,1]-∂ₓ.*U₋[:,1])/(2*dt)
+					d2xh = ifft(∂ₓ.*∂ₓ.*U₀[:,1])
+					dtu = ifft(U₊[:,2]-U₋[:,2])/(2*dt)
+					dxu = ifft(∂ₓ.*U₀[:,2])
+					dxh = ifft(∂ₓ.*U₀[:,1])
+					u = ifft(U₀[:,2])
+
+					# Need to relaod everything since this has been modified by f!
+					fftη .= fft(data.η(x)) 
+					fftv .= fft(data.v(x)) 
+					h .= 1 .+ ϵ*ifft(fftη)
+					fftu .= fft(u)
+
+					fftp = 1/3/a*Π⅔ .*fft(  h .* (d2th+dtu.*dxh+2*u.*dtdxh+u.*dxu.*dxh+u.*u.*d2xh) )
+
+
 				end
 				
 			else
@@ -217,7 +276,7 @@ mutable struct relaxedGreenNaghdi <: AbstractModel
 		# - `p` corresponds to the relaxed (artificial) layer-averaged non-hydrostatic pressure;
 		# - `w` corresponds to the relaxed (artificial) layer-averaged vertical velocity.
 		# - `x` is the vector of collocation points
-function mapfrofull(U)
+		function mapfrofull(U)
 			fftη .= U[:,1]
 			h .= 1 .+ ϵ*ifft(fftη)
 			fftu .= U[:,2]
