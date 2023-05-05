@@ -4,7 +4,7 @@ export Whitham
     Whitham(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-two uncoupled Whitham equations.
+two uncoupled Whitham equations, following [Emerald](https://doi.org/10.1088/1361-6544/ac24df).
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -118,7 +118,8 @@ mutable struct Whitham <: AbstractModel
 		end
 
 		# Build raw data from physical data.
-		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
+		# Discrete Fourier transform of the suitable variables 
+		# with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
 			fftr .= Π⅔ .* ( fft(data.η(x)) + F₁ .* fft(data.v(x)) )/2
 			ffts .= Π⅔ .* ( fft(data.η(x)) - F₁ .* fft(data.v(x)) )/2
