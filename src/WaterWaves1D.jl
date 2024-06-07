@@ -43,10 +43,12 @@ include("models/WhithamBoussinesq.jl")
 include("models/WhithamGreenNaghdi.jl")
 include("models/WWn.jl")
 
+
+# These models are not documented
 include("models/Whitham.jl")
 include("models/relaxedGreenNaghdi.jl")
-include("models/SVN.jl")
-include("models/Toy.jl")
+include("models/Choi.jl")
+
 
 
 include("solvers/Euler.jl")
