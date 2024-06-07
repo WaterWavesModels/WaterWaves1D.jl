@@ -2,7 +2,7 @@ export Random, random
 """
     random(x;args)
 
-Randomly generate a vector of size `x`, based on provided (optional arguments) :
+Randomly generate a vector of values at collocation points `x`, based on provided (optional arguments) :
 - `L` is the typical wavelength (default is `L=1`),
 - `s` is the (real) Sobolev index regularity (default is `s=∞`, smooth data),
 - `λ` is the length of spatial localization (default is `λ=∞`, no localization),
