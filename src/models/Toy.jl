@@ -40,7 +40,7 @@ mutable struct Toy <: AbstractModel
 
     function Toy(param::NamedTuple; 
 								mesh = Mesh(param),
-								h	= sin,
+								str	= true,
 								dealias = 0,
 								ktol	= 0,
 								label	= nothing
@@ -73,7 +73,7 @@ mutable struct Toy <: AbstractModel
 
 		# Pre-allocate useful data
 		k = mesh.k
-		x 	= mesh.x
+		x = mesh.x
 
 		∂ₓ	=  1im * k
 		Jδ = δ * ∂ₓ .+ 1im
@@ -89,16 +89,25 @@ mutable struct Toy <: AbstractModel
 
 
 		# Evolution equations are ∂t U = f(U)
-		function f!(U)
-			U[:,2] .= -a * Π⅔.*fft( ifft(Jδ  .* U[:,2] ) ./ U[:,1] )
-			U[ abs.(U[:,2]).< ktol, 2 ].=0
-			U[:,1] = zero(U[:,1])
-		end
+			function f!(U)
+				if str == true
+					U[:,2] .= -a * Π⅔.*fft( ifft(Jδ  .* U[:,2] ) ./ U[:,1] )
+				else
+					U[:,2] .= -a * Π⅔.*fft( ifft(Jδ  .* U[:,2] ) ./ ( 1 .+ abs.(ifft(U[:,2])).^2 ) )
+				end
+				U[ abs.(U[:,2]).< ktol, 2 ].=0
+				U[:,1] .= zero(U[:,1])
+			end
+			#  function f!(U)
+			# 	U[:,2] .= -a * Π⅔.*fft( ifft(Jδ  .* U[:,2] ) .* ( 1 .+ ifft(U[:,2]).^2 ) )
+			# 	U[ abs.(U[:,2]).< ktol, 2 ].=0
+			# 	U[:,1] = zero(U[:,1])
+			# end
 
 		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
-			h .= data.η(x)
+			h .= 1 .+ data.η(x)
 			u .= fft(data.v(x)) 
 			u[abs.(u).< ktol ].=0
 			
