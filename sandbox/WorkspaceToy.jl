@@ -8,17 +8,28 @@ gr();
 
 #---- parameters
 param = (
-    δ = 0.1,
-    a = 100,
-    N = 2^9, # number of collocation points
+    δ = 0.025,
+    a = 1000,
+    N = 2^10, # number of collocation points
     L = 10,# size of the mesh (-L,L)
-    T = 0.5,# final time of computation
+    T = 1,# final time of computation
+    dt = 0.0001,  # timestep
+    Ns = 1000, # number of stored timesteps
+);
+
+param2 = (
+    δ = 0.025,
+    a = 10000,
+    N = 2^10, # number of collocation points
+    L = 10,# size of the mesh (-L,L)
+    T = 1,# final time of computation
     dt = 0.00001,  # timestep
+    Ns = 1000, # number of stored timesteps
 );
 
 
 #---- initial data
-fh(x) = - 0.5*exp(-x^2);
+fh(x) =  0.5*exp(-(x)^2);
 
 function Fh(x)
     h = 1. ;
@@ -28,8 +39,8 @@ function Fh(x)
     return h
 end
 
-ζ(x) = 1 .+ fh.(x);
-u(x) = x.*exp.(-x.*x);
+ζ(x) = 1 .+ fh.(x.+5);
+u(x) = (x.+5).*exp.(-(x.+5).^2) / (1 .+ 0* param.a);
 init = Init(ζ, u);
 # ζ et v sont des fonctions.
 # Init les mets sous une forme utilisable par le programme
@@ -39,15 +50,11 @@ init = Init(ζ, u);
 #models = AbstractModel[]
 
 
-pb= Problem( Toy(param; dealias = 0) , init, param)
+pb1= Problem( Toy(param; str = true , dealias = 0) , init, param)
+pb2= Problem( Toy(param2; str = true , dealias = 0) , init, param2)
 
 
-#problems = Problem[]
-#for model in models
-#    push!(problems, Problem(model, init, param;solver=s))
-#end
-problems = [pb] 
-#problems = [pWW pGN pFGa pFGb pFGc] 
+problems = [pb1 pb2] 
 
 #---- computation
 for problem in problems
@@ -55,10 +62,32 @@ for problem in problems
 end
 
 #---- visualization
-plt=plot(pb;T=0.5,var=[:velocity])
-plt=plot!(pb;T=0.0,var=[:surface,:velocity])
+plot(problems;T=1,var=[:velocity])
+
+anim = @animate for time in LinRange(0,param.T,501)
+    plot(problems; T = time,var=[:velocity])
+    ylims!(-0.5, 0.5)
+end
+gif(anim,"toy.gif")
 
 
+
+function energy(pb,param;T=Inf::AbstractFloat)
+    mesh=Mesh(param)
+    T=min(max(T,0),pb.times.ts[end])
+	index = findfirst(pb.times.ts.>=T)
+    u = ifft(pb.data.U[index][:,2])
+    h = pb.data.U[index][:,1]
+    h,u = pb.model.mapfrofull(pb.data.U[index])
+    
+    return sum(abs.(u).^2 .*h)
+end
+E1=[];E2=[]
+for t in Times(param).ts
+    push!(E1,energy(pb1,param;T=t))
+    push!(E2,energy(pb2,param;T=t))
+end
+plot(Times(param).ts,[E1 E2])
 
 # Attention au scaling a revoir !
 # Faire la derivee en temps
