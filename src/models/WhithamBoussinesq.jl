@@ -118,7 +118,7 @@ mutable struct WhithamBoussinesq <: AbstractModel
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
 			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
-			U[abs.(U).< ktol ].=0
+			U[ abs.(U).< ktol ].=0
 			return U
 		end
 
