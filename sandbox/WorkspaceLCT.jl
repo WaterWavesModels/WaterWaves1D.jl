@@ -234,7 +234,7 @@ function Compare(scenario;WP=1,p=Inf,k=0)
         solve!(pLCT)
 
         N = zeros( length(pLCT), 4 )
-        for j in 1:length(pLCT)
+        for j in eachindex(pLCT)
             N[j,1]=norm(pWW,pSV,p=p,k=k)
             N[j,2]=norm(pWW,pLCT[j],p=p,k=k)
             N[j,3]=norm(pWW,pGN,p=p,k=k)
@@ -272,7 +272,7 @@ function Compare(scenario;WP=1,p=Inf,k=0)
 
 
         N = zeros( length(pLCT), 4 )
-        for j in 1:length(pLCT)
+        for j in eachindex(pLCT)
             N[j,1]=norm(pWW[j],pSV[j],p=p,k=k)
             N[j,2]=norm(pWW[j],pLCT[j],p=p,k=k)
             N[j,3]=norm(pWW[j],pGN[j],p=p,k=k)

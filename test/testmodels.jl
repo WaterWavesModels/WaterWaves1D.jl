@@ -205,7 +205,7 @@ pbWW = Problem( modelWW, init, paraT )
 solve!(pbWW;verbose=false)
 ηWW,vWW,xWW=solution(pbWW)
 
-for i in 1:length(models)
+for i in eachindex(models)
     # build the initial-value problem
     problem = Problem( models[i], init, paraT )
     # solve the initial-value problem
@@ -284,7 +284,7 @@ solve!(pbWW;verbose=false)
 ηWW,vWW,xWW=solution(pbWW)
 
 
-for i in 1:length(models)
+for i in eachindex(models)
     # build the initial-value problem
     problem = Problem( models[i], init, paraT )
     # solve the initial-value problem
@@ -373,7 +373,7 @@ pbWW = Problem( modelWW, init, paraT )
 solve!(pbWW;verbose=false)
 ηWW,vWW,xWW=solution(pbWW)
 
-for i in 1:length(models)
+for i in eachindex(models)
     # build the initial-value problem
     problem = Problem( models[i], init, paraT )
     # solve the initial-value problem

@@ -62,7 +62,7 @@ function create_animation( problems; name=nothing, x = nothing, Nframes = 201,
 	m = surface + fourier + velocity
     anim = @animate for l in L
 		plt = plot(layout=(m,1))
-		for i in 1:length(problems)
+		for i in eachindex(problems)
 			plot_solution!( plt, problems[i]; t=problems[i].times.ts[l],x=x,
 					interpolation=interpolation,compression=compression,
 					surface=surface, fourier=fourier, velocity=velocity,
@@ -107,7 +107,7 @@ Plots in `plt` the solution of initial-value problems at a given time.
 """
 function plot_solution!( plt, problems; t=nothing,x=nothing,interpolation=false,compression=false, surface=true, fourier=true, velocity=false, label=nothing)
 	if typeof(problems)==Problem problems=[problems]; label = [label] end
-	for i in 1:length(problems)
+	for i in eachindex(problems)
 		p = problems[i]
 		# retrieve the label
 		if isnothing(label) || label == [nothing]
@@ -196,14 +196,14 @@ If a collection of problems are provided, then all possible pairs are compared.
 function plot_difference!( plt, problems; t=nothing,x=nothing,interpolation=false,compression=false, fast=false, surface=true, fourier=false, velocity=false, label=nothing)
 	if problems[1] isa Problem
 		pairs=[]
-		for i in 1:length(problems)
+		for i in eachindex(problems)
 			for j in i+1:length(problems)
 				push!(pairs,(problems[i],problems[j]))
 			end
 		end
  	else pairs = problems
 	end
-	for i in 1:length(pairs)
+	for i in eachindex(pairs)
 		p1 = pairs[i][1]
 		p2 = pairs[i][2]
 		# retrieve the label

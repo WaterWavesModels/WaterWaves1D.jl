@@ -262,7 +262,7 @@ end
     
 
     function gauge(p::Problem;x=0,T=nothing)
-        if T==nothing
+        if isnothing(T)
             times=p.times.ts
         elseif T[1]==T
             times=[T]

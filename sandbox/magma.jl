@@ -27,6 +27,6 @@ magma_init()
 result = magma_gesv!(A_test, B_test)
 magma_finalize()
 
-for i in 1:length(result)
+for i in eachindex(result)
     @test Array(result[i]) ≈ right_answer[i]
 end

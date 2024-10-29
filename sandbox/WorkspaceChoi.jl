@@ -102,7 +102,7 @@ function norm(p;T=Inf::AbstractFloat,a,μ,s=0)
 end
 
 function norms(p;T=nothing,a,μ,s=0,rel=false)
-    if T == nothing T = p.times.ts end
+    if isnothing(T)  T = p.times.ts end
     N=zeros(length(T),4)
     j=0
     if rel == true N0 = sum(norm(p;T=T[1],a=a,μ=μ,s=s)) else N0=1 end
@@ -130,7 +130,7 @@ function norm(p1,p2;T=Inf::AbstractFloat,a,μ)
 end
 
 function norms(p1,p2;T=nothing,a,μ,rel=false)
-    if T == nothing T = p1.times.ts end
+    if isnothing(T) T = p1.times.ts end
     N=zeros(length(T),2)
     j=0
     if rel == true N0 = sum(norm(p1,p2;T=T[1],a=a,μ=μ)) else N0=1 end
