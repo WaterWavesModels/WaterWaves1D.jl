@@ -48,6 +48,7 @@ include("models/WWn.jl")
 include("models/Whitham.jl")
 include("models/relaxedGreenNaghdi.jl")
 include("models/Choi.jl")
+include("models/SaintVenant2D.jl")
 
 
 

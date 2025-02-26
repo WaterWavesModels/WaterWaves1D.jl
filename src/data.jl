@@ -12,14 +12,22 @@ Data structure to store the solution of an initial-value problem along time.
 """
 mutable struct Data
 
-    U :: Vector{Array{ComplexF64,2}}
+    U :: Vector{AbstractArray}
     datasize :: Int
     datalength :: Int
 
     function Data( v :: AbstractArray )
 
-        (datalength , datasize ) = size(v)
-
+        dim = length(size(v))
+        if dim == 1 # if v is a vector of data (η,vx,vy...)
+            datasize = size(v,1)
+            datalength = size(v[1],1)
+        elseif dim == 2 # data are columns of v
+            (datalength , datasize ) = size(v)
+        elseif dim == 3 # data are in a three-dimensional array
+            datasize = size(v,3)
+            datalength = size(v,1)
+        end
         U = [copy(v)]
 
         new(U, datasize, datalength)
