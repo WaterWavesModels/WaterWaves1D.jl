@@ -24,7 +24,7 @@ and [G. Richard](https://doi.org/10.1016/j.euromechflu.2021.05.011).
 - `restart`: the corresponding option of the GMRES algorithm (default is `100`);
 - `maxiter`: the corresponding option of GMRES (default is `nothing`);
 - `ktol`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
-- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `dealias`: dealiasing with Orszag rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"Favrie-Gavrilyuk"` if `FG==true`, `"Escalante-Dumbser-Castro"` otherwise);
 
 # Return values

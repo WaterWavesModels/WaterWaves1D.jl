@@ -1,6 +1,6 @@
 # #
 # Reproduces the figures in
-# the work of V. Duchêne and B. Mélinand
+# [V. Duchêne and B. Melinand](https://doi.org/10.2140/paa.2024.6.73)
 # on the quadratic pseudo-spectral method (WW2)
 # #
 export IntegrateWW2,Figure
@@ -23,7 +23,7 @@ Other arguments are optional:
 - `N` the number of collocation points (default is `2^10`),
 - `T` the final time of integration (default is `10`),
 - `dt` the timestep (default is `0.001`),
-- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `1`, i.e. 2/3 rule, `0` means no dealiasing);
+- `dealias`: dealiasing with Orszag rule `1-dealias/(dealias+2)` (default is `1`, i.e. 2/3 rule, `0` means no dealiasing);
 - `δ` the strength of the rectifier (default is `0.001`),
 - `m` the order of the rectifier (as a regularizing operator, default is `-1`),
 - `Ns` the number of stored computed times (default is all times).
@@ -102,7 +102,7 @@ end
 
 Several numerical experiments,
 depending on the argument `scenario` (between 1 and 12)
-corresponding to different figures in [DM]
+corresponding to different figures in [V. Duchêne and B. Melinand](https://doi.org/10.2140/paa.2024.6.73)
 
 - `scenario∈[1,7]`: spurious instability formation for smooth initial data.
     - `scenario=1`: no instability even without dealiasing and rectification, if small number of modes.

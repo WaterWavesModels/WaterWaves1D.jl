@@ -443,7 +443,7 @@ Other arguments are optional:
 - `SGN`: use SGN if `true`, and WGN if `false` (default is `false`),
 - `iterate`: use GMRES if `true`, and LU decomposition otherwise (default is `true`),
 - `precond` gives some choice in the preconditioner for GMRES,
-- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `dealias`: dealiasing with Orszag rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `name`: a string used to save raw data and the figures.
 
 Return `(problem,plt)` where `problem` contains all the information and `plt` a plot of the final time solution.

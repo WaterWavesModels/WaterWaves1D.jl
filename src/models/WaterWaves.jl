@@ -22,7 +22,7 @@ the water waves system (via conformal mapping, see [Zakharov, Dyachenko and Vasi
 - `tol`: (relative) tolerance of the fix-point algorithm (default is `1e-16`);
 - `maxiter`: the maximal number of iteration in the fix-point algorithm (default is `100`);
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
-- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `dealias`: dealiasing with Orszag rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"water waves"`);
 - `verbose`: prints information if `true` (default is `true`).
 

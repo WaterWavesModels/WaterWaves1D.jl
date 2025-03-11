@@ -14,7 +14,7 @@ Define an object of type `AbstractModel` which is a toy model for three-scale si
 - `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `h`: the static component function. By default, `h = sin`;
 - `ktol`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
-- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `dealias`: dealiasing with Orszag rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"toy");
 
 # Return values

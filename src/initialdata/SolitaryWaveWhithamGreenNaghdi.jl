@@ -20,7 +20,7 @@ and mesh size `L` and number of collocation points `N`;
 - `tol :: Real`: relative tolerance measured in ℓ∞ norm (default is `1e-10`);
 - `ktol :: Real`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
 - `gtol :: Real`: relative tolerance of the GMRES algorithm (default is `1e-10`);
-- `dealias :: Int`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `dealias :: Int`: dealiasing with Orszag rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `q :: Real`: Newton algorithm modified with `u_{n+1}=q*u_{n+1}+(1-q)*u_n` (default is `1`);
 - `α :: Real`: adds `α` times spectral projection onto the Kernel to the Jacobian (default is `0`).
 

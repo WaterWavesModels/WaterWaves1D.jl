@@ -19,7 +19,7 @@ the Serre-Green-Naghdi model ([Serre](https://10.1051/lhb/1953058), [Su and Gard
 - `restart`: the corresponding option of the GMRES algorithm (default is `100`);
 - `maxiter`: the corresponding option of GMRES (default is `nothing`);
 - `ktol`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
-- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `dealias`: dealiasing with Orszag rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"Green-Naghdi"`);
 
 # Return values

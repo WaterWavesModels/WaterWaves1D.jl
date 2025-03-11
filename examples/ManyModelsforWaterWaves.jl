@@ -27,7 +27,7 @@ Other arguments are optional:
 - `L` the half-length of the mesh,
 - `T` the final time of integration,
 - `dt` the timestep,
-- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing),
+- `dealias`: dealiasing with Orszag rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing),
 - `iterate`: use GMRES if `true`, and LU decomposition otherwise (default is `true`),
 - `precond` gives some choice in the preconditioner for GMRES (default is `true` for the default preconditioner),
 - `method` and `maxiter` are the corresponding options for generating the initial data in the water waves model; see doc of `WaterWaves`

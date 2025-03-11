@@ -157,7 +157,7 @@ and [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s
 ## Optional keyword arguments
 - `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
-- `dealias`: dealiasing with `1/3` Orlicz rule if `true` or no dealiasing if `false` (by default);
+- `dealias`: dealiasing with `1/3` Orszag rule if `true` or no dealiasing if `false` (by default);
 - `label`: a label for future references (default is `"deep quadratic"`);
 
 # Return values

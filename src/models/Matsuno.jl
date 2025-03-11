@@ -187,7 +187,7 @@ the quadratic deep-water model proposed by [Matsuno](https://doi.org/10.1103/Phy
 ## Optional keyword arguments
 - `IL`: Set the infinite-layer case if `IL=true` (or `μ=Inf`, or `ν=0`), in which case `ϵ` is the steepness parameter. Default is `false`.
 - `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
-- `dealias`: dealiasing with `1/3` Orlicz rule if `true` or no dealiasing if `false` (by default);
+- `dealias`: dealiasing with `1/3` Orszag rule if `true` or no dealiasing if `false` (by default);
 - `label`: a label for future references (default is `"Matsuno"`);
 
 # Return values

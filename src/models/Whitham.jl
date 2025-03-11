@@ -15,7 +15,7 @@ two uncoupled Whitham equations, following [Emerald](https://doi.org/10.1088/136
 - `KdV`: if `true` (default is `false`), compute the standard KdV equations instead (see `KdV(param;kwargs)`);
 - `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
-- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `dealias`: dealiasing with Orszag rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"Whitham-Boussinesq"`);
 
 
