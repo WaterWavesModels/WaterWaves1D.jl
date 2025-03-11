@@ -14,7 +14,7 @@ Saint-Venant (or shallow water) model.
 ## Optional keyword arguments
 - `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
-- `dealias`: no dealisasing if set to `0` or `false` (default), standard 3/2 Orlicz rule if set to `1` or `true`, otherwise the value sets additionnally a maximal slope of the dealiasing symbol (`2/dealias` modes are affected);
+- `dealias`: no dealisasing if set to `0` or `false` (default), standard 3/2 Orszag rule if set to `1` or `true`, otherwise the value sets additionnally a maximal slope of the dealiasing symbol (`2/dealias` modes are affected);
 - `label`: a label for future references (default is `"Saint-Venant"`);
 
 # Return values
