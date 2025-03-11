@@ -48,6 +48,17 @@ function solution_fourier( problem :: Problem, T, x̃, interpolation, compressio
 
 end
 
+function solution_fourier_velocity( problem :: Problem, T, x̃, interpolation, compression )
+
+    η, v, x = solution(problem; x = x̃, T = T, interpolation = interpolation)
+    fftv = fft(v)
+    k = fftshift(Mesh(x).k)
+    y = abs.(fftshift(fftv))
+    i = indices(compression, x)
+    k[i][y[i].!=0], y[i][y[i].!=0]
+
+end
+
 function difference( problems :: Vector{Problem}, T, x̃, interpolation )
     η1, v1, x1 = solution(problems[1]; x = x̃, T = T, interpolation = interpolation)
     η2, v2, x2 = solution(problems[2]; x = x̃, T = T, interpolation = interpolation)
@@ -170,7 +181,7 @@ end
 
 	    end
 
-        if variable == :fourier || variable == :Fourier
+        if variable in ( :fourier, :Fourier)
 
 	    	@series begin 
 
@@ -183,6 +194,42 @@ end
 	    		subplot := n
 
                 solution_fourier( problem, T, x, interpolation, compression ) 
+
+	    	end
+
+	    end
+
+        if variable in ( :fourier_surface , :Fourier_surface)
+
+	    	@series begin 
+
+
+                title --> string("Fourier coefficients, surface (log scale)",string_title)
+                label --> problem.label
+                xguide --> "wavenumber"
+                yguide --> "amplitude"
+                yscale --> :log10
+	    		subplot := n
+
+                solution_fourier( problem, T, x, interpolation, compression ) 
+
+	    	end
+
+	    end
+
+        if variable in ( :fourier_velocity , :Fourier_velocity) 
+
+	    	@series begin 
+
+
+                title --> string("Fourier coefficients, velocity (log scale)",string_title)
+                label --> problem.label
+                xguide --> "wavenumber"
+                yguide --> "amplitude"
+                yscale --> :log10
+	    		subplot := n
+
+                solution_fourier_velocity( problem, T, x, interpolation, compression ) 
 
 	    	end
 
@@ -274,6 +321,50 @@ end
                     subplot := n
     
                     solution_fourier( problem, T, x, interpolation, compression ) 
+
+    
+                end
+    
+            end
+        end
+
+        if variable in (:fourier_surface , :Fourier_surface)
+
+            for problem in problems
+    
+                @series begin 
+    
+    
+                    title --> string("Fourier coefficients, surface (log scale)", string_title)
+                    label --> problem.label
+                    xguide --> "wavenumber"
+                    yguide --> "amplitude"
+                    yscale --> :log10
+                    subplot := n
+    
+                    solution_fourier( problem, T, x, interpolation, compression ) 
+
+    
+                end
+    
+            end
+        end
+
+        if variable in (:fourier_velocity , :Fourier_velocity)
+
+            for problem in problems
+    
+                @series begin 
+    
+    
+                    title --> string("Fourier coefficients (log scale)", string_title)
+                    label --> problem.label
+                    xguide --> "wavenumber"
+                    yguide --> "amplitude"
+                    yscale --> :log10
+                    subplot := n
+    
+                    solution_fourier_velocity( problem, T, x, interpolation, compression ) 
 
     
                 end
