@@ -110,8 +110,8 @@ mutable struct modifiedMatsuno <: AbstractModel
 		function mapto(data::InitialData)
 			fftη .= Π⅔ .* fft(data.η(x));
 			fftv .= Π⅔ .* fft(data.v(x));
-			U = [fftη fftv-ϵ* Π⅔ .*fft(ifft(Tμ.*fftv).*ifft(∂ₓ.*fftη) )]
-			U[abs.(U).< ktol ].=0
+			U = [fftη ,fftv-ϵ* Π⅔ .*fft(ifft(Tμ.*fftv).*ifft(∂ₓ.*fftη) )]
+			for u in U u[ abs.(u).< ktol ].=0 end
 			return U
 		end
 
@@ -121,30 +121,30 @@ mutable struct modifiedMatsuno <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U;n=10)
-			∂ζ=ifft(∂ₓ.*U[:,1]);
-			z.=U[:,2];v.=U[:,2];
+			∂ζ=ifft(∂ₓ.*U[1]);
+			z.=U[2];v.=U[2];
 			for j=1:n
 				v.=z+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*v))
 			end
-			real(ifft(U[:,1])),real(ifft(v)),mesh.x
+			real(ifft(U[1])),real(ifft(v)),mesh.x
 		end
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
-			fftη .= U[:,1]
-		    fftv .= U[:,2]
-			η  .= ifft(U[:,1])
-			v  .= ifft(U[:,2])
+			fftη .= U[1]
+		    fftv .= U[2]
+			η  .= ifft(U[1])
+			v  .= ifft(U[2])
 			Q .= Tμ.*fftv
 			Q -= ϵ *∂ₓ.*fft(η.*ifft(fftv)) .+ ϵ*Tμ.*fft(η.*ifft(G₀.*fftv))
 			F .= exp.(-ϵ*ifft(G₀.*fftη))
 			R .= -fft(F.*ifft(∂ₓ.*fftη))*ν
 			R -= ϵ/2*∂ₓ.*fft(v.^2)
 
-			U[:,1] .= Π⅔.*Q/sqrt(μ)/ν
-		   	U[:,2] .= Π⅔.*R/sqrt(μ)/ν
-			U[abs.(U).< ktol ].=0
+			U[1] .= Π⅔.*Q/sqrt(μ)/ν
+		   	U[2] .= Π⅔.*R/sqrt(μ)/ν
+			for u in U u[ abs.(u).< ktol ].=0 end
 
 		end
 

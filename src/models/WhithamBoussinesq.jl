@@ -102,23 +102,23 @@ mutable struct WhithamBoussinesq <: AbstractModel
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
-		    fftv .= U[:,2]
-			fftη .= F₂.*U[:,2]
+		    fftv .= U[2]
+			fftη .= F₂.*U[2]
 			v .= real(ifft(fftη))
-			fftη .= U[:,1]
-		   	η .= real(ifft(U[:,1]))
+			fftη .= U[1]
+		   	η .= real(ifft(U[1]))
 
-		   	U[:,1] .= -∂ₓ.*(F₁.*fftv.+ϵ*Π⅔.*F₂.*fft(η.*v))
-		   	U[:,2] .= -∂ₓ.*(fftη.+ϵ/2*Π⅔.*fft(v.^2))
-			U[abs.(U).< ktol ].=0
+		   	U[1] .= -∂ₓ.*(F₁.*fftv.+ϵ*Π⅔.*F₂.*fft(η.*v))
+		   	U[2] .= -∂ₓ.*(fftη.+ϵ/2*Π⅔.*fft(v.^2))
+			for u in U u[ abs.(u).< ktol ].=0 end
 
 		end
 
 		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
-			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
-			U[ abs.(U).< ktol ].=0
+			U = [Π⅔ .* fft(data.η(x)), Π⅔ .*fft(data.v(x))]
+			for u in U u[ abs.(u).< ktol ].=0 end
 			return U
 		end
 
@@ -128,7 +128,7 @@ mutable struct WhithamBoussinesq <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2])),mesh.x
+			real(ifft(U[1])),real(ifft(U[2])),mesh.x
 		end
 
         new(label, f!, mapto, mapfro, info )

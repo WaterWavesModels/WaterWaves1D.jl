@@ -84,17 +84,17 @@ mutable struct Airy <: AbstractModel
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
-			fftη .= U[:,1]
-			fftv .= U[:,2]
+			fftη .= U[1]
+			fftv .= U[2]
 
-		   	U[:,1] .= -∂ₓF₁.*fftv
-		   	U[:,2] .= -∂ₓ.*fftη
+		   	U[1] .= -∂ₓF₁.*fftv
+		   	U[2] .= -∂ₓ.*fftη
 
 		end
 
 		# Build raw data from physical data (discrete Fourier transform)
 		function mapto(data::InitialData)
-			U = [fft(data.η(x)) fft(data.v(x))]
+			[fft(data.η(x)), fft(data.v(x))]
 		end
 
 		# Reconstruct physical variables from raw data
@@ -103,7 +103,7 @@ mutable struct Airy <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2])),mesh.x
+			real(ifft(U[1])),real(ifft(U[2])),mesh.x
 		end
 
         new(label, f!, mapto, mapfro, info )

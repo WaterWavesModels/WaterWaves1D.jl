@@ -32,7 +32,7 @@ function solveandplot()
 	@time solve!( problem )
 
 	# Plot
-	fftηfin=last(problem.data.U)[:,1]
+	fftηfin=last(problem.data.U)[1]
 	plt = plot(layout=(1,2))
 	plot!(plt[1,1],fftshift(mesh.k),fftshift(log10.(abs.(fftηfin)));
 			title = "frequencies")

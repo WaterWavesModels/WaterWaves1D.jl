@@ -174,7 +174,7 @@ function energy(p::Problem; T=nothing)
 	mesh=Mesh(x)
 	U=p.model.mapto(Init(mesh,η,v));
 	∂ₓ=1im*mesh.k;
-	p.model.f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
+	p.model.f!(U);fftm=-U[1]./∂ₓ;fftm[1]=0;
 	m=real(ifft(fftm));
 	@. mesh.dx/2*($sum(η^2) + $sum(v*m))
 end
@@ -239,8 +239,8 @@ function energydiff(p::Problem; T=nothing, rel=false)
 	U=p.model.mapto(Init(mesh,η,v)); 
 	U0=p.model.mapto(Init(mesh,η0,v0));
 	∂ₓ=1im*mesh.k;
-	p.model.f!(U);fftm=-U[:,1]./∂ₓ;fftm[1]=0;
-	p.model.f!(U0);fftm0=-U0[:,1]./∂ₓ;fftm0[1]=0;
+	p.model.f!(U);fftm=-U[1]./∂ₓ;fftm[1]=0;
+	p.model.f!(U0);fftm0=-U0[1]./∂ₓ;fftm0[1]=0;
 	m=real(ifft(fftm));	m0=real(ifft(fftm0));
 	if rel == false
 		return @. mesh.dx/2*($sum((η-η0)*η+η0*(η-η0)) + $sum((v-v0)*m+v0*(m-m0)))

@@ -76,8 +76,8 @@ function energy(pb,param;T=Inf::AbstractFloat)
     mesh=Mesh(param)
     T=min(max(T,0),pb.times.ts[end])
 	index = findfirst(pb.times.ts.>=T)
-    u = ifft(pb.data.U[index][:,2])
-    h = pb.data.U[index][:,1]
+    u = ifft(pb.data.U[index][2])
+    h = pb.data.U[index][1]
     h,u = pb.model.mapfrofull(pb.data.U[index])
     
     return sum(abs.(u).^2 .*h)
@@ -110,8 +110,8 @@ function norm(pb,param;T=Inf::AbstractFloat,k=0,p=Inf,m=0,δ=1,dot=false)
 
     T=min(max(T,0),pb.times.ts[end])
 	index = findfirst(pb.times.ts.>=T)
-    u = ifft(pb.data.U[index][:,2])
-    h = pb.data.U[index][:,1]
+    u = ifft(pb.data.U[index][2])
+    h = pb.data.U[index][1]
     h,u = pb.model.mapfrofull(pb.data.U[index])
     # h,u = solution(pb,T=T) #pb, you have only the real part
 

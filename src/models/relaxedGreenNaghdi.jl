@@ -134,22 +134,22 @@ mutable struct relaxedGreenNaghdi <: AbstractModel
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U;a=a)
-			fftη .= U[:,1]
+			fftη .= U[1]
 			h .= 1 .+ ϵ*ifft(fftη)
-			fftu .= U[:,2]; u.= ifft(fftu);
-			fftp .= U[:,3]; p.= ifft(fftp);
-			fftw .= U[:,4]; w.= ifft(fftw);
+			fftu .= U[2]; u.= ifft(fftu);
+			fftp .= U[3]; p.= ifft(fftp);
+			fftw .= U[4]; w.= ifft(fftw);
 			if FG == true
 				hFG .= h.*(1 .- ϵ*p/a)
 			else
 				hFG .= h
 			end
 
-			U[:,1] .= -∂ₓ.*Π⅔.*fft(h .* u)
-			U[:,2] .= -∂ₓ.*Π⅔.*(fftη .+ ϵ/2 * fft( u.^2) ) - a*μ * Π⅔.*fft(1 ./h .* ifft(∂ₓ.* fft( hFG.*p ) ) )
-			U[:,3] .= -a*Π⅔.*fft((2*w.+hFG.*ifft(∂ₓ.*fftu))./h) - ϵ*Π⅔.*fft( u .* ifft(∂ₓ.* fftp)  )
-			U[:,4] .= 3/2*a*Π⅔.*fft(p./h) - ϵ*Π⅔.*fft( u .* ifft(∂ₓ.* fftw ) )
-			U[abs.(U).< ktol ].=0
+			U[1] .= -∂ₓ.*Π⅔.*fft(h .* u)
+			U[2] .= -∂ₓ.*Π⅔.*(fftη .+ ϵ/2 * fft( u.^2) ) - a*μ * Π⅔.*fft(1 ./h .* ifft(∂ₓ.* fft( hFG.*p ) ) )
+			U[3] .= -a*Π⅔.*fft((2*w.+hFG.*ifft(∂ₓ.*fftu))./h) - ϵ*Π⅔.*fft( u .* ifft(∂ₓ.* fftp)  )
+			U[4] .= 3/2*a*Π⅔.*fft(p./h) - ϵ*Π⅔.*fft( u .* ifft(∂ₓ.* fftw ) )
+			for u in U u[ abs.(u).< ktol ].=0 end
 		end
 
 		# Build raw data from physical data.
@@ -219,14 +219,14 @@ mutable struct relaxedGreenNaghdi <: AbstractModel
 
     				U₋ = U₀ + dt/6 .* (U1 + 2*U2 + 2*U3 + U4 )
 
-					d2th = ifft(U₊[:,1]+U₋[:,1]-2*U₀[:,1])/dt^2
-					dth = ifft(U₊[:,1]-U₋[:,1])/(2*dt)
-					dtdxh = ifft(∂ₓ.*U₊[:,1]-∂ₓ.*U₋[:,1])/(2*dt)
-					d2xh = ifft(∂ₓ.*∂ₓ.*U₀[:,1])
-					dtu = ifft(U₊[:,2]-U₋[:,2])/(2*dt)
-					dxu = ifft(∂ₓ.*U₀[:,2])
-					dxh = ifft(∂ₓ.*U₀[:,1])
-					u = ifft(U₀[:,2])
+					d2th = ifft(U₊[1]+U₋[1]-2*U₀[1])/dt^2
+					dth = ifft(U₊[1]-U₋[1])/(2*dt)
+					dtdxh = ifft(∂ₓ.*U₊[1]-∂ₓ.*U₋[1])/(2*dt)
+					d2xh = ifft(∂ₓ.*∂ₓ.*U₀[1])
+					dtu = ifft(U₊[2]-U₋[2])/(2*dt)
+					dxu = ifft(∂ₓ.*U₀[2])
+					dxh = ifft(∂ₓ.*U₀[1])
+					u = ifft(U₀[2])
 
 					# Need to relaod everything since this has been modified by f!
 					fftη .= fft(data.η(x)) 
@@ -253,7 +253,7 @@ mutable struct relaxedGreenNaghdi <: AbstractModel
 				fftw.=-1/2*fft(hFG.*ifft(∂ₓ.*fftu))
 			end
 			U = [Π⅔ .* fftη Π⅔ .* fftu Π⅔ .* fftp Π⅔ .* fftw]
-			U[abs.(U).< ktol ].=0
+			for u in U u[ abs.(u).< ktol ].=0 end
 			return U
 		end
 
@@ -263,9 +263,9 @@ mutable struct relaxedGreenNaghdi <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-			fftη .= U[:,1]
+			fftη .= U[1]
 			h .= 1 .+ ϵ*ifft(fftη)
-			fftu .= U[:,2]
+			fftu .= U[2]
 			fftv .= fftu - μ/3 *Π⅔.*fft( 1 ./h .* ifft(  Π⅔.* ∂ₓ .* fft( h.^3 .* ifft(  Π⅔.* ∂ₓ .* fftu ) ) ) )
 			real(ifft(fftη)),real(ifft(fftv)),mesh.x
 		end
@@ -277,11 +277,11 @@ mutable struct relaxedGreenNaghdi <: AbstractModel
 		# - `w` corresponds to the relaxed (artificial) layer-averaged vertical velocity.
 		# - `x` is the vector of collocation points
 		function mapfrofull(U)
-			fftη .= U[:,1]
+			fftη .= U[1]
 			h .= 1 .+ ϵ*ifft(fftη)
-			fftu .= U[:,2]
+			fftu .= U[2]
 			fftv .= fftu - μ/3 *Π⅔.*fft( 1 ./h .* ifft(  Π⅔.* ∂ₓ .* fft( h.^3 .* ifft(  Π⅔.* ∂ₓ .* fftu ) ) ) )
-			real(ifft(fftη)),real(ifft(fftv)),real(ifft(fftu)),real(ifft(U[:,3])),real(ifft(U[:,4])),mesh.x
+			real(ifft(fftη)),real(ifft(fftv)),real(ifft(fftu)),real(ifft(U[3])),real(ifft(U[4])),mesh.x
 		end
 
         new(label, f!, mapto, mapfro, mapfrofull, info )

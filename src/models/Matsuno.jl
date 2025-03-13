@@ -85,13 +85,13 @@ mutable struct Matsuno_fast <: AbstractModel
 		function f!(U)
 
 		    for i in eachindex(ζ)
-		        ζ[i] = G₀[i] * U[i,1]
+		        ζ[i] = G₀[i] * U[1][i]
 		    end
 
 		    ldiv!(unew, Px, ζ )
 
 		    for i in eachindex(ζ)
-		        ζ[i] = ∂ₓ[i] * U[i,1]
+		        ζ[i] = ∂ₓ[i] * U[1][i]
 		    end
 
 		    ldiv!(I₁, Px, ζ)
@@ -103,8 +103,8 @@ mutable struct Matsuno_fast <: AbstractModel
 		    I₁  .*= ϵ .* Π⅔
 		    I₁  .-= ζ
 
-		    ldiv!(ζ, Px, view(U,:,1))
-		    ldiv!(unew, Px, view(U,:,2))
+		    ldiv!(ζ, Px, U[1])
+		    ldiv!(unew, Px, U[2])
 
 		    I₂    .= ζ .* unew
 
@@ -113,8 +113,8 @@ mutable struct Matsuno_fast <: AbstractModel
 		    I₃    .*= ∂ₓ
 
 		    for i in eachindex(Tμ)
-		        U[i,1]  = Tμ[i] * U[i,2]
-		        I₀[i] = G₀[i] * U[i,2]
+		        U[1][i]  = Tμ[i] * U[2][i]
+		        I₀[i] = G₀[i] * U[2][i]
 		    end
 
 		    ldiv!(I₂, Px, I₀)
@@ -128,9 +128,9 @@ mutable struct Matsuno_fast <: AbstractModel
 		    I₃    .*= ϵ .* Π⅔
 
 		    for i in eachindex(I₃)
-		        U[i,1] -= I₃[i]
+		        U[1][i] -= I₃[i]
 		    end
-			U[:,1] ./= sqrt(μ)/ν
+			U[1] ./= sqrt(μ)/ν
 
 		    I₃    .=  unew.^2
 
@@ -141,7 +141,7 @@ mutable struct Matsuno_fast <: AbstractModel
 		    I₁    .-= unew
 
 		    for i in eachindex(I₁)
-		        U[i,2] =  I₁[i]/sqrt(μ)
+		        U[2][i] =  I₁[i]/sqrt(μ)
 		    end
 
 		end
@@ -150,7 +150,7 @@ mutable struct Matsuno_fast <: AbstractModel
 		function mapto(data::InitialData)
 			fftη = Π⅔ .* fft(data.η(x));
 			fftv = Π⅔ .* fft(data.v(x));
-			U = [fftη fftv-ϵ* Π⅔ .*fft(ifft(Tμ.*fftv).*ifft(∂ₓ.*fftη) )]
+			U = [fftη , fftv-ϵ* Π⅔ .*fft(ifft(Tμ.*fftv).*ifft(∂ₓ.*fftη) )]
 			return U
 		end
 
@@ -160,12 +160,12 @@ mutable struct Matsuno_fast <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U;n=10)
-			∂ζ=ifft(∂ₓ.*U[:,1]);
-			I₁.=view(U,:,2);I₂.=view(U,:,2);
+			∂ζ=ifft(∂ₓ.*U[1]);
+			I₁.=U[2];I₂.=U[2];
 			for j=1:n
 				I₂.=I₁+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*I₂))
 			end
-			real(ifft(view(U,:,1))),real(ifft(I₂)),mesh.x
+			real(ifft(U[1])),real(ifft(I₂)),mesh.x
 		end
 
 		new(label, f!, mapto, mapfro, info )
@@ -277,14 +277,14 @@ mutable struct Matsuno <: AbstractModel
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
-		   ζ .= ifft(U[:,1])
-		   unew .= ifft(U[:,2])
-		   I₃ .= fft(ifft(∂ₓ.*U[:,1]).*ifft(G₀.*U[:,1]))
-		   I₁ .= Tμ.*U[:,2].-ϵ*Π⅔.*(Tμ.*fft(ζ.*ifft(G₀.*U[:,2])).+∂ₓ.*fft(ζ.*unew))
-		   I₂ .= -ν*(∂ₓ.*U[:,1])+ϵ*Π⅔.*(ν*I₃-∂ₓ.*fft(unew.^2)/2)
+		   ζ .= ifft(U[1])
+		   unew .= ifft(U[2])
+		   I₃ .= fft(ifft(∂ₓ.*U[1]).*ifft(G₀.*U[1]))
+		   I₁ .= Tμ.*U[2].-ϵ*Π⅔.*(Tμ.*fft(ζ.*ifft(G₀.*U[2])).+∂ₓ.*fft(ζ.*unew))
+		   I₂ .= -ν*(∂ₓ.*U[1])+ϵ*Π⅔.*(ν*I₃-∂ₓ.*fft(unew.^2)/2)
 		   #
-		   U[:,1] .= I₁/sqrt(μ)/ν
-		   U[:,2] .= I₂/sqrt(μ)/ν
+		   U[1] .= I₁/sqrt(μ)/ν
+		   U[2] .= I₂/sqrt(μ)/ν
 
 		end
 
@@ -292,7 +292,7 @@ mutable struct Matsuno <: AbstractModel
 		function mapto(data::InitialData)
 			fftη = Π⅔ .* fft(data.η(x));
 			fftv = Π⅔ .* fft(data.v(x));
-			U = [fftη fftv-ϵ* Π⅔ .*fft(ifft(Tμ.*fftv).*ifft(∂ₓ.*fftη) )]
+			U = [fftη, fftv-ϵ* Π⅔ .*fft(ifft(Tμ.*fftv).*ifft(∂ₓ.*fftη) )]
 			return U
 		end
 
@@ -302,12 +302,12 @@ mutable struct Matsuno <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U;n=10)
-			∂ζ=ifft(∂ₓ.*U[:,1]);
-			I₁.=U[:,2];I₂.=U[:,2];
+			∂ζ=ifft(∂ₓ.*U[1]);
+			I₁.=U[2];I₂.=U[2];
 			for j=1:n
 				I₂.=I₁+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*I₂))
 			end
-			real(ifft(U[:,1])),real(ifft(I₂)),mesh.x
+			real(ifft(U[1])),real(ifft(I₂)),mesh.x
 		end
 
 

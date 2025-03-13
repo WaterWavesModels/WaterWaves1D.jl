@@ -54,7 +54,7 @@ mutable struct Problem
 
         # A basic check
         try
-            step!(solver, model, copy(last(data.U)), 1)
+            step!(solver, model, deepcopy(last(data.U)), 0)
         catch
             @warn "The model and the solver are incompatible. `solve!` will not work."
         end
@@ -112,7 +112,7 @@ function solve!(problem :: Problem; verbose=true::Bool)
 
     ci = get(ENV, "CI", nothing) == "true"
 
-    U = copy(last(problem.data.U))
+    U = deepcopy(last(problem.data.U))
 
     dt     = problem.times.dt
     solver = problem.solver
@@ -130,7 +130,7 @@ function solve!(problem :: Problem; verbose=true::Bool)
         pbar = Progress(problem.times.Ns-1; enabled = !ci)
         for j in 1:problem.times.Ns-1
             step!(solver, model, U, dt)
-            push!(data,copy(U))
+            push!(data,deepcopy(U))
             next!(pbar)
         end
 
@@ -140,7 +140,7 @@ function solve!(problem :: Problem; verbose=true::Bool)
             for l in 1:problem.times.ns[j]
                 step!(solver, model, U, dt)
             end
-            push!(data,copy(U))
+            push!(data,deepcopy(U))
             next!(pbar)
         end
     else
@@ -150,7 +150,7 @@ function solve!(problem :: Problem; verbose=true::Bool)
                 step!(solver, model, U, dt)
                 next!(pbar)
             end
-            push!(data,copy(U))
+            push!(data,deepcopy(U))
             println()
 
         end
@@ -185,7 +185,7 @@ function solve!(problems; verbose=true::Bool)
                 flag = true
             end
         end
-        push!(U,copy(last(problem.data.U)))
+        push!(U,deepcopy(last(problem.data.U)))
         nsteps+=problem.times.Ns-1
     end
     if flag
@@ -207,7 +207,7 @@ function solve!(problems; verbose=true::Bool)
 
             for j in 1:problems[i].times.Ns-1
                 step!(problems[i].solver, problems[i].model, U[i], problems[i].times.dt)
-                push!(problems[i].data.U,copy(U[i]))
+                push!(problems[i].data.U,deepcopy(U[i]))
                 next!(pg)
             end
 
@@ -216,7 +216,7 @@ function solve!(problems; verbose=true::Bool)
                 for l in 1:problems[i].times.ns[j]
                     step!(problems[i].solver, problems[i].model, U[i], problems[i].times.dt)
                 end
-                push!(problems[i].data.U,copy(U[i]))
+                push!(problems[i].data.U,deepcopy(U[i]))
                 next!(pg)
             end
         end
@@ -242,3 +242,6 @@ Base.:(==)(p1::Problem, p2::Problem) =
     p1.times == p2.times &&
     p1.data == p2.data &&
     p1.label == p2.label
+
+Base.:(≈)(p1::Problem, p2::Problem ; atol::Real=0, rtol::Real= √eps()) =
+    all(isapprox.(p1.model.mapfro(p1.data.U[end]) , p2.model.mapfro(p2.data.U[end]),atol=atol,rtol=rtol))

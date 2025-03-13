@@ -135,8 +135,8 @@ mutable struct WWn <: AbstractModel
 		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
-			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
-			U[ abs.(U).< ktol ].=0
+			U = [Π⅔ .* fft(data.η(x)), Π⅔ .*fft(data.v(x))]
+			for u in U u[ abs.(u).< ktol ].=0 end
 			return U
 		end
 
@@ -146,20 +146,20 @@ mutable struct WWn <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-			real( ifft(U[:,1]) ),real( ifft(U[:,2]) ), mesh.x
+			real( ifft(U[1]) ),real( ifft(U[2]) ), mesh.x
 		end
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
-			fftη .= U[:,1]
-		    fftv .= U[:,2]
+			fftη .= U[1]
+		    fftv .= U[2]
 			Q .= Tμ.*fftv
 			R .= -fftη*ν
 
 			if n >= 2
-				η  .= ifft(Jδ.*U[:,1])
-				v  .= ifft(U[:,2])
+				η  .= ifft(Jδ.*U[1])
+				v  .= ifft(U[2])
 				Lphi .= -ifft(Q)
 				Q += -ϵ *∂ₓ.*fft(η.*ifft(fftv)) .+ ϵ*G₀.*fft(η.*Lphi)
 				R += ϵ/2*Jδ.*fft(-v.^2 .+ Lphi.^2)
@@ -181,9 +181,9 @@ mutable struct WWn <: AbstractModel
 						.- 1/2* (η.^2).* (ifft(∂ₓ .* fft(Lphi))).^2 ) .+
 						1/4*ϵ^3 * ∂ₓ.*∂ₓ.*fft((η .* Lphi).^2)
 			end
-		   	U[:,1] .= Π⅔.*Q/sqrt(μ)/ν
-		   	U[:,2] .= Π⅔.*∂ₓ.*R/sqrt(μ)/ν
-			U[abs.(U).< ktol ].=0
+		   	U[1] .= Π⅔.*Q/sqrt(μ)/ν
+		   	U[2] .= Π⅔.*∂ₓ.*R/sqrt(μ)/ν
+			for u in U u[ abs.(u).< ktol ].=0 end
 
 		end
 
@@ -245,7 +245,7 @@ mutable struct WWn <: AbstractModel
 						1/4*ϵ^3 * ∂ₓ.*∂ₓ.*fft((η .* Lphi).^2)
 			end
 		   	U2 .= Π⅔.*∂ₓ.*R/sqrt(μ)/ν
-			U2[abs.(U2).< ktol ].=0
+			U2[ abs.(U2).< ktol ].=0
 
 		end
 

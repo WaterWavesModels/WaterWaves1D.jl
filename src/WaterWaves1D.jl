@@ -56,4 +56,8 @@ include("solvers/Euler.jl")
 include("solvers/EulerSymp.jl")
 include("solvers/RK4.jl")
 
+include("models/SaintVenant_matrix.jl")
+include("solvers/RK4_matrix.jl")
+
+
 end

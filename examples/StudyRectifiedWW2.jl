@@ -82,7 +82,7 @@ function IntegrateWW2(;init=1,μ=1,ϵ=0.1,L=20,N=2^10,T=10,dt = 0.001,dealias=1,
 	blowup_index=0;blowup=false;
 	for j in 1:problem.times.Ns
 		blowup_index+=1
-		if isnan(problem.data.U[j][1,1])
+		if isnan(problem.data.U[j][1][1])
 			blowup=true
 			break
 		end

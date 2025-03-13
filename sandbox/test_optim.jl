@@ -197,13 +197,13 @@ function (m::Matsuno)(U::Array{ComplexF64,2})
 
 
     @inbounds for i in eachindex(m.hnew)
-        m.hnew[i] = m.Γ[i] * U[i,1]
+        m.hnew[i] = m.Γ[i] * U[1][i]
     end
 
     ldiv!(m.unew, m.Px, m.hnew )
 
     @inbounds for i in eachindex(m.hnew)
-        m.hnew[i] = m.Dx[i] * U[i,1]
+        m.hnew[i] = m.Dx[i] * U[1][i]
     end
 
     ldiv!(m.I₁, m.Px, m.hnew)
@@ -218,8 +218,8 @@ function (m::Matsuno)(U::Array{ComplexF64,2})
         m.I₁[i] = m.I₁[i] * m.ϵ * m.Π⅔[i] - m.hnew[i]
     end
 
-    ldiv!(m.hnew, m.Px, view(U,:,1))
-    ldiv!(m.unew, m.Px, view(U,:,2))
+    ldiv!(m.hnew, m.Px, U[1])
+    ldiv!(m.unew, m.Px, U[2])
 
     @inbounds for i in eachindex(m.hnew)
         m.I₂[i] = m.hnew[i] * m.unew[i]
@@ -228,8 +228,8 @@ function (m::Matsuno)(U::Array{ComplexF64,2})
     mul!(m.I₃, m.Px, m.I₂)
 
     @inbounds for i in eachindex(m.H)
-        U[i,1]  = m.H[i] * U[i,2]
-        m.I₀[i] = m.Γ[i] * U[i,2]
+        U[1][i]  = m.H[i] * U[2][i]
+        m.I₀[i] = m.Γ[i] * U[2][i]
     end
 
     ldiv!(m.I₂, m.Px, m.I₀)
@@ -241,14 +241,14 @@ function (m::Matsuno)(U::Array{ComplexF64,2})
     mul!(m.hnew, m.Px, m.I₂)
 
     @inbounds for i in eachindex(m.unew)
-        U[i,1] -= (m.I₃[i] * m.Dx[i] + m.hnew[i] * m.H[i]) * m.ϵ * m.Π⅔[i]
+        U[1][i] -= (m.I₃[i] * m.Dx[i] + m.hnew[i] * m.H[i]) * m.ϵ * m.Π⅔[i]
         m.I₃[i]  = m.unew[i]^2
     end 
 
     mul!(m.unew, m.Px, m.I₃)
 
     @inbounds for i in eachindex(m.unew)
-        U[i,2]  =  m.I₁[i] - m.unew[i] * m.Dx[i] * m.ϵ/2 * m.Π⅔[i]
+        U[2][i]  =  m.I₁[i] - m.unew[i] * m.Dx[i] * m.ϵ/2 * m.Π⅔[i]
     end 
 
 end
@@ -304,8 +304,8 @@ function main()
     solver  = RK4(param,model)
     
     U       = zeros(ComplexF64,(mesh.N,2))
-    U[:,1] .= model.Π⅔ .* fft(init.h) 
-    U[:,2] .= model.Π⅔ .* fft(init.u)
+    U[1] .= model.Π⅔ .* fft(init.h) 
+    U[2] .= model.Π⅔ .* fft(init.u)
 
     dt = times.dt
     nr = times.nr

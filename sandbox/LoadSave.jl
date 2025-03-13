@@ -67,7 +67,7 @@ function convert(::Type{Problem}, p :: ProblemSave)
     # Reconstructs the initial data
     mesh=Mesh(param_p)
     U=first(p.data.U)
-    initial = Init(mesh,U[:,1],U[:,2])
+    initial = Init(mesh,U[1],U[2])
 
     # Reconstructs the solver (may not work with other user-defined solvers)
     solver = try

@@ -23,7 +23,7 @@ struct Euler <: TimeSolver
     label :: String
 
     function Euler( U :: Array; realdata=nothing )
-        U1 = copy(U)
+        U1 = deepcopy(U)
         if realdata==true
             U1 = real.(U1);
         end
@@ -37,8 +37,15 @@ struct Euler <: TimeSolver
         U=model.mapto(Init(x->0*x,x->0*x))
         Euler( U; realdata=realdata)
     end
-    function Euler( param::NamedTuple, datasize=2::Int; realdata=nothing )
-        Euler( zeros(Complex{Float64}, (param.N,datasize)); realdata=realdata)
+    function RK4( model :: AbstractModel; realdata=nothing )
+        U=model.mapto(Init(x->0*x,x->0*x))
+        RK4( U; realdata=realdata)
+    end
+    function Euler( param::NamedTuple, systemsize=2::Int; realdata=nothing )
+        Euler( [Array{Complex{Float64}}(undef,param.N) for _ in 1:systemsize]  ; realdata=realdata)
+    end
+    function Euler( datasize, systemsize=2::Int; realdata=nothing )
+        Euler( [Array{Complex{Float64}}(undef,datasize) for _ in 1:systemsize] ; realdata=realdata)
     end
 end
 
@@ -48,9 +55,10 @@ function step!(solver :: Euler,
                 dt )
 
 
-    solver.U1 .= U
+    [u1 .= u for (u1,u) in zip(solver.U1,U)]
     model.f!( solver.U1 )
-    U .+= dt .* solver.U1
+    [u .+= dt * u1 for (u,u1) in zip(U,solver.U1)]
+
 
 end
 
@@ -75,8 +83,8 @@ function step!(s  :: Euler_naive,
                dt )
 
 
-    U0 = copy(U)
+    U0 = deepcopy(U)
     model.f!( U0 )
-    U .+= dt * U0
+    [u .+= dt * u0 for (u,u0) in zip(U,U0)]
 
 end

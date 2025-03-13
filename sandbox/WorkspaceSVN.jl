@@ -68,9 +68,9 @@ sol3=solution(p3)
 sol4=solution(p4)
 
 err = [
-norm(sol3[1][:,1]-sol4[1][:,2],Inf);
-norm(sol2[1][:,1]-sol4[1][:,3],Inf);
-norm(sol1[1][:,1]-sol4[1][:,4],Inf) ]
+norm(sol3[1][1]-sol4[1][2],Inf);
+norm(sol2[1][1]-sol4[1][3],Inf);
+norm(sol1[1][1]-sol4[1][4],Inf) ]
 
 N= [35 ; 21; 15]
 
@@ -97,9 +97,9 @@ sol3b=solution(p3b)
 sol4b=solution(p4b)
 
 errb = [
-norm(sol3b[1][:,2]-sol4b[1][:,3],Inf);
-norm(sol2b[1][:,2]-sol4b[1][:,5],Inf);
-norm(sol1b[1][:,2]-sol4b[1][:,9],Inf) ]
+norm(sol3b[1][2]-sol4b[1][3],Inf);
+norm(sol2b[1][2]-sol4b[1][5],Inf);
+norm(sol1b[1][2]-sol4b[1][9],Inf) ]
 
 Nb= [60 ; 30; 15]
 

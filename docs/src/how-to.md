@@ -71,11 +71,11 @@ function Airy(param::NamedTuple; # param is a NamedTuple containing all necessar
 
   # Evolution equations are ∂t U = f(U)
   function f!(U)
-    fftη .= U[:,1]
-    fftv .= U[:,2]
+    fftη .= U[1]
+    fftv .= U[2]
 
-    U[:,1] .= -∂ₓF₁.*fftv
-    U[:,2] .= -∂ₓ.*fftη
+    U[1] .= -∂ₓF₁.*fftv
+    U[2] .= -∂ₓ.*fftη
   end
 
   # Build raw data from physical data (discrete Fourier transform)
@@ -85,7 +85,7 @@ function Airy(param::NamedTuple; # param is a NamedTuple containing all necessar
 
   # Return physical data `(η,v,x)` from raw data
   function mapfro(U)
-    real(ifft(U[:,1])),real(ifft(U[:,2])),x
+    real(ifft(U[1])),real(ifft(U[2])),x
   end
 
   new( label, f!, mapto, mapfro )

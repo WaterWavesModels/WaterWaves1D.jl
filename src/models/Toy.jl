@@ -91,17 +91,17 @@ mutable struct Toy <: AbstractModel
 		# Evolution equations are ∂t U = f(U)
 			function f!(U)
 				if str == true
-					U[:,2] .= -a * Π⅔.*fft( ifft(Jδ  .* U[:,2] ) ./ U[:,1] )
+					U[2] .= -a * Π⅔.*fft( ifft(Jδ  .* U[2] ) ./ U[1] )
 				else
-					U[:,2] .= -a * Π⅔.*fft( ifft(Jδ  .* U[:,2] ) ./ ( 1 .+ abs.(ifft(U[:,2])).^2 ) )
+					U[2] .= -a * Π⅔.*fft( ifft(Jδ  .* U[2] ) ./ ( 1 .+ abs.(ifft(U[2])).^2 ) )
 				end
-				U[ abs.(U[:,2]).< ktol, 2 ].=0
-				U[:,1] .= zero(U[:,1])
+				U[ abs.(U[2]).< ktol, 2 ].=0
+				U[1] .= zero(U[1])
 			end
 			#  function f!(U)
-			# 	U[:,2] .= -a * Π⅔.*fft( ifft(Jδ  .* U[:,2] ) .* ( 1 .+ ifft(U[:,2]).^2 ) )
-			# 	U[ abs.(U[:,2]).< ktol, 2 ].=0
-			# 	U[:,1] = zero(U[:,1])
+			# 	U[2] .= -a * Π⅔.*fft( ifft(Jδ  .* U[2] ) .* ( 1 .+ ifft(U[2]).^2 ) )
+			# 	U[ abs.(U[2]).< ktol, 2 ].=0
+			# 	U[1] = zero(U[1])
 			# end
 
 		# Build raw data from physical data.
@@ -109,7 +109,7 @@ mutable struct Toy <: AbstractModel
 		function mapto(data::InitialData)
 			h .= 1 .+ data.η(x)
 			u .= fft(data.v(x)) 
-			u[abs.(u).< ktol ].=0
+			for u in U u[ abs.(u).< ktol ].=0 end
 			
 			U = [h Π⅔ .* u]
 			return U
@@ -121,8 +121,8 @@ mutable struct Toy <: AbstractModel
 		# - `u` is the values of the real part of solutions at collocation points `x`;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-			h .= U[:,1]
-			u .= ifft(U[:,2])
+			h .= U[1]
+			u .= ifft(U[2])
 
 			return real(h),real(u),mesh.x 
 		end
@@ -133,8 +133,8 @@ mutable struct Toy <: AbstractModel
 		# - `u` is the values of the real part of solutions at collocation points `x`;
 		# - `x` is the vector of collocation points
 		function mapfrofull(U)
-			h .= U[:,1]
-			u .= ifft(U[:,2])
+			h .= U[1]
+			u .= ifft(U[2])
 
 			return real(h),u,mesh.x 
 		end

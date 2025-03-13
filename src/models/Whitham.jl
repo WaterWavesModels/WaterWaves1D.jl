@@ -106,14 +106,14 @@ mutable struct Whitham <: AbstractModel
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
-		    ffts .= U[:,2]
+		    ffts .= U[2]
 			s .= real(ifft(ffts))
-			fftr .= U[:,1]
+			fftr .= U[1]
 		   	r .= real(ifft(fftr))
 
-		   	U[:,1] .= -∂ₓ.*(F₁.*fftr.+3*ϵ/4*Π⅔.*F₂.*fft(r.^2))
-		   	U[:,2] .= ∂ₓ.*(F₁.*ffts.+3*ϵ/4*Π⅔.*F₂.*fft(s.^2))
-			U[abs.(U).< ktol ].=0
+		   	U[1] .= -∂ₓ.*(F₁.*fftr.+3*ϵ/4*Π⅔.*F₂.*fft(r.^2))
+		   	U[2] .= ∂ₓ.*(F₁.*ffts.+3*ϵ/4*Π⅔.*F₂.*fft(s.^2))
+			for u in U u[ abs.(u).< ktol ].=0 end
 
 		end
 
@@ -126,9 +126,9 @@ mutable struct Whitham <: AbstractModel
 			r .= real(ifft(fftr))
 			s .= real(ifft(ffts))
 
-			U = [fftr - ϵ₀/4*Π⅔ .*fft(ifft(∂ₓ.*fftr).*ifft(∂ₓ⁻.*ffts) + r.*s + 1/2*s.^2) ;;
+			U = [fftr - ϵ₀/4*Π⅔ .*fft(ifft(∂ₓ.*fftr).*ifft(∂ₓ⁻.*ffts) + r.*s + 1/2*s.^2) ,
 				ffts - ϵ₀/4*Π⅔ .*fft(ifft(∂ₓ.*ffts).*ifft(∂ₓ⁻.*fftr) + r.*s + 1/2*r.^2)  ]
-			U[abs.(U).< ktol ].=0
+			for u in U u[ abs.(u).< ktol ].=0 end
 			return U
 		end
 
@@ -138,9 +138,9 @@ mutable struct Whitham <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-			ffts .= U[:,2]
+			ffts .= U[2]
 			s .= real(ifft(ffts))
-			fftr .= U[:,1]
+			fftr .= U[1]
 		   	r .= real(ifft(fftr))
 			newr = fftr + ϵ₀/4*Π⅔ .*fft(ifft(∂ₓ.*fftr).*ifft(∂ₓ⁻.*ffts) + r.*s + 1/2*s.^2)  
 			news = ffts + ϵ₀/4*Π⅔ .*fft(ifft(∂ₓ.*ffts).*ifft(∂ₓ⁻.*fftr) + r.*s + 1/2*r.^2)

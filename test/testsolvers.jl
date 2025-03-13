@@ -11,7 +11,7 @@ parap = merge(paraX,paraT) # used to construct problems
 init     = Init(x->cos.(x),x-> sin.(x) )
 
 #--- model
-model=WWn(param)
+model=SaintVenant(param)
 
 #--- reference problem
 pb0 = Problem( model, init, parap )
@@ -24,6 +24,9 @@ solve!(pb0,verbose=false)
     push!(solvers, RK4(model.mapto(init)) )
     push!(solvers, RK4(paraX) )
     push!(solvers, RK4(paraX,2) )
+    push!(solvers, RK4(paraX.N,2) )
+    push!(solvers, RK4(paraX.N) )
+    push!(solvers, RK4(model) )
     push!(solvers, RK4_naive() )
 
     # check all RK4 solvers generate the same data
@@ -32,6 +35,25 @@ solve!(pb0,verbose=false)
                     solver = solver );
         solve!(pb,verbose=false)
         @test pb.data.U == pb0.data.U
+    end
+end
+@testset "RK4 solvers" begin
+    # different ways to build RK4_matrix solver
+    model_m=SaintVenant_matrix(param)
+
+    solvers = TimeSolver[]
+    push!(solvers, RK4_matrix(model_m.mapto(init)) )
+    push!(solvers, RK4_matrix(paraX) )
+    push!(solvers, RK4_matrix(paraX,2) )
+    push!(solvers, RK4_matrix(model_m) )
+    push!(solvers, RK4_matrix_naive() )
+
+    # check all RK4 solvers generate the same data
+    for solver in solvers
+        pb = Problem( model_m, init, parap;
+                    solver = solver );
+        solve!(pb,verbose=false)
+        @test pb ≈ pb0
     end
 end
 
@@ -43,8 +65,8 @@ end
     solve!(pb1,verbose=false)
     # check explicit Euler is of order ≈ dt*T
     order = paraT.dt*paraT.T
-    @test isapprox(pb0.data.U[end] , pb1.data.U[end] , rtol = order)
-    @test !isapprox(pb0.data.U[end] , pb1.data.U[end] , rtol = order/4)
+    @test isapprox(pb0 , pb1 , rtol = order)
+    @test !isapprox(pb0 , pb1 , rtol = order/4)
 
 
     # different ways to build explicit Euler solver
@@ -52,6 +74,10 @@ end
     push!(solvers, Euler(model.mapto(init)) )
     push!(solvers, Euler(paraX) )
     push!(solvers, Euler(paraX,2) )
+    push!(solvers, Euler(paraX.N,2) )
+    push!(solvers, Euler(paraX.N) )
+    push!(solvers, Euler(model) )
+    
     push!(solvers, Euler_naive() )
 
     # check all Euler solvers generate the same data
@@ -65,6 +91,13 @@ end
 
 #--- tests on symplectic Euler solvers
 @testset "symplectic Euler solver" begin
+    #--- model
+    model=WWn(param)
+
+    #--- reference problem : standard RK4 solver
+    pb0 = Problem( model, init, parap )
+    solve!(pb0,verbose=false)
+
     # build symplectic Euler solver
     pb1 = Problem( model, init, parap;
                 solver = EulerSymp(model) )

@@ -138,39 +138,39 @@ mutable struct threescale <: AbstractModel
 		# Evolution equations are ∂t U = f(U)
 		function f!(U;a=a)
 			if simple != false
-				fftη .= U[:,1]; fftu .= U[:,2];
-				fftp .= U[:,3]; fftw .= U[:,4];
+				fftη .= U[1]; fftu .= U[2];
+				fftp .= U[3]; fftw .= U[4];
 				η .= ifft(fftη)
 				if str == false
 					η .+= ifft(fftu)/2
 				end
 	
-				U[:,1] .= -simple[1]*∂ₓ.* fftu
+				U[1] .= -simple[1]*∂ₓ.* fftu
 							#-∂ₓ.*Π⅔.*fft(h .* u)
-				U[:,2] .=  - Π⅔.*fft(1 ./(1 .+ ϵ*simple[2]*η) .* ifft(∂ₓ.* (simple[1]*fftη .+ a*δ *fftp) ) )
+				U[2] .=  - Π⅔.*fft(1 ./(1 .+ ϵ*simple[2]*η) .* ifft(∂ₓ.* (simple[1]*fftη .+ a*δ *fftp) ) )
 							#-∂ₓ.*Π⅔.*(fftη .+ ϵ/2 * fft( u.^2) ) - a*μ * Π⅔.*fft(1 ./h .* ifft(∂ₓ.* fft( hFG.*p ) ) )
-				U[:,3] .= -a*Π⅔.*fft(1 ./(1 .+ ϵ*simple[3]*η) .*ifft(2*fftw.+ δ * ∂ₓ.*fftu) )
+				U[3] .= -a*Π⅔.*fft(1 ./(1 .+ ϵ*simple[3]*η) .*ifft(2*fftw.+ δ * ∂ₓ.*fftu) )
 							#  -a*Π⅔.*fft((2*w.+hFG.*ifft(∂ₓ.*fftu))./h) - ϵ*Π⅔.*fft( u .* ifft(∂ₓ.* fftp)  )
-				U[:,4] .= 3/2*a*Π⅔.*fft(1 ./(1 .+ ϵ*simple[4]*η) .*ifft(fftp)) #- ϵ*Π⅔.*fft( u .* ifft(∂ₓ.* fftw ) )
-				U[abs.(U).< ktol ].=0
+				U[4] .= 3/2*a*Π⅔.*fft(1 ./(1 .+ ϵ*simple[4]*η) .*ifft(fftp)) #- ϵ*Π⅔.*fft( u .* ifft(∂ₓ.* fftw ) )
+				for u in U u[ abs.(u).< ktol ].=0 end
 			else
-				fftη .= U[:,1]
+				fftη .= U[1]
 				h .= 1 .+ ϵ*ifft(fftη)
-				fftu .= U[:,2]; u.= ifft(fftu);
-				fftp .= U[:,3]; p.= ifft(fftp);
-				fftw .= U[:,4]; w.= ifft(fftw);
+				fftu .= U[2]; u.= ifft(fftu);
+				fftp .= U[3]; p.= ifft(fftp);
+				fftw .= U[4]; w.= ifft(fftw);
 				if str == false
 					h .+= ϵ*ifft(fftu)/2
 				end
 
-				U[:,1] .= -∂ₓ.*fftu
+				U[1] .= -∂ₓ.*fftu
 							#-∂ₓ.*Π⅔.*fft(h .* u)
-				U[:,2] .= -∂ₓ.*fftη - a*δ * Π⅔.*fft(1 ./h .* ifft(∂ₓ.* fft( h.*p ) ) )
+				U[2] .= -∂ₓ.*fftη - a*δ * Π⅔.*fft(1 ./h .* ifft(∂ₓ.* fft( h.*p ) ) )
 							#-∂ₓ.*Π⅔.*(fftη .+ ϵ/2 * fft( u.^2) ) - a*μ * Π⅔.*fft(1 ./h .* ifft(∂ₓ.* fft( hFG.*p ) ) )
-				U[:,3] .= -a*Π⅔.*fft((2*w.+ δ * h.*ifft(∂ₓ.*fftu))./h) 
+				U[3] .= -a*Π⅔.*fft((2*w.+ δ * h.*ifft(∂ₓ.*fftu))./h) 
 							#  -a*Π⅔.*fft((2*w.+hFG.*ifft(∂ₓ.*fftu))./h) - ϵ*Π⅔.*fft( u .* ifft(∂ₓ.* fftp)  )
-				U[:,4] .= 3/2*a*Π⅔.*fft(p./h) #- ϵ*Π⅔.*fft( u .* ifft(∂ₓ.* fftw ) )
-				U[abs.(U).< ktol ].=0
+				U[4] .= 3/2*a*Π⅔.*fft(p./h) #- ϵ*Π⅔.*fft( u .* ifft(∂ₓ.* fftw ) )
+				for u in U u[ abs.(u).< ktol ].=0 end
 			end
 		end
 
@@ -247,14 +247,14 @@ mutable struct threescale <: AbstractModel
 
     				U₋ = U₀ + dt/6 .* (U1 + 2*U2 + 2*U3 + U4 )
 
-					d2th = ifft(U₊[:,1]+U₋[:,1]-2*U₀[:,1])/dt^2
-					dth = ifft(U₊[:,1]-U₋[:,1])/(2*dt)
-					dtdxh = ifft(∂ₓ.*U₊[:,1]-∂ₓ.*U₋[:,1])/(2*dt)
-					d2xh = ifft(∂ₓ.*∂ₓ.*U₀[:,1])
-					dtu = ifft(U₊[:,2]-U₋[:,2])/(2*dt)
-					dxu = ifft(∂ₓ.*U₀[:,2])
-					dxh = ifft(∂ₓ.*U₀[:,1])
-					u = ifft(U₀[:,2])
+					d2th = ifft(U₊[1]+U₋[1]-2*U₀[1])/dt^2
+					dth = ifft(U₊[1]-U₋[1])/(2*dt)
+					dtdxh = ifft(∂ₓ.*U₊[1]-∂ₓ.*U₋[1])/(2*dt)
+					d2xh = ifft(∂ₓ.*∂ₓ.*U₀[1])
+					dtu = ifft(U₊[2]-U₋[2])/(2*dt)
+					dxu = ifft(∂ₓ.*U₀[2])
+					dxh = ifft(∂ₓ.*U₀[1])
+					u = ifft(U₀[2])
 
 					# Need to relaod everything since this has been modified by f!
 					fftη .= fft(data.η(x)) 
@@ -284,7 +284,7 @@ mutable struct threescale <: AbstractModel
 			# U = [Π⅔ .* fftη Π⅔ .* fftu Π⅔ .* fftp Π⅔ .* fftw]
 			U = [Π⅔ .* fftη Π⅔ .* fftu Π⅔ .* (δ*fftp) Π⅔ .* (δ*fftw)]
 
-			U[abs.(U).< ktol ].=0
+			for u in U u[ abs.(u).< ktol ].=0 end
 			return U
 		end
 
@@ -294,12 +294,12 @@ mutable struct threescale <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-			fftη .= U[:,1]
+			fftη .= U[1]
 			#h .= 1 .+ ϵ*ifft(fftη)
-			fftu .= U[:,2]
+			fftu .= U[2]
 			fftv .= fftu #- μ/3 *Π⅔.*fft( 1 ./h .* ifft(  Π⅔.* ∂ₓ .* fft( h.^3 .* ifft(  Π⅔.* ∂ₓ .* fftu ) ) ) )
-			fftp .= U[:,3]; 
-			fftw .= U[:,4];
+			fftp .= U[3]; 
+			fftw .= U[4];
 			real(ifft(fftp)),real(ifft(fftv)),mesh.x
 		end
 		# Return `(η,v,u,p,w,x)`, where
@@ -310,11 +310,11 @@ mutable struct threescale <: AbstractModel
 		# - `w` corresponds to the relaxed (artificial) layer-averaged vertical velocity.
 		# - `x` is the vector of collocation points
 		function mapfrofull(U)
-			fftη .= U[:,1]
+			fftη .= U[1]
 			#h .= 1 .+ ϵ*ifft(fftη)
-			fftu .= U[:,2]
+			fftu .= U[2]
 			fftv .= fftu #- μ/3 *Π⅔.*fft( 1 ./h .* ifft(  Π⅔.* ∂ₓ .* fft( h.^3 .* ifft(  Π⅔.* ∂ₓ .* fftu ) ) ) )
-			real(ifft(fftη)),real(ifft(fftv)),real(ifft(fftu)),real(ifft(U[:,3])),real(ifft(U[:,4])),mesh.x
+			real(ifft(fftη)),real(ifft(fftv)),real(ifft(fftu)),real(ifft(U[3])),real(ifft(U[4])),mesh.x
 		end
 
         new(label, f!, mapto, mapfro, mapfrofull, info )

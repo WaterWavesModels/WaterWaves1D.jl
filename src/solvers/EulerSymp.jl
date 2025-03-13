@@ -34,8 +34,8 @@ struct EulerSymp <: TimeSolver
 
 
     function EulerSymp( U :: Array; Niter = 10, implicit = 1, realdata=nothing )
-        U1 = copy(U[:,1])
-        U2 = copy(U[:,1])
+        U1 = deepcopy(U[1])
+        U2 = deepcopy(U[2])
         if realdata==true
             U1 = real.(U1);U2 = real.(U2)
         end
@@ -57,7 +57,7 @@ struct EulerSymp <: TimeSolver
         EulerSymp( U; Niter = Niter, realdata=realdata, implicit=implicit)
     end
     function EulerSymp( param::NamedTuple; Niter = 10, implicit = 1, realdata=nothing )
-        EulerSymp( zeros(Complex{Float64}, (param.N,2)) ; Niter = Niter, realdata=realdata,implicit=implicit)
+        EulerSymp( [zeros(Complex{Float64}, param.N) , zeros(Complex{Float64}, param.N)] ; Niter = Niter, realdata=realdata,implicit=implicit)
     end
 end
 
@@ -67,25 +67,25 @@ function step!(solver :: EulerSymp,
                 dt )
 
 
-    solver.U1 .= copy(U[:,1])
-    solver.U2 .= copy(U[:,2])
+    solver.U1 .= deepcopy(U[1])
+    solver.U2 .= deepcopy(U[2])
 
     if solver.implicit == 1
         for i=1:solver.Niter
             model.f1!( solver.U1, solver.U2 )
-            solver.U1 .= U[:,1] + dt * solver.U1
+            solver.U1 .= U[1] + dt * solver.U1
         end
-        U[:,1] .= solver.U1
+        U[1] .= solver.U1
         model.f2!( solver.U1, solver.U2 )
-        U[:,2] .+= dt * solver.U2
+        U[2] .+= dt * solver.U2
     elseif solver.implicit == 2
         for i=1:solver.Niter
             model.f2!( solver.U1, solver.U2 )
-            solver.U2 .= U[:,2] + dt * solver.U2
+            solver.U2 .= U[2] + dt * solver.U2
         end
-        U[:,2] .= solver.U2
+        U[2] .= solver.U2
         model.f1!( solver.U1, solver.U2 )
-        U[:,1] .+= dt * solver.U1
+        U[1] .+= dt * solver.U1
     else
         error("when defining `EulerSymp`, the keyword `implicit` must be either 1 or 2.")
     end

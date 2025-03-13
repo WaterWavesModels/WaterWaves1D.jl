@@ -1,7 +1,7 @@
-export SaintVenant,SaintVenant_fast
+export SaintVenant_matrix,SaintVenant_matrix_fast
 
 """
-    SaintVenant(param;kwargs)
+    SaintVenant_matrix(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 Saint-Venant (or shallow water) model.
@@ -20,14 +20,14 @@ Saint-Venant (or shallow water) model.
 
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
-1. a function `SaintVenant.f!` to be called in explicit time-integration solvers;
-2. a function `SaintVenant.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
-3. a function `SaintVenant.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
+1. a function `SaintVenant_matrix.f!` to be called in explicit time-integration solvers;
+2. a function `SaintVenant_matrix.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
+3. a function `SaintVenant_matrix.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
     - `η` is the values of surface deformation at collocation points `x`;
     - `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
-mutable struct SaintVenant <: AbstractModel
+mutable struct SaintVenant_matrix <: AbstractModel
 
 	label 	:: String
 	f!		:: Function
@@ -35,7 +35,7 @@ mutable struct SaintVenant <: AbstractModel
 	mapfro	:: Function
 	info	:: String
 
-    function SaintVenant(param::NamedTuple;
+    function SaintVenant_matrix(param::NamedTuple;
 						mesh = Mesh(param),
 						dealias=0,smooth=false,
 						ktol=0,
@@ -67,6 +67,7 @@ mutable struct SaintVenant <: AbstractModel
 		# Pre-allocate useful data
 		k  = mesh.k
 		x  = mesh.x
+		dk = mesh.dk
 		∂ₓ	=  1im * k
 
 		if dealias == 0
@@ -89,21 +90,21 @@ mutable struct SaintVenant <: AbstractModel
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
-			fftη .= U[1]
-			fftv .= U[2]
-			η .= real(ifft(fftη))
-			v .= real(ifft(fftv))
+			fftη .= U[:,1]
+			fftv .= U[:,2]
+			η .= real(ifft(U[:,1]))
+			v .= real(ifft(U[:,2]))
 
-			U[1] .= -∂ₓ.*( fftv .+ ϵ * Π.* fft( η .* v) )
-			U[2] .= -∂ₓ.*( fftη .+ ϵ * Π.* fft( v.^2 )/2 )
-			for u in U u[ abs.(u).< ktol ].=0 end
+			U[:,1] .= -∂ₓ.*( fftv .+ ϵ * Π.* fft( η .* v) )
+			U[:,2] .= -∂ₓ.*( fftη .+ ϵ * Π.* fft( v.^2 )/2 )
+			U[ abs.(U).< ktol ].=0
 		end
 
 		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
-			U = [Π⅔.* fft(data.η(x)), Π⅔.*fft(data.v(x))]
-			for u in U u[ abs.(u).< ktol ].=0 end
+			U = [Π⅔.* fft(data.η(x)) Π⅔.*fft(data.v(x))]
+			U[ abs.(U).< ktol ].=0
 			return U
 		end
 
@@ -113,7 +114,7 @@ mutable struct SaintVenant <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-			real(ifft(U[1])),real(ifft(U[2])),mesh.x
+			real(ifft(U[:,1])),real(ifft(U[:,2])),mesh.x
 		end
 
 		new(label, f!, mapto, mapfro, info)
@@ -121,11 +122,11 @@ mutable struct SaintVenant <: AbstractModel
 end
 
 """
-	SaintVenant_fast(param;kwargs)
+	SaintVenant_matrix_fast(param;kwargs)
 
-Same as `SaintVenant`, but faster.
+Same as `SaintVenant_matrix`, but faster.
 """
-mutable struct SaintVenant_fast <: AbstractModel
+mutable struct SaintVenant_matrix_fast <: AbstractModel
 
 	label 	:: String
 	f!		:: Function
@@ -133,7 +134,7 @@ mutable struct SaintVenant_fast <: AbstractModel
 	mapfro	:: Function
 	info	:: String
 
-    function SaintVenant_fast(param::NamedTuple;
+    function SaintVenant_matrix_fast(param::NamedTuple;
 						mesh = Mesh(param),
 						dealias=0,smooth=false,
 						ktol=0,
@@ -158,13 +159,14 @@ mutable struct SaintVenant_fast <: AbstractModel
 		if ktol == 0
 			info *= "No Krasny filter. "
 		else
-			@error("The Krasny filter will *not* be applied. Use 'SaintVenant' instead")
+			@error("The Krasny filter will *not* be applied. Use 'SaintVenant_matrix' instead")
 		end
 		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
 		# Pre-allocate useful data
 		k  = mesh.k
 		x  = mesh.x
+		dk = mesh.dk
 		∂ₓ	=  1im * k
 
 		if dealias == 0
@@ -191,8 +193,8 @@ mutable struct SaintVenant_fast <: AbstractModel
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
-			fftη .= U[1]
-			fftv .= U[2]
+			fftη .= U[:,1]
+			fftv .= U[:,2]
 
 			ldiv!(η, Px, fftη )
 			ldiv!(v, Px, fftv )
@@ -204,7 +206,7 @@ mutable struct SaintVenant_fast <: AbstractModel
 			fftv.+=I
 			fftv.*=∂
 
-			U[1] .= fftv
+			U[:,1] .= fftv
 
 			v.*=v
 			v./=2
@@ -213,14 +215,14 @@ mutable struct SaintVenant_fast <: AbstractModel
 			fftη.+=I
 			fftη.*=∂
 
-			U[2] .= fftη
+			U[:,2] .= fftη
 		end
 
 		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
-			U = [Π⅔.* fft(data.η(x)), Π⅔.*fft(data.v(x))]
-			for u in U u[ abs.(u).< ktol ].=0 end
+			U = [Π⅔.* fft(data.η(x)) Π⅔.*fft(data.v(x))]
+			U[ abs.(U).< ktol ].=0
 			return U
 		end
 
@@ -230,7 +232,7 @@ mutable struct SaintVenant_fast <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-			real(ifft(U[1])),real(ifft(U[2])),mesh.x
+			real(ifft(U[:,1])),real(ifft(U[:,2])),mesh.x
 		end
 
 		new(label, f!, mapto, mapfro, info)

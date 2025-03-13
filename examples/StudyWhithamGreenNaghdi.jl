@@ -377,10 +377,10 @@ function StabilitySolitaryWaveWGN(;p=2,c=2,N=2^10,L=10*π,T=10,dt=10/10^4,SGN=fa
 	ts = problem.times.ts
 	x = mesh.x
 	k = mesh.k
-	X=interpolate(mesh,real.(ifft(problem.data.U[1][:,1])))[1].x
+	X=interpolate(mesh,real.(ifft(problem.data.U[1][1])))[1].x
 	zs=zeros(length(X),length(ts));
 	for i in 1:length(ts)
-		zs[:,i].=interpolate(mesh,real.(ifft(problem.data.U[i][:,1])))[2]
+		zs[:,i].=interpolate(mesh,real.(ifft(problem.data.U[i][1])))[2]
 	end
 
 	plt = plot()
@@ -512,7 +512,7 @@ function IntegrateWGN(scenario;δ=0.1,N=2^11,L=3*π,x₀=-3,T= 5,dt = 5/10^4,SGN
 
 	print("normalized error: $(dE(η,u,v,ηfin,ufin,vfin)/E(η,u,v)) \n")
 
-	fftηfin=last(problem.data.U)[:,1]
+	fftηfin=last(problem.data.U)[1]
 
 	plt = plot(problem,var=[:surface,:fourier],label="")
 	display(plt)
@@ -524,7 +524,7 @@ function IntegrateWGN(scenario;δ=0.1,N=2^11,L=3*π,x₀=-3,T= 5,dt = 5/10^4,SGN
 		k = mesh.k
 		zs=zeros(param.N,length(ts));
 		@showprogress 1 for i in 1:length(ts)
-			zs[:,i].=real.(ifft(problem.data.U[i][:,1]))
+			zs[:,i].=real.(ifft(problem.data.U[i][1]))
 		end
 		plt3=plot()
 		my_cg = cgrad([:blue,:green])

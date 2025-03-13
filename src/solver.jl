@@ -13,16 +13,16 @@ Base.:(==)(a::TimeSolver, b::TimeSolver) = begin
   
     init = Random((N=10, L=10))
     
-    Na = try size(a.U1,1)
+    Na = try length(a.U1[1])
     catch
         2
     end
     ma = Airy((μ=1, N=Na, L=10))
     Ua = ma.mapto(init)
 
-    Nb = try size(b.U1,1)
+    Nb = try length(b.U1[1])
     catch
-        Complex.(rand(2,2))
+        2
     end
     mb = Airy((μ=1, N=Nb, L=10))
     Ub = mb.mapto(init)

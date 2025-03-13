@@ -118,9 +118,9 @@ mutable struct IsobeKakinuma <: AbstractModel
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
-			fftη .= U[:,1]
+			fftη .= U[1]
 			h .= 1 .+ ϵ*ifft(fftη)
-			fftv .= U[:,2]
+			fftv .= U[2]
 			C .= [ zero(fftv) ; -1/2 * ∂ₓ.* fftv]
 			if iterate == false
 				L .= [Id    μ*(FFT * Diagonal( h.^2 ) * IFFT .* Π⅔)  ;
@@ -140,17 +140,17 @@ mutable struct IsobeKakinuma <: AbstractModel
 			w .= 2*h.* ifft( fftϕ[:,2])
 			G .= -∂ₓ.*Π⅔.* fft( h.* ifft( ∂ₓ.* fftϕ[:,1] .+ fftv) .+ μ*(h.^3)/3  .* ifft(∂ₓ.* fftϕ[:,2]) )
 
-		   	U[:,1] .= G
-			U[:,2] .= -∂ₓ .* (fftη .+ ϵ * Π⅔ .* fft( μ * w .* ifft(-G)
+		   	U[1] .= G
+			U[2] .= -∂ₓ .* (fftη .+ ϵ * Π⅔ .* fft( μ * w .* ifft(-G)
 								.+ 1/2 * (u.^2 .+ μ * w.^2 ) ) )
-			U[abs.(U).< ktol ].=0
+			for u in U u[ abs.(u).< ktol ].=0 end
 		end
 
 		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
-			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
-			U[abs.(U).< ktol ].=0
+			U = [Π⅔ .* fft(data.η(x)), Π⅔ .*fft(data.v(x))]
+			for u in U u[ abs.(u).< ktol ].=0 end
 			return U
 		end
 
@@ -160,7 +160,7 @@ mutable struct IsobeKakinuma <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2])),mesh.x
+			real(ifft(U[1])),real(ifft(U[2])),mesh.x
 		end
 
         new(label, f!, mapto, mapfro, info)

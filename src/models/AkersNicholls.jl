@@ -84,26 +84,26 @@ mutable struct AkersNicholls_fast <: AbstractModel
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
-		    ldiv!(ζ, Px , view(U,:,1))
+		    ldiv!(ζ, Px , U[1])
 
-		    I₁  .= view(U,:,2) .* Lμ
+		    I₁  .= U[2] .* Lμ
 		    ldiv!(unew, Px , I₁)
 		    unew .^= 2
 		    mul!(I₁, Px , unew)
 		    I₁ .*= Tμ
 
-		    I₂  .= view(U,:,1) .* ∂ₓ
+		    I₂  .= U[1] .* ∂ₓ
 		    ldiv!(unew, Px , I₂)
 		    unew .*= ζ
 		    mul!(I₂, Px , unew)
 
-		    I₃  .= view(U,:,1) .* Tμ∂ₓ
+		    I₃  .= U[1] .* Tμ∂ₓ
 		    ldiv!(unew, Px, I₃)
 		    unew .*= ζ
 		    mul!(I₃ , Px , unew)
 		    I₃ .*= Tμ
 
-		    ζ  .= .- view(U,:,2) .* ∂ₓ
+		    ζ  .= .- U[2] .* ∂ₓ
 
 		    I₁ .*= ν
 			I₁ .-= I₂
@@ -111,8 +111,8 @@ mutable struct AkersNicholls_fast <: AbstractModel
 		    I₁ .*= Π⅔
 		    I₁ .*= ϵ
 
-		    U[:,2] .= (view(U,:,1) .* Tμ .+ I₁)/sqrt(μ)/ν
-		    U[:,1] .= ζ/sqrt(μ)
+		    U[2] .= (U[1] .* Tμ .+ I₁)/sqrt(μ)/ν
+		    U[1] .= ζ/sqrt(μ)
 
 		end
 
@@ -120,7 +120,7 @@ mutable struct AkersNicholls_fast <: AbstractModel
 		function mapto(data::InitialData)
 			ζ.=data.η(x);v=data.v(x);
 			fftv=fft(v);
-			[Π⅔ .* fft(ζ)  Π⅔ .* (fftv./Lμ+ϵ*fft(ζ.*v)+ ϵ*Tμ.*fft(ζ.*ifft(Tμ.*fftv)))/ν]
+			[Π⅔ .* fft(ζ) , Π⅔ .* (fftv./Lμ+ϵ*fft(ζ.*v)+ ϵ*Tμ.*fft(ζ.*ifft(Tμ.*fftv)))/ν]
 		end
 
 		# Reconstruct physical variables from raw data
@@ -129,7 +129,7 @@ mutable struct AkersNicholls_fast <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U;n=10)
-			ζ.=ifft(view(U,:,1));I₁.=ν*view(U,:,2);I₂.=Lμ.*I₁;
+			ζ.=ifft(U[1]);I₁.=ν*U[2];I₂.=Lμ.*I₁;
 			for j=1:n
 				I₂.=Lμ.*(I₁-ϵ*Π⅔ .* ( fft(ζ.*ifft(I₂)) + Tμ.*fft(ζ.*ifft(Tμ.*I₂))) )
 			end
@@ -247,17 +247,17 @@ mutable struct AkersNicholls <: AbstractModel
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
 
-			ζ .=ifft(U[:,1]);
-			I₁ .=Tμ.*fft(ifft(Lμ.*U[:,2]).^2);
+			ζ .=ifft(U[1]);
+			I₁ .=Tμ.*fft(ifft(Lμ.*U[2]).^2);
 			# Tricomi identity : the above equals the two commented lines below
-			# I₁ .=Tμ.*fft(ifft(Lμ.*U[:,2]).^2 .+ ifft(∂ₓ.*U[:,2]).^2)/2;
-			# I₁ .-=fft(ifft(Lμ.*U[:,2]).*ifft(∂ₓ.*U[:,2]));
+			# I₁ .=Tμ.*fft(ifft(Lμ.*U[2]).^2 .+ ifft(∂ₓ.*U[2]).^2)/2;
+			# I₁ .-=fft(ifft(Lμ.*U[2]).*ifft(∂ₓ.*U[2]));
 
-			I₂ .=fft(ζ.*ifft(∂ₓ.*U[:,1])) ;
-			I₃ .=Tμ.*fft(ζ.*ifft(Tμ∂ₓ.*U[:,1]));
-			ζ .= U[:,1] ;
-			U[:,1] .= -∂ₓ.*U[:,2]/sqrt(μ) ;
-			U[:,2] .= (Tμ.*ζ+ϵ*Π⅔.*(ν*I₁-I₂-I₃))/sqrt(μ)/ν ;
+			I₂ .=fft(ζ.*ifft(∂ₓ.*U[1])) ;
+			I₃ .=Tμ.*fft(ζ.*ifft(Tμ∂ₓ.*U[1]));
+			ζ .= U[1] ;
+			U[1] .= -∂ₓ.*U[2]/sqrt(μ) ;
+			U[2] .= (Tμ.*ζ+ϵ*Π⅔.*(ν*I₁-I₂-I₃))/sqrt(μ)/ν ;
 
 		end
 
@@ -265,7 +265,7 @@ mutable struct AkersNicholls <: AbstractModel
 		function mapto(data::InitialData)
 			ζ.=data.η(x);v=data.v(x);
 			fftv=fft(v);
-			[Π⅔ .* fft(ζ)  Π⅔ .* (fftv./Lμ+ϵ*fft(ζ.*v)+ ϵ*Tμ.*fft(ζ.*ifft(Tμ.*fftv)))/ν]
+			[Π⅔ .* fft(ζ),  Π⅔ .* (fftv./Lμ+ϵ*fft(ζ.*v)+ ϵ*Tμ.*fft(ζ.*ifft(Tμ.*fftv)))/ν]
 		end
 
 		# Reconstruct physical variables from raw data
@@ -274,7 +274,7 @@ mutable struct AkersNicholls <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U;n=10)
-			ζ.=ifft(U[:,1]);I₁.=ν*U[:,2];I₂.=Lμ.*I₁;
+			ζ.=ifft(U[1]);I₁.=ν*U[2];I₂.=Lμ.*I₁;
 			for j=1:n
 				I₂.=Lμ.*(I₁-ϵ*Π⅔ .* ( fft(ζ.*ifft(I₂)) + Tμ.*fft(ζ.*ifft(Tμ.*I₂))) )
 			end

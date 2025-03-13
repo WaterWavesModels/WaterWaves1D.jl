@@ -117,9 +117,9 @@ mutable struct SquareRootDepth <: AbstractModel
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
-			fftη .= U[:,1]
+			fftη .= U[1]
 			h .= 1 .+ ϵ*ifft(fftη)
-			fftv .= U[:,2]
+			fftv .= U[2]
 			if iterate == false
 				L .= Id - μ/3 * Diagonal( ∂ₓ .* Π⅔) * FFT * Diagonal( 1 ./h ) * IFFT∂ₓFFT * Diagonal( h ) * IFFT
 				fftu .= L \ fftv
@@ -132,17 +132,17 @@ mutable struct SquareRootDepth <: AbstractModel
 			end
 			u .= ifft(fftu)
 			w .= ifft(Π⅔.*∂ₓ.*fft(h.*u))
-		   	U[:,1] .= -∂ₓ.*Π⅔.*(fftu .+ ϵ * fft(ifft(fftη) .* u))
-			U[:,2] .= -∂ₓ.*Π⅔.*(fftη .+ ϵ/2 * fft( u.^2 )
+		   	U[1] .= -∂ₓ.*Π⅔.*(fftu .+ ϵ * fft(ifft(fftη) .* u))
+			U[2] .= -∂ₓ.*Π⅔.*(fftη .+ ϵ/2 * fft( u.^2 )
 							.+ ϵ*μ/6 * fft( (w./h).^2 ) )
-			U[abs.(U).< ktol ].=0
+			for u in U u[ abs.(u).< ktol ].=0 end
 		end
 
 		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
-			U = [Π⅔ .* fft(data.η(x)) Π⅔ .*fft(data.v(x))]
-			U[abs.(U).< ktol ].=0
+			U = [Π⅔ .* fft(data.η(x)), Π⅔ .*fft(data.v(x))]
+			for u in U u[ abs.(u).< ktol ].=0 end
 			return U
 		end
 
@@ -152,7 +152,7 @@ mutable struct SquareRootDepth <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-			real(ifft(U[:,1])),real(ifft(U[:,2])),mesh.x
+			real(ifft(U[1])),real(ifft(U[2])),mesh.x
 		end
 		# Returns `(η,v,u)`, where
 		# - `η` is the surface deformation;
@@ -160,11 +160,11 @@ mutable struct SquareRootDepth <: AbstractModel
 		# - `u` corresponds to the layer-averaged velocity.
 		# Inverse Fourier transform and take the real part, plus solves the costly elliptic problem for `u`.
 		function mapfrofull(U)
-				fftη .= U[:,1]
+				fftη .= U[1]
 			   	h .= 1 .+ ϵ*ifft(fftη)
 				L .=  Id - μ/3 * Diagonal( ∂ₓ .* Π⅔) * FFT * Diagonal( 1 ./h ) * IFFT∂ₓFFT * Diagonal( h ) * IFFT
 
-				   real(ifft(U[:,1])),real(ifft(U[:,2])),real(ifft(L \ U[:,2]))
+				   real(ifft(U[1])),real(ifft(U[2])),real(ifft(L \ U[2]))
 		end
 
         new(label, f!, mapto, mapfro, mapfrofull, info)

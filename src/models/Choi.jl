@@ -176,11 +176,11 @@ mutable struct Choi <: AbstractModel
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
-			fftη .= U[:,1]
+			fftη .= U[1]
 			h .= 1 .+ ϵ*ifft(fftη)
-			fftv .= U[:,2]
+			fftv .= U[2]
 
-			U[:,1] .= -∂ₓ.*Π⅔.*(f1(h,fftv))
+			U[1] .= -∂ₓ.*Π⅔.*(f1(h,fftv))
 			q      .= -∂ₓ.*Π⅔.*(fftη .+ ϵ * f3(h,fftv) )
 
 			if reg == true
@@ -200,8 +200,8 @@ mutable struct Choi <: AbstractModel
 						restart = restart, maxiter = maxiter, Pl = Precond, reltol = gtol )
 			end
 
-			U[:,2] .= fftu
-			U[abs.(U).< ktol ].=0
+			U[2] .= fftu
+			for u in U u[ abs.(u).< ktol ].=0 end
 		end
 
 		# Build raw data from physical data.
@@ -230,8 +230,8 @@ mutable struct Choi <: AbstractModel
 			end
 
 
-			U = [Π⅔ .* fftη Π⅔ .*fftu]
-			U[abs.(U).< ktol ].=0
+			U = [Π⅔.*fftη, Π⅔.*fftu]
+			for u in U u[ abs.(u).< ktol ].=0 end
 			return U
 		end
 
@@ -241,11 +241,11 @@ mutable struct Choi <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-			fftη .= U[:,1]
+			fftη .= U[1]
 			h .= 1 .+ ϵ*ifft(fftη)
-			fftv .= U[:,2]
+			fftv .= U[2]
 
-			real(ifft(U[:,1])),real(ifft(f2(h,fftv))),mesh.x
+			real(ifft(U[1])),real(ifft(f2(h,fftv))),mesh.x
 		end
 		# Return `(η,v,u,vb)`, where
 		# - `η` is the surface deformation;
@@ -255,11 +255,11 @@ mutable struct Choi <: AbstractModel
 
 		# Inverse Fourier transform and take the real part, plus solves the costly elliptic problem for `u`.
 		function mapfrofull(U)
-				fftη .= U[:,1]
+				fftη .= U[1]
 			   	h .= 1 .+ ϵ*ifft(fftη)
-				fftv .= U[:,2]
+				fftv .= U[2]
 
-				real(ifft(U[:,1])),real(ifft(f2(h,fftv))),real(ifft(f1(h,fftv))./h),real(ifft(fftv))
+				real(ifft(U[1])),real(ifft(f2(h,fftv))),real(ifft(f1(h,fftv))./h),real(ifft(fftv))
 		end
 
         new(label, f!, mapto, mapfro, mapfrofull, info )

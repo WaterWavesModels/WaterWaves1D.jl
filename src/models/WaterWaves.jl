@@ -151,7 +151,7 @@ mutable struct WaterWaves <: AbstractModel
 		# Use a conformal change of coordinate
 		function mapto(data::InitialData)
 		  if data.η(x)==zero(x) && data.v(x)==zero(x)  #useful when defining the type of initial data in some solvers
-			  return zeros(Complex{Float64}, (mesh.N,2))
+			  return [zeros(Complex{Float64}, mesh.N),zeros(Complex{Float64}, mesh.N)]
 		  else
 			# preallocate some variables to save memory use
 			fη = zeros(Complex{Float64}, mesh.N)
@@ -251,8 +251,8 @@ mutable struct WaterWaves <: AbstractModel
 			z0 .= data.η(x+ϵ/ν*real.(ifft(u0)))
 			v0 .= data.v(x+ϵ/ν*real.(ifft(u0))) .* (1 .+ ϵ/ν*real.(ifft(Π⅔.*∂ₓ.*u0)) )
 
-			U=[ Π⅔ .* fft(z0)   Π⅔ .* fft(v0) ]  # Π⅔ for dealiasing
-			U[ abs.(U).< ktol ].=0     # applies Krasny filter if ktol>0
+			U=[ Π⅔ .* fft(z0) ,  Π⅔ .* fft(v0) ]  # Π⅔ for dealiasing
+			for u in U u[ abs.(u).< ktol ].=0 end
  			return U
 		  end
 		end
@@ -263,26 +263,26 @@ mutable struct WaterWaves <: AbstractModel
 		# - `v` is the derivative of the trace of the velocity potential;
 		# - `x` is the vector of collocation points
 		function mapfro(U)
-		   	ξ  .= real.(sqrt(μ)*(1+ϵ*meanf(U[:,1]))*k)
-	       	xv .= real.(-1im*sqrt(μ)*ifft( Π⅔ .*cotanh(ξ) .*  U[:,1] ))
+		   	ξ  .= real.(sqrt(μ)*(1+ϵ*meanf(U[1]))*k)
+	       	xv .= real.(-1im*sqrt(μ)*ifft( Π⅔ .*cotanh(ξ) .*  U[1] ))
 
-		   return real.( ifft(U[:,1]) ) , real.( ifft(U[:,2])./(1 .+ ϵ*real.(ifft(∂ₓ.*fft(xv)) )) ), x + ϵ*xv
+		   return real.( ifft(U[1]) ) , real.( ifft(U[2])./(1 .+ ϵ*real.(ifft(∂ₓ.*fft(xv)) )) ), x + ϵ*xv
 		end
 
 		# Water Waves equations are ∂t U = f(U)
 		function f!(U)
-		   	Dphi .= real.(ifft(U[:,2]))
-			ξ .= sqrt(μ)*(1 .+ ϵ*meanf(U[:,1]))*k
-			Dxv .= real.(sqrt(μ)*ifft( k .* cotanh(ξ) .* U[:,1]  ))
-			Dz .= real.(ifft( ∂ₓ.*  U[:,1] ))
+		   	Dphi .= real.(ifft(U[2]))
+			ξ .= sqrt(μ)*(1 .+ ϵ*meanf(U[1]))*k
+			Dxv .= real.(sqrt(μ)*ifft( k .* cotanh(ξ) .* U[1]  ))
+			Dz .= real.(ifft( ∂ₓ.*  U[1] ))
 
 			J .= (1 .+ ϵ*Dxv).^2 + μ*(ϵ*Dz).^2
-			M1 .= real.(-1im/sqrt(μ)*ifft( mytanh(ξ).* U[:,2] ))
+			M1 .= real.(-1im/sqrt(μ)*ifft( mytanh(ξ).* U[2] ))
 			M2 .= real.( 1im*sqrt(μ)*ifft( cotanh(ξ) .* fft(M1./J) ))
 			q0 = mean((1 .+ ϵ*Dxv).*M2 + ϵ*μ*Dz.*M1./J)
 
-			U[:,2] .= -∂ₓ .* U[:,1] - ϵ* Π⅔ .* ∂ₓ .* fft( Dphi.*M2 + 1/2 .*(Dphi.^2 -μ*M1.^2)./J - q0*Dphi )/ν
-			U[:,1] .=  Π⅔ .* fft( (1 .+ ϵ*Dxv).*M1./J - ϵ*Dz.*M2 + ϵ*q0*Dz )/ν
+			U[2] .= -∂ₓ .* U[1] - ϵ* Π⅔ .* ∂ₓ .* fft( Dphi.*M2 + 1/2 .*(Dphi.^2 -μ*M1.^2)./J - q0*Dphi )/ν
+			U[1] .=  Π⅔ .* fft( (1 .+ ϵ*Dxv).*M1./J - ϵ*Dz.*M2 + ϵ*q0*Dz )/ν
 
 		end
 
