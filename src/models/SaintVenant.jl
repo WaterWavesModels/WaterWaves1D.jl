@@ -24,7 +24,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 2. a function `SaintVenant.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `SaintVenant.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
     - `η` is the values of surface deformation at collocation points `x`;
-    - `v` is the derivative of the trace of the velocity potential at `x`.
+    - `v` is the layer-averaged velocity (or the derivative of the trace of the velocity potential) at `x`.
 
 """
 mutable struct SaintVenant <: AbstractModel
