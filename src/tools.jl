@@ -93,17 +93,17 @@ function solution(p::Problem; T=nothing, x=nothing, interpolation = false, raw =
 	index = findfirst(p.times.ts.>=T)
 	t=p.times.ts[index]
 	if raw
-		return p.data.U[index],t
+		return (p.data.U[index]...,t)
 	end
 
-	if Symbol(typeof(p.model)) == :WaterWaves
+	if Symbol(typeof(p.model)) == :WaterWaves || (isnothing(x) && interpolation == false)
 		if !isnothing(x) || interpolation != false
 			@warn "Cannot interpolate non-regularly spaced mesh."
 		end
-		(η,v,x) = (p.model.mapfro)(p.data.U[index])
+		return (p.model.mapfro(p.data.U[index])...,t)
 
 	else
-		(η,v,y) = (p.model.mapfro)(p.data.U[index])
+		(η,v,y) = p.model.mapfro(p.data.U[index])
 		mesh=Mesh(y)
 		if isnothing(x)
 			x = y
@@ -120,8 +120,8 @@ function solution(p::Problem; T=nothing, x=nothing, interpolation = false, raw =
 			new_mesh,v = interpolate(mesh,v;n=interpolation)
 			x = new_mesh.x
 		end
+		return η,v,x,t
 	end
-	return η,v,x,t
 end
 
 """
