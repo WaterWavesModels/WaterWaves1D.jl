@@ -71,25 +71,25 @@ mutable struct SaintVenant2D <: AbstractModel
 
 		# Pre-allocate useful data
 		kx=mesh.k;ky=mesh.k;x=mesh.x;y=mesh.x;nx=mesh.N;ny=mesh.N;
-		∂y = 1im * ky' .* one.( x)
-		∂x = one.(y') .* 1im .* kx
+		∂y = 1im * ky' 
+		∂x = 1im .* kx
 		
 		if dealias == 0
 			Π⅔ 	= ones(nx,ny) # no dealiasing (Π⅔=Id)
-			Π 	= ones(nx,ny) # no dealiasing (Π⅔=Id)
+			Πx 	= ones(nx,1) # no dealiasing (Π⅔=Id)
+			Πy 	= ones(1,ny) # no dealiasing (Π⅔=Id)
 		else
 			K = (mesh.kmax-mesh.kmin)/(3*dealias)
-			Π⅔ 	= (abs.(ky) .<= K)'.*(abs.(kx) .<= K) # Dealiasing low-pass filter
+			Π⅔ 	= (abs.(ky') .<= K).*(abs.(kx) .<= K) # Dealiasing low-pass filter
 			if smooth ==0
-				Px 	= abs.(kx) .<= K # Dealiasing low-pass filter
-				Py 	= abs.(ky) .<= K # Dealiasing low-pass filter
+				Πx 	= abs.(kx) .<= K # Dealiasing low-pass filter
+				Πy 	= abs.(ky') .<= K # Dealiasing low-pass filter
 			else
-				Px  = max.( 0 , min.( 1 , 2/smooth*( 1 .-abs.(kx)/K) )).^2	
-				Py  = max.( 0 , min.( 1 , 2/smooth*( 1 .-abs.(ky)/K) )).^2	
+				Πx  = max.( 0 , min.( 1 , 2/smooth*( 1 .-abs.(kx)/K) )).^2	
+				Πy  = max.( 0 , min.( 1 , 2/smooth*( 1 .-abs.(ky')/K) )).^2	
 			end
 			#P   = min.(( abs.(mesh.k) .<= K).*( (-abs.(mesh.k) .+ K)*dealias/mesh.dk ),1)	
 			#P  =min.(( abs.(mesh.k) .<= K).*( (-abs.(mesh.k) .+ K)*dealias/mesh.dk .+1/2 ),1)	
-			Π = Py'.*Px		
 		end
 
 		η = zeros(Float64, (nx,ny))
@@ -109,14 +109,14 @@ mutable struct SaintVenant2D <: AbstractModel
 			vx .= real(ifft(fftvx))
 			vy .= real(ifft(fftvy))
 
-			U[1] .= -∂x.*( fftvx .+ ϵ * Π.* fft( η .* vx) ) +
-						-∂y.*( fftvy .+ ϵ * Π.* fft( η .* vy) )
+			U[1] .= -∂x.*( fftvx .+ ϵ * Πx.*Πy.* fft( η .* vx) ) +
+						-∂y.*( fftvy .+ ϵ * Πx.*Πy.* fft( η .* vy) )
 			if hamiltonian
-				U[2] .= -∂x.*( fftη .+ ϵ/2 * Π.* fft( vx.^2+vy.^2 ) )
-				U[3] .= -∂y.*( fftη .+ ϵ/2 * Π.* fft( vx.^2+vy.^2 ) )
+				U[2] .= -∂x.*( fftη .+ ϵ/2 * Πx.*Πy.* fft( vx.^2+vy.^2 ) )
+				U[3] .= -∂y.*( fftη .+ ϵ/2 * Πx.*Πy.* fft( vx.^2+vy.^2 ) )
 			else
-				U[2] .= -∂x.*( fftη ) .- ϵ * Π.* fft( vx.* ifft(∂x.*fftvx) + vy.* ifft(∂y.*fftvx) )
-				U[3] .= -∂y.*( fftη ) .- ϵ * Π.* fft( vx.* ifft(∂x.*fftvy) + vy.* ifft(∂y.*fftvy) )
+				U[2] .= -∂x.*( fftη ) .- ϵ * Πx.*Πy.* fft( vx.* ifft(∂x.*fftvx) + vy.* ifft(∂y.*fftvx) )
+				U[3] .= -∂y.*( fftη ) .- ϵ * Πx.*Πy.* fft( vx.* ifft(∂x.*fftvy) + vy.* ifft(∂y.*fftvy) )
 			end		
 			for u in U u[ abs.(u).< ktol ].=0 end
 		end
@@ -132,12 +132,13 @@ mutable struct SaintVenant2D <: AbstractModel
 		end
 
 		# Reconstruct physical variables from raw data
-		# Return `(η,v,x)`, where
+		# Return `(η,vx,vy,x,y)`, where
 		# - `η` is the surface deformation;
-		# - `v` is the derivative of the trace of the velocity potential;
-		# - `x` is the vector of collocation points
+		# - `vx` is the horizontal velocity field;
+		# - `vy` is the horizontal velocity field;
+		# - `(x,y)` is the matrix of collocation points
 		function mapfro(U)
-			real(ifft(U[:,:,1])),real(ifft(U[:,:,2])),real(ifft(U[:,:,3])),x,y
+			real(ifft(U[1])),real(ifft(U[2])),real(ifft(U[3])),x,y
 		end
 
 		new(label, f!, mapto, mapfro, info)
@@ -148,6 +149,9 @@ end
 	SaintVenant_fast(param;kwargs)
 
 Same as `SaintVenant`, but faster.
+
+If the optional argument `large_data` is set to `true` (default is `false`), then the standard fft,ifft functions are used.
+This may be faster, while using more allocations.
 """
 mutable struct SaintVenant2D_fast <: AbstractModel
 
@@ -162,6 +166,7 @@ mutable struct SaintVenant2D_fast <: AbstractModel
 						dealias=0,ktol=0,
 						smooth=false,
 						hamiltonian=false,
+						large_data=false,
 						label="Saint-Venant"
 						)
 
@@ -194,60 +199,75 @@ mutable struct SaintVenant2D_fast <: AbstractModel
 		# Pre-allocate useful data
 		kx=mesh.k;ky=mesh.k;x=mesh.x;y=mesh.x;nx=mesh.N;ny=mesh.N;
 		
-		if dealias == 0
-			Π⅔ 	= ones(nx,ny) # no dealiasing (Π⅔=Id)
-			Π 	= ones(nx,ny) # no dealiasing (Π⅔=Id)
+		if dealias == 0 # no dealiasing (Π⅔=Id)
+			Πx⅔ = ones(nx,1) 
+			Πy⅔ = ones(1,ny)
+			Πx 	= ones(nx,1) 
+			Πy 	= ones(1,ny) 
+
 		else
+			# Dealiasing low-pass filter
 			K = (mesh.kmax-mesh.kmin)/(3*dealias)
-			Π⅔ 	= (abs.(ky) .<= K)'.*(abs.(kx) .<= K) # Dealiasing low-pass filter
+			Πx⅔ 	= abs.(kx) .<= K 
+			Πy⅔ 	= abs.(ky') .<= K 
+			# Smooth or sharp low-pass filter
 			if smooth ==0
-				Px 	= abs.(kx) .<= K # Dealiasing low-pass filter
-				Py 	= abs.(ky) .<= K # Dealiasing low-pass filter
+				Πx 	= abs.(kx) .<= K 
+				Πy 	= abs.(ky') .<= K 
 			else
-				Px  = max.( 0 , min.( 1 , 2/smooth*( 1 .-abs.(kx)/K) )).^2	
-				Py  = max.( 0 , min.( 1 , 2/smooth*( 1 .-abs.(ky)/K) )).^2	
+				Πx  = max.( 0 , min.( 1 , 2/smooth*( 1 .-abs.(kx)/K) )).^2	
+				Πy  = max.( 0 , min.( 1 , 2/smooth*( 1 .-abs.(ky')/K) )).^2	
 			end
-			#P   = min.(( abs.(mesh.k) .<= K).*( (-abs.(mesh.k) .+ K)*dealias/mesh.dk ),1)	
-			#P  =min.(( abs.(mesh.k) .<= K).*( (-abs.(mesh.k) .+ K)*dealias/mesh.dk .+1/2 ),1)	
-			Π = Py'.*Px		
 		end
-		
-    	f  = zeros(ComplexF64,(nx,ny))
-    	f̂  = similar(f)
-    	fᵗ = zeros(ComplexF64,(ny,nx))
-    	f̂ᵗ = similar(fᵗ)
 
     
-    	FFTW.set_num_threads(4)
-    	Px = plan_fft(f,  1, flags=FFTW.PATIENT)    
-    	Py = plan_fft(fᵗ, 1, flags=FFTW.PATIENT)
-		P2 = plan_fft(f,  2, flags=FFTW.PATIENT)    
-
-    
-		η = zeros(Float64, (nx,ny))
-        vx = zeros(Float64, (nx,ny))
-		vy = zeros(Float64, (nx,ny))
+		η = zeros(Complex{Float64}, (nx,ny))
+        vx = zeros(Complex{Float64}, (nx,ny))
+		vy = zeros(Complex{Float64}, (nx,ny))
 		fftη = zeros(Complex{Float64}, (nx,ny))
         fftvx = zeros(Complex{Float64}, (nx,ny))
 		fftvy = zeros(Complex{Float64}, (nx,ny))
-		I = zeros(Complex{Float64}, mesh.N)
+		Ix = similar(fftη)
+		Iy = similar(fftη)
+		I = similar(fftη)
+		Jx = similar(fftη)
+		Jy = similar(fftη)
 
-		ϵΠ=ϵ*Π
-		∂=-∂ₓ
+		ϵΠx=(√ϵ)*Πx
+		ϵΠy=(√ϵ)*Πy
+		∂y = -1im * ky'
+		∂x = -1im * kx
 
-		function my_ifft!(fft,f,fᵗ,gᵗ)
-			ldiv!(f, Px, fft )
-			transpose!(fᵗ,f)
-			ldiv!(gᵗ, Py, fᵗ )
-			transpose!(fft,gᵗ)
+		FFTW.set_num_threads(4)
+    	Px = plan_fft(η,  1)#, flags=FFTW.PATIENT)    
+    	#Py = plan_fft(fᵗ, 1, flags=FFTW.PATIENT)
+		Py = plan_fft(η,  2)#, flags=FFTW.PATIENT)    
+		iPx = plan_ifft(η,  1)#, flags=FFTW.PATIENT)    
+    	#Py = plan_ifft(fᵗ, 1, flags=FFTW.PATIENT)
+		iPy = plan_ifft(η,  2)#, flags=FFTW.PATIENT)    
+
+
+		function my_ifft!(f,f̂,cache;large_data=large_data)
+			
+			if large_data
+				f.=ifft(f̂)
+			else
+				mul!(cache, iPx, f̂ )
+				mul!(f, iPy, cache )
+				#ldiv!(cache, Px, f̂ )
+				#ldiv!(f, Py, cache )
+
+			end
 		end
+		function my_fft!(f̂,f,cache;large_data=large_data)
+			if large_data
+				f̂.=fft(f)
+			else
+				mul!(cache, Px, f )
+				mul!(f̂, Py, cache )
 
-		function my_ifft2!(fft,f)
-			ldiv!(f, Px, fft )
-			ldiv!(fft, P2, f )
+			end
 		end
-
-
 
 		# Evolution equations are ∂t U = f(U)
 		function f!(U)
@@ -255,48 +275,115 @@ mutable struct SaintVenant2D_fast <: AbstractModel
 			fftvx .= U[2]
 			fftvy .= U[3]
 
-			# TO DO Complete Saint-Venant using
-			# https://pnavaro.github.io/math-julia/diffeq/rotation-with-fft.html
+			my_ifft!(η,fftη,I)
+			my_ifft!(vx,fftvx,I)
+			my_ifft!(vy,fftvy,I)
 
-			ldiv!(η, Px, fftη )
-			ldiv!(v, Px, fftv )
+			if hamiltonian
+				Jx.=vx
+				Jx.^=2
+				Jy.=vy
+				Jy.^=2
+				Jx.+=Jy
+				Jx./=2
+				my_fft!(I,Jx,Ix)  # I = 1/2(vx^2+vy^2) in Fourier space
 
+				I.*=ϵΠx
+				I.*=ϵΠy
+				I.+=fftη
 
-			η.*=v
-			mul!(I, Px, η)
-			I.*=ϵΠ
-			fftv.+=I
-			fftv.*=∂
+				U[2] .=I
+				U[2].*=∂x
 
-			U[1] .= fftv
+				U[3] .=I
+				U[3].*=∂y
 
-			v.*=v
-			v./=2
-			mul!(I, Px, v)
-			I.*=ϵΠ
-			fftη.+=I
-			fftη.*=∂
+			else
+				Jx.=fftvx
+				Jx.*=∂x
+				my_ifft!(Ix,Jx,I)
+				Ix.*=vx
 
-			U[2] .= fftη
+				Jy.=fftvx
+				Jy.*=∂y
+				my_ifft!(Iy,Jy,I)
+				Iy.*=vy 
+
+				Ix.+=Iy
+				my_fft!(I,Ix,Iy)
+
+				I.*=ϵΠx
+				I.*=ϵΠy
+				
+				U[2] .= fftη
+				U[2].*=∂x
+				U[2].+=I
+
+				Jx.=fftvy
+				Jx.*=∂x
+				my_ifft!(Ix,Jx,I)
+				Ix.*=vx
+
+				Jy.=fftvy
+				Jy.*=∂y
+				my_ifft!(Iy,Jy,I)
+				Iy.*=vy 
+
+				Ix.+=Iy
+				my_fft!(I,Ix,Iy)
+
+				I.*=ϵΠx
+				I.*=ϵΠy
+				
+				U[3] .= fftη
+				U[3].*=∂y
+				U[3].+=I
+			end
+
+			vx.*=η
+			my_fft!(Ix,vx,I)
+			Ix.*=ϵΠx
+			Ix.*=ϵΠy
+			fftvx.+=Ix
+			fftvx.*=∂x
+			
+
+			vy.*=η
+			my_fft!(Iy,vy,I)
+			Iy.*=ϵΠy
+			Iy.*=ϵΠx
+			fftvy.+=Iy
+			fftvy.*=∂y
+			
+			fftvx.+=fftvy
+			U[1] .= fftvx
+
 		end
 
 		# Build raw data from physical data.
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
+		# Build raw data from physical data.
+		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
-			U = [Π⅔.* fft(data.η(x)), Π⅔.*fft(data.v(x))]
+			#U = cat(Π⅔.* fft(data.η(x,y)), Π⅔.*fft(data.vx(x,y)), Π⅔.*fft(data.vy(x,y)),dims=3)
+			U = [Πx⅔.*Πy⅔.* fft(data.η(x,y)), Πx⅔.*Πy⅔.*fft(data.vx(x,y)), Πx⅔.*Πy⅔.*fft(data.vy(x,y))]
+
 			for u in U u[ abs.(u).< ktol ].=0 end
 			return U
 		end
 
 		# Reconstruct physical variables from raw data
-		# Return `(η,v,x)`, where
+		# Return `(η,vx,vy,x,y)`, where
 		# - `η` is the surface deformation;
-		# - `v` is the derivative of the trace of the velocity potential;
-		# - `x` is the vector of collocation points
+		# - `vx` is the horizontal velocity field;
+		# - `vy` is the horizontal velocity field;
+		# - `(x,y)` is the matrix of collocation points
 		function mapfro(U)
-			real(ifft(U[1])),real(ifft(U[2])),mesh.x
+			real(ifft(U[1])),real(ifft(U[2])),real(ifft(U[3])),x,y
 		end
+
 
 		new(label, f!, mapto, mapfro, info)
     end
 end
+
