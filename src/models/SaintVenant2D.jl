@@ -478,14 +478,15 @@ struct TestSaintVenant2D <: AbstractModel
 
         FFTW.set_num_threads(4)
 
-        fw = plan_fft(η)#, flags=FFTW.PATIENT)    
-        bw = plan_ifft(η)#, flags=FFTW.PATIENT)    
+        fw = plan_fft(η)
+        bw = plan_ifft(η)
 
         my_ifft!(f, f̂) = mul!(f, bw, f̂)
         my_fft!(f̂, f) = mul!(f̂, fw, f)
 
         # Evolution equations are ∂t U = f(U)
         function f!(U)
+
             fftη .= U[1]
             fftvx .= U[2]
             fftvy .= U[3]
