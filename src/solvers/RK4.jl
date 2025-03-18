@@ -208,37 +208,34 @@ struct TestRK4 <: TimeSolver
 
 end
 
-function step!(s :: TestRK4,
-               m :: TestSaintVenant2D,
-               U  ,
-               dt )
+function step!(s  :: TestRK4,
+                m :: TestSaintVenant2D,
+                U  ,
+                dt )
 
-    u = VectorOfArray(U)
-    u1 = VectorOfArray(s.U1)
-    du = VectorOfArray(s.dU)
 
-    u1 .= u
-    m.f!( u1 )
-    du .= u1
-
-    u1 .= u .+ dt/2 .* u1 
-    m.f!( u1 )
-
-    du .+= 2 .* u1 
-
-    u1 .= u .+ dt/2 .* u1 
-
-    m.f!( u1 )
-
-    du .+= 2 .* u1 
-
-    u1 .= u .+ dt .* u1 
-
+    [u1 .= u for (u1,u) in zip(s.U1,U)]
     m.f!( s.U1 )
+    [du .= u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    du .+= u1 
+    [u1 .*= dt/2 for u1 in s.U1]
+    [u1 .+= u for (u1,u) in zip(s.U1,U)]
+    m.f!( s.U1 )
+    [u1 .*=2 for u1 in s.U1]
+    [du .+= u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    u .+= dt/6 .* du 
+    [u1 .*= dt/4 for u1 in s.U1]
+    [u1 .+= u for (u1,u) in zip(s.U1,U)]
+    m.f!( s.U1 )
+    [u1.*=2 for u1 in s.U1]
+    [du .+= u1 for (du,u1) in zip(s.dU,s.U1)]
+
+    [u1 .*= dt/2 for u1 in s.U1]
+    [u1 .+= u for (u1,u) in zip(s.U1,U)]
+    m.f!( s.U1 )
+    [du .+= u1 for (du,u1) in zip(s.dU,s.U1)]
+
+    [du .*=dt/6 for du in s.dU]
+    [u .+= du for (u,du) in zip(U,s.dU)]
 
 end
-
