@@ -45,20 +45,6 @@ mutable struct Problem
         U = model.mapto(initial)
         data  = Data(U)
 
-        #try
-        #    mesh  = Mesh(param)
-        #catch
-        #    η,v,x = model.mapro(U)
-        #    mesh = Mesh(x)
-        #end
-
-        # A basic check
-        try
-            step!(solver, model, deepcopy(last(data.U)), 0)
-        catch
-            @warn "The model and the solver are incompatible. `solve!` will not work."
-        end
-
         new(model, initial, solver, times, data, label)
 
     end
