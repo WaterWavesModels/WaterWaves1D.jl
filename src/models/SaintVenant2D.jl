@@ -477,20 +477,12 @@ struct TestSaintVenant2D <: AbstractModel
         ∂x = -1im * kx
 
         FFTW.set_num_threads(4)
-        Px = plan_fft(η, 1)#, flags=FFTW.PATIENT)    
-        #Py = plan_fft(fᵗ, 1, flags=FFTW.PATIENT)
-        Py = plan_fft(η, 2)#, flags=FFTW.PATIENT)    
-        iPx = plan_ifft(η, 1)#, flags=FFTW.PATIENT)    
-        #Py = plan_ifft(fᵗ, 1, flags=FFTW.PATIENT)
-        iPy = plan_ifft(η, 2)#, flags=FFTW.PATIENT)    
 
         fw = plan_fft(η)#, flags=FFTW.PATIENT)    
         bw = plan_ifft(η)#, flags=FFTW.PATIENT)    
 
-
-        my_ifft!(f, f̂, cache) = mul!(f, bw, f̂ )
-
-        my_fft!(f̂, f, cache) = mul!(f̂, fw, f)
+        my_ifft!(f, f̂) = mul!(f, bw, f̂)
+        my_fft!(f̂, f) = mul!(f̂, fw, f)
 
         # Evolution equations are ∂t U = f(U)
         function f!(U)
@@ -498,52 +490,52 @@ struct TestSaintVenant2D <: AbstractModel
             fftvx .= U[2]
             fftvy .= U[3]
 
-            my_ifft!(η, fftη, I)
-            my_ifft!(vx, fftvx, I)
-            my_ifft!(vy, fftvy, I)
+            my_ifft!(η, fftη)
+            my_ifft!(vx, fftvx)
+            my_ifft!(vy, fftvy)
 
-                Jx .= fftvx
-                Jx .*= ∂x
-                my_ifft!(Ix, Jx, I)
-                Ix .*= vx
+            Jx .= fftvx
+            Jx .*= ∂x
+            my_ifft!(Ix, Jx)
+            Ix .*= vx
 
-                Jy .= fftvx
-                Jy .*= ∂y
-                my_ifft!(Iy, Jy, I)
-                Iy .*= vy
+            Jy .= fftvx
+            Jy .*= ∂y
+            my_ifft!(Iy, Jy)
+            Iy .*= vy
 
-                Ix .+= Iy
-                my_fft!(I, Ix, Iy)
+            Ix .+= Iy
+            my_fft!(I, Ix)
 
-                I .*= ϵΠx
-                I .*= ϵΠy
+            I .*= ϵΠx
+            I .*= ϵΠy
 
-                U[2] .= fftη
-                U[2] .*= ∂x
-                U[2] .+= I
+            U[2] .= fftη
+            U[2] .*= ∂x
+            U[2] .+= I
 
-                Jx .= fftvy
-                Jx .*= ∂x
-                my_ifft!(Ix, Jx, I)
-                Ix .*= vx
+            Jx .= fftvy
+            Jx .*= ∂x
+            my_ifft!(Ix, Jx)
+            Ix .*= vx
 
-                Jy .= fftvy
-                Jy .*= ∂y
-                my_ifft!(Iy, Jy, I)
-                Iy .*= vy
+            Jy .= fftvy
+            Jy .*= ∂y
+            my_ifft!(Iy, Jy)
+            Iy .*= vy
 
-                Ix .+= Iy
-                my_fft!(I, Ix, Iy)
+            Ix .+= Iy
+            my_fft!(I, Ix)
 
-                I .*= ϵΠx
-                I .*= ϵΠy
+            I .*= ϵΠx
+            I .*= ϵΠy
 
-                U[3] .= fftη
-                U[3] .*= ∂y
-                U[3] .+= I
+            U[3] .= fftη
+            U[3] .*= ∂y
+            U[3] .+= I
 
             vx .*= η
-            my_fft!(Ix, vx, I)
+            my_fft!(Ix, vx)
             Ix .*= ϵΠx
             Ix .*= ϵΠy
             fftvx .+= Ix
@@ -551,7 +543,7 @@ struct TestSaintVenant2D <: AbstractModel
 
 
             vy .*= η
-            my_fft!(Iy, vy, I)
+            my_fft!(Iy, vy)
             Iy .*= ϵΠy
             Iy .*= ϵΠx
             fftvy .+= Iy

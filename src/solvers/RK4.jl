@@ -214,10 +214,9 @@ end
 
 
 function step!(s  :: TestRK4,
-                m :: AbstractModel,
-                U  ,
-                dt )
-
+               m :: AbstractModel,
+               U  ,
+               dt )
 
     u = VectorOfArray(U)
     u1 = VectorOfArray(s.U1)
