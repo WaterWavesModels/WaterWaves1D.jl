@@ -476,7 +476,7 @@ struct TestSaintVenant2D <: AbstractModel
         ∂y = -1im * ky'
         ∂x = -1im * kx
 
-FFTW.set_num_threads(4)
+        FFTW.set_num_threads(4)
         Px = plan_fft(η, 1)#, flags=FFTW.PATIENT)    
         #Py = plan_fft(fᵗ, 1, flags=FFTW.PATIENT)
         Py = plan_fft(η, 2)#, flags=FFTW.PATIENT)    
@@ -484,19 +484,13 @@ FFTW.set_num_threads(4)
         #Py = plan_ifft(fᵗ, 1, flags=FFTW.PATIENT)
         iPy = plan_ifft(η, 2)#, flags=FFTW.PATIENT)    
 
+        fw = plan_fft(η)#, flags=FFTW.PATIENT)    
+        bw = plan_ifft(η)#, flags=FFTW.PATIENT)    
 
-        function my_ifft!(f, f̂, cache)
 
-                mul!(cache, iPx, f̂)
-                mul!(f, iPy, cache)
-                #ldiv!(cache, Px, f̂ )
-                #ldiv!(f, Py, cache )
+        my_ifft!(f, f̂, cache) = mul!(f, bw, f̂ )
 
-        end
-        function my_fft!(f̂, f, cache)
-                mul!(cache, Px, f)
-                mul!(f̂, Py, cache)
-        end
+        my_fft!(f̂, f, cache) = mul!(f̂, fw, f)
 
         # Evolution equations are ∂t U = f(U)
         function f!(U)
