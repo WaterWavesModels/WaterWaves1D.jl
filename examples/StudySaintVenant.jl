@@ -3,7 +3,7 @@
 # the work of V. Duchêne and J. Marstrander
 # on the numerical discretization of quasilinear systems
 # #
-export IntegrateSV,Figure
+export IntegrateSV,Convergence
 using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
 #using JLD #(uncomment if using @save)
 
@@ -50,6 +50,9 @@ function IntegrateSV(;init=1,α=1.5,M=nothing,h₀=1/2,v₀=2,ϵ=1,L=π,N=2^9,T=
 	elseif init == 2
 		if isnothing(M) M=(N÷3) end
 		init = Init(x->(h₀-1)*cos.(x), x->2*sin.(x).+sin.(M*x)/M^2)
+	elseif init == 3
+		if isnothing(M) M=(N÷3) end
+		init = Init(x->(h₀-1)*cos.(x).-sin.(M*x)/M^2 .+cos.((M-1)*x)/M^2, x->2*sin.(x).+sin.(M*x)/M^2 .-cos.((M-1)*x)/M^2)
 	else
 		@error "argument init must be 1 or 2"
 	end
@@ -144,9 +147,12 @@ end
 plot_font = "Computer Modern"
 default(fontfamily=plot_font)
 
-#--- Experiment 1 : heap, sharp low-pass filter
+#--- Experiment 1 : heap of water, sharp low-pass filter
+# Solve the problems, save the errors and the reference solution
 reference_problem,E0,E1=Convergence(1;smooth=false)	
+# Extract initial data of the reference problem
 η0,v0,x=reference_problem.model.mapfro(reference_problem.data.U[1])
+# Plot initial data
 Fig1a=plot(x,[η0 v0],label=["\$\\eta^0\$" "\$u^0\$"],xlabel="\$x\$")
 savefig(Fig1a,"Fig1a.pdf");savefig(Fig1a,"Fig1a.svg");
 
@@ -156,6 +162,7 @@ savefig(Fig1a,"Fig1a.pdf");savefig(Fig1a,"Fig1a.svg");
 # end
 # gif(anim, "anim1.gif", fps = 15)
 
+# Plot convergence rates
 Fig1b=plot(;xlabel="\$N\$",axis=:log)
 Ns=2 .^(6:14);
 scatter!(Fig1b,Ns,E1,label="\$E_1\$",color=1)
@@ -165,8 +172,10 @@ plot!(Fig1b,Ns,Ns.^(-2),label="",color=2)
 savefig(Fig1b,"Fig1b.pdf");savefig(Fig1b,"Fig1b.svg");
 
 #--- Experiment 2 : heap, smooth low-pass filter
+# Solve the problems, save the errors and the reference solution
 reference_problem,E0_smooth,E1_smooth=Convergence(1;smooth=true)	
 
+# Plot convergence rates
 Fig2=plot(;xlabel="\$N\$",axis=:log)
 Ns=2 .^(6:14)
 scatter!(Fig2,Ns,E1,label="\$E_1\$, sharp low-pass filter",color=1)
@@ -186,10 +195,13 @@ round.(log2.(E0_smooth[1:end-1]./E0_smooth[2:end]),digits=2)
 round.(log2.(E1_smooth[1:end-1]./E1_smooth[2:end]),digits=2)
 
 #--- Experiment 3 : high Fourier mode, sharp low-pass filter
+# Solve the problems, save the errors and the reference solution
 reference_problem,E0,E1=Convergence(2;smooth=false)	
 
+# Extract initial data of the first problem
 η0,v0,x=reference_problem.model.mapfro(reference_problem.data.U[1])
 
+# Plot initial data
 Fig3a=plot(x,[η0 v0],label=["\$\\eta^0\$" "\$u^0\$"],xlabel="\$x\$")
 plot!(x,v0.-2*sin.(x),
     xlim=(0,π),#ylim=(2-1e-2,2+1e-2),
@@ -208,6 +220,7 @@ savefig(Fig3a,"Fig3a.pdf");savefig(Fig3a,"Fig3a.svg");
 # end
 # gif(anim, "anim3.gif", fps = 15)
 
+# Plot convergence rates
 Fig3b=plot(;xlabel="\$N\$",axis=:log)
 Ns=2 .^(6:14);
 scatter!(Fig3b,Ns,E1[end:-1:1],label="\$E_1\$",color=1)
@@ -217,10 +230,10 @@ plot!(Fig3b,Ns,Ns.^(-2),label="",color=2)
 savefig(Fig3b,"Fig3b.pdf");savefig(Fig1b,"Fig3b.svg");
 
 
-# Some experiments to play around experiment 3.
+# Some experiments to play around experiment 3: sharp cut-off vs a reference solution
 n=10
-p = IntegrateSV(init=2,h₀=0.5,v₀=2,ϵ=1,L=π,N=2^n,T=0.05,dt = 1e-5,dealias=true,smooth=smooth,Ns=1,label="N=2^$n")
-reference_problem=IntegrateSV(init=2,M=(2^n÷3),h₀=0.5,v₀=2,ϵ=1,L=π,N=2^12,T=0.05,dt = 1e-5,dealias=true,smooth=smooth,Ns=1,label="N=2^15")
+p = IntegrateSV(init=2,h₀=0.5,v₀=2,ϵ=1,L=π,N=2^n,T=0.05,dt = 1e-5,dealias=true,smooth=false,Ns=1,label="N=2^$n")
+reference_problem=IntegrateSV(init=2,M=(2^n÷3),h₀=0.5,v₀=2,ϵ=1,L=π,N=2^12,T=0.05,dt = 1e-5,dealias=true,smooth=false,Ns=1,label="N=2^15")
 plot(p,T=0,var=:fourier_velocity)
 plot!(reference_problem,T=0,var=:fourier_velocity)
 xlims!(-5,5)
@@ -238,21 +251,25 @@ plot!(reference_problem;var=[:surface :velocity :fourier :fourier_velocity])
 ∂=1im*Mesh(x).k
 diff(η;n=1)=real.(ifft(∂.^n.*fft(η)))
 
-plot(x,diff(v;n=2),label="sharp")
+plot(x,diff(v;n=2),label="2^$n")
 
 ∂=1im*Mesh(xref).k
 diff(η;n=1)=real.(ifft(∂.^n.*fft(η)))
-plot!(xref,diff(vref;n=2),label="sharp")
+plot!(xref,diff(vref;n=2),label="2^15")
 
 
 #--- Experiment 4 : instability in zero-depth situation
+# Solve problem with vanishing depth and  smooth cut-off
 pb_smooth=IntegrateSV(init=2,h₀=0,v₀=2,ϵ=1,L=π,N=2^12,T=0.1,dt = 1e-5,dealias=true,smooth=true,Ns=1,label="smooth")
-pb_sharp=IntegrateSV(init=2,h₀=0,v₀=2,ϵ=1,L=π,N=2^12,T=0.1,dt = 1e-5,dealias=true,smooth=smooth,Ns=1,label="sharp")
+# Solve problem with vanishing depth and  smooth cut-off
+pb_sharp=IntegrateSV(init=2,h₀=0,v₀=2,ϵ=1,L=π,N=2^12,T=0.1,dt = 1e-5,dealias=true,smooth=false,Ns=1,label="sharp")
+
+# Plot solutions
 Fig4a=plot(pb_sharp,var=[:surface :velocity :fourier_velocity])
 plot!(pb_smooth,var=[:surface :velocity :fourier_velocity])
 savefig(Fig4a,"Fig4a.pdf");savefig(Fig4a,"Fig4a.svg");
 
-
+# Plot second derivative
 η,v,x=solution(pb_sharp)
 ∂=1im*Mesh(x).k
 diff(η;n=1)=real.(ifft(∂.^n.*fft(η)))
@@ -268,4 +285,32 @@ savefig(Fig4b,"Fig4b.pdf");savefig(Fig4b,"Fig4b.svg");
 
 norm(diff(v;n=2))./norm(diff(v0;n=2))
 norm(diff(vs;n=2))./norm(diff(v0;n=2))
+
+
+#--- Experiment 5 : instability ?
+pb_ref=IntegrateSV(init=2,h₀=0.5,v₀=2,ϵ=1,L=π,N=2^13,T=0.1,dt = 1e-5,dealias=true,smooth=false,Ns=1,label="ref")
+pb_ins=IntegrateSV(init=3,h₀=0.5,v₀=2,ϵ=1,L=π,N=2^13,T=0.1,dt = 1e-5,dealias=true,smooth=false,Ns=1,label="ins")
+Fig5a=plot(pb_ref,var=[:surface :velocity :fourier_velocity])
+plot!(pb_ins,var=[:surface :velocity :fourier_velocity])
+#savefig(Fig4a,"Fig4a.pdf");savefig(Fig4a,"Fig4a.svg");
+
+
+η,v,x=solution(pb_ref)
+∂=1im*Mesh(x).k;
+diff(η;n=1)=real.(ifft(∂.^n.*fft(η)))
+
+Fig4b=plot(x,diff(v;n=2),label="ref")
+
+ηs,vs,=solution(pb_ins)
+plot!(x,diff(ηs;n=2),label="ins")
+title!("\$\\partial_x^2v\$")
+xlabel!("\$x\$")
+savefig(Fig4b,"Fig4b.pdf");savefig(Fig4b,"Fig4b.svg");
+
+η0,v0,x=solution(pb_ins;T=0)
+
+norm(diff(v;n=2))./norm(diff(v0;n=2))
+norm(diff(vs;n=2))./norm(diff(v0;n=2))
+norm(diff(ηs;n=2))./norm(diff(η0;n=2))
+
 nothing
