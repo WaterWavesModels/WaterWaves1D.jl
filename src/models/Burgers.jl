@@ -13,7 +13,7 @@ Define an object of type `AbstractModel` which is a Burgers model for three-scal
 ## Optional keyword arguments
 - `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `ktol`: tolerance of the Krasny filter (default is `0`, i.e. no filtering);
-- `dealias`: dealiasing with Orlicz rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
+- `dealias`: dealiasing with Orszag rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
 - `label`: a label for future references (default is `"Burgers");
 
 # Return values
@@ -75,16 +75,20 @@ mutable struct Burgers <: AbstractModel
 
 		if dealias == 0
 			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
+			Π 	= ones(size(k)) # no dealiasing (Π⅔=Id)
+
 		else
-			K = (mesh.kmax-mesh.kmin)/3
-            Π⅔      =min.(( abs.(k) .<= K).*(-abs.(k)/dealias.+K/dealias),1)		
+			K = (mesh.kmax-mesh.kmin)/3/dealias
+            Π⅔ 	= abs.(k) .<= K		
+			#Π  	= min.(( abs.(k) .<= K).*( (-abs.(k) .+ K)*dealias/dk ),1)	
+			Π 	= abs.(k) .<= K # Dealiasing low-pass filter
         end
 		u = zeros(Complex{Float64}, mesh.N)
 
 
 		# Evolution equations are ∂t U = f(U)
 			function f!(U)
-				U .= -ϵ/2 * Π⅔.*∂ₓ.*fft( ifft( U ).^2 )
+				U .= -ϵ/2 * Π.*∂ₓ.*fft( ifft( U ).^2 )
 				U[ abs.(U).< ktol].=0
 			end
 
@@ -92,7 +96,7 @@ mutable struct Burgers <: AbstractModel
 		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
 		function mapto(data::InitialData)
 			u .= fft(data.v(x)) 
-			u[abs.(u).< ktol ].=0
+			for u in U u[ abs.(u).< ktol ].=0 end
 			U = reshape(Π⅔.*u,length(u),1)
 			return U
 		end

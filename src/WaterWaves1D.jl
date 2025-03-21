@@ -49,6 +49,7 @@ include("models/Whitham.jl")
 include("models/relaxedGreenNaghdi.jl")
 include("models/Choi.jl")
 include("models/SaintVenant2D.jl")
+include("models/bilayerSaintVenant.jl")
 
 
 
@@ -56,6 +57,7 @@ include("solvers/Euler.jl")
 include("solvers/EulerSymp.jl")
 include("solvers/RK4.jl")
 
+# These are old versions
 include("models/SaintVenant_matrix.jl")
 include("solvers/RK4_matrix.jl")
 
