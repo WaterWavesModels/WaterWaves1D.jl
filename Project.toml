@@ -13,7 +13,9 @@ LinearMaps = "7a12625a-238d-50fd-b39a-03d52299707e"
 Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
 ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
+RecursiveArrayTools = "731186ca-8d62-57ce-b412-fbd966d074cd"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+TimerOutputs = "a759f4b9-e2f1-59dc-863e-4aeb61b1ea8f"
 
 [compat]
 Elliptic = "1"
@@ -23,7 +25,9 @@ IterativeSolvers = "0.9"
 LinearMaps = "3"
 ProgressMeter = "1"
 RecipesBase = "1"
+RecursiveArrayTools = "3.31.1"
 Statistics = "1"
+TimerOutputs = "0.5.28"
 julia = "^1.1"
 
 [extras]

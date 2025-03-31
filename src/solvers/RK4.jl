@@ -194,3 +194,60 @@ function step!(s  :: RK4_naive,
     [u .+= dt/6 .* (u1 + 2*u2 + 2*u3 + u4 ) for (u,u1,u2,u3,u4) in zip(U,U1,U2,U3,U4)]
 
 end
+
+
+using RecursiveArrayTools
+
+export TestRK4
+
+struct TestRK4 <: TimeSolver
+
+    U1 :: Vector{Matrix{ComplexF64}}
+    dU :: Vector{Matrix{ComplexF64}}
+    label :: String
+
+    function TestRK4( U :: Array; realdata=nothing )
+        new( deepcopy(U), deepcopy(U), "TestRK4")
+    end
+
+end
+
+
+function step!(s  :: TestRK4,
+               m :: AbstractModel,
+               U  ,
+               dt )
+
+    u = VectorOfArray(U)
+    u1 = VectorOfArray(s.U1)
+    du = VectorOfArray(s.dU)
+
+    u1 .= u 
+
+    m.f!( s.U1 )
+
+    du .= u1 
+
+    u1 .= u .+ dt/2 .* u1 
+
+    m.f!( s.U1 )
+
+    du .+= 2 .* u1 
+
+    u1 .= u .+ dt/2 .* u1 
+
+    m.f!( s.U1 )
+
+    du .+= 2 .* u1 
+
+    u1 .= u .+ dt .* u1 
+
+    m.f!( s.U1 )
+
+    du .+= u1 
+
+    u .+= dt/6 .* du 
+
+end
+
+
