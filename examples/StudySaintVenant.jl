@@ -46,13 +46,15 @@ function IntegrateSV(;init=1,α=1.5,M=nothing,h₀=1/2,v₀=2,ϵ=1,L=π,N=2^9,T=
 
 	mesh=Mesh(param)
 	if init == 1
-		init = Init(x->1/2*exp.(-abs.(x).^α).*exp.(-4*x.^2),x->1/2*cos.(x.+1).*exp.(-4*x.^2))
+		init = Init(x->1/2*exp.(-abs.(x).^α).*exp.(-4*x.^2),x->0*cos.(x))
 	elseif init == 2
 		if isnothing(M) M=(N÷3) end
-		init = Init(x->(h₀-1)*cos.(x), x->2*sin.(x).+sin.(M*x)/M^2)
+		init = Init(x->(h₀-1)*cos.(x), x->sin.(x).+sin.(M*x)/M^2)
 	elseif init == 3
 		if isnothing(M) M=(N÷3) end
-		init = Init(x->(h₀-1)*cos.(x).-sin.(M*x)/M^2 .+cos.((M-1)*x)/M^2, x->2*sin.(x).+sin.(M*x)/M^2 .-cos.((M-1)*x)/M^2)
+		init = Init(x->-(h₀-1)*cos.(x).-sin.(M*x)/M^2 .+cos.((M-1)*x)/M^2, x->2*sin.(x).+sin.(M*x)/M^2 .-cos.((M-1)*x)/M^2)
+	elseif init == 4
+		init = Init(x->(h₀-1)*cos.(x), x->2*sin.(x))
 	else
 		@error "argument init must be 1 or 2"
 	end
@@ -100,11 +102,11 @@ function Convergence(init;smooth=false,name=nothing,anim=false)
 	E1=Float64[]
 	
 	if init == 1
-		reference_problem=IntegrateSV(init=init,α=1.5,ϵ=1,L=π,N=2^15,T=0.05,dt = 1e-5,dealias=true,smooth=false,Ns=100,label="reference")
+		reference_problem=IntegrateSV(init=init,α=1.5,ϵ=1,L=π,N=2^15,T=0.5,dt = 1e-5,dealias=true,smooth=false,Ns=100,label="reference")
 		Uref=reference_problem.data.U[end]/2^15
 
 		for n=6:14
-			p = IntegrateSV(init=init,α=1.5,ϵ=1,L=π,N=2^n,T=0.05,dt = 1e-5,dealias=true,smooth=smooth,Ns=1,label="N=2^$n")
+			p = IntegrateSV(init=init,α=1.5,ϵ=1,L=π,N=2^n,T=0.5,dt = 1e-5,dealias=true,smooth=smooth,Ns=1,label="N=2^$n")
 			push!(problems,p)
 			η,v,x=p.model.mapfro(p.data.U[end])
 			U=[p.data.U[end][1] ; p.data.U[end][2]]/2^n
@@ -163,7 +165,7 @@ savefig(Fig1a,"Fig1a.pdf");savefig(Fig1a,"Fig1a.svg");
 # gif(anim, "anim1.gif", fps = 15)
 
 # Plot convergence rates
-Fig1b=plot(;xlabel="\$N\$",axis=:log)
+Fig1b=plot(;xlabel="\$M\$",axis=:log)
 Ns=2 .^(6:14);
 scatter!(Fig1b,Ns,E1,label="\$E_1\$",color=1)
 scatter!(Fig1b,Ns,E0,label="\$E_0\$",color=2)
@@ -176,7 +178,7 @@ savefig(Fig1b,"Fig1b.pdf");savefig(Fig1b,"Fig1b.svg");
 reference_problem,E0_smooth,E1_smooth=Convergence(1;smooth=true)	
 
 # Plot convergence rates
-Fig2=plot(;xlabel="\$N\$",axis=:log)
+Fig2=plot(;xlabel="\$M\$",axis=:log)
 Ns=2 .^(6:14)
 scatter!(Fig2,Ns,E1,label="\$E_1\$, sharp low-pass filter",color=1)
 scatter!(Fig2,Ns,E0,label="\$E_0\$, sharp low-pass filter",color=2)
@@ -220,15 +222,18 @@ savefig(Fig3a,"Fig3a.pdf");savefig(Fig3a,"Fig3a.svg");
 # end
 # gif(anim, "anim3.gif", fps = 15)
 
+reference_problem,E0_smooth,E1_smooth=Convergence(2;smooth=true)	
+
 # Plot convergence rates
-Fig3b=plot(;xlabel="\$N\$",axis=:log)
+Fig3b=plot(;xlabel="\$M\$",axis=:log,legend=:bottomleft)
 Ns=2 .^(6:14);
-scatter!(Fig3b,Ns,E1[end:-1:1],label="\$E_1\$",color=1)
-scatter!(Fig3b,Ns,E0[end:-1:1],label="\$E_0\$",color=2)
+scatter!(Fig3b,Ns,E1[end:-1:1],label="\$E_1\$, sharp low-pass filter",color=1)
+scatter!(Fig3b,Ns,E0[end:-1:1],label="\$E_0\$, sharp low-pass filter",color=2)
+scatter!(Fig3b,Ns,E1_smooth[end:-1:1],label="\$E_1\$, smooth low-pass filter",color=3)
+scatter!(Fig3b,Ns,E0_smooth[end:-1:1],label="\$E_0\$, smooth low-pass filter",color=4)
 plot!(Fig3b,Ns,Ns.^(-1),label="",color=1)
 plot!(Fig3b,Ns,Ns.^(-2),label="",color=2)
 savefig(Fig3b,"Fig3b.pdf");savefig(Fig1b,"Fig3b.svg");
-
 
 # Some experiments to play around experiment 3: sharp cut-off vs a reference solution
 n=10
@@ -277,14 +282,56 @@ diff(η;n=1)=real.(ifft(∂.^n.*fft(η)))
 Fig4b=plot(x,diff(v;n=2),label="sharp")
 ηs,vs,=solution(pb_smooth)
 plot!(x,diff(vs;n=2),label="smooth")
-title!("\$\\partial_x^2v\$")
+title!("\$\\partial_x^2v,     N = 2^{12}\$")
 xlabel!("\$x\$")
-savefig(Fig4b,"Fig4b.pdf");savefig(Fig4b,"Fig4b.svg");
+savefig(Fig4b,"Fig4b_12.pdf");savefig(Fig4b,"Fig4b_12.svg");
 
 η0,v0,x=solution(pb_sharp;T=0)
 
 norm(diff(v;n=2))./norm(diff(v0;n=2))
 norm(diff(vs;n=2))./norm(diff(v0;n=2))
+
+
+param = (
+    μ = 0.01,
+    ϵ = 0.1,
+    N = 2^9, # number of collocation points
+    L = π,# size of the mesh (-L,L)
+    T = 0.1,# final time of computation
+    dt=1e-5,  # timestep
+    Ns=1
+);
+
+
+N = 2^9;
+K = N÷3;
+
+init1D = Init(x->-1*cos.(x), x->2*sin.(x).+sin.(K*x)/K^2);
+
+
+model1D = SaintVenant_fast(param; dealias = true, smooth = false, label = "1D") 
+
+solver1D=RK4(model1D.mapto(init1D))
+
+problem1D = Problem(model1D, init1D, param;solver=solver1D)
+
+#---- Solve problems
+solve!(problem1D)
+
+
+#---- Visualization
+
+η1D,v1D,x1D = solution(problem1D;T=0.1)
+
+plot(x1D,v1D)
+
+∂=1im*Mesh(x).k
+diff(η;n=1)=real.(ifft(∂.^n.*fft(η)))
+
+plot(x1D,diff(v1D;n=2))
+
+nothing
+
 
 
 #--- Experiment 5 : instability ?
