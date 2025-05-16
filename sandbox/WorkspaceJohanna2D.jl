@@ -287,11 +287,11 @@ function IntegrateSV(;ϵ=1,L=π,N=2^9,T=0.1,dt =1e-3,dealias=1,smooth=false,Ns=n
 	end
 
 
-    #K=floor(params.N/2*2/3)-1 # If data depends on K, then the reference solution needs to be rebuilt for each value of K
-    K = 16;
-    ζ(x,y) = 0.5 .*cos.(x).*cos.(y)' .+ 0*cos.(K*y').*sin.(K*x)/K^2; 
-    ux(x,y) = 1 .* cos.(y').*sin.(x) .+ 0*cos.(K*y').*sin.(K*x)/K^2; 
-    uy(x,y) = -sin.(y').*cos.(x);
+    K=floor(params.N/2*2/3)-1 # If data depends on K, then the reference solution needs to be computed for each value of K
+    α=3/2
+    ζ(x,y) = 0.5 .*abs.(cos.(x).*cos.(y)').^α .+ 0*cos.(K*y').*sin.(K*x)/K^2; 
+    ux(x,y) = 1 .* abs.(cos.(y').*sin.(x)).^α .+ 0*cos.(K*y').*sin.(K*x)/K^2; 
+    uy(x,y) = -abs.(sin.(y').*cos.(x)).^α;
 
     init = Init2D(ζ, ux, uy);
 
@@ -309,8 +309,8 @@ function Convergence(smooth=false,hamiltonian = false)
 	E0=Float64[]
 	E1=Float64[]
 
-    Nref=2^11
-    reference_problem=IntegrateSV(L=π,N=Nref,T=0.1,dt = 1e-4,smooth=smooth,hamiltonian=hamiltonian)
+    Nref=2^10
+    reference_problem=IntegrateSV(L=π,N=Nref,T=0.1,dt = 1e-4,Ns=1,smooth=smooth,hamiltonian=hamiltonian)
     ηref,vxref, vyref,xref, yref=solution(reference_problem; T= 0.05)
     Uref=reference_problem.data.U[end]/Nref^2
     kxref = fftshift(Mesh(xref).k)
@@ -318,7 +318,7 @@ function Convergence(smooth=false,hamiltonian = false)
     Uref2 = fftshift(Uref[2])
     Uref3 = fftshift(Uref[3])
 
-    for n=6:10
+    for n=6:9
         p = IntegrateSV(L=π,N=2^n,T=0.1,dt = 1e-4,Ns=1,smooth=smooth,hamiltonian=hamiltonian)
         push!(problems,p)
         η,vx, vy,x, y=solution(p; T= 0.05)
@@ -370,7 +370,7 @@ reference_problem,E0=Convergence()
 
 # Plot convergence rates
 Fig1b=plot(;xlabel="\$N\$",axis=:log)
-Ns=2 .^(6:10);
+Ns=2 .^(6:9);
 #scatter!(Fig1b,Ns,E1,label="\$E_1\$",color=1)
 scatter!(Fig1b,Ns,E0,label="\$E_0\$",color=2)
 #plot!(Fig1b,Ns,Ns.^(-1),label="",color=1)
