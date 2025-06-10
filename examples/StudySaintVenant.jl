@@ -55,21 +55,13 @@ function IntegrateSV(;init=1,α=1.5,N=nothing,h₀=1/2,v₀=2,ϵ=1,L=π,M=2^9,T=
 
 	mesh=Mesh(param)
 	if init == 1
-		init = Init(x->1/2*exp.(-abs.(x).^α).*exp.(-4*x.^2),x->1/2*cos.(x.+1).*exp.(-4*x.^2))
+		init = Init(x->1/2*exp.(-abs.(x).^α).*exp.(-4*x.^2),x->0*cos.(x))
 	elseif init == 2
-<<<<<<< Updated upstream
-		if isnothing(M) M=(N÷3) end
-		init = Init(x->(h₀-1)*cos.(x), x->2*sin.(x).+sin.(M*x)/M^2)
-	elseif init == 3
-		if isnothing(M) M=(N÷3) end
-		init = Init(x->(h₀-1)*cos.(x).-sin.(M*x)/M^2 .+cos.((M-1)*x)/M^2, x->2*sin.(x).+sin.(M*x)/M^2 .-cos.((M-1)*x)/M^2)
-=======
 		if isnothing(N) N=(M÷3) end
 		init = Init(x->(h₀-1)*cos.(x), x->v₀ .* sin.(x).+sin.(N*x)/N^2)
 	elseif init == 3
 		f(x)=1/2*exp.(-4*x.^2)
 		init = Init(x->f(x),x->2*sqrt.(1 .+ϵ*f(x)).-2)
->>>>>>> Stashed changes
 	else
 		@error "argument init must be 1 or 2"
 	end
@@ -115,14 +107,6 @@ function Convergence(init;smooth=false,name=nothing,T=0.5)
 	E0=Float64[]		# array or relative L^2 errors
 	E1=Float64[]		# araay of relative H^1 errors
 	
-<<<<<<< Updated upstream
-	if init == 1
-		reference_problem=IntegrateSV(init=init,α=1.5,ϵ=1,L=π,N=2^15,T=0.05,dt = 1e-5,dealias=true,smooth=false,Ns=100,label="reference")
-		Uref=reference_problem.data.U[end]/2^15
-
-		for n=6:14
-			p = IntegrateSV(init=init,α=1.5,ϵ=1,L=π,N=2^n,T=0.05,dt = 1e-5,dealias=true,smooth=smooth,Ns=1,label="N=2^$n")
-=======
 	if init == 1 # initial data is a heap of water
 		# Solve the reference problem
 		reference_problem=IntegrateSV(init=init,α=1.5,ϵ=1,L=π,M=2^15,T=T,dt = 1e-5,dealias=true,smooth=false,Ns=100,label="reference")
@@ -132,7 +116,6 @@ function Convergence(init;smooth=false,name=nothing,T=0.5)
 		for n=14:-1:6
 			# Solve the problem with fewer Fourier modes
 			p = IntegrateSV(init=init,α=1.5,ϵ=1,L=π,M=2^n,T=T,dt = 1e-5,dealias=true,smooth=smooth,Ns=1,label="2M=2^$n")
->>>>>>> Stashed changes
 			push!(problems,p)
 			# Save the (Fourier modes of) last computed solution
 			U=[p.data.U[end][1] ; p.data.U[end][2]]/2^n
@@ -189,21 +172,12 @@ reference_problem,E0,E1=Convergence(1;smooth=false,T=0)
 Fig1a=plot(x,[η0 v0],label=["\$\\eta^0\$" "\$u^0\$"],xlabel="\$x\$")
 savefig(Fig1a,"Fig1a.pdf");savefig(Fig1a,"Fig1a.svg");
 # Plot convergence rates
-<<<<<<< Updated upstream
-Fig1b=plot(;xlabel="\$N\$",axis=:log)
-Ns=2 .^(6:14);
-scatter!(Fig1b,Ns,E1,label="\$E_1\$",color=1)
-scatter!(Fig1b,Ns,E0,label="\$E_0\$",color=2)
-plot!(Fig1b,Ns,Ns.^(-1),label="",color=1)
-plot!(Fig1b,Ns,Ns.^(-2),label="",color=2)
-=======
 Fig1b=plot(;xlabel="\$2M\$",axis=:log)
 n=14:-1:6;M=2 .^n;
 scatter!(Fig1b,M,E1,label="\$E_1\$",color=1)
 scatter!(Fig1b,M,E0,label="\$E_0\$",color=2)
 plot!(Fig1b,M,M.^(-1),label="",color=1)
 plot!(Fig1b,M,M.^(-2),label="",color=2)
->>>>>>> Stashed changes
 savefig(Fig1b,"Fig1b.pdf");savefig(Fig1b,"Fig1b.svg");
 end
 
@@ -217,21 +191,12 @@ reference_problem,E0,E1=Convergence(1;smooth=false)
 reference_problem,E0_smooth,E1_smooth=Convergence(1;smooth=true)	
 
 # Plot convergence rates
-<<<<<<< Updated upstream
-Fig2=plot(;xlabel="\$N\$",axis=:log)
-Ns=2 .^(6:14)
-scatter!(Fig2,Ns,E1,label="\$E_1\$, sharp low-pass filter",color=1)
-scatter!(Fig2,Ns,E0,label="\$E_0\$, sharp low-pass filter",color=2)
-scatter!(Fig2,Ns,E1_smooth,label="\$E_1\$, smooth low-pass filter",color=3)
-scatter!(Fig2,Ns,E0_smooth,label="\$E_0\$, smooth low-pass filter",color=4)
-=======
 Fig2=plot(;xlabel="\$2M\$",axis=:log)
 n=14:-1:6;M=2 .^n;
 scatter!(Fig2,M,E1,label="\$E_1\$, sharp low-pass filter",color=1)
 scatter!(Fig2,M,E0,label="\$E_0\$, sharp low-pass filter",color=2)
 scatter!(Fig2,M,E1_smooth,label="\$E_1\$, smooth low-pass filter",color=3)
 scatter!(Fig2,M,E0_smooth,label="\$E_0\$, smooth low-pass filter",color=4)
->>>>>>> Stashed changes
 
 plot!(Fig2,M,M.^(-1),label="",color=1)
 plot!(Fig2,M,M.^(-2),label="",color=2)
@@ -272,48 +237,27 @@ savefig(Fig3a,"Fig3a.pdf");savefig(Fig3a,"Fig3a.svg");
 # Solve the problems, save the errors and the reference solution
 reference_problem,E0,E1=Convergence(2;smooth=false)	
 
-<<<<<<< Updated upstream
-# Plot convergence rates
-Fig3b=plot(;xlabel="\$N\$",axis=:log)
-=======
 #--- Experiment 4 : high frequency component, smooth low-pass filter
 reference_problem,E0_smooth,E1_smooth=Convergence(2;smooth=true)	
 
 # Plot convergence rates
 Fig3b=plot(;xlabel="\$2M\$",axis=:log,legend=:bottomleft)
->>>>>>> Stashed changes
 Ns=2 .^(6:14);
-scatter!(Fig3b,Ns,E1[end:-1:1],label="\$E_1\$",color=1)
-scatter!(Fig3b,Ns,E0[end:-1:1],label="\$E_0\$",color=2)
+scatter!(Fig3b,Ns,E1[end:-1:1],label="\$E_1\$, sharp low-pass filter",color=1)
+scatter!(Fig3b,Ns,E0[end:-1:1],label="\$E_0\$, sharp low-pass filter",color=2)
+scatter!(Fig3b,Ns,E1_smooth[end:-1:1],label="\$E_1\$, smooth low-pass filter",color=3)
+scatter!(Fig3b,Ns,E0_smooth[end:-1:1],label="\$E_0\$, smooth low-pass filter",color=4)
 plot!(Fig3b,Ns,Ns.^(-1),label="",color=1)
 plot!(Fig3b,Ns,Ns.^(-2),label="",color=2)
 savefig(Fig3b,"Fig3b.pdf");savefig(Fig1b,"Fig3b.svg");
 end
 
-<<<<<<< Updated upstream
-
-# Some experiments to play around experiment 3: sharp cut-off vs a reference solution
-n=10
-p = IntegrateSV(init=2,h₀=0.5,v₀=2,ϵ=1,L=π,N=2^n,T=0.05,dt = 1e-5,dealias=true,smooth=false,Ns=1,label="N=2^$n")
-reference_problem=IntegrateSV(init=2,M=(2^n÷3),h₀=0.5,v₀=2,ϵ=1,L=π,N=2^12,T=0.05,dt = 1e-5,dealias=true,smooth=false,Ns=1,label="N=2^15")
-plot(p,T=0,var=:fourier_velocity)
-plot!(reference_problem,T=0,var=:fourier_velocity)
-xlims!(-5,5)
-η,v,x=solution(p;T=0)
-ηref,vref,xref=solution(reference_problem;T=0)
-plot(x,v.-2*sin.(x))
-plot!(xref,vref.-2*sin.(xref))
-
-plot(p;var=[:surface :velocity :fourier :fourier_velocity])
-plot!(reference_problem;var=[:surface :velocity :fourier :fourier_velocity])
-=======
 #--- Experiment 5 : instability in zero-depth situation
 function Figure4()
 # Solve problem with vanishing depth and smooth cut-off and M=2^10 modes
 pb_smooth_M10=IntegrateSV(init=2,h₀=0,v₀=2,ϵ=1,L=π,M=2^10,T=0.1,dt = 1e-5,dealias=true,smooth=true,Ns=1,label="smooth")
 # Solve problem with vanishing depth and sharp cut-off and M=2^10 modes
 pb_sharp_M10=IntegrateSV(init=2,h₀=0,v₀=2,ϵ=1,L=π,M=2^10,T=0.1,dt = 1e-5,dealias=true,smooth=false,Ns=1,label="sharp")
->>>>>>> Stashed changes
 
 # Plot solutions
 plot(pb_sharp_M10,var=[:surface :velocity :fourier_velocity])
@@ -348,14 +292,6 @@ plot!(pb_smooth_M12,var=[:surface :velocity :fourier_velocity])
 ∂=1im*Mesh(x).k
 diff(η;n=1)=real.(ifft(∂.^n.*fft(η)))
 
-<<<<<<< Updated upstream
-Fig4b=plot(x,diff(v;n=2),label="sharp")
-ηs,vs,=solution(pb_smooth)
-plot!(x,diff(vs;n=2),label="smooth")
-title!("\$\\partial_x^2v\$")
-xlabel!("\$x\$")
-savefig(Fig4b,"Fig4b.pdf");savefig(Fig4b,"Fig4b.svg");
-=======
 Fig4b=plot(x,diff(v_M12;n=2),label="sharp")
 plot!(x,diff(vs_M12;n=2),label="smooth")
 title!("\$\\partial_x^2u_N, \\quad    2M = 2^{12}\$")
@@ -413,7 +349,6 @@ function IntegrateSV2D(;N=nothing,s=2,h₀=1/2,u₀=1/2,v₀=-1/2,u₁=1,v₁=1,
 	            T  = T, dt = dt,
 				Ns = Ns )
 	end
->>>>>>> Stashed changes
 
 	mesh=Mesh(param)
 	if isnothing(N) N=(M÷3) end
@@ -430,14 +365,6 @@ function IntegrateSV2D(;N=nothing,s=2,h₀=1/2,u₀=1/2,v₀=-1/2,u₁=1,v₁=1,
 	
 	solve!( problem )
 
-<<<<<<< Updated upstream
-#--- Experiment 5 : instability ?
-pb_ref=IntegrateSV(init=2,h₀=0.5,v₀=2,ϵ=1,L=π,N=2^13,T=0.1,dt = 1e-5,dealias=true,smooth=false,Ns=1,label="ref")
-pb_ins=IntegrateSV(init=3,h₀=0.5,v₀=2,ϵ=1,L=π,N=2^13,T=0.1,dt = 1e-5,dealias=true,smooth=false,Ns=1,label="ins")
-Fig5a=plot(pb_ref,var=[:surface :velocity :fourier_velocity])
-plot!(pb_ins,var=[:surface :velocity :fourier_velocity])
-#savefig(Fig4a,"Fig4a.pdf");savefig(Fig4a,"Fig4a.svg");
-=======
 	# Check energy preservation
 	e(η,vx,vy) = 1/2* ( η.^2 .+ (1 .+ϵ*η).*(vx.^2 .+vy.^2) );
 	e(η1,vx1,vy1,η2,vx2,vy2) = 1/2* ( (η1-η2).*(η1+η2) .+ (1 .+ϵ*η2).*(vx1-vx2).*(vx1+vx2) .+ (1 .+ϵ*η2).*(vy1-vy2).*(vy1+vy2)
@@ -532,7 +459,6 @@ plot!(Fig5a,Ns,12 .*Ns.^(-2),label="",color=2)
 
 savefig(Fig5a,"Fig5a.pdf");savefig(Fig5a,"Fig5a.svg");
 
->>>>>>> Stashed changes
 
 
 #--- Hamiltonian system
