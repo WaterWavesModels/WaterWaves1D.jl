@@ -188,8 +188,9 @@ function Compute(scenario;prep=1,str=false,p=2,k=3)
         ϵ = 1,
         N = 2^10, # number of collocation points
         L = π, # size of the mesh (-L,L)
-        T = 1, # final time of computation
+        T = 0.1, # final time of computation
         dt = 0.0001,  # timestep
+        Ns=1 #times stored
         );
 
     #---- initial data
@@ -224,8 +225,8 @@ function Compute(scenario;prep=1,str=false,p=2,k=3)
         @info("different values of δ: $deltas.\na=100")
 
         for delta in deltas
-            para=merge( param,( δ = delta , a = 100) )
-            push!(pLCT , Problem(relaxedGreenNaghdi(para;str = str, prep = prep, dealias = 1),init,para) )
+            para=merge( param,( μ = delta^2 , a = 100) )
+            push!(pLCT , Problem(relaxedGreenNaghdi(para;FG = str, id = prep, dealias = 1),init,para) )
         end
 
         solve!(pLCT)
@@ -240,11 +241,12 @@ function Compute(scenario;prep=1,str=false,p=2,k=3)
             end
         end
     end
-    return N
+    return as,N
 end
 
 using Plots
-scatter(as,N[:,6,1],xaxis=:log10,yaxis=:log10)
+as,N=Compute(2;prep=1,str=false)
+scatter(as,N[9,:,1]',xaxis=:log10,yaxis=:log10)
 nothing
 # scatter(mus,NWP3,xaxis=:log10,yaxis=:log10,label=["WW vs SV" "WW vs LCT" "WW vs GN" "LCT vs GN"],legend=:bottomright,title="WP3, a = 100",xlabel="mu",ylabel="difference (elevation, in \$L^\\infty\$)")
 # plot!(mus,mus.^2,label="μ²",color=:3)

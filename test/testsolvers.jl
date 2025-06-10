@@ -37,25 +37,6 @@ solve!(pb0,verbose=false)
         @test pb.data.U == pb0.data.U
     end
 end
-@testset "RK4 solvers" begin
-    # different ways to build RK4_matrix solver
-    model_m=SaintVenant_matrix(param)
-
-    solvers = TimeSolver[]
-    push!(solvers, RK4_matrix(model_m.mapto(init)) )
-    push!(solvers, RK4_matrix(paraX) )
-    push!(solvers, RK4_matrix(paraX,2) )
-    push!(solvers, RK4_matrix(model_m) )
-    push!(solvers, RK4_matrix_naive() )
-
-    # check all RK4 solvers generate the same data
-    for solver in solvers
-        pb = Problem( model_m, init, parap;
-                    solver = solver );
-        solve!(pb,verbose=false)
-        @test pb ≈ pb0
-    end
-end
 
 #--- tests on explicit Euler solvers
 @testset "explicit Euler solver" begin

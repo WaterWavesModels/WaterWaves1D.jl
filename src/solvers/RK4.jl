@@ -1,4 +1,4 @@
-export RK4,RK4_naive,RK4_fast
+export RK4,RK4_naive
 export step!
 
 """
@@ -48,109 +48,42 @@ struct RK4 <: TimeSolver
     end
 end
 
+using RecursiveArrayTools
 
 function step!(s  :: RK4,
-                m :: AbstractModel,
-                U  ,
-                dt )
+    m :: AbstractModel,
+    U  ,
+    dt )
 
+    u = VectorOfArray(U)
+    u1 = VectorOfArray(s.U1)
+    du = VectorOfArray(s.dU)
 
-    [u1 .= u for (u,u1) in zip(U,s.U1)]
+    u1 .= u 
+
     m.f!( s.U1 )
-    [du .= u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    [u1 .= u .+ dt/2 .* u1 for (u,u1) in zip(U,s.U1)]
+    du .= u1 
+
+    u1 .= u .+ dt/2 .* u1 
+
     m.f!( s.U1 )
-    [du .+= 2 .* u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    [u1 .= u .+ dt/2 .* u1 for (u,u1) in zip(U,s.U1)]
+    du .+= 2 .* u1 
+
+    u1 .= u .+ dt/2 .* u1 
+
     m.f!( s.U1 )
-    [du .+= 2 .* u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    [u1 .= u .+ dt .* u1 for (u,u1) in zip(U,s.U1)]
+    du .+= 2 .* u1 
+
+    u1 .= u .+ dt .* u1 
+
     m.f!( s.U1 )
-    [du .+= u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    [u .+= dt/6 .* du for (u,du) in zip(U,s.dU)]
+    du .+= u1 
 
-end
-"""
-    RK4(arguments;realdata)
-
-Explicit Runge-Kutta fourth order solver.
-
-Construct an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
-
-Arguments can be either
-0. an object of type `AbstractModel`, typically the model you will solve with the solver;
-1. an `Array` which has the size of the objects that the solver will manipulate (typically a vector of `systemsize` elements of size `N` where `N` is the number of collocation points and `systemsize` the number of solved equations);
-2. a `(datasize,systemsize)` where `datasize` is the size of scalar variables (typically `N` the number of collocation points) and `datasize` (optional, by default `systemsize=2`) the number of solved equations);
-3. `(param,systemsize)` where `param` is a `NamedTuple` containing a key `N` describing the number of collocation points, and `systemsize` the number of solved equations (optional, by default `systemsize=2`).
-
-The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
-By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
-
-"""
-struct RK4_fast <: TimeSolver
-
-    U1 :: Array
-    dU :: Array
-    label :: String
-
-    function RK4_fast( U :: Array; realdata=nothing )
-        U1 = deepcopy(U)
-        dU = deepcopy(U)
-        if realdata==true
-            U1 = real.(U1);dU = real.(dU)
-        end
-        if realdata==false
-            U1 = complex.(U1);dU = complex.(dU)
-        end
-        new( U1, dU, "RK4")
-    end
-
-    function RK4_fast( model :: AbstractModel; realdata=nothing )
-        U=model.mapto(Init(x->0*x,x->0*x))
-        RK4_fast( U; realdata=realdata)
-    end
-    function RK4_fast( param::NamedTuple, systemsize=2::Int; realdata=nothing )
-        RK4_fast( [Array{Complex{Float64}}(undef,param.N) for _ in 1:systemsize]  ; realdata=realdata)
-    end
-    function RK4_fast( datasize, systemsize=2::Int; realdata=nothing )
-        RK4_fast( [Array{Complex{Float64}}(undef,datasize) for _ in 1:systemsize] ; realdata=realdata)
-    end
-end
-
-
-function step!(s  :: RK4_fast,
-                m :: AbstractModel,
-                U  ,
-                dt )
-
-
-    [u1 .= u for (u1,u) in zip(s.U1,U)]
-    m.f!( s.U1 )
-    [du .= u1 for (du,u1) in zip(s.dU,s.U1)]
-
-    [u1 .*= dt/2 for u1 in s.U1]
-    [u1 .+= u for (u1,u) in zip(s.U1,U)]
-    m.f!( s.U1 )
-    [u1 .*=2 for u1 in s.U1]
-    [du .+= u1 for (du,u1) in zip(s.dU,s.U1)]
-
-    [u1 .*= dt/4 for u1 in s.U1]
-    [u1 .+= u for (u1,u) in zip(s.U1,U)]
-    m.f!( s.U1 )
-    [u1.*=2 for u1 in s.U1]
-    [du .+= u1 for (du,u1) in zip(s.dU,s.U1)]
-
-    [u1 .*= dt/2 for u1 in s.U1]
-    [u1 .+= u for (u1,u) in zip(s.U1,U)]
-    m.f!( s.U1 )
-    [du .+= u1 for (du,u1) in zip(s.dU,s.U1)]
-
-    [du .*=dt/6 for du in s.dU]
-    [u .+= du for (u,du) in zip(U,s.dU)]
+    u .+= dt/6 .* du 
 
 end
 

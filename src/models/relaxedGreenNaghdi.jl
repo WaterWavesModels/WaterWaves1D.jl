@@ -252,7 +252,7 @@ mutable struct relaxedGreenNaghdi <: AbstractModel
 				end	
 				fftw.=-1/2*fft(hFG.*ifft(∂ₓ.*fftu))
 			end
-			U = [Π⅔ .* fftη Π⅔ .* fftu Π⅔ .* fftp Π⅔ .* fftw]
+			U = [Π⅔ .* fftη, Π⅔ .* fftu, Π⅔ .* fftp, Π⅔ .* fftw]
 			for u in U u[ abs.(u).< ktol ].=0 end
 			return U
 		end
