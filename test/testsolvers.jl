@@ -123,3 +123,39 @@ end
     @test isapprox(pb3.data.U[end] , pb1.data.U[end], rtol = order )
     @test !isapprox(pb0.data.U[end] , pb1.data.U[end] , rtol = order/4)
 end
+
+#--- tests on 2D systems
+
+# Initial data
+ζ(x,y) = 0.5 .*cos.(x).*cos.(y)';
+ux(x,y) = 0.5 .* cos.(y').*sin.(x);
+uy(x,y) = -0.5 .* sin.(y').*cos.(x);
+
+init2D = Init2D(ζ, ux, uy);
+
+# Build problems
+
+#--- model
+model2D=SaintVenant2D(param)
+
+#--- tests on RK4 solvers
+@testset "RK4 solvers for 2D problems" begin
+
+    pb0 = Problem( model2D, init2D, parap ; solver = RK4(model2D.mapto(init2D)))
+    solve!(pb0,verbose=false)
+    pb1 = Problem( model2D, init2D, parap ; solver = RK4_naive())
+    solve!(pb1,verbose=false)
+
+    @test pb0.data.U == pb1.data.U
+end
+
+#--- tests on Euler solvers
+@testset "Euler solvers for 2D problems" begin
+
+    pb0 = Problem( model2D, init2D, parap ; solver = Euler(model2D.mapto(init2D)))
+    solve!(pb0,verbose=false)
+    pb1 = Problem( model2D, init2D, parap ; solver = Euler_naive())
+    solve!(pb1,verbose=false)
+
+    @test pb0.data.U == pb1.data.U
+end

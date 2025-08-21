@@ -74,18 +74,18 @@ end
 @testset "Study: Whitham-Green-Naghdi" begin
     include("../examples/StudyWhithamGreenNaghdi.jl")
 
-    norms = (13.564148081919193, 13.564148081919193, 12.01160049359638)
+    norms = (13.564148081919193, 12.01160049359638)
 
     η,u,v,mesh = PlotSolitaryWaveWGN1(c=2,N=2^9,L=7*π,verbose=false,name=nothing) 
-    @test all((norm(η),norm(η),norm(v)) .≈ norms )
+    @test all((norm(η),norm(v)) .≈ norms )
     @test mesh == Mesh((N=2^9,L=7*π))
 
     η,u,v,mesh = PlotSolitaryWaveWGN2(c=2,N=2^9,L=7*π,verbose=false,name=nothing) 
-    @test all((norm(η),norm(η),norm(v)) .≈ norms )
+    @test all((norm(η),norm(v)) .≈ norms )
     @test mesh == Mesh((N=2^9,L=7*π))
 
     η,u,v,mesh = PlotSolitaryWaveWGN3(c=2,N=2^9,L=7*π,verbose=false,name=nothing) 
-    @test all((norm(η),norm(η),norm(v)) .≈ norms )
+    @test all((norm(η),norm(v)) .≈ norms )
     @test mesh == Mesh((N=2^9,L=7*π))
 
     Jac,Jacstar,FFT,IFFT = PlotJacobianWGN(;c=2,L=10*π,N=2^6,SGN=false,verbose=false,name=nothing)
@@ -105,5 +105,44 @@ end
     η,v=solution(pb)
     @test norm(η) ≈ 1.0808748139030515 || norm(v) ≈ 0.9929455087249658
     
+
+end
+
+@testset "Study: SaintVenant" begin
+    include("../examples/StudySaintVenant.jl")
+
+    problem1 = IntegrateSV(;init=1,α=1.5,N=nothing,h₀=nothing,v₀=nothing,ϵ=1,L=π,M=2^6,T=0.05,dt =1e-5,dealias=true,smooth=false,Ns=1)
+    η,v=solution(problem1)
+    @test all((norm(η),norm(v)) .≈ (1.1384447011432766,0.13223692570972134))
+
+
+    problem2 = IntegrateSV(;init=2,α=nothing,N=nothing,h₀=1/2,v₀=2,ϵ=1,L=π,M=2^6,T=0.05,dt =1e-5,dealias=true,smooth=true,Ns=1)
+    η,v=solution(problem2)
+    @test all((norm(η),norm(v)) .≈ (3.402895534611065, 11.157811912130184))
+
+    problem3 = IntegrateSV(;init=3,α=nothing,N=nothing,h₀=nothing,v₀=nothing,ϵ=1,L=π,M=2^6,T=0.05,dt =1e-5,dealias=false,smooth=nothing,Ns=1)
+    η,v=solution(problem3)
+    @test all((norm(η),norm(v)) .≈ (1.26323755549213, 1.1565217449137426))
+
+    problem2Da = IntegrateSV2D(; N=nothing, s=2, h₀=1/2,
+                        u₀=1/2, v₀=-1/2, u₁=1, v₁=-1,
+                        ϵ=1, L=π, M=2^5, T=0.01, dt=5e-5,
+                        dealias=true, smooth=false,
+                        hamiltonian=false, Ns=1,
+                        label="non-hamiltonian")
+
+    η,vx,vy=solution(problem2Da)
+    @test all( (norm(η),norm(vx),norm(vy)) .≈ (7.999250008281116, 7.921618162378015, 8.081581836264434) )
+
+    problem2Db = IntegrateSV2D(; N=nothing, s=2, h₀=1/2,
+                        u₀=1/2, v₀=-1/2, u₁=1, v₁=-1,
+                        ϵ=1, L=π, M=2^5, T=0.01, dt=5e-5,
+                        dealias=true, smooth=false,
+                        hamiltonian=true, Ns=1,
+                        label="non-hamiltonian")
+
+    η,vx,vy=solution(problem2Db)
+    @test all( (norm(η),norm(vx),norm(vy)) .≈ (7.999225016708526, 7.92164586145311, 8.081605781638073) )
+
 
 end
