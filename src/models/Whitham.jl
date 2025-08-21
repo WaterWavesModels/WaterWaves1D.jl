@@ -13,10 +13,12 @@ two uncoupled Whitham equations, following [Emerald](https://doi.org/10.1088/136
 
 ## Optional keyword arguments
 - `KdV`: if `true` (default is `false`), compute the standard KdV equations instead (see `KdV(param;kwargs)`);
+- `BBM`: if `true` (default is `false`), compute the standard BBM equations instead (see `BBM(param;kwargs)`);
+- `improved_initial_data`: if `true` (default), improves the naive (first-order) decomposition into right-going and left-going wave;
 - `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: dealiasing with Orszag rule `1-dealias/(dealias+2)` (default is `0`, i.e. no dealiasing);
-- `label`: a label for future references (default is `"Whitham-Boussinesq"`);
+- `label`: a label for future references (default is `"Whitham"`, `"KdV"` or `"BBM"` depending on the equation solved);
 
 
 # Return values
