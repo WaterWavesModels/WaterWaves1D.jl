@@ -1,612 +1,672 @@
-# #
-# Reproduces the figures in
-# the work of V. Duchêne and J. Marstrander
-# on the numerical discretization of quasilinear systems
-# #
-export IntegrateSV,IntegrateSV2D,Convergence,Convergence2D,Figure1,Figure2,Figure3,Figure4,Figure5,Figure6,Figure7
-using WaterWaves1D,FFTW,Plots,LinearAlgebra,ProgressMeter;
+# =============================================================================
+# StudySaintVenant.jl
+# Reproduces the figures in the work of V. Duchêne and J. Marstrander
+# https://doi.org/10.48550/arXiv.2507.00516
+# on the numerical discretization of quasilinear systems.
+# This code has undergone postprocessing to improve formatting, indentation,
+# and in-line documentation with the assistance of OpenAI's ChatGPT.
+# The scientific content and numerical implementation remain entirely
+# the work of the original author(s), V. Duchêne and J. Marstrander, 
+# and have not been altered.
+# =============================================================================
 
+export IntegrateSV, IntegrateSV2D, Convergence, Convergence2D,
+       Figure1, Figure2, Figure3, Figure4, Figure5, Figure6, Figure7
+
+using WaterWaves1D, FFTW, Plots, LinearAlgebra, ProgressMeter
+
+# Set default plot font
 plot_font = "Computer Modern"
-default(fontfamily=plot_font)
+default(fontfamily = plot_font)
 
+# ------------------- 
+# --- 1D PROBLEMS ---
+# -------------------
 
-#------------------- 
-#--- 1D PROBLEMS ---
-#-------------------
-
-
-#--- Integration
+# ----------------------------------------------------------------
+# IntegrateSV: Numerical integration of the 1D Saint-Venant system
+# ----------------------------------------------------------------
 
 """
-	IntegrateSV(;init,args)
+    IntegrateSV(; init, args...)
 
-Integrate in time the Saint-Venant (shallow water) system with an initial data depending on the provided `init`
-- if `init=1`, then surface deformation `η(t=0,x)=1/2*exp(-|x|^α)*exp(-4x^2)` and velocity `v(t=0,x)=0` (with `α` provided as an optional argument, by default `α=3/2`)
-- if `init=2`, then surface deformation `η(t=0,x)=exp(-x^2)` and velocity `v(t=0,x)=exp.(-x^2)*(sin(x)+sin(N*x)/N^2)` (with `N` provided as an optional argument)
+Integrate the Saint-Venant (shallow water) system in 1D with initial data depending on `init`.
 
-Other arguments are optional:
-- `α` the parameter in the first initial data, prescribing the regularity (default is `3/2`),
-- `(N,h₀,v₀) the parameters in the second initial data, describing the high frequency mode, the minimum depth, and the maximum velocity 
-(by default, `h₀=1/2,v₀=2` and `N` is 2/3 of the number of collocation points),
-- `ϵ` the nonlinearity parameter (default is `1`),
-- `L` the half-length of the mesh (default is `π`),
-- `M` the number of collocation points (default is `2^9`),
-- `T` the final time of integration (default is `0.5`),
-- `dt` the timestep (default is `1e-5`),
-- `dealias`: no dealisasing if set to `0` or `false`, otherwise `1/(3*dealias)` modes are set to `0` (corresponding to standard 2/3 Orszag rule if `dealias` is set to `1` or `true`, which is default),
-- `smooth`: A smooth low-pass filter (whose scaling is defined by `N`) if set to `0` or `false` (default), otherwise only `2/(3*dealias)*(1-smooth/2)` modes are kept untouched,
-- `Ns` the number of stored computed times (default is all times),
-- `label`: a label (string) for future use (default is ""Saint-Venant"").
+- `init = 1`: η₀(x) = ½·exp(-|x|^α)·exp(-4x²), v₀(x) = 0
+- `init = 2`: η₀(x) = (h₀-1)·cos(x), v₀(x) = v₀·sin(x) + sin(N·x)/N²
+- `init = 3`: η₀(x) = ½·exp(-4x²), v₀(x) = 2·√(1+ε·η₀) - 2
 
+Keyword arguments:
+- `α`: regularity exponent (default 3/2)
+- `N`, `h₀`, `v₀`: frequency, minimum depth, velocity for init=2
+- `ϵ`: nonlinearity parameter (default 1)
+- `L`: half-length of mesh (default π)
+- `M`: number of collocation points (default 2⁹)
+- `T`: final integration time (default 0.5)
+- `dt`: time step (default 1e-5)
+- `dealias`: whether to use dealiasing (default true)
+- `smooth`: smooth low-pass filter (default false)
+- `Ns`: number of stored output times
+- `label`: descriptive string
 
-Return `problem` of the solved problem 
+Returns the `problem` object containing the solution.
 """
-function IntegrateSV(;init=1,α=1.5,N=nothing,h₀=1/2,v₀=2,ϵ=1,L=π,M=2^9,T=0.5,dt =1e-5,dealias=true,smooth=false,Ns=nothing,label="Saint-Venant")
-	if isnothing(Ns)
-		param = ( ϵ  = ϵ,
-				N  = M, L  = L,
-	            T  = T, dt = dt )
-	else
-		param = ( ϵ  = ϵ,
-				N  = M, L  = L,
-	            T  = T, dt = dt,
-				Ns = Ns )
-	end
+function IntegrateSV(; init, α=1.5, N=nothing, h₀=1/2, v₀=2,
+                      ϵ=1, L=π, M=2^9, T=0.5, dt=1e-5,
+                      dealias=true, smooth=false, Ns=nothing,
+                      label="Saint-Venant")
 
-	mesh=Mesh(param)
-	if init == 1
-		init = Init(x->1/2*exp.(-abs.(x).^α).*exp.(-4*x.^2),x->0*cos.(x))
-	elseif init == 2
-		if isnothing(N) N=(M÷3) end
-		init = Init(x->(h₀-1)*cos.(x), x->v₀ .* sin.(x).+sin.(N*x)/N^2)
-	elseif init == 3
-		f(x)=1/2*exp.(-4*x.^2)
-		init = Init(x->f(x),x->2*sqrt.(1 .+ϵ*f(x)).-2)
-	else
-		@error "argument init must be 1 or 2"
-	end
+    # Set simulation parameters
+    param = isnothing(Ns) ?
+        (ϵ=ϵ, N=M, L=L, T=T, dt=dt) :
+        (ϵ=ϵ, N=M, L=L, T=T, dt=dt, Ns=Ns)
 
-	model = SaintVenant_fast(param; dealias = dealias, smooth = smooth, label = label) 
-	solver=RK4(model.mapto(init))
-	problem = Problem(model, init, param;solver=solver)
-	solve!( problem )
+    mesh = Mesh(param)
 
+    # Select initial condition based on `init`
+    if init == 1
+        init = Init(x -> 0.5 * exp.(-abs.(x).^α) .* exp.(-4x.^2),
+                    x -> 0 * cos.(x))
+    elseif init == 2
+        if isnothing(N)
+            N = M ÷ 3
+        end
+        init = Init(x -> (h₀ - 1) * cos.(x),
+                    x -> v₀ .* sin.(x) .+ sin.(N * x) / N^2)
+    elseif init == 3
+        f(x) = 0.5 * exp.(-4 * x.^2)
+        init = Init(x -> f(x),
+                    x -> 2 * sqrt.(1 .+ ϵ * f(x)) .- 2)
+    else
+        @error "argument init must be 1, 2, or 3"
+    end
 
-	# check energy preservation
-	e(η,v) = 1/2* ( η.^2 .+ (1 .+ϵ*η).*v.^2);
-	e(η1,v1,η2,v2) = 1/2* ( (η1-η2).*(η1+η2) .+ (1 .+ϵ*η2).*(v1-v2).*(v1+v2)
-						.+ϵ*(η1-η2).*v1.^2 );
-	
-	(ηfin,vfin)   =  solution(problem)
-	(η0,v0)=(init.η(mesh.x),init.v(mesh.x))
+    # Define model, solver and set initial-value problem
+    model  = SaintVenant_fast(param; dealias=dealias, smooth=smooth, label=label)
+    solver = RK4(model.mapto(init))
+    problem = Problem(model, init, param; solver=solver)
 
-	error_energy = abs(sum(e(ηfin,vfin,η0,v0))/sum(e(η0,v0)))
-	@info "normalized preservation of the total energy: $error_energy\n"
+    # Run simulation
+    solve!(problem)
 
-	return problem
+    # --- Check energy preservation ---
+
+    e(η, v) = 0.5 * (η.^2 .+ (1 .+ ϵ * η) .* v.^2)
+    e(η1, v1, η2, v2) = 0.5 * ((η1 - η2) .* (η1 + η2) .+
+                               (1 .+ ϵ * η2) .* (v1 - v2) .* (v1 + v2) .+
+                               ϵ * (η1 - η2) .* v1.^2)
+
+    ηfin, vfin = solution(problem)
+    η0, v0 = init.η(mesh.x), init.v(mesh.x)
+
+    error_energy = abs(sum(e(ηfin, vfin, η0, v0)) / sum(e(η0, v0)))
+    @info "normalized preservation of the total energy: $error_energy\\n"
+
+    return problem
 end
 
+# ------------------------------------------------------------
+# Convergence: Convergence test for the 1D Saint-Venant system
+# ------------------------------------------------------------
 
 """
-	Convergence(init;smooth,T=0.5)
+    Convergence(init; smooth=false, T=0.5)
 
-Convergence rate associated with numerical experiments.
-The Saint-Venant (shallow water) system is numerically integrated with several values for the number of collocation points.
+Compute the convergence rate by solving the Saint-Venant system for
+various resolutions and comparing to a reference solution.
 
-- `init=1`: the initial data are chosen as for Figure 1 and 2 (heap of water)
-- `init=2`: the initial data are chosen as for Figure 3 (high-frequency component)
+Arguments:
+- `init = 1`: heap of water (Figures 1 and 2)
+- `init = 2`: high-frequency mode (Figure 3)
+- `smooth`: use smooth low-pass filter (default: false)
+- `T`: final integration time (default: 0.5)
 
-If optional argument `smooth` is `true` (default is `false`): a smooth low-pass filter is used.
-The optional argument `T` is the final time of computation (default is `0.5`).
-
-Return the reference problem and relative errors.
+Returns:
+- reference problem
+- L² relative error array
+- H¹ relative error array
 """
-function Convergence(init;smooth=false,name=nothing,T=0.5)
+function Convergence(; init, smooth=false, name=nothing, T=0.5)
+    E0 = Float64[]  # L² errors,
+    E1 = Float64[]  # H¹ errors
 
-	problems=Problem[] 	# array of problems 
-	E0=Float64[]		# array or relative L^2 errors
-	E1=Float64[]		# araay of relative H^1 errors
-	
-	if init == 1 # initial data is a heap of water
-		# Solve the reference problem
-		reference_problem=IntegrateSV(init=init,α=1.5,ϵ=1,L=π,M=2^15,T=T,dt = 1e-5,dealias=true,smooth=false,Ns=100,label="reference")
-		# Save the (Fourier modes of) last computed solution
-		Uref=reference_problem.data.U[end]/2^15
+    if init == 1
+        # Reference solution
+        reference_problem = IntegrateSV(init=1, α=1.5, ϵ=1, L=π, M=2^15,
+                                        T=T, dt=1e-5, dealias=true,
+                                        smooth=false, Ns=100, label="reference")
+        # Fourier coefficients
+        Uref = reference_problem.data.U[end] / 2^15
 
-		for n=14:-1:6
-			# Solve the problem with fewer Fourier modes
-			p = IntegrateSV(init=init,α=1.5,ϵ=1,L=π,M=2^n,T=T,dt = 1e-5,dealias=true,smooth=smooth,Ns=1,label="2M=2^$n")
-			push!(problems,p)
-			# Save the (Fourier modes of) last computed solution
-			U=[p.data.U[end][1] ; p.data.U[end][2]]/2^n
-			# Extract the corresponding modes of the reference solution
-			Nmodes=2^(n-1)
-			Ucomp=[ Uref[1][1:Nmodes];  Uref[1][end-Nmodes+1:end] ;
-						Uref[2][1:Nmodes];  Uref[2][end-Nmodes+1:end]  ]
+        for n in 14:-1:6
+            # Lower-resolution run
+            p = IntegrateSV(init=1, α=1.5, ϵ=1, L=π, M=2^n, T=T, dt=1e-5,
+                            dealias=true, smooth=smooth, Ns=1, label="2M=2^$n")
+            # Fourier coefficients
+            U = [p.data.U[end][1]; p.data.U[end][2]] / 2^n
 
-			# Compute the relative errors
-			push!(E0,norm(U-Ucomp,2)/norm(Ucomp,2))
-			k=[0:Nmodes-1; -Nmodes:-1]
-			K=[sqrt.(1 .+ k.^2);sqrt.(1 .+ k.^2)]
-			push!(E1,norm(K.*U-K.*Ucomp,2)/norm(K.*Ucomp,2))
-		end
-	elseif init == 2
+            Nmodes = 2^(n-1)
+            Ucomp = [Uref[1][1:Nmodes]; Uref[1][end-Nmodes+1:end];
+                     Uref[2][1:Nmodes]; Uref[2][end-Nmodes+1:end]]
 
-		for n=14:-1:6
-			# Solve the reference problem
-			reference_problem=IntegrateSV(init=init,N=(2^n÷3),h₀=0.5,v₀=2,ϵ=1,L=π,M=2^15,T=T,dt = 1e-5,dealias=true,smooth=smooth,Ns=1,label="reference")
-			# Solve the problem with fewer Fourier modes
-			p = IntegrateSV(init=init,h₀=0.5,v₀=2,ϵ=1,L=π,M=2^n,T=T,dt = 1e-5,dealias=true,smooth=smooth,Ns=1,label="2M=2^$n")
+            # L² error
+            push!(E0, norm(U - Ucomp, 2) / norm(Ucomp, 2))
 
-			# Save the (Fourier modes of) last computed solutions
-			Uref=reference_problem.data.U[end]/2^15
-			U=[p.data.U[end][1] ; p.data.U[end][2]]/2^n
-			# Extract the corresponding modes of the reference solution
-			Nmodes=2^(n-1)
-			Ucomp=[ Uref[1][1:Nmodes];  Uref[1][end-Nmodes+1:end] ;
-						Uref[2][1:Nmodes];  Uref[2][end-Nmodes+1:end]  ]
+            # H¹ error
+            k = [0:Nmodes-1; -Nmodes:-1]
+            K = [sqrt.(1 .+ k.^2); sqrt.(1 .+ k.^2)]
+            push!(E1, norm(K .* U - K .* Ucomp, 2) / norm(K .* Ucomp, 2))
+        end
+    elseif init == 2
+        for n in 14:-1:6
+            # Reference solution
+            reference_problem = IntegrateSV(init=2, N=(2^n ÷ 3), h₀=0.5, v₀=2,
+                                            ϵ=1, L=π, M=2^15, T=T, dt=1e-5,
+                                            dealias=true, smooth=smooth,
+                                            Ns=1, label="reference")
+            # Lower-resolution run
+            p = IntegrateSV(init=2, h₀=0.5, v₀=2, ϵ=1, L=π, M=2^n, T=T,
+                            dt=1e-5, dealias=true, smooth=smooth,
+                            Ns=1, label="2M=2^$n")
+            # Fourier coefficients
+            Uref = reference_problem.data.U[end] / 2^15
+            U = [p.data.U[end][1]; p.data.U[end][2]] / 2^n
 
-			# Compute the relative errors
-			push!(E0,norm(U-Ucomp,2)/norm(Ucomp,2))
-			k=[0:Nmodes-1; -Nmodes:-1]
-			K=[sqrt.(1 .+ k.^2);sqrt.(1 .+ k.^2)]
-			push!(E1,norm(K.*U-K.*Ucomp,2)/norm(K.*Ucomp,2))
-		end
-	end
-	return reference_problem,E0,E1
+            Nmodes = 2^(n-1)
+            Ucomp = [Uref[1][1:Nmodes]; Uref[1][end-Nmodes+1:end];
+                     Uref[2][1:Nmodes]; Uref[2][end-Nmodes+1:end]]
 
+            # L² error
+            push!(E0, norm(U - Ucomp, 2) / norm(Ucomp, 2))
+            
+            # H¹ error
+            k = [0:Nmodes-1; -Nmodes:-1]
+            K = [sqrt.(1 .+ k.^2); sqrt.(1 .+ k.^2)]
+            push!(E1, norm(K .* U - K .* Ucomp, 2) / norm(K .* Ucomp, 2))
+        end
+    end
+
+    return reference_problem, E0, E1
 end
 
-
-#--- Figures
-
-#------- Experiments with a heap of water
+# ----------------------------------------------------------------------------
+# Figure 1: Initial data : heap of water, physical and spectral representation
+# ----------------------------------------------------------------------------
 function Figure1()
-# Plot the initial data (heap of water) and the decay of Fourier coefficients
-# Build the problems, the errors measure the decay of Fourier coefficients
-reference_problem,E0,E1=Convergence(1;smooth=false,T=0)	
+    # Build initial data
+    reference_problem, E0, E1 = Convergence(init=1; smooth=false, T=0)
+    η0, v0, x = solution(reference_problem,T=0)
 
-# Extract initial data of the reference problem
-η0,v0,x=reference_problem.model.mapfro(reference_problem.data.U[1])
-# Plot initial data
-Fig1a=plot(x,[η0 v0],label=["\$\\eta^0\$" "\$u^0\$"],xlabel="\$x\$")
-savefig(Fig1a,"Fig1a.pdf");savefig(Fig1a,"Fig1a.svg");
-# Plot convergence rates
-Fig1b=plot(;xlabel="\$2M\$",axis=:log)
-n=14:-1:6;M=2 .^n;
-scatter!(Fig1b,M,E1,label="\$E_1\$",color=1)
-scatter!(Fig1b,M,E0,label="\$E_0\$",color=2)
-plot!(Fig1b,M,M.^(-1),label="",color=1)
-plot!(Fig1b,M,M.^(-2),label="",color=2)
-savefig(Fig1b,"Fig1b.pdf");savefig(Fig1b,"Fig1b.svg");
+    Fig1a = plot(x, [η0 v0], label=["\$\\eta^0\$" "\$u^0\$"], xlabel="\$x\$")
+    savefig(Fig1a, "Fig1a.pdf"); savefig(Fig1a, "Fig1a.svg")
+
+    Fig1b = plot(; xlabel="\$2M\$", axis=:log)
+    n = 14:-1:6
+    M = 2 .^ n
+    scatter!(Fig1b, M, E1, label="\$E_1\$", color=1)
+    scatter!(Fig1b, M, E0, label="\$E_0\$", color=2)
+    plot!(Fig1b, M, M.^(-1), label="", color=1)
+    plot!(Fig1b, M, M.^(-2), label="", color=2)
+    savefig(Fig1b, "Fig1b.pdf"); savefig(Fig1b, "Fig1b.svg")
 end
 
-#--- Experiment 1 : heap of water, sharp low-pass filter
+# --------------------------------------------------------
+# Figure 2: Convergence with sharp vs smooth low-pass filter
+# --------------------------------------------------------
 function Figure2()
-# Solve the problems, save the errors and the reference solution
-reference_problem,E0,E1=Convergence(1;smooth=false)	
+    # Sharp low-pass filter
+    _, E0, E1 = Convergence(init=1; smooth=false, T=0.5)
 
-#--- Experiment 2 : heap of water, smooth low-pass filter
-# Solve the problems, save the errors and the reference solution
-reference_problem,E0_smooth,E1_smooth=Convergence(1;smooth=true)	
+    # Smooth low-pass filter
+    _, E0_smooth, E1_smooth = Convergence(init=1; smooth=true, T=0.5)
 
-# Plot convergence rates
-Fig2=plot(;xlabel="\$2M\$",axis=:log)
-n=14:-1:6;M=2 .^n;
-scatter!(Fig2,M,E1,label="\$E_1\$, sharp low-pass filter",color=1)
-scatter!(Fig2,M,E0,label="\$E_0\$, sharp low-pass filter",color=2)
-scatter!(Fig2,M,E1_smooth,label="\$E_1\$, smooth low-pass filter",color=3)
-scatter!(Fig2,M,E0_smooth,label="\$E_0\$, smooth low-pass filter",color=4)
+    # Convergence plot
+    Fig2 = plot(; xlabel="\$2M\$", axis=:log)
+    n = 14:-1:6
+    M = 2 .^ n
 
-plot!(Fig2,M,M.^(-1),label="",color=1)
-plot!(Fig2,M,M.^(-2),label="",color=2)
+    scatter!(Fig2, M, E1, label="\$E_1\$, sharp", color=1)
+    scatter!(Fig2, M, E0, label="\$E_0\$, sharp", color=2)
+    scatter!(Fig2, M, E1_smooth, label="\$E_1\$, smooth", color=3)
+    scatter!(Fig2, M, E0_smooth, label="\$E_0\$, smooth", color=4)
+    plot!(Fig2, M, M.^(-1), label="", color=1)
+    plot!(Fig2, M, M.^(-2), label="", color=2)
 
-savefig(Fig2,"Fig2.pdf");savefig(Fig1b,"Fig2.svg");
+    savefig(Fig2, "Fig2.pdf"); savefig(Fig2, "Fig2.svg")
 
-# Table : experimental order of Convergence
-return round.(log2.(E0[1:end-1]./E0[2:end]),digits=2),
-		round.(log2.(E1[1:end-1]./E1[2:end]),digits=2),
-		round.(log2.(E0_smooth[1:end-1]./E0_smooth[2:end]),digits=2),
-		round.(log2.(E1_smooth[1:end-1]./E1_smooth[2:end]),digits=2)
+    return round.(log2.(E0[1:end-1] ./ E0[2:end]), digits=2),
+           round.(log2.(E1[1:end-1] ./ E1[2:end]), digits=2),
+           round.(log2.(E0_smooth[1:end-1] ./ E0_smooth[2:end]), digits=2),
+           round.(log2.(E1_smooth[1:end-1] ./ E1_smooth[2:end]), digits=2)
 end
 
-
-#--------- Experiments with a high frequency component
+# ----------------------------------------------------------
+# Figure 3: High-frequency mode initial data and convergence
+# ----------------------------------------------------------
 function Figure3()
-# Plot the initial data (heap of water) and the decay of Fourier coefficients
-# Build the problems, the errors measure the decay of Fourier coefficients
-reference_problem,E0,E1=Convergence(2;smooth=false,T=0)	
+    # Build and plot initial data with high-frequency component
+    reference_problem, _, _ = Convergence(init=2; smooth=false, T=0)
+    η0, v0, x = reference_problem.model.mapfro(reference_problem.data.U[1])
 
-# Extract initial data of the first problem
-η0,v0,x=reference_problem.model.mapfro(reference_problem.data.U[1])
+    Fig3a = plot(x, [η0 v0], label=["\$\\eta^0\$" "\$u^0\$"], xlabel="\$x\$")
+    plot!(x, v0 .- 2*sin.(x),
+          xlim=(0, π),
+          frame=:box,
+          color=2,
+          inset=bbox(0.6, 0.6, 0.35, 0.25),
+          subplot=2,
+          label="\$u^0 - 2\\sin(x)\$")
+    savefig(Fig3a, "Fig3a.pdf")
+    savefig(Fig3a, "Fig3a.svg")
 
-# Plot initial data
-Fig3a=plot(x,[η0 v0],label=["\$\\eta^0\$" "\$u^0\$"],xlabel="\$x\$")
-plot!(x,v0.-2*sin.(x),
-    xlim=(0,π),#ylim=(2-1e-2,2+1e-2),
-    frame=:box,
-    #yticks=false,
-	color=:2,
-    inset=bbox(0.6,0.6,0.35,0.25),
-    subplot=2,
-	label="\$u^0-2\\sin(x)\$"
-)
-savefig(Fig3a,"Fig3a.pdf");savefig(Fig3a,"Fig3a.svg");
+    # Sharp low-pass filter
+    _, E0, E1 = Convergence(init=2; T=0.5, smooth=false)
 
-#--- Experiment 3 : high frequency component, sharp low-pass filter
-# Solve the problems, save the errors and the reference solution
-reference_problem,E0,E1=Convergence(2;smooth=false)	
+    # Smooth low-pass filter
+    _, E0_smooth, E1_smooth = Convergence(init=2; T=0.5, smooth=true)
 
-#--- Experiment 4 : high frequency component, smooth low-pass filter
-reference_problem,E0_smooth,E1_smooth=Convergence(2;smooth=true)	
+    # Convergence plot
+    Fig3b = plot(; xlabel="\$2M\$", axis=:log, legend=:bottomleft)
+    M = 2 .^ (14:-1:6)
+    scatter!(Fig3b, M, E1, label="\$E_1\$, sharp", color=1)
+    scatter!(Fig3b, M, E0, label="\$E_0\$, sharp", color=2)
+    scatter!(Fig3b, M, E1_smooth, label="\$E_1\$, smooth", color=3)
+    scatter!(Fig3b, M, E0_smooth, label="\$E_0\$, smooth", color=4)
+    plot!(Fig3b, M, M.^(-1), label="", color=1)
+    plot!(Fig3b, M, M.^(-2), label="", color=2)
 
-# Plot convergence rates
-Fig3b=plot(;xlabel="\$2M\$",axis=:log,legend=:bottomleft)
-Ns=2 .^(6:14);
-scatter!(Fig3b,Ns,E1[end:-1:1],label="\$E_1\$, sharp low-pass filter",color=1)
-scatter!(Fig3b,Ns,E0[end:-1:1],label="\$E_0\$, sharp low-pass filter",color=2)
-scatter!(Fig3b,Ns,E1_smooth[end:-1:1],label="\$E_1\$, smooth low-pass filter",color=3)
-scatter!(Fig3b,Ns,E0_smooth[end:-1:1],label="\$E_0\$, smooth low-pass filter",color=4)
-plot!(Fig3b,Ns,Ns.^(-1),label="",color=1)
-plot!(Fig3b,Ns,Ns.^(-2),label="",color=2)
-savefig(Fig3b,"Fig3b.pdf");savefig(Fig1b,"Fig3b.svg");
+    savefig(Fig3b, "Fig3b.pdf")
+    savefig(Fig3b, "Fig3b.svg")
 end
 
-#--- Experiment 5 : instability in zero-depth situation
+# ----------------------------------------------------------
+# Figure 4: Instability in simulations with vanishing depth
+# ----------------------------------------------------------
 function Figure4()
-# Solve problem with vanishing depth and smooth cut-off and M=2^10 modes
-pb_smooth_M10=IntegrateSV(init=2,h₀=0,v₀=2,ϵ=1,L=π,M=2^10,T=0.1,dt = 1e-5,dealias=true,smooth=true,Ns=1,label="smooth")
-# Solve problem with vanishing depth and sharp cut-off and M=2^10 modes
-pb_sharp_M10=IntegrateSV(init=2,h₀=0,v₀=2,ϵ=1,L=π,M=2^10,T=0.1,dt = 1e-5,dealias=true,smooth=false,Ns=1,label="sharp")
+    # Simulations with M = 2^10
+    # Smooth low-pass filter
+    pb_smooth_M10 = IntegrateSV(init=2, h₀=0, v₀=2, ϵ=1, L=π, M=2^10, T=0.1,
+                                dt=1e-5, dealias=true, smooth=true, Ns=1, label="smooth")
+    # Sharp low-pass filter
+    pb_sharp_M10 = IntegrateSV(init=2, h₀=0, v₀=2, ϵ=1, L=π, M=2^10, T=0.1,
+                               dt=1e-5, dealias=true, smooth=false, Ns=1, label="sharp")
 
-# Plot solutions
-plot(pb_sharp_M10,var=[:surface :velocity :fourier_velocity])
-plot!(pb_smooth_M10,var=[:surface :velocity :fourier_velocity])
+    
+    # Plot second derivative of the velocity
+    η_M10, v_M10, x = solution(pb_sharp_M10)
+    ηs_M10, vs_M10, _ = solution(pb_smooth_M10)
 
-# Plot second derivatives of solutions
-η_M10,v_M10,x=solution(pb_sharp_M10)
-ηs_M10,vs_M10,=solution(pb_smooth_M10)
-∂=1im*Mesh(x).k
-diff(η;n=1)=real.(ifft(∂.^n.*fft(η)))
+    ∂ = 1im * Mesh(x).k
+    ∂2v_M10 = real.(ifft(∂.^2 .* fft(v_M10)))
+    ∂2vs_M10 = real.(ifft(∂.^2 .* fft(vs_M10)))
 
-Fig4a=plot(x,diff(v_M10;n=2),label="sharp")
-plot!(x,diff(vs_M10;n=2),label="smooth")
-title!("\$\\partial_x^2u_N, \\quad    2M = 2^{10}\$")
-xlabel!("\$x\$")
-savefig(Fig4a,"Fig4a.pdf");savefig(Fig4a,"Fig4a.svg");
+    Fig4a = plot(x, ∂2v_M10, label="sharp")
+    plot!(x, ∂2vs_M10, label="smooth")
+    title!("\$\\partial_x^2 u_N, \\quad 2M = 2^{10}\$")
+    xlabel!("\$x\$")
+    savefig(Fig4a, "Fig4a.pdf")
+    savefig(Fig4a, "Fig4a.svg")
 
+    # Simulations with M = 2^12
+    # Smooth low-pass filter
+    pb_smooth_M12 = IntegrateSV(init=2, h₀=0, v₀=2, ϵ=1, L=π, M=2^12, T=0.1,
+                                dt=1e-5, dealias=true, smooth=true, Ns=1, label="smooth")
+    # Sharp low-pass filter
+    pb_sharp_M12 = IntegrateSV(init=2, h₀=0, v₀=2, ϵ=1, L=π, M=2^12, T=0.1,
+                               dt=1e-5, dealias=true, smooth=false, Ns=1, label="sharp")
 
+    # Plot second derivative of the velocity
+    η_M12, v_M12, x = solution(pb_sharp_M12)
+    ηs_M12, vs_M12, _ = solution(pb_smooth_M12)
 
-# Solve problem with vanishing depth and smooth cut-off and M=2^12 modes
-pb_smooth_M12=IntegrateSV(init=2,h₀=0,v₀=2,ϵ=1,L=π,M=2^12,T=0.1,dt = 1e-5,dealias=true,smooth=true,Ns=1,label="smooth")
-# Solve problem with vanishing depth and sharp cut-off and M=2^12 modes
-pb_sharp_M12=IntegrateSV(init=2,h₀=0,v₀=2,ϵ=1,L=π,M=2^12,T=0.1,dt = 1e-5,dealias=true,smooth=false,Ns=1,label="sharp")
+    ∂ = 1im * Mesh(x).k
+    ∂2v_M12 = real.(ifft(∂.^2 .* fft(v_M12)))
+    ∂2vs_M12 = real.(ifft(∂.^2 .* fft(vs_M12)))
 
-# Plot solutions
-plot(pb_sharp_M12,var=[:surface :velocity :fourier_velocity])
-plot!(pb_smooth_M12,var=[:surface :velocity :fourier_velocity])
-
-# Plot second derivatives of solutions
-η_M12,v_M12,x=solution(pb_sharp_M12)
-ηs_M12,vs_M12,=solution(pb_smooth_M12)
-∂=1im*Mesh(x).k
-diff(η;n=1)=real.(ifft(∂.^n.*fft(η)))
-
-Fig4b=plot(x,diff(v_M12;n=2),label="sharp")
-plot!(x,diff(vs_M12;n=2),label="smooth")
-title!("\$\\partial_x^2u_N, \\quad    2M = 2^{12}\$")
-xlabel!("\$x\$")
-savefig(Fig4b,"Fig4b.pdf");savefig(Fig4b,"Fig4b.svg");
+    Fig4b = plot(x, ∂2v_M12, label="sharp")
+    plot!(x, ∂2vs_M12, label="smooth")
+    title!("\$\\partial_x^2 u_N, \\quad 2M = 2^{12}\$")
+    xlabel!("\$x\$")
+    savefig(Fig4b, "Fig4b.pdf")
+    savefig(Fig4b, "Fig4b.svg")
 end
 
-#--- Experiment 6 (not shown in the manuscript) : simluations after wavebreaking
-function FigureNone()
-# Solve problem with smooth simple wave initial data and M=2^10 modes
-pb_sharp_M10=IntegrateSV(init=3,ϵ=1,L=π,M=2^10,T=1,dt = 1e-5,dealias=true,smooth=false,Ns=100,label="sharp")
-pb_smooth_M10=IntegrateSV(init=3,ϵ=1,L=π,M=2^10,T=1,dt = 1e-5,dealias=true,smooth=true,Ns=100,label="smooth")
-plot([pb_sharp_M10,pb_smooth_M10],T=1)
+# -----------------------------------------------------------------
+# FigureX: Simulations of smooth simple waves after wavebreaking 
+# (not appearingin the manuscript)
+# -----------------------------------------------------------------
+function FigureX()
+    # Simulations with M = 2^10 modes
+    pb_sharp_M10 = IntegrateSV(init=3, ϵ=1, L=π, M=2^10, T=1, dt=1e-5,
+                               dealias=true, smooth=false, Ns=100, label="sharp")
+    pb_smooth_M10 = IntegrateSV(init=3, ϵ=1, L=π, M=2^10, T=1, dt=1e-5,
+                                dealias=true, smooth=true, Ns=100, label="smooth")
 
-# Solve problem with smooth simple wave initial data and M=2^12 modes
-pb_sharp_M12=IntegrateSV(init=3,ϵ=1,L=π,M=2^12,T=1,dt = 1e-5,dealias=true,smooth=false,Ns=100,label="sharp")
-pb_smooth_M12=IntegrateSV(init=3,ϵ=1,L=π,M=2^12,T=1,dt = 1e-5,dealias=true,smooth=true,Ns=100,label="smooth")
-plot([pb_sharp_M12,pb_smooth_M12],T=1)
+    plot([pb_sharp_M10, pb_smooth_M10], T=1)
+
+    # Simulations with M = 2^12 modes
+    pb_sharp_M12 = IntegrateSV(init=3, ϵ=1, L=π, M=2^12, T=1, dt=1e-5,
+                               dealias=true, smooth=false, Ns=100, label="sharp")
+    pb_smooth_M12 = IntegrateSV(init=3, ϵ=1, L=π, M=2^12, T=1, dt=1e-5,
+                                dealias=true, smooth=true, Ns=100, label="smooth")
+
+    plot([pb_sharp_M12, pb_smooth_M12], T=1)
 end
 
+# -------------------
+# --- 2D PROBLEMS ---
+# -------------------
 
-#------------------- 
-#--- 2D PROBLEMS ---
-#-------------------
-
+# ---------------------------------------------------------------
+# IntegrateSV2D: Numerical integration of the 2D Saint-Venant system
+# ---------------------------------------------------------------
 """
-	IntegrateSV2D(;init,args)
+    IntegrateSV2D(; args...)
 
-Integrate in time two-dimensional Saint-Venant (shallow water) system.
+Integrate in time the 2D Saint-Venant (shallow water) system.
 
-All arguments are optional:
-- `(N,s,u₀,v₀,u₁,v₁) describe parameters of the initial initial data (by default, `N` is 2/3 of the number of collocation points),
-- `ϵ` the nonlinearity parameter (default is `1`),
-- `L` the half-length of the mesh (default is `π`),
-- `M` the number of collocation points (default is `2^9`),
-- `T` the final time of integration (default is `0.1`),
-- `dt` the timestep (default is `5e-5`),
-- `dealias`: no dealisasing if set to `0` or `false`, otherwise `1/(3*dealias)` modes are set to `0` (corresponding to standard 2/3 Orszag rule if `dealias` is set to `1` or `true`, which is default),
-- `smooth`: A smooth low-pass filter (whose scaling is defined by `N`) if set to `0` or `false` (default), otherwise only `2/(3*dealias)*(1-smooth/2)` modes are kept untouched,
-- `hamiltonian`: if `true` (default is `false`) then the Hamiltonian Saint-Venant system is computed,
-- `Ns` the number of stored computed times (default is only initial and final times),
-- `label`: a label (string) for future use (default is ""Saint-Venant"").
+Initial data is
+- ζ(x, y) = (h₀-1)·cos(x)·cos.(y)'
+- u(x, y) = u₀·sin(x)·cos.(y)+ u₁·sin(N·x)·cos(N·y)/N^s
+- v(x, y) = v₀·cos(x)·sin.(y)+ v₁·cos(N·x)·sin.(N·y)/N^s
 
+Keyword arguments:
+- `N, s, u₀, v₀, u₁, v₁`: Initial data params (frequencies and amplitudes)
+- `ϵ`: Nonlinearity parameter (default 1)
+- `L`: Half-length of domain (default π)
+- `M`: Number of collocation points (default 2⁹)
+- `T`: Final time (default 0.1)
+- `dt`: Timestep (default 5e-5)
+- `dealias`: Use dealiasing (default true)
+- `smooth`: Use smooth spectral filter (default false)
+- `hamiltonian`: Use Hamiltonian system (default false)
+- `Ns`: Number of output time steps (default 1)
+- `label`: String label for identification
 
-Return `problem` of the solved problem 
+Returns:
+- `problem`: The `Problem` object containing the simulation result
 """
-function IntegrateSV2D(;N=nothing,s=2,h₀=1/2,u₀=1/2,v₀=-1/2,u₁=1,v₁=1,ϵ=1,L=π,M=2^9,T=0.1,dt =5e-5,dealias=true,smooth=false,hamiltonian=false,Ns=1,label="Saint-Venant")
-	if isnothing(Ns)
-		param = ( ϵ  = ϵ,
-				N  = M, L  = L,
-	            T  = T, dt = dt )
-	else
-		param = ( ϵ  = ϵ,
-				N  = M, L  = L,
-	            T  = T, dt = dt,
-				Ns = Ns )
-	end
+function IntegrateSV2D(; N=nothing, s=2, h₀=1/2,
+                        u₀=1/2, v₀=-1/2, u₁=1, v₁=-1,
+                        ϵ=1, L=π, M=2^9, T=0.1, dt=5e-5,
+                        dealias=true, smooth=false,
+                        hamiltonian=false, Ns=1,
+                        label="Saint-Venant")
 
-	mesh=Mesh(param)
-	if isnothing(N) N=(M÷3) end
-	
-	ζ(x,y) = (h₀-1) * cos.(x).*cos.(y)'; 
-    ux(x,y) = u₀* cos.(y').*sin.(x) .+ u₁*cos.(N*y').*sin.(N*x)/N^s; 
-    uy(x,y) = v₀* sin.(y').*cos.(x) .+ v₁*sin.(N*y').*cos.(N*x)/N^s;
+    # Define parameters
+    param = isnothing(Ns) ?
+        (ϵ=ϵ, N=M, L=L, T=T, dt=dt) :
+        (ϵ=ϵ, N=M, L=L, T=T, dt=dt, Ns=Ns)
 
-	init = Init2D(ζ, ux, uy);
+    mesh = Mesh(param)
+    if isnothing(N)
+        N = M ÷ 3
+    end
 
-	model=SaintVenant2D_fast(param; dealias = dealias , hamiltonian = hamiltonian, smooth=smooth)
-    solver=RK4(model.mapto(init))
-    problem = Problem(  model, init, param ; solver=solver )
-	
-	solve!( problem )
+    # Define initial conditions
+    ζ(x, y)   = (h₀ - 1) * cos.(x) .* cos.(y)'
+    ux(x, y)  = u₀ * cos.(y') .* sin.(x) .+ u₁ * cos.(N * y') .* sin.(N * x) / N^s
+    uy(x, y)  = v₀ * sin.(y') .* cos.(x) .+ v₁ * sin.(N * y') .* cos.(N * x) / N^s
 
-	# Check energy preservation
-	e(η,vx,vy) = 1/2* ( η.^2 .+ (1 .+ϵ*η).*(vx.^2 .+vy.^2) );
-	e(η1,vx1,vy1,η2,vx2,vy2) = 1/2* ( (η1-η2).*(η1+η2) .+ (1 .+ϵ*η2).*(vx1-vx2).*(vx1+vx2) .+ (1 .+ϵ*η2).*(vy1-vy2).*(vy1+vy2)
-						.+ϵ*(η1-η2).*vx1.^2 .+ ϵ*(η1-η2).*vy1.^2 );
-	
-	(ηfin,vxfin,vyfin)   =  solution(problem)
-	(η0,vx0,vy0)=(init.η(mesh.x,mesh.x),init.vx(mesh.x,mesh.x),init.vy(mesh.x,mesh.x))
+    init = Init2D(ζ, ux, uy)
 
-	error_energy = abs(sum(e(ηfin,vxfin,vyfin,η0,vx0,vy0))/sum(e(η0,vx0,vy0)))
-	@info "normalized preservation of the total energy: $error_energy\n"
+    # Define model, solver and set initial-value problem
+    model = SaintVenant2D_fast(param; dealias=dealias, hamiltonian=hamiltonian, smooth=smooth)
+    solver = RK4(model.mapto(init))
+    problem = Problem(model, init, param; solver=solver)
 
-	return problem
+    # Run simulation
+    solve!(problem)
+
+    # --- Energy check ---
+    e(η, vx, vy) = 0.5 * (η.^2 .+ (1 .+ ϵ * η) .* (vx.^2 .+ vy.^2))
+    e(η1, vx1, vy1, η2, vx2, vy2) = 0.5 * (
+        (η1 - η2) .* (η1 + η2) .+
+        (1 .+ ϵ * η2) .* (vx1 - vx2) .* (vx1 + vx2) .+
+        (1 .+ ϵ * η2) .* (vy1 - vy2) .* (vy1 + vy2) .+
+        ϵ * (η1 - η2) .* vx1.^2 .+ ϵ * (η1 - η2) .* vy1.^2
+    )
+
+    ηfin, vxfin, vyfin = solution(problem)
+    η0 = init.η(mesh.x, mesh.x)
+    vx0 = init.vx(mesh.x, mesh.x)
+    vy0 = init.vy(mesh.x, mesh.x)
+
+    error_energy = abs(sum(e(ηfin, vxfin, vyfin, η0, vx0, vy0)) / sum(e(η0, vx0, vy0)))
+    @info "normalized preservation of the total energy: $error_energy\\n"
+
+    return problem
 end
 
-
+# --------------------------------------------------------------
+# Convergence2D: Convergence test for the 2D Saint-Venant system
+# --------------------------------------------------------------
 """
-	Convergence(init;smooth,T=0.5)
+    Convergence2D(; smooth=false, hamiltonian=false, T=0.1)
 
-Convergence rate associated with numerical experiments.
-The Saint-Venant (shallow water) system is numerically integrated with several values for the number of collocation points.
+Compute convergence rates by comparing lower-resolution solutions
+to a high-resolution reference for 2D Saint-Venant system.
 
-If optional argument `smooth` is `true` (default is `false`): a smooth low-pass filter is used.
-If optional argument `hamiltonian` is `true` (default is `false`): the Hamiltonian Saint-Venant system is computed,
-
-The optional argument `T` is the final time of computation (default is `0.1`).
-
-Return the reference problem and relative errors.
+Returns:
+- L² error array
+- H¹ error array
 """
-function Convergence2D(;smooth=false,hamiltonian=false,name=nothing,T=0.1)
+function Convergence2D(; smooth=false, hamiltonian=false, name=nothing, T=0.1)
+    E0 = Float64[]  # L² errors
+    E1 = Float64[]  # H¹ errors
 
-	problems=Problem[] 	# array of problems 
-	E0=Float64[]		# array or relative L^2 errors
-	E1=Float64[]		# araay of relative H^1 errors
-	
-	
-
-	for n=9:-1:6
-		# Solve the reference problem
-		reference_problem=IntegrateSV2D(M=2^10,N = (2^n)÷3,T=T,smooth=smooth,hamiltonian=hamiltonian,Ns=1,label="reference")
-		# Save the (Fourier modes of) last computed solution
-		Uref=reference_problem.data.U[end]/2^20
+    for n in 9:-1:6
+        # Reference solution
+        reference_problem = IntegrateSV2D(M=2^10, N=(2^n)÷3, T=T,
+                                          s=2, h₀=1/2, u₀=1/2, v₀=-1/2, u₁=1, v₁=-1,
+                                          smooth=smooth, hamiltonian=hamiltonian,
+                                          Ns=1, label="reference") 
+        # Fourier coefficients
+        Uref = reference_problem.data.U[end] / 2^20
         Uref1 = fftshift(Uref[1])
         Uref2 = fftshift(Uref[2])
         Uref3 = fftshift(Uref[3])
-
-		# Solve the problem with fewer Fourier modes
-		p = IntegrateSV2D(M=2^n,N = (2^n)÷3, T=T,smooth=smooth,hamiltonian=hamiltonian,Ns=1,label="2M=2^$n")
-        push!(problems,p)
-   		# Save the (Fourier modes of) last computed solution
-		U = p.data.U[end]/2^(2n)
+        
+        # Lower-resolution run
+        p = IntegrateSV2D(M=2^n, N=(2^n)÷3, T=T,
+                          s=2, h₀=1/2, u₀=1/2, v₀=-1/2, u₁=1, v₁=-1,
+                          smooth=smooth, hamiltonian=hamiltonian,
+                          Ns=1, label="2M=2^$n")
+        # Fourier coefficients
+        U = p.data.U[end] / 2^(2n)
         U1 = fftshift(U[1])
         U2 = fftshift(U[2])
         U3 = fftshift(U[3])
-        # Extract the corresponding modes of the reference solution
-		Nmodes=2^(n-1);Nref=2^9;
-		Ucomp1 = Uref1[Nref-Nmodes+1:Nref+Nmodes, Nref-Nmodes+1:Nref+Nmodes];
-        Ucomp2 = Uref2[Nref-Nmodes+1:Nref+Nmodes, Nref-Nmodes+1:Nref+Nmodes];
-        Ucomp3 = Uref3[Nref-Nmodes+1:Nref+Nmodes, Nref-Nmodes+1:Nref+Nmodes];
 
-		# Compute the relative errors
-		kx = range(-Nmodes,Nmodes-1)
+        Nmodes = 2^(n-1)
+        Nref = 2^9
+        Ucomp1 = Uref1[Nref-Nmodes+1:Nref+Nmodes, Nref-Nmodes+1:Nref+Nmodes]
+        Ucomp2 = Uref2[Nref-Nmodes+1:Nref+Nmodes, Nref-Nmodes+1:Nref+Nmodes]
+        Ucomp3 = Uref3[Nref-Nmodes+1:Nref+Nmodes, Nref-Nmodes+1:Nref+Nmodes]
+
+        # L² error
+        push!(E0, norm([norm(U1 - Ucomp1); norm(U2 - Ucomp2); norm(U3 - Ucomp3)]) /
+                  norm([norm(Ucomp1); norm(Ucomp2); norm(Ucomp3)]))
+
+        # H¹ error
+        kx = range(-Nmodes, Nmodes-1)
         ky = kx'
         k = sqrt.(1 .+ kx.^2 .+ ky.^2)
-        
-        push!(E0,norm([norm(U1-Ucomp1,2);norm(U2-Ucomp2,2);norm(U3 - Ucomp3,2)],2)/norm([norm(Ucomp1,2);norm(Ucomp2,2);norm(Ucomp3,2)],2))
-        push!(E1,norm([norm(k.*U1-k.*Ucomp1,2);norm(k.*U2-k.*Ucomp2,2);norm(k.*U3 - k.*Ucomp3,2)],2)/norm([norm(k.*Ucomp1,2);norm(k.*Ucomp2,2);norm(k.*Ucomp3,2)],2))
-	end
+        push!(E1, norm([norm(k .* U1 - k .* Ucomp1);
+                        norm(k .* U2 - k .* Ucomp2);
+                        norm(k .* U3 - k .* Ucomp3)]) /
+                  norm([norm(k .* Ucomp1);
+                        norm(k .* Ucomp2);
+                        norm(k .* Ucomp3)]))
+    end
 
-	return E0,E1
-
+    return E0, E1
 end
 
-#--- Figures
-
-#------- Experiment 1. Convergence rate for initial data satisfying the strong hyperbolicity condition
+# ----------------------------------------------------------------
+# Figure 5: 2D convergence (sharp and smooth, Hamiltonian and not)
+# ----------------------------------------------------------------
 function Figure5()
-#--- Non-Hamiltonian system
+    # Non-Hamiltonian system, sharp and smooth low-pass filters
+    E0, E1 = Convergence2D(T=0.1, smooth=false, hamiltonian=false)
+    E0s, E1s = Convergence2D(T=0.1, smooth=true, hamiltonian=false)
 
-# Solve the problems, save the errors
-E0,E1=Convergence2D(;T=0.1,smooth=false, hamiltonian=false)
-E0s,E1s=Convergence2D(;T=0.1,smooth=true, hamiltonian=false)
+    Fig5a = plot(; xlabel="\$M\$", axis=:log, legend=:bottomleft)
+    M = 2 .^ (9:-1:6)
+    scatter!(Fig5a, M, E1, label="\$E_1\$, sharp", color=1)
+    scatter!(Fig5a, M, E0, label="\$E_0\$, sharp", color=2)
+    scatter!(Fig5a, M, E1s, label="\$E_1\$, smooth", color=3)
+    scatter!(Fig5a, M, E0s, label="\$E_0\$, smooth", color=4)
+    plot!(Fig5a, M, 4 .* M.^(-1), label="", color=1)
+    plot!(Fig5a, M, 12 .* M.^(-2), label="", color=2)
+    savefig(Fig5a, "Fig5a.pdf"); savefig(Fig5a, "Fig5a.svg")
 
-# Plot convergence rates
-Fig5a=plot(;xlabel="\$M\$",axis=:log,legend=:bottomleft)
-n=9:-1:6;Ns=2 .^n;
-scatter!(Fig5a,Ns,E1,label="\$E_1\$, sharp low-pass filter",color=1)
-scatter!(Fig5a,Ns,E0,label="\$E_0\$, sharp low-pass filter",color=2)
-scatter!(Fig5a,Ns,E1s,label="\$E_1\$, smooth low-pass filter",color=3)
-scatter!(Fig5a,Ns,E0s,label="\$E_0\$, smooth low-pass filter",color=4)
-plot!(Fig5a,Ns,4 .* Ns.^(-1),label="",color=1)
-plot!(Fig5a,Ns,12 .*Ns.^(-2),label="",color=2)
+    # Hamiltonian system, sharp and smooth low-pass filters
+    E0, E1 = Convergence2D(T=0.1, smooth=false, hamiltonian=true)
+    E0s, E1s = Convergence2D(T=0.1, smooth=true, hamiltonian=true)
 
-savefig(Fig5a,"Fig5a.pdf");savefig(Fig5a,"Fig5a.svg");
-
-
-
-#--- Hamiltonian system
-
-# Solve the problems, save the errors
-E0,E1=Convergence2D(;T=0.1,smooth=false, hamiltonian=true)
-E0s,E1s=Convergence2D(;T=0.1,smooth=true, hamiltonian=true)
-
-# Plot convergence rates
-Fig5b=plot(;xlabel="\$M\$",axis=:log,legend=:bottomleft)
-n=9:-1:6;Ns=2 .^n;
-scatter!(Fig5b,Ns,E1,label="\$E_1\$, sharp low-pass filter",color=1)
-scatter!(Fig5b,Ns,E0,label="\$E_0\$, sharp low-pass filter",color=2)
-scatter!(Fig5b,Ns,E1s,label="\$E_1\$, smooth low-pass filter",color=3)
-scatter!(Fig5b,Ns,E0s,label="\$E_0\$, smooth low-pass filter",color=4)
-plot!(Fig5b,Ns,4 .* Ns.^(-1),label="",color=1)
-plot!(Fig5b,Ns,12 .*Ns.^(-2),label="",color=2)
-
-savefig(Fig5b,"Fig5b.pdf");savefig(Fig5b,"Fig5b.svg");
+    Fig5b = plot(; xlabel="\$M\$", axis=:log, legend=:bottomleft)
+    scatter!(Fig5b, M, E1, label="\$E_1\$, sharp", color=1)
+    scatter!(Fig5b, M, E0, label="\$E_0\$, sharp", color=2)
+    scatter!(Fig5b, M, E1s, label="\$E_1\$, smooth", color=3)
+    scatter!(Fig5b, M, E0s, label="\$E_0\$, smooth", color=4)
+    plot!(Fig5b, M, 4 .* M.^(-1), label="", color=1)
+    plot!(Fig5b, M, 12 .* M.^(-2), label="", color=2)
+    savefig(Fig5b, "Fig5b.pdf"); savefig(Fig5b, "Fig5b.svg")
 end
 
-#------- Experiment 2. Negative-depth 
+# ------------------------------------------------------
+# Figure 6: Instability for 2D simulation with h₀ < 0
+# ------------------------------------------------------
 function Figure6()
-##---- Solve problems (M=2^9)
-problem = IntegrateSV2D(;h₀=-0.1,u₀=1/2,v₀=-1/2,u₁=1,v₁=1,M=2^9,T=0.1,dt =5e-5,smooth=false,hamiltonian=false,Ns=1)
-problem_smooth =  IntegrateSV2D(;h₀=-0.1,u₀=1/2,v₀=-1/2,u₁=1,v₁=1,M=2^9,T=0.1,dt =5e-5,smooth=true,hamiltonian=false,Ns=1)
+    # M = 2^9
+    # Smooth low-pass filter
+    problem = IntegrateSV2D(h₀=-0.1, u₀=0.5, v₀=-0.5, u₁=1, v₁=-1,
+                            M=2^9, T=0.1, dt=5e-5, smooth=false,
+                            hamiltonian=false, Ns=1)
+    η, vx, vy, x, y = solution(problem)
 
-η,vx,vy,x,y = solution(problem)
-ηs,vxs,vys, = solution(problem_smooth)
+    # Sharp low-pass filter
+    problem_smooth = IntegrateSV2D(h₀=-0.1, u₀=0.5, v₀=-0.5, u₁=1, v₁=-1,
+                                   M=2^9, T=0.1, dt=5e-5, smooth=true,
+                                   hamiltonian=false, Ns=1)
 
-mesh=Mesh(x)
-kx=mesh.k;ky=mesh.k;x=mesh.x;y=mesh.x;
-∂y = 1im * ky' ;
-∂x = 1im * kx  ;
+    ηs, vxs, vys, = solution(problem_smooth)
 
-function ∂fx( f )
-    real.(ifft(∂x .* fft(f, 1), 1))
-end
-function ∂fy( f )
-    real.(ifft(∂y .* fft(f, 2), 2))
-end
+    # Plot second derivative of the velocity
+    mesh = Mesh(x)
+    kx, ky = mesh.k, mesh.k
+    ∂x, ∂y = 1im * kx, 1im * ky'
 
-# sharp low-pass filter, non-hamiltonian system
-Fig6a=plot(x,y,∂fx(∂fx(vx)),st=:surface,label="sharp")
-plot!(xlabel="x", ylabel="y")
-title!("\$\\partial_x^2u_N, \\quad    2M = 2^{9}\$")
-savefig(Fig6a,"Fig6a.pdf");savefig(Fig6a,"Fig6a.svg");
+    ∂fx(f) = real.(ifft(∂x .* fft(f, 1), 1))
+    ∂fy(f) = real.(ifft(∂y .* fft(f, 2), 2))
 
-# smooth low-pass filter, non-hamiltonian system
-Fig6b=plot(x,y,∂fx(∂fx(vxs)),st=:surface,label="smooth")
-plot!(xlabel="x", ylabel="y")
-title!("\$\\partial_x^2u_N, \\quad    2M = 2^{9}\$")
-savefig(Fig6b,"Fig6b.pdf");savefig(Fig6b,"Fig6b.svg");
+    Fig6a = plot(x, y, ∂fx(∂fx(vx)), st=:surface, label="sharp")
+    plot!(xlabel="x", ylabel="y")
+    title!("\$\\partial_x^2 u_N, \\quad 2M = 2^{9}\$")
+    savefig(Fig6a, "Fig6a.pdf"); savefig(Fig6a, "Fig6a.svg")
 
-##---- Solve problems (M=2^10)
-problem = IntegrateSV2D(;h₀=-0.1,u₀=1/2,v₀=-1/2,u₁=1,v₁=1,M=2^10,T=0.1,dt =5e-5,smooth=false,hamiltonian=false,Ns=1)
-problem_smooth =  IntegrateSV2D(;h₀=-0.1,u₀=1/2,v₀=-1/2,u₁=1,v₁=1,M=2^10,T=0.1,dt =5e-5,smooth=true,hamiltonian=false,Ns=1)
+    Fig6b = plot(x, y, ∂fx(∂fx(vxs)), st=:surface, label="smooth")
+    plot!(xlabel="x", ylabel="y")
+    title!("\$\\partial_x^2 u_N, \\quad 2M = 2^{9}\$")
+    savefig(Fig6b, "Fig6b.pdf"); savefig(Fig6b, "Fig6b.svg")
 
-η,vx,vy,x,y = solution(problem)
-ηs,vxs,vys, = solution(problem_smooth)
+    # M = 2^10...
+    # Smooth low-pass filter
+    problem = IntegrateSV2D(h₀=-0.1, u₀=0.5, v₀=-0.5, u₁=1, v₁=1,
+                            M=2^10, T=0.1, dt=5e-5, smooth=false,
+                            hamiltonian=false, Ns=1)
+    η, vx, vy, x, y = solution(problem)
+    # Sharp low-pass filter
+    problem_smooth = IntegrateSV2D(h₀=-0.1, u₀=0.5, v₀=-0.5, u₁=1, v₁=1,
+                                   M=2^10, T=0.1, dt=5e-5, smooth=true,
+                                   hamiltonian=false, Ns=1)
+    ηs, vxs, vys, = solution(problem_smooth)
 
-mesh=Mesh(x)
-kx=mesh.k;ky=mesh.k;x=mesh.x;y=mesh.x;
-∂y = 1im * ky' ;
-∂x = 1im * kx  ;
+    # Plot second derivative of the velocity
+    mesh = Mesh(x)
+    kx, ky = mesh.k, mesh.k
+    ∂x, ∂y = 1im * kx, 1im * ky'
 
-function ∂fx( f )
-    real.(ifft(∂x .* fft(f, 1), 1))
-end
-function ∂fy( f )
-    real.(ifft(∂y .* fft(f, 2), 2))
-end
+    ∂fx(f) = real.(ifft(∂x .* fft(f, 1), 1))
+    ∂fy(f) = real.(ifft(∂y .* fft(f, 2), 2))
 
-# sharp low-pass filter, non-hamiltonian system
-Fig6c=plot(x,y,∂fx(∂fx(vx)),st=:surface,label="sharp")
-plot!(xlabel="x", ylabel="y")
-title!("\$\\partial_x^2u_N, \\quad    2M = 2^{10}\$")
-savefig(Fig6c,"Fig6c.pdf");savefig(Fig6c,"Fig6c.svg");
+    Fig6c = plot(x, y, ∂fx(∂fx(vx)), st=:surface, label="sharp")
+    plot!(xlabel="x", ylabel="y")
+    title!("\$\\partial_x^2 u_N, \\quad 2M = 2^{10}\$")
+    savefig(Fig6c, "Fig6c.pdf"); savefig(Fig6c, "Fig6c.svg")
 
-# smooth low-pass filter, non-hamiltonian system
-Fig6d=plot(x,y,∂fx(∂fx(vxs)),st=:surface,label="smooth")
-plot!(xlabel="x", ylabel="y")
-title!("\$\\partial_x^2u_N, \\quad    2M = 2^{10}\$")
-savefig(Fig6d,"Fig6d.pdf");savefig(Fig6d,"Fig6d.svg");
-end
+    Fig6d = plot(x, y, ∂fx(∂fx(vxs)), st=:surface, label="smooth")
+    plot!(xlabel="x", ylabel="y")
+    title!("\$\\partial_x^2 u_N, \\quad 2M = 2^{10}\$")
+    savefig(Fig6d, "Fig6d.pdf"); savefig(Fig6d, "Fig6d.svg")end
 
-#------- Experiment 3. Hamiltonian system 
+# -------------------------------------------------------------
+# Figure 7: Instability for Hamiltonian system simulation in 2D
+# -------------------------------------------------------------
 function Figure7()
-##---- Solve problems (M=2^9)
-problem = IntegrateSV2D(;h₀=0.5,u₀=2,v₀=-2,u₁=1,v₁=-1,M=2^9,T=0.1,dt =5e-5,smooth=false,hamiltonian=true,Ns=1)
-problem_smooth =  IntegrateSV2D(;h₀=0.5,u₀=2,v₀=-2,u₁=1,v₁=-1,M=2^9,T=0.1,dt =5e-5,smooth=true,hamiltonian=true,Ns=1)
+    # M = 2^9
+    # Smooth low-pass filter
+    problem = IntegrateSV2D(h₀=0.5, u₀=2, v₀=-2, u₁=1, v₁=-1,
+                            M=2^9, T=0.1, dt=5e-5, smooth=false,
+                            hamiltonian=true, Ns=1)
+    η, vx, vy, x, y = solution(problem)
 
-η,vx,vy,x,y = solution(problem)
-ηs,vxs,vys, = solution(problem_smooth)
+    # Sharp low-pass filter
+    problem_smooth = IntegrateSV2D(h₀=0.5, u₀=2, v₀=-2, u₁=1, v₁=-1,
+                                   M=2^9, T=0.1, dt=5e-5, smooth=true,
+                                   hamiltonian=true, Ns=1)
+    ηs, vxs, vys, = solution(problem_smooth)
 
-mesh=Mesh(x)
-kx=mesh.k;ky=mesh.k;x=mesh.x;y=mesh.x;
-∂y = 1im * ky' ;
-∂x = 1im * kx  ;
+    # Plot second derivative of the velocity
+    mesh = Mesh(x)
+    kx, ky = mesh.k, mesh.k
+    ∂x, ∂y = 1im * kx, 1im * ky'
 
-function ∂fx( f )
-    real.(ifft(∂x .* fft(f, 1), 1))
+    ∂fx(f) = real.(ifft(∂x .* fft(f, 1), 1))
+    ∂fy(f) = real.(ifft(∂y .* fft(f, 2), 2))
+
+    Fig7a = plot(x, y, ∂fx(∂fx(vx)), st=:surface, label="sharp")
+    plot!(xlabel="x", ylabel="y")
+    title!("\$\\partial_x^2 u_N, \\quad 2M = 2^{9}\$")
+    savefig(Fig7a, "Fig7a.pdf"); savefig(Fig7a, "Fig7a.svg")
+
+    Fig7b = plot(x, y, ∂fx(∂fx(vxs)), st=:surface, label="smooth")
+    plot!(xlabel="x", ylabel="y")
+    title!("\$\\partial_x^2 u_N, \\quad 2M = 2^{9}\$")
+    savefig(Fig7b, "Fig7b.pdf"); savefig(Fig7b, "Fig7b.svg")
+
+    # M = 2^10
+    # Smooth low-pass filter
+    problem = IntegrateSV2D(h₀=0.5, u₀=2, v₀=-2, u₁=1, v₁=-1,
+                            M=2^10, T=0.1, dt=5e-5, smooth=false,
+                            hamiltonian=true, Ns=1)
+    η, vx, vy, x, y = solution(problem)
+
+    # Sharp low-pass filter
+    problem_smooth = IntegrateSV2D(h₀=0.5, u₀=2, v₀=-2, u₁=1, v₁=-1,
+                                   M=2^10, T=0.1, dt=5e-5, smooth=true,
+                                   hamiltonian=true, Ns=1)
+    ηs, vxs, vys, = solution(problem_smooth)
+
+    # Plot second derivative of the velocity
+    mesh = Mesh(x)
+    kx, ky = mesh.k, mesh.k
+    ∂x, ∂y = 1im * kx, 1im * ky'
+
+    ∂fx(f) = real.(ifft(∂x .* fft(f, 1), 1))
+    ∂fy(f) = real.(ifft(∂y .* fft(f, 2), 2))
+
+    Fig7c = plot(x, y, ∂fx(∂fx(vx)), st=:surface, label="sharp")
+    plot!(xlabel="x", ylabel="y")
+    title!("\$\\partial_x^2 u_N, \\quad 2M = 2^{10}\$")
+    savefig(Fig7c, "Fig7c.pdf"); savefig(Fig7c, "Fig7c.svg")
+
+    Fig7d = plot(x, y, ∂fx(∂fx(vxs)), st=:surface, label="smooth")
+    plot!(xlabel="x", ylabel="y")
+    title!("\$\\partial_x^2 u_N, \\quad 2M = 2^{10}\$")
+    savefig(Fig7d, "Fig7d.pdf"); savefig(Fig7d, "Fig7d.svg")
 end
-function ∂fy( f )
-    real.(ifft(∂y .* fft(f, 2), 2))
-end
 
-# sharp low-pass filter, Hamiltonian system
-Fig7a=plot(x,y,∂fx(∂fx(vx)),st=:surface,label="sharp")
-plot!(xlabel="x", ylabel="y")
-title!("\$\\partial_x^2u_N, \\quad    2M = 2^{9}\$")
-savefig(Fig7a,"Fig7a.pdf");savefig(Fig7a,"Fig7a.svg");
-
-# smooth low-pass filter, non-hamiltonian system
-Fig7b=plot(x,y,∂fx(∂fx(vxs)),st=:surface,label="smooth")
-plot!(xlabel="x", ylabel="y")
-title!("\$\\partial_x^2u_N, \\quad    2M = 2^{9}\$")
-savefig(Fig7b,"Fig7b.pdf");savefig(Fig7b,"Fig7b.svg");
-
-##---- Solve problems (M=2^10)
-problem = IntegrateSV2D(;h₀=0.5,u₀=2,v₀=-2,u₁=1,v₁=-1,M=2^10,T=0.1,dt =5e-5,smooth=false,hamiltonian=true,Ns=1)
-problem_smooth =  IntegrateSV2D(;h₀=0.5,u₀=2,v₀=-2,u₁=1,v₁=-1,M=2^10,T=0.1,dt =5e-5,smooth=true,hamiltonian=true,Ns=1)
-
-η,vx,vy,x,y = solution(problem)
-ηs,vxs,vys, = solution(problem_smooth)
-
-mesh=Mesh(x)
-kx=mesh.k;ky=mesh.k;x=mesh.x;y=mesh.x;
-∂y = 1im * ky' ;
-∂x = 1im * kx  ;
-
-function ∂fx( f )
-    real.(ifft(∂x .* fft(f, 1), 1))
-end
-function ∂fy( f )
-    real.(ifft(∂y .* fft(f, 2), 2))
-end
-
-# sharp low-pass filter, non-hamiltonian system
-Fig7c=plot(x,y,∂fx(∂fx(vx)),st=:surface,label="sharp")
-plot!(xlabel="x", ylabel="y")
-title!("\$\\partial_x^2u_N, \\quad    2M = 2^{10}\$")
-savefig(Fig7c,"Fig7c.pdf");savefig(Fig7c,"Fig7c.svg");
-
-# smooth low-pass filter, non-hamiltonian system
-Fig7d=plot(x,y,∂fx(∂fx(vxs)),st=:surface,label="smooth")
-plot!(xlabel="x", ylabel="y")
-title!("\$\\partial_x^2u_N, \\quad    2M = 2^{10}\$")
-savefig(Fig7d,"Fig7d.pdf");savefig(Fig7d,"Fig7d.svg");
-end
 nothing
+
