@@ -46,16 +46,16 @@ include("models/WWn.jl")
 
 # These models are not documented
 include("models/Whitham.jl")
-include("models/relaxedGreenNaghdi.jl")
 include("models/Choi.jl")
+include("models/relaxedGreenNaghdi.jl")
 include("models/SaintVenant2D.jl")
-include("models/bilayerSaintVenant.jl")
 
 
 
 include("solvers/Euler.jl")
 include("solvers/EulerSymp.jl")
 include("solvers/RK4.jl")
+
 
 
 end
