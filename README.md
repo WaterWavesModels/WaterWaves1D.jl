@@ -10,7 +10,7 @@
 ## Installation
 
 ```julia
-(v1.8) pkg> add WaterWaves1D
+(v1.11) pkg> add WaterWaves1D
 using WaterWaves1D
 ```
 
@@ -93,3 +93,32 @@ gif(anim, "Example.gif", fps=15)
 The code is citable via [zenodo](https://zenodo.org). Please cite as:
 
 > V. Duchêne, P. Navaro. WaterWaves1D.jl (Version v0.1.0). Zenodo.  [https://doi.org/10.5281/zenodo.7142921](https://doi.org/10.5281/zenodo.7142921)
+
+## Publications
+
+These preprints and publications use `WaterWaves1D.jl`.
+
+1. Vincent Duchêne and Christian Klein, [*Numerical study of the Serre-Green-Naghdi equations and a fully dispersive counterpart*](https://doi.org/10.3934/dcdsb.2021300), Discrete Contin. Dyn. Syst. Ser. B, 27(10), pp. 5905–5933 (2022). DOI: [10.3934/dcdsb.2021300](https://doi.org/10.3934/dcdsb.2021300)
+2. Vincent Duchêne and Benjamin Melinand, [*Rectification of a deep water model for surface gravity waves*](https://doi.org/10.2140/paa.2024.6.73), Pure Appl. Anal. 6, No. 1, pp. 73–128 (2024). DOI: [10.2140/paa.2024.6.73](https://doi.org/10.2140/paa.2024.6.73)
+3. Arnaud Debussche, Etienne Mémin, and Antoine Moneyron, [*Derivation of Stochastic Models for
+Coastal Waves*](https://doi.org/10.1007/978-3-031-70660-8_9), in B. Chapron et al. (eds.), Stochastic Transport in Upper Ocean Dynamics III,
+Mathematics of Planet Earth 13 (2025). DOI:[10.1007/978-3-031-70660-8_9](https://doi.org/10.1007/978-3-031-70660-8_9)
+4. Duchêne, Vincent; Marstrander, Johanna Ulvedal, [*The Fourier spectral approach to the spatial discretization of quasilinear hyperbolic systems*](https://doi.org/10.48550/arXiv.2507.00516), 
+Preprint, arXiv:2507.00516 (2025). DOI: [10.48550/arXiv.2507.00516](https://doi.org/10.48550/arXiv.2507.00516) 
+
+If you have a work that belongs to tis list, please [open a pull request](https://github.com/WaterWavesModels/WaterWaves1D.jl/pulls) to add it or let us know!
+
+## Contributing
+
+If you would like to contribute to the development of the package, please do not refrain from contacting us, for instance by [opening an issue](https://github.com/WaterWavesModels/WaterWaves1D.jl//issues/new).
+
+
+## Related Julia packages
+
+If this package does not fit your needs, you may consider
+
+- [`SpectralWaves.jl`](https://github.com/mcpaprota/SpectralWaves.jl) Implementation of a spectral method for water waves *over topography*.
+- [`GeophysicalFlows.jl`](https://github.com/FourierFlows/GeophysicalFlows.jl) Geophysical fluid dynamics leveraging the pseudo-spectral solver modules of the package [`FourierFlows.jl`](https://github.com/FourierFlows/FourierFlows.jl).
+- [`DispersiveShallowWater.jl`](https://juliapackages.com/p/dispersiveshallowwater) Structure-preserving numerical methods for dispersive shallow water models.
+- [`TrixiShallowWater.jl`](https://github.com/trixi-framework/TrixiShallowWater.jl) simulations of the shallow water equations with the discontinuous Galerkin method.
+- [`Oceananigans.jl`](https://github.com/CliMA/Oceananigans.jl) Finite volume simulations of the nonhydrostatic and hydrostatic Boussinesq equations on CPUs and GPUs.
