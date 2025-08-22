@@ -372,7 +372,7 @@ end
             end
         end
 
-	    if variable in ( :difference , :difference_surface)
+	    if variable in ( :difference , :difference_surface, :surface_difference)
 
 
             @series begin
@@ -388,7 +388,7 @@ end
 
 	    end
 
-        if variable == :difference_velocity
+        if variable in ( :difference_velocity, :velocity_difference)
 
 
 
@@ -405,7 +405,7 @@ end
 
         end
 
-        if variable in ( :difference_fourier , :difference_Fourier )
+        if variable in ( :difference_fourier , :difference_Fourier, :fourier_difference, :Fourier_difference )
 
 
                 
@@ -423,7 +423,7 @@ end
 
         end
 
-        if variable in ( :differences, :differences_surface )
+        if variable in ( :differences, :differences_surface, :surface_differences )
 
             pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
 
@@ -443,7 +443,7 @@ end
 
         end
 
-        if variable == :differences_velocity
+        if variable in (:differences_velocity, :velocity_differences)
 
             pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
 
@@ -464,7 +464,7 @@ end
 
         end
 
-        if variable == :differences_fourier || variable == :differences_Fourier
+        if variable in ( :differences_fourier , :differences_Fourier, :fourier_differences , :Fourier_differences)
 
             pairs = [(i,j) for i in eachindex(problems) for j in 1:i-1]
 
