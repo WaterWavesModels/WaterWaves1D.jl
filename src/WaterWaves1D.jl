@@ -29,26 +29,25 @@ include("initialdata/SolitaryWaveWhithamBoussinesq.jl")
 include("initialdata/SolitaryWaveWhitham.jl")
 
 include("models/Airy.jl")
-include("models/Boussinesq.jl")
 include("models/AkersNicholls.jl")
+include("models/BBM.jl")
+include("models/Boussinesq.jl")
+include("models/Choi.jl")
 include("models/IsobeKakinuma.jl")
+include("models/KdV.jl")
 include("models/Matsuno.jl")
 include("models/modifiedMatsuno.jl")
 include("models/NonHydrostatic.jl")
+include("models/relaxedGreenNaghdi.jl")
 include("models/SerreGreenNaghdi.jl")
 include("models/SaintVenant.jl")
+include("models/SaintVenant2D.jl")
 include("models/SquareRootDepth.jl")
 include("models/WaterWaves.jl")
+include("models/Whitham.jl")
 include("models/WhithamBoussinesq.jl")
 include("models/WhithamGreenNaghdi.jl")
 include("models/WWn.jl")
-
-
-# These models are not documented
-include("models/Whitham.jl")
-include("models/Choi.jl")
-include("models/relaxedGreenNaghdi.jl")
-include("models/SaintVenant2D.jl")
 
 
 

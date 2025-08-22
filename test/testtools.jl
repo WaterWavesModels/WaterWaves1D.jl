@@ -50,6 +50,7 @@ end
     @test t==pb.times.ts[end]
 end
 
+using Plots
 @testset "Plot recipes" begin
     param = ( ϵ  = 1/2, μ = 1, N  = 2^8, L  = 10 , T  = 0.1, dt = 0.01)
     init = Init(x->sin.(-x.^2),x->cos.(x)) 

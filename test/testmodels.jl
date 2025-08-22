@@ -286,6 +286,18 @@ push!(models,Whitham(param::NamedTuple;
             label	= "BBM") )
 push!(precisions,para.μ^2+para.ϵ^2)
 
+push!(models,KdV(param::NamedTuple;
+			dealias = 0,
+			ktol	= 1e-12,
+            label	= "KdV") )
+push!(precisions,para.μ^2+para.ϵ^2)
+
+push!(models,BBM(param::NamedTuple;
+			dealias = 0,
+			ktol	= 1e-12,
+            label	= "BBM") )
+push!(precisions,para.μ^2+para.ϵ^2)
+
 # Build reference problem (water waves)
 modelWW =  WaterWaves(merge(param,(ν=1,));
 					IL	    = false,
