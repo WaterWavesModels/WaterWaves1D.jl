@@ -1,4 +1,4 @@
-# Problems
+# Main architecture
 
 A central object in [`WaterWaves1D.jl`](https://github.com/WaterWavesModels/WaterWaves1D.jl/) is the [`Problem`](@ref WaterWaves1D.Problem) structure, which contains all information on a numerically discretized initial-value problem. In practice, a problem is generated as 
 ```julia

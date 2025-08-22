@@ -93,7 +93,7 @@ is one of the oldest model for the propagation of water waves. It reads
 Notice that the parameter ``μ`` has disappeared:
 the Saint-Venant system is the order-zero shallow water model for water waves.
 
-The associated code is [`SaintVenant`](@ref WaterWaves1D.SaintVenant).
+The associated code is [`SaintVenant`](@ref WaterWaves1D.SaintVenant) (see also [`SaintVenant_fast`](@ref WaterWaves1D.SaintVenant_fast)).
 
 #### The Boussinesq systems
 
@@ -220,7 +220,7 @@ The associated code is [`WhithamBoussinesq`](@ref WaterWaves1D.WhithamBoussinesq
 
 #### The Isobe-Kakinuma systems
 
-The Isobe-Kakinuma model is a hierarchy of models proposed by
+The Isobe-Kakinuma model is a hierarchy of systems proposed by
 [Isobe](https://doi.org/10.1061/9780784400890.023),
 depending on the rank ``N`` and the parameters ``(p_0,p_1,⋯,p_N)``
 
@@ -246,6 +246,23 @@ where ``h=1 + ϵ η`` is the depth, ``v=∂_xψ`` the derivative of the trace of
 The associated code [`IsobeKakinuma`](@ref WaterWaves1D.IsobeKakinuma)
 is (for now) limited to the case ``N=1`` and ``(p₀,p₁)=(0,2)``.
 
+#### The Choi systems
+
+The Choi model is a hierarchy of systems proposed by
+[Choi](https://doi.org/0.1017/jfm.2022.544),
+depending on the rank ``M``. 
+We actually consider an asymptotically equivalent variant which reads
+
+```math
+  \left\{\begin{array}{l}
+∂_tη+∂_x\left(\sum_{m=0}^M  h^{2m+1}\frac{(-μ∂_x^2)^mv }{(2m+1)!}\right) =0,\\[1ex]
+\big(	1-\sum_{m=1}^M μ∂_x( h^{2m}∂_x\frac{(-μ∂_x^2)^{m-1}}{(2m)!})\big)∂_tv +∂_xη  \\[1ex] 
+		\qquad +∂_x\left(\frac12\sum_{m=0}^M h^{2m}\left(\sum_{j=0}^m \frac{(-μ∂_x^2)^j v}{(2j)!}  \frac{(-μ∂_x^2)^{m-j} v}{(2m-2j)!}-μ\sum_{j=0}^{m-1} \frac{∂_x(-μ∂_x^2)^j v}{(2j+1)!} \frac{∂_x(-μ∂_x^2)^{m-j-1} v}{(2m-2j-1)!} \right)\right),
+  \end{array}\right.
+```
+where ``h=1 + ϵ η`` is the depth and ``v=∂_xϕᵦ`` is the derivative of the trace of the velocity potential at the bottom.
+
+The associated code is [`Choi`](@ref WaterWaves1D.Choi).
 
 
 ### Small steepness models
@@ -365,6 +382,70 @@ can be written as
 with notations as above, ``L^μ=\frac{ν\sqrtμ D}{\tanh(\sqrtμ D)}`` and where ``m=-\frac1{\sqrtμ ν} T^μψ  + \frac{ϵ}{ν} \big(η ∂_xψ +  T^μ(η T^μ ∂_xψ)\big)`` represents the vertically integrated horizontal momentum.
 
 The associated codes is [`AkersNicholls`](@ref WaterWaves1D.AkersNicholls), and [`AkersNicholls_fast`](@ref WaterWaves1D.AkersNicholls_fast) for a less human-readable but more efficient version.
+
+### Other models
+
+All the models presented so far consists in two evolution equations for the surface elevation `η` and one velocity variable. Our package is not limited to such structure.
+
+#### Unidirectional models (KdV, BBM, Whitham)
+
+The celebrated [Korteweg-de Vries](https://doi.org/10.1080/14786449508620739) (KdV) model was introduced to model water waves.
+
+```math
+∂_tη+∂_x η+\tfrac{3ϵ}{2} η ∂_xη + \tfrac{μ}{6}∂_x^3η=0.
+```
+
+The [Benjamin-Bona-Mahony](https://doi.org/10.1098%2Frsta.1972.0032) (BBM) model is a well-known asymptotically equivalent variant.
+```math
+(1-\tfrac{μ}{6}∂_x^2)∂_tη+∂_x η+\tfrac{3ϵ}{2} η ∂_xη =0.
+```
+
+A full dispersion model was proposed by [Whitham](https://doi.org/10.1098/rspa.1967.0119)
+```math
+∂_tη+M^μ∂_x η+\tfrac{3ϵ}{2} η ∂_xη =0.
+```
+where ``M^μ=\big(\tfrac{\tanh(\sqrtμ D)}{\sqrtμ D}\big)^{1/2}``.
+
+While these models have been designed to approximate *unidirectional* (left-going or right-going) waves, they can also be used as building blocks to approximate general water waves; see [Emerald](https://doi.org/10.1088/1361-6544/ac24df).
+
+The associated codes are [`KdV`](@ref WaterWaves1D.KdV), [`BBM`](@ref WaterWaves1D.BBM) and [`Whitham`](@ref WaterWaves1D.Whitham) respectively.
+
+#### Relaxed Green-Naghdi models
+
+[Favrie and Gavrilyuk](https://doi.org/10.1088/1361-6544/aa712d), [Escalante, Dumbser and Castro](https://doi.org/10.1016/j.jcp.2019.05.035) and [Richard](https://doi.org/10.1016/j.euromechflu.2021.05.011) among others have proposed a strategy to efficiently approximate solutions of the Green-Naghdi model.
+
+It consists in solving an augmented system with additional unknowns and a relaxation parameter, for instance
+
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+∂_x (hu)=0,\\[1ex]
+  h(∂_tu+ϵu∂_x u+∂_x η)+aμ ∂_x (hp)=0,\\[1ex]
+  h(∂_tp +ϵu∂_x p)+a(2w+h∂_xu)=0,\\[1ex]
+	h(∂_tw+uϵ∂_x w) = a\tfrac{3}{2}p.
+  \end{array}\right.
+```
+where ``h=1 + ϵ η`` is the water depth and ``p`` and ``w`` are expected to approximate the layer-veraged pressure and vertical velocity if ``a\gg1``.
+
+Notice the system has four evolution equations, in particular initial data for the augmented variables ``p`` and ``w`` must be suitably chosen. 
+
+The associated code is [`relaxedGreenNaghdi`](@ref WaterWaves1D.relaxedGreenNaghdi).
+
+#### Two-dimensional models
+
+Despite its name, our package is not strictly restricted to one-dimensional evolution equations, although the full water waves equations with two horizontal dimensions is largely outside its scope.
+
+As a demonstration we implemented the two-dimensional [Saint-Venant](https://en.wikipedia.org/wiki/Shallow_water_equations#One-dimensional_Saint-Venant_equations) which reads
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+\nabla\cdot((1+ϵη)\bm{v})=0,\\[1ex]
+  ∂_tv+\nabla η+ϵ(\bm{v}\cdot\nabla)\bm{v}=0.
+  \end{array}\right.
+```
+Alternatively, we may replace ``(\bm{v}\cdot\nabla)\bm{v}`` with ``\tfrac12 \nabla(|\bm{v}|^2)`` so a to preserve the hamiltonian structure of the original model, and we implemented both versions.
+
+
+The associated code is [`SaintVenant2D`](@ref WaterWaves1D.SaintVenant2D) (see also [`SaintVenant2D_fast`](@ref WaterWaves1D.SaintVenant2D_fast)).
+
 
 ## Mass, momentum, energy
 
