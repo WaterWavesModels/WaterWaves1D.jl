@@ -4,7 +4,7 @@ export Choi
     Choi(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the model proposed by [Choi](https://doi.org/10.1017/jfm.2022.544).
+(an asymptotically equivalent variant of) the model proposed by [Choi](https://doi.org/10.1017/jfm.2022.544).
 
 # Argument
 `param` is of type `NamedTuple` and must contain
