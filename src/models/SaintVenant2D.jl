@@ -166,9 +166,9 @@ mutable struct SaintVenant2D <: AbstractModel
 end
 
 """
-	SaintVenant_fast(param;kwargs)
+	SaintVenant2D_fast(param;kwargs)
 
-Same as `SaintVenant`, but faster.
+Same as `SaintVenant2D`, but faster.
 
 If the optional argument `large_data` is set to `true` (default is `false`), 
 then the standard `fft` and `ifft` functions (instead of plans) are used.
