@@ -98,6 +98,7 @@ The code is citable via [zenodo](https://zenodo.org). Please cite as:
 
 These preprints and publications use `WaterWaves1D.jl`.
 
+1. Vincent Duchêne, [*Many Models for Water Waves*](https://www.ams.org/open-math-notes/omn-view-listing?listingId=111309), Open Math Notes, OMN:202109.111309 (2021).
 1. Vincent Duchêne and Christian Klein, [*Numerical study of the Serre-Green-Naghdi equations and a fully dispersive counterpart*](https://doi.org/10.3934/dcdsb.2021300), Discrete Contin. Dyn. Syst. Ser. B, 27(10), pp. 5905–5933 (2022). DOI: [10.3934/dcdsb.2021300](https://doi.org/10.3934/dcdsb.2021300)
 2. Vincent Duchêne and Benjamin Melinand, [*Rectification of a deep water model for surface gravity waves*](https://doi.org/10.2140/paa.2024.6.73), Pure Appl. Anal. 6, No. 1, pp. 73–128 (2024). DOI: [10.2140/paa.2024.6.73](https://doi.org/10.2140/paa.2024.6.73)
 3. Arnaud Debussche, Etienne Mémin, and Antoine Moneyron, [*Derivation of Stochastic Models for
