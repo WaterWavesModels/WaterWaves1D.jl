@@ -99,15 +99,14 @@ The code is citable via [zenodo](https://zenodo.org). Please cite as:
 These preprints and publications use `WaterWaves1D.jl`.
 
 1. Vincent Duchêne, [*Many Models for Water Waves*](https://www.ams.org/open-math-notes/omn-view-listing?listingId=111309), Open Math Notes, OMN:202109.111309 (2021).
-1. Vincent Duchêne and Christian Klein, [*Numerical study of the Serre-Green-Naghdi equations and a fully dispersive counterpart*](https://doi.org/10.3934/dcdsb.2021300), Discrete Contin. Dyn. Syst. Ser. B, 27(10), pp. 5905–5933 (2022). DOI: [10.3934/dcdsb.2021300](https://doi.org/10.3934/dcdsb.2021300)
-2. Vincent Duchêne and Benjamin Melinand, [*Rectification of a deep water model for surface gravity waves*](https://doi.org/10.2140/paa.2024.6.73), Pure Appl. Anal. 6, No. 1, pp. 73–128 (2024). DOI: [10.2140/paa.2024.6.73](https://doi.org/10.2140/paa.2024.6.73)
-3. Arnaud Debussche, Etienne Mémin, and Antoine Moneyron, [*Derivation of Stochastic Models for
-Coastal Waves*](https://doi.org/10.1007/978-3-031-70660-8_9), in B. Chapron et al. (eds.), Stochastic Transport in Upper Ocean Dynamics III,
+2. Vincent Duchêne and Christian Klein, [*Numerical study of the Serre-Green-Naghdi equations and a fully dispersive counterpart*](https://doi.org/10.3934/dcdsb.2021300), Discrete Contin. Dyn. Syst. Ser. B, 27(10), pp. 5905–5933 (2022). DOI: [10.3934/dcdsb.2021300](https://doi.org/10.3934/dcdsb.2021300)
+3. Vincent Duchêne and Benjamin Melinand, [*Rectification of a deep water model for surface gravity waves*](https://doi.org/10.2140/paa.2024.6.73), Pure Appl. Anal. 6, No. 1, pp. 73–128 (2024). DOI: [10.2140/paa.2024.6.73](https://doi.org/10.2140/paa.2024.6.73)
+4. Arnaud Debussche, Etienne Mémin, and Antoine Moneyron, [*Derivation of Stochastic Models for Coastal Waves*](https://doi.org/10.1007/978-3-031-70660-8_9), in B. Chapron et al. (eds.), Stochastic Transport in Upper Ocean Dynamics III,
 Mathematics of Planet Earth 13 (2025). DOI:[10.1007/978-3-031-70660-8_9](https://doi.org/10.1007/978-3-031-70660-8_9)
-4. Duchêne, Vincent; Marstrander, Johanna Ulvedal, [*The Fourier spectral approach to the spatial discretization of quasilinear hyperbolic systems*](https://doi.org/10.48550/arXiv.2507.00516), 
+5. Duchêne, Vincent; Marstrander, Johanna Ulvedal, [*The Fourier spectral approach to the spatial discretization of quasilinear hyperbolic systems*](https://doi.org/10.48550/arXiv.2507.00516), 
 Preprint, arXiv:2507.00516 (2025). DOI: [10.48550/arXiv.2507.00516](https://doi.org/10.48550/arXiv.2507.00516) 
 
-If you have a work that belongs to tis list, please [open a pull request](https://github.com/WaterWavesModels/WaterWaves1D.jl/pulls) to add it or let us know!
+If you have a work that belongs to this list, please [open a pull request](https://github.com/WaterWavesModels/WaterWaves1D.jl/pulls) to add it or let us know!
 
 ## Contributing
 
