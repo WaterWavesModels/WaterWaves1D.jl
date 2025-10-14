@@ -1,7 +1,7 @@
 name = "WaterWaves1D"
 uuid = "1a68f91a-d9eb-11e8-2e16-69ad0016fc96"
 authors = ["Vincent Duchene <vincent.duchene@univ-rennes1.fr>", "Pierre Navaro <pierre.navaro@math.cnrs.fr>"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 Elliptic = "b305315f-e792-5b7a-8f41-49f472929428"
