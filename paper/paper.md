@@ -15,7 +15,7 @@ authors:
 affiliations:
   - name: Univ Rennes, CNRS, IRMAR - UMR 6625, France.
     index: 1
-date: 8 June 2022
+date: 17 November 2025
 bibliography: paper.bib
 
 ---
@@ -71,7 +71,7 @@ with $\phi$ being the unique solution to the elliptic boundary value problem
 $$
 \begin{cases}
 \mu \partial_x^2 \phi + \partial_z^2 \phi=0& \text{ in } \{ (x,z) \colon   -1<z<\epsilon\eta(x) \} , \\
- \phi = \psi & \text{ on } \{ (x,z) \colon   z=\epsilon\eta(x) \} ,\\
+\phi = \psi & \text{ on } \{ (x,z) \colon   z=\epsilon\eta(x) \} ,\\
 \partial_z \phi =0 & \text{ on } \{ (x,z) \colon z=-1 \} .
 \end{cases}
 $$
@@ -99,7 +99,7 @@ using WaterWaves1D
 param = (
     # Physical parameters. Variables are non-dimensionalized as in Lannes, The water waves problem, isbn:978-0-8218-9470-5
     μ  = 1,     # shallow-water dimensionless parameter
-    ϵ  = 1/4,   # nonlinearity dimensionless parameter
+    epsilon  = 1/4,   # nonlinearity dimensionless parameter
     # Numerical parameters
     N  = 2^10,  # number of collocation points
     L  = 10,    # half-length of the numerical tank (-L,L)
@@ -138,6 +138,7 @@ solve!([WW_problem WW2_problem])
 
 plot([WW_problem, WW2_problem], legend = :bottomright)
 ```
+
 ![Water waves system and the quadratic model](paper.png){ width=80% }
 
 # Citations
@@ -151,8 +152,6 @@ citation) then you can do it with the example BibTeX entry below for @fidgit.
 
 For a quick reference, the following citation commands can be used:
 
-- @Duchene:2020  ->  "Vincent Duchêne and Tatsuo Iguchi (2020)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
+%% - `[@Duchene:2020]`  ->  "Vincent Duchêne and Tatsuo Iguchi (2020)"
 
 # References
