@@ -91,13 +91,13 @@ In this example we shall observe the disintegration of a heap of water using the
 
 ## Set up the initial-value problem
 
-First we define parameters of our problem.
+First we define physical parameters of our problem. Variables are non-dimensionalized as 
+in [@Lannes:2013].
 
 ```julia
 using WaterWaves1D
 
 param = (
-    # Physical parameters. Variables are non-dimensionalized as in Lannes, The water waves problem, isbn:978-0-8218-9470-5
     μ  = 1,     # shallow-water dimensionless parameter
     epsilon  = 1/4,   # nonlinearity dimensionless parameter
     # Numerical parameters
@@ -108,7 +108,9 @@ param = (
                 )
 ```
 
-Now we define initial data solver (the "heap of water"). The function `Init` may take either functions, or vectors (values at collocation points) as arguments.
+Now we define initial data solver (the "heap of water"). The function
+`Init` may take either functions, or vectors (values at collocation
+points) as arguments.
 
 ```julia
 z(x) = exp.(-abs.(x).^4) # surface deformation
@@ -123,12 +125,15 @@ WW_model  = WaterWaves(param) # The water waves system
 WW2_model = WWn(param; n = 2, dealias = 1, δ = 1/10) # The quadratic model (WW2)
 ```
 
-Finally we set up initial-value problems. Optionally, one may specify a `time solver` to `Problem`, by default the standard explicit fourth order Runge Kutta method is used.
+Finally we set up initial-value problems. Optionally, one may specify
+a `time solver` to `Problem`, by default the standard explicit
+fourth order Runge Kutta method is used.
 
 ```julia
 WW_problem  = Problem(WW_model,  init, param)
 WW2_problem = Problem(WW2_model, init, param)
 ```
+
 ## Solve the initial-value problem and generate graphics
 
 ```julia
@@ -141,17 +146,11 @@ plot([WW_problem, WW2_problem], legend = :bottomright)
 
 ![Water waves system and the quadratic model](paper.png){ width=80% }
 
+
+
 # Citations
 
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
+[@Duchene:2020]
 
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-
-%% - `[@Duchene:2020]`  ->  "Vincent Duchêne and Tatsuo Iguchi (2020)"
 
 # References

@@ -1,0 +1,30 @@
+{
+  "@context": "https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld",
+  "@type": "Code",
+  "author": [
+    {
+      "@id": "https://orcid.org/0000-0002-8349-1284",
+      "@type": "Person",
+      "email": "vincent.duchene@univ-rennes1.fr",
+      "name": "Vincent Duchene",
+      "affiliation": "Univ Rennes, CNRS, IRMAR - UMR 6625, France."
+    },
+    {
+      "@id": "https://orcid.org/0000-0002-7372-3221",
+      "@type": "Person",
+      "email": "pierre.navaro@univ-rennes1.fr",
+      "name": "Pierre Navaro",
+      "affiliation": "Univ Rennes, CNRS, IRMAR - UMR 6625, France."
+    }
+  ],
+  "identifier": "https://doi.org/10.5281/zenodo.17365679",
+  "codeRepository": "https://github.com/WaterWavesModels/WaterWaves1D.jl",
+  "datePublished": "2025-11-28",
+  "dateModified": "2025-11-28",
+  "dateCreated": "2025-11-28",
+  "description": "WaterWaves1D.jl is a Julia package providing a framework to study and compare several models for the propagation of unidimensional surface gravity waves (a.k.a. \"water waves\").",
+  "keywords": "water waves, julialang, shallow water equations",
+  "license": "MIT",
+  "title": "WaterWaves1D.jl",
+  "version": "0.2.1"
+}

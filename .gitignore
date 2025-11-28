@@ -14,3 +14,5 @@ testsave.h5
 notebooks/.ipynb_checkpoints
 paper/paper.pdf
 paper/paper.jats
+paper/jats/paper.jats
+paper/jats/paper.png
