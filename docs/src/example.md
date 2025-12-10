@@ -12,7 +12,8 @@ First we define parameters of our problem.
 using WaterWaves1D
 
 param = (
-    # Physical parameters. Variables are non-dimensionalized as in Lannes, The water waves problem, isbn:978-0-8218-9470-5
+    # Physical parameters. Variables are non-dimensionalized as in Lannes, 
+    # The water waves problem, isbn:978-0-8218-9470-5
     μ  = 1,     # shallow-water dimensionless parameter
     ϵ  = 1/4,   # nonlinearity dimensionless parameter
     # Numerical parameters
