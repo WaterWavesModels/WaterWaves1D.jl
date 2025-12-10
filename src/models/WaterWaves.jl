@@ -4,7 +4,7 @@ export WaterWaves
     WaterWaves(param; kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the water waves system (via conformal mapping, see [Zakharov, Dyachenko and Vasilyev](https://doi.org/10.1016/S0997-7546(02)01189-5)).
+the water waves system (via conformal mapping, see [Zakharov, Dyachenko and Vasilyev](@cite Zakharov2002)).
 
 # Argument
 `param` is of type `NamedTuple` and must contain

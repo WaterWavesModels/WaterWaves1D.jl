@@ -4,10 +4,10 @@ export WWn
     WWn(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the water waves expansion proposed by [Dommermuth and Yue](https://doi.org/10.1017/s002211208700288x),
-[West et al.](https://doi.org/10.1029/jc092ic11p11803), [Craig and Sulem](https://doi.org/10.1006/jcph.1993.1164)
-(see also the account by [Choi](http://hdl.handle.net/2433/251940))
-with the "rectification" method proposed by [Duchêne and Melinand](https://arxiv.org/abs/2203.03277).
+the water waves expansion proposed by [Dommermuth and Yue](@cite Dommermuth1987),
+[West et al.](@cite West1987), [Craig and Sulem](@cite Craig1993)
+(see also the account by [Choi](@cite Choi1995))
+with the "rectification" method proposed by [Duchêne and Melinand](@cite DucheneMelinand2022).
 
 # Argument
 `param` is of type `NamedTuple` and must contain

@@ -14,7 +14,7 @@ a Boussinesq-type model with full-dispersion property.
 ## Optional keyword arguments
 - `Boussinesq`: if `true` (default is `false`), compute the standard Boussinesq system instead (see `Boussinesq(param;kwargs)`);
 - a parameter `α` which determines the model solved:
-    - If `α = 1` (default), then the model has been introduced in [Dinvay, Dutykh and Kalisch](https://doi.org/10.1016/j.apnum.2018.09.016);
+    - If `α = 1` (default), then the model has been introduced in [Dinvay, Dutykh and Kalisch](@cite Dinvay2019);
     - If `α = 1/2`, then the model is a quasilinear version;
     - If `α < 1/2`, then expect instabilities stemming from ill-posedness of the model.
 - `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;

@@ -4,9 +4,9 @@ export relaxedGreenNaghdi
     relaxedGreenNaghdi(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-a relaxed Green-Naghdi model proposed by [N. Favrie and S. Gavrilyuk](https://doi.org/10.1088/1361-6544/aa712d) 
-or [C. Escalante, M. Dumbser and M. Castro](https://doi.org/10.1016/j.jcp.2019.05.035) 
-and [G. Richard](https://doi.org/10.1016/j.euromechflu.2021.05.011).
+a relaxed Green-Naghdi model proposed by [N. Favrie and S. Gavrilyuk](@cite FavrieGavrilyuk2017) 
+or [C. Escalante, M. Dumbser and M. Castro](@cite EscalanteDumbserCastro2019) 
+and [G. Richard](@cite Richard2021).
 
 # Argument
 `param` is of type `NamedTuple` and must contain

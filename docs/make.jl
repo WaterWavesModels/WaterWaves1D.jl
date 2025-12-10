@@ -4,6 +4,7 @@ push!(LOAD_PATH,"../src/")
 ENV["GKSwstype"]="100"
 
 using Documenter
+using DocumenterCitations
 using Plots
 using Literate
 using WaterWaves1D
@@ -18,7 +19,10 @@ NB_OUTPUT   = joinpath(@__DIR__, "src", "notebooks")
  #Literate.markdown(joinpath(@__DIR__, "..",  "notebooks","FullDispersion.ipynb"), DOC_OUTPUT, documenter=true)
  #Literate.notebook(joinpath(@__DIR__, "..",  "notebooks","FullDispersion.ipynb"), NB_OUTPUT, execute=false)
 
+bib = CitationBibliography(joinpath(@__DIR__, "references.bib"), style = :authoryear)
+
 makedocs(modules=[WaterWaves1D],
+         plugins = [bib],
          doctest = false,
          authors = "Vincent Duchene",
          format = Documenter.HTML(prettyurls = get(ENV, "CI", nothing) == "true"),
@@ -32,7 +36,8 @@ makedocs(modules=[WaterWaves1D],
             "How-to..." => "how-to.md",
             "Example" => "example.md",
             "Plot recipes" => "plot_recipes.md",
-            "Library" => "library.md"
+            "Library" => "library.md",
+            "References" => "references.md"
                    ])
 
 #                  "Animation"     => "examples/animation.md",

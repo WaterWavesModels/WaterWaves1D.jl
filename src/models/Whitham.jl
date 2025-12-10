@@ -4,7 +4,7 @@ export Whitham
     Whitham(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-two uncoupled Whitham equations, following [Emerald](https://doi.org/10.1088/1361-6544/ac24df).
+two uncoupled Whitham equations, following [Emerald](@cite HoangNguyen2022).
 
 # Argument
 `param` is of type `NamedTuple` and must contain

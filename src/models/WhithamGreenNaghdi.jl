@@ -4,7 +4,7 @@ export WhithamGreenNaghdi
     WhithamGreenNaghdi(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the fully dispersive Green-Naghdi model proposed by [Duchêne, Israwi and Talhouk](https://doi.org/10.1137/130947064).
+the fully dispersive Green-Naghdi model proposed by [Duchêne, Israwi and Talhouk](@cite Duchene2015).
 
 # Argument
 `param` is of type `NamedTuple` and must contain

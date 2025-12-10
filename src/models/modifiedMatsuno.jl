@@ -4,7 +4,7 @@ export modifiedMatsuno
     modifiedMatsuno(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the modified Matsuno model proposed by [Duchêne and Melinand](https://arxiv.org/abs/2203.03277).
+the modified Matsuno model proposed by [Duchêne and Melinand](@cite DucheneMelinand2022).
 
 # Argument
 `param` is of type `NamedTuple` and must contain

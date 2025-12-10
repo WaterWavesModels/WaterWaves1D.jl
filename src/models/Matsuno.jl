@@ -176,7 +176,7 @@ end
 	Matsuno(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the quadratic deep-water model proposed by [Matsuno](https://doi.org/10.1103/PhysRevLett.69.609).
+the quadratic deep-water model proposed by [Matsuno](@cite Matsuno1992).
 
 # Argument
 `param` is of type `NamedTuple` and must contain

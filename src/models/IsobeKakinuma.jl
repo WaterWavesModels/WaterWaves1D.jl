@@ -4,7 +4,7 @@ export IsobeKakinuma
     IsobeKakinuma(param;kwargs)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the Isobe-Kakinuma model proposed by [Isobe](https://doi.org/10.1061/9780784400890.023).
+the Isobe-Kakinuma model proposed by [Isobe](@cite Isobe1994).
 
 # Argument
 `param` is of type `NamedTuple` (or a collection `NamedTuple`s) of and must contain
