@@ -1,7 +1,7 @@
 export Boussinesq
 
 """
-    Boussinesq(param;kwargs)
+    Boussinesq(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 `abcd`-Boussinesq models (with `b=d` and `c=0`).

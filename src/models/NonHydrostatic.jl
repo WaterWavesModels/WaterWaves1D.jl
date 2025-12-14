@@ -1,7 +1,7 @@
 export NonHydrostatic
 
 """
-    NonHydrostatic(param;kwargs)
+    NonHydrostatic(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the "Non-hydrostatic" model proposed by [Bristeau, Mangeney, Sainte-Marie and Seguin](@cite Bristeau2015)

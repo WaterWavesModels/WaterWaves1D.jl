@@ -1,9 +1,9 @@
 export Matsuno_fast,Matsuno
 
 """
-	Matsuno_fast(param;kwargs)
+	Matsuno_fast(param; kwargs...)
 
-Same as `Matsuno`, but faster.
+Same as [`Matsuno`](@ref), but faster.
 """
 mutable struct Matsuno_fast <: AbstractModel
 
@@ -173,7 +173,7 @@ mutable struct Matsuno_fast <: AbstractModel
 end
 
 """
-	Matsuno(param;kwargs)
+	Matsuno(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the quadratic deep-water model proposed by [Matsuno](@cite Matsuno1992).

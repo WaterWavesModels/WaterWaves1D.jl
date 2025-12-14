@@ -1,7 +1,7 @@
 export SerreGreenNaghdi
 
 """
-    SerreGreenNaghdi(param;kwargs)
+    SerreGreenNaghdi(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the Serre-Green-Naghdi model ([Serre](@cite Serre1953), [Su and Gardner](@cite Su1969), [Green and Naghdi](@cite Green1976)).

@@ -1,7 +1,7 @@
 export SquareRootDepth
 
 """
-    SquareRootDepth(param;kwargs)
+    SquareRootDepth(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the "√D" model proposed by [Cotter, Holm and Percival](@cite Cotter2010)

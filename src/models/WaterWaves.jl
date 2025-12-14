@@ -1,7 +1,7 @@
 export WaterWaves
 
 """
-    WaterWaves(param; kwargs)
+    WaterWaves(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the water waves system (via conformal mapping, see [Zakharov, Dyachenko and Vasilyev](@cite Zakharov2002)).
@@ -31,9 +31,9 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 1. a function `WaterWaves.f!` to be called in the explicit time-integration solver (also `WaterWaves.f1!` and `WaterWaves.f2!` for the symplectic Euler solver);
 2. a function `WaterWaves.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `WaterWaves.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
-    - `x` is a vector of collocation points (non-regularly spaced);
-	- `η` is the values of surface deformation at collocation points `x`;
-    - `v` is the derivative of the trace of the velocity potential at `x`.
+  - `x` is a vector of collocation points (non-regularly spaced);
+  - `η` is the values of surface deformation at collocation points `x`;
+  - `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
 mutable struct WaterWaves <: AbstractModel

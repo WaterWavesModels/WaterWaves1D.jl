@@ -1,7 +1,7 @@
 export IsobeKakinuma
 
 """
-    IsobeKakinuma(param;kwargs)
+    IsobeKakinuma(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the Isobe-Kakinuma model proposed by [Isobe](@cite Isobe1994).
