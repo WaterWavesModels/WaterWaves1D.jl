@@ -1,7 +1,7 @@
 export Airy
 
 """
-	Airy(param;mesh,label)
+	Airy(param; mesh, label)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 the linear ([Airy](https://en.wikipedia.org/wiki/Airy_wave_theory)) water waves equations.

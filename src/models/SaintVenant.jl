@@ -1,7 +1,7 @@
 export SaintVenant,SaintVenant_fast
 
 """
-    SaintVenant(param;kwargs)
+    SaintVenant(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 Saint-Venant (or shallow water) model.
@@ -123,7 +123,7 @@ end
 """
 	SaintVenant_fast(param;kwargs)
 
-Same as `SaintVenant`, but faster.
+Same as [`SaintVenant`](@ref), but faster.
 """
 mutable struct SaintVenant_fast <: AbstractModel
 

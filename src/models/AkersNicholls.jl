@@ -1,9 +1,9 @@
 export AkersNicholls_fast,AkersNicholls
 
 """
-    AkersNicholls_fast(param;kwargs)
+    AkersNicholls_fast(param; kwargs...)
 
-Same as `AkersNicholls`, but faster.
+Same as [`AkersNicholls`](@ref), but faster.
 """
 mutable struct AkersNicholls_fast <: AbstractModel
 
@@ -142,11 +142,11 @@ mutable struct AkersNicholls_fast <: AbstractModel
 end
 
 """
-    AkersNicholls(param;kwargs)
+    AkersNicholls(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the quadratic deep-water model proposed by [Akers and Nicholls](https://doi.org/10.1137/090771351)
-and [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s42286-019-00005-w)
+the quadratic deep-water model proposed by [Akers and Nicholls](@cite AkersNicholls2009)
+and [Cheng, Granero-Belinchón, Shkoller and Milewski](@cite ChengGranero2019)
 
 # Argument
 `param` is of type `NamedTuple` and must contain

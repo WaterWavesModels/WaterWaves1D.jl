@@ -1,10 +1,10 @@
 export Whitham
 
 """
-    Whitham(param;kwargs)
+    Whitham(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-two uncoupled Whitham equations, following [Emerald](https://doi.org/10.1088/1361-6544/ac24df).
+two uncoupled Whitham equations, following [Emerald](@cite HoangNguyen2022).
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -26,8 +26,8 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 1. a function `Whitham.f!` to be called in explicit time-integration solvers;
 2. a function `Whitham.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed.
 3. a function `Whitham.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
-	- `η` is the values of surface deformation at collocation points `x`;
-	- `v` is the derivative of the trace of the velocity potential at `x`.
+  - `η` is the values of surface deformation at collocation points `x`;
+  - `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
 mutable struct Whitham <: AbstractModel

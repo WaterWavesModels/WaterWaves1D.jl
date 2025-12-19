@@ -1,10 +1,10 @@
 export SquareRootDepth
 
 """
-    SquareRootDepth(param;kwargs)
+    SquareRootDepth(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the "√D" model proposed by [Cotter, Holm and Percival](https://doi.org/10.1098/rspa.2010.0124)
+the "√D" model proposed by [Cotter, Holm and Percival](@cite Cotter2010)
 
 # Argument
 `param` is of type `NamedTuple` and must contain

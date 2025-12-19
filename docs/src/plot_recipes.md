@@ -6,7 +6,7 @@ computed problems solution. You need to import the package [Plots.jl](https://gi
 ## Surface deformation and velocity
 
 ```@example surface
-using WaterWaves1D #hide
+using WaterWaves1D 
 using Plots
 
 param = ( μ = 1, ϵ = 1/4, N = 2^10, L = 10, T = 5, dt = 0.01 )
@@ -55,7 +55,7 @@ plot([(problem0, problem1), (problem0, problem2)], var = :difference_velocity)
 
 ```@example fourier
 using Plots
-using WaterWaves1D #hide
+using WaterWaves1D
 
 η(x) = exp.(-x.^2)
 v(x) = zero(x)   
