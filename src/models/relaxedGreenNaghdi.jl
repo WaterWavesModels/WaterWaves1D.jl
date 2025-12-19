@@ -1,12 +1,12 @@
 export relaxedGreenNaghdi
 
 """
-    relaxedGreenNaghdi(param;kwargs)
+    relaxedGreenNaghdi(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-a relaxed Green-Naghdi model proposed by [N. Favrie and S. Gavrilyuk](https://doi.org/10.1088/1361-6544/aa712d) 
-or [C. Escalante, M. Dumbser and M. Castro](https://doi.org/10.1016/j.jcp.2019.05.035) 
-and [G. Richard](https://doi.org/10.1016/j.euromechflu.2021.05.011).
+a relaxed Green-Naghdi model proposed by [N. Favrie and S. Gavrilyuk](@cite FavrieGavrilyuk2017) 
+or [C. Escalante, M. Dumbser and M. Castro](@cite EscalanteDumbserCastro2019) 
+and [G. Richard](@cite Richard2021).
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -32,12 +32,12 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 1. a function `relaxedGreenNaghdi.f!` to be called in explicit time-integration solvers;
 2. a function `relaxedGreenNaghdi.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `relaxedGreenNaghdi.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
-	- `η` is the values of surface deformation at collocation points `x`;
-	- `v` is the derivative of the trace of the velocity potential at `x`;
+  - `η` is the values of surface deformation at collocation points `x`;
+  - `v` is the derivative of the trace of the velocity potential at `x`;
 4. additionally, a handy function `relaxedGreenNaghdi.mapfrofull` which from data matrix returns the Tuple of real vectors `(η,v,u,p,w)`, where
-	- `u` corresponds to the layer-averaged horizontal velocity.
-	- `p` corresponds to the relaxed (artificial) layer-averaged non-hydrostatic pressure;
-	- `w` corresponds to the relaxed (artificial) layer-averaged vertical velocity.
+  - `u` corresponds to the layer-averaged horizontal velocity.
+  - `p` corresponds to the relaxed (artificial) layer-averaged non-hydrostatic pressure;
+  - `w` corresponds to the relaxed (artificial) layer-averaged vertical velocity.
 
 """
 mutable struct relaxedGreenNaghdi <: AbstractModel

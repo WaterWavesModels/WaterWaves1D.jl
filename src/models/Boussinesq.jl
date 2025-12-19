@@ -1,11 +1,11 @@
 export Boussinesq
 
 """
-    Boussinesq(param;kwargs)
+    Boussinesq(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 `abcd`-Boussinesq models (with `b=d` and `c=0`).
-See [Bona, Chen, and Saut](https://doi.org/10.1007/s00332-002-0466-4)
+See [Bona, Chen, and Saut](@cite Bona2002)
 
 # Argument
 `param` is of type `NamedTuple` and must contain

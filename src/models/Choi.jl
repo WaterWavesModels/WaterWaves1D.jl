@@ -1,10 +1,10 @@
 export Choi
 
 """
-    Choi(param;kwargs)
+    Choi(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-(an asymptotically equivalent variant of) the model proposed by [Choi](https://doi.org/10.1017/jfm.2022.544).
+(an asymptotically equivalent variant of) the model proposed by [Choi](@cite Choi2022).
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -29,12 +29,12 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 1. a function `Choi.f!` to be called in explicit time-integration solvers;
 2. a function `Choi.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `Choi.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
-	- `η` is the values of surface deformation at collocation points `x`;
-	- `v` is the derivative of the trace of the velocity potential;
+  - `η` is the values of surface deformation at collocation points `x`;
+  - `v` is the derivative of the trace of the velocity potential;
 4. additionally, a handy function `Choi.mapfrofull` which from data matrix returns the Tuple of real vectors `(η,v,u,vᵦ)`, where
-	- `v` is the derivative of the trace of the velocity potential;
-	- `u` corresponds to the layer-averaged horizontal velocity;
-	- `vᵦ` corresponds to the horizontal velocity at the bottom.
+  - `v` is the derivative of the trace of the velocity potential;
+  - `u` corresponds to the layer-averaged horizontal velocity;
+  - `vᵦ` corresponds to the horizontal velocity at the bottom.
 
 """
 mutable struct Choi <: AbstractModel

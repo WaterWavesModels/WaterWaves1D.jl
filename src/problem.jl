@@ -84,7 +84,7 @@ show(io::IO, p::Problem) =
 export solve!
 
 """
-    solve!( problem :: Problem; verbose=true )
+$(TYPEDSIGNATURES)
 
 Solve (i.e. integrate in time) an initial-value problem
 
@@ -151,7 +151,7 @@ end
 using Base.Threads
 
 """
-    solve!( problems; verbose=true )
+$(TYPEDSIGNATURES)
 
 Solve (i.e. integrate in time) a collection of initial-value problems.
 

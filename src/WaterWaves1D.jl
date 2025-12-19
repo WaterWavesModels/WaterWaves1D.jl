@@ -1,6 +1,6 @@
 module WaterWaves1D
 
-# external modules
+using DocStringExtensions
 using ProgressMeter,FFTW
 using LinearMaps,IterativeSolvers,LinearAlgebra
 using HDF5

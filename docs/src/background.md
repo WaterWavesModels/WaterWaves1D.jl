@@ -26,8 +26,8 @@ neglecting surface tension effects,
 assuming constant atmospheric pressure at the free surface and
 free slip boundary condition at the flat bottom,
 the equations in dimensionless variables read as follows
-(following notations in [Lannes](https://bookstore.ams.org/surv-188),
-[Duchêne](https://www.ams.org/open-math-notes/omn-view-listing?listingId=111309)).
+(following notations in [Lannes2013](@citet),
+[Duchene2022](@citet)).
 
 ```math
   \left\{\begin{array}{l}
@@ -55,30 +55,42 @@ In the above formula,
 * ``μ`` is the *shallowness* dimensionless parameter, defined as the square of the ratio of the depth of the layer to the typical horizontal wavelength of the flow.
 * ``ν`` is a scaling parameter: in shallow water situations one typically sets ``ν=1`` while in deep water situations it is wise to set ``ν=1/\sqrt{μ}``. In the latter case, ``ϵ\sqrt{μ}`` being the *steepness* of the wave plays an important role. Especially, taking formally the limit ``μ→∞`` one obtains the infinite-depth situation where the wave steepness is the only remaining parameter.
 
-While the above formulation (due to
-[Zakharov](https://doi.org/10.1007/BF00913182) and
-[Craig and Sulem](https://doi.org/10.1006/jcph.1993.1164))
-is very elegant, it is not directly suitable for efficient numerical simulations,
-due to the costly time-dependent elliptic problem involved in the Dirichlet-to-Neumann operator, ``G^μ``.
-In our unidimensional framework, it is possible to make use of conformal mapping so as to rewrite the system
-using only pointwise operations or Fourier multipliers (that is pointwise operations in Fourier space).
-This allows, by means of the [Fast Fourier Transform](https://en.wikipedia.org/wiki/Fast_Fourier_transform) (FFT) and its inverse (IFFT), to provide a very efficient strategy for the numerical simulation of the water waves system. This strategy has been described for instance in [Dyachenko et al.](https://doi.org/10.1016/0375-9601(96)00417-3) and [Choi and Camassa](https://doi.org/10.1061/(asce)0733-9399(1999)125:7(756)).
+While the above formulation (due to [Zakharov1968](@citet)
+and [Craig1993](@citet)) is
+very elegant, it is not directly suitable for efficient numerical
+simulations, due to the costly time-dependent elliptic problem
+involved in the Dirichlet-to-Neumann operator, ``G^μ``.  In our
+unidimensional framework, it is possible to make use of conformal
+mapping so as to rewrite the system using only pointwise operations
+or Fourier multipliers (that is pointwise operations in Fourier
+space).  This allows, by means of the [Fast Fourier
+Transform](https://en.wikipedia.org/wiki/Fast_Fourier_transform)
+(FFT) and its inverse (IFFT), to provide a very efficient strategy
+for the numerical simulation of the water waves system. This strategy
+has been described for instance in [Dyachenko1996](@citet) and [Choi1999](@citet).
 
 The resulting code is [`WaterWaves`](@ref WaterWaves1D.WaterWaves).
 
 ## Models
 
-Because the above method is relatively recent (in comparison with early studies on water waves),
-imperfect (it suffers from "anti-resolution" for large-amplitude waves: the location of gridpoints spread out near wave crests, which in practice may demand the use of a very large number of modes to resolve the flow accurately), and restricted to unidimensional waves, many simplified models have been introduced in the literature. It is the aim of this package to provide a home for some of them.
+Because the above method is relatively recent (in comparison with
+early studies on water waves), imperfect (it suffers from
+"anti-resolution" for large-amplitude waves: the location of
+gridpoints spread out near wave crests, which in practice may demand
+the use of a very large number of modes to resolve the flow
+accurately), and restricted to unidimensional waves, many simplified
+models have been introduced in the literature. It is the aim of
+this package to provide a home for some of them.
 
 
 ### Shallow water models
 
-Shallow water models are expected to provide valid approximation to the water waves system
-for small values of the shallowness parameter, ``μ≪1`` (in this case, ``ν=1``).
+Shallow water models are expected to provide valid approximation
+to the water waves system for small values of the shallowness
+parameter, ``μ≪1`` (in this case, ``ν=1``).
 
 Many of these models are derived and discussed in
-[Duchêne](https://www.ams.org/open-math-notes/omn-view-listing?listingId=111309).
+[Duchene2022](@citet).
 
 #### The Saint-Venant system
 
@@ -99,7 +111,7 @@ The associated code is [`SaintVenant`](@ref WaterWaves1D.SaintVenant) (see also 
 
 The ``abcd``-[Boussinesq](https://en.wikipedia.org/wiki/Boussinesq_approximation_(water_waves)) systems
 refers to the full class of equations described by
-[Bona, Chen and Saut](https://doi.org/10.1007/s00332-002-0466-4)
+[Bona2002](@citet)
 
 ```math
   \left\{\begin{array}{l}
@@ -135,14 +147,14 @@ Specifically, we consider systems of the form
   \end{array}\right.
 ```
 with ``F_1^μ=\frac{\tanh(\sqrtμ D)}{\sqrtμ D}``, and ``F_2^μ=(F_1^μ)^α`` (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
-The case ``α = 1`` has been introduced by [Dinvay, Dutykh and Kalisch](https://doi.org/10.1016/j.apnum.2018.09.016), more general situations have been studied by [Emerald](https://doi.org/10.1137/20M1332049).
+The case ``α = 1`` has been introduced by [Dinvay2019](@citet), more general situations have been studied by [Emerald2021](@citet).
 
 
 The associated code is [`WhithamBoussinesq`](@ref WaterWaves1D.WhithamBoussinesq).
 
 #### The Green-Naghdi system
 
-The (Serre-)Green-Naghdi system ([Serre](https://10.1051/lhb/1953058), [Su and Gardner](https://10.1063/1.1664873), [Green and Naghdi](https://10.1017/s0022112076002425))
+The (Serre-)Green-Naghdi system ([Serre1953](@citet), [Su1969](@citet), [Green1976](@citet))
 is sometimes called "fully nonlinear Boussinesq system"
 and is expected to provide a better approximation when the parameter ``ϵ`` is large.
 
@@ -163,7 +175,7 @@ The associated code is [`SerreGreenNaghdi`](@ref WaterWaves1D.SerreGreenNaghdi).
 #### The square-root depth system
 
 The "√D" system
-proposed by [Cotter, Holm and Percival](https://doi.org/10.1098/rspa.2010.0124)
+proposed by [Cotter2010](@citet)
 can be written as
 ```math
   \left\{\begin{array}{l}
@@ -181,7 +193,7 @@ The associated code is [`SquareRootDepth`](@ref WaterWaves1D.SquareRootDepth).
 #### The "non-hydrostatic" system
 
 The "non-hydrostatic" system
-proposed by [Bristeau, Mangeney, Sainte-Marie and Seguin](https://doi.org/10.3934/dcdsb.2015.20.961)
+proposed by [Bristeau2015](@citet)
 can be written as
 ```math
   \left\{\begin{array}{l}
@@ -199,7 +211,7 @@ The associated code is [`NonHydrostatic`](@ref WaterWaves1D.NonHydrostatic).
 #### The Whitham-Green-Naghdi system
 
 The Whitham-Green-Naghdi system
-proposed by [Duchêne, Israwi and Talhouk](https://doi.org/10.1137/130947064).
+proposed by [Duchene2015](@citet).
 can be viewed as a modified Green-Naghdi system in view of
 fully recovering the [dispersive properties](https://en.wikipedia.org/wiki/Dispersion_(water_waves)) of the water waves system. In other words, in the linear framework, that is setting ``ϵ=0``, the model coincides with the linearized water waves system.
 
@@ -221,7 +233,7 @@ The associated code is [`WhithamBoussinesq`](@ref WaterWaves1D.WhithamBoussinesq
 #### The Isobe-Kakinuma systems
 
 The Isobe-Kakinuma model is a hierarchy of systems proposed by
-[Isobe](https://doi.org/10.1061/9780784400890.023),
+[Isobe1994](@citet),
 depending on the rank ``N`` and the parameters ``(p_0,p_1,⋯,p_N)``
 
 ```math
@@ -249,7 +261,7 @@ is (for now) limited to the case ``N=1`` and ``(p₀,p₁)=(0,2)``.
 #### The Choi systems
 
 The Choi model is a hierarchy of systems proposed by
-[Choi](https://doi.org/0.1017/jfm.2022.544),
+[Choi2022](@citet),
 depending on the rank ``M``. 
 We actually consider an asymptotically equivalent variant which reads
 
@@ -293,9 +305,9 @@ The associated code is [`Airy`](@ref WaterWaves1D.Airy).
 
 #### The spectral systems
 
-[Dommermuth and Yue](https://doi.org/10.1017/s002211208700288x),
-[West et al.](https://doi.org/10.1029/jc092ic11p11803), and
-[Craig and Sulem](https://doi.org/10.1006/jcph.1993.1164) have proposed
+[Dommermuth1987](@citet),
+[West1987](@citet), and
+[Craig1993](@citet) have proposed
 a hierarchy of systems based on a "spectral" expansion, which can be interpreted
 through the Taylor expansion of the Dirichlet-to-Neumann, ``G^μ[ϵη]ψ``, with respect
 to the surface deformation variable:
@@ -314,7 +326,7 @@ where we denote ``v=∂_xψ`` the derivative of the trace of the velocity potent
 
 Higher order systems can be constructed using recursive formula.
 Explicit expressions up to quintic nonlinearities are given in
-[Choi](http://hdl.handle.net/2433/251940).
+[Choi1995](@citet).
 
 The associated code is [`WWn`](@ref WaterWaves1D.WWn).
 
@@ -324,9 +336,9 @@ The associated code is [`WWn`](@ref WaterWaves1D.WWn).
 #### The rectified spectral systems
 
 It turns out the spectral models above suffer from spurious instabilities; see
-[Ambrose, Bona and Nicholls](https://doi.org/10.1098/rspa.2013.0849).
+[AmbroseBonaNicholls2013](@citet).
 
-[Duchêne and Melinand](https://arxiv.org/abs/2203.03277) proposed a "rectified" quadratic model:
+[DucheneMelinand2022](@citet) proposed a "rectified" quadratic model:
 ```math
   \left\{\begin{array}{l}
   ∂_tη-\tfrac{1}{\sqrtμ ν} T^μv  + \tfrac{ϵ}{ν} ∂_x\big((J^δη) v +  T^μ((J^δη) T^μ v)\big) =0,\\[1ex]
@@ -341,7 +353,7 @@ J_0(k)=\min(1,1/|k|).
 
 #### The Matsuno system
 
-The model introduced by [Matsuno](https://doi.org/10.1103/PhysRevLett.69.609) is
+The model introduced by [Matsuno1992](@citet) is
 ```math
   \left\{\begin{array}{l}
   ∂_tη-\tfrac{1}{\sqrtμ ν} T^μu  + \tfrac{ϵ}{ν} ∂_x(η u) +  \tfrac{ϵ}{ν} T^μ(η ∂_x T^μ u) =0,\\[1ex]
@@ -357,7 +369,7 @@ The associated codes are [`Matsuno`](@ref WaterWaves1D.Matsuno), and [`Matsuno_f
 
 
 In view of ensuring the stability of the equations,
-[Duchêne and Melinand](https://arxiv.org/abs/2203.03277)
+[DucheneMelinand2022](@citet)
 proposed a modified Matsuno system:
 ```math
   \left\{\begin{array}{l}
@@ -370,8 +382,8 @@ The associated codes is [`modifiedMatsuno`](@ref WaterWaves1D.modifiedMatsuno).
 
 #### The Akers-Nicholls system
 
-The model introduced in [Akers and Nicholls](https://doi.org/10.1137/090771351)
-(see also [Cheng, Granero-Belinchón, Shkoller and Milewski](https://doi.org/10.1007/s42286-019-00005-w))
+The model introduced in [AkersNicholls2009](@citet)
+(see also [ChengGranero2019](@citet))
 can be written as
 ```math
   \left\{\begin{array}{l}
@@ -389,30 +401,30 @@ All the models presented so far consists in two evolution equations for the surf
 
 #### Unidirectional models (KdV, BBM, Whitham)
 
-The celebrated [Korteweg-de Vries](https://doi.org/10.1080/14786449508620739) (KdV) model was introduced to model water waves.
+The celebrated [KortewegDeVries1895](@citet) (KdV) model was introduced to model water waves.
 
 ```math
 ∂_tη+∂_x η+\tfrac{3ϵ}{2} η ∂_xη + \tfrac{μ}{6}∂_x^3η=0.
 ```
 
-The [Benjamin-Bona-Mahony](https://doi.org/10.1098%2Frsta.1972.0032) (BBM) model is a well-known asymptotically equivalent variant.
+The [BenjaminBonaMahony1972](@citet) (BBM) model is a well-known asymptotically equivalent variant.
 ```math
 (1-\tfrac{μ}{6}∂_x^2)∂_tη+∂_x η+\tfrac{3ϵ}{2} η ∂_xη =0.
 ```
 
-A full dispersion model was proposed by [Whitham](https://doi.org/10.1098/rspa.1967.0119)
+A full dispersion model was proposed by [Whitham1967](@citet)
 ```math
 ∂_tη+M^μ∂_x η+\tfrac{3ϵ}{2} η ∂_xη =0.
 ```
 where ``M^μ=\big(\tfrac{\tanh(\sqrtμ D)}{\sqrtμ D}\big)^{1/2}``.
 
-While these models have been designed to approximate *unidirectional* (left-going or right-going) waves, they can also be used as building blocks to approximate general water waves; see [Emerald](https://doi.org/10.1088/1361-6544/ac24df).
+While these models have been designed to approximate *unidirectional* (left-going or right-going) waves, they can also be used as building blocks to approximate general water waves; see [HoangNguyen2022](@citet).
 
 The associated codes are [`KdV`](@ref WaterWaves1D.KdV), [`BBM`](@ref WaterWaves1D.BBM) and [`Whitham`](@ref WaterWaves1D.Whitham) respectively.
 
 #### Relaxed Green-Naghdi models
 
-[Favrie and Gavrilyuk](https://doi.org/10.1088/1361-6544/aa712d), [Escalante, Dumbser and Castro](https://doi.org/10.1016/j.jcp.2019.05.035) and [Richard](https://doi.org/10.1016/j.euromechflu.2021.05.011) among others have proposed a strategy to efficiently approximate solutions of the Green-Naghdi model.
+[FavrieGavrilyuk2017](@citet), [EscalanteDumbserCastro2019](@citet) and [Richard2021](@citet) among others have proposed a strategy to efficiently approximate solutions of the Green-Naghdi model.
 
 It consists in solving an augmented system with additional unknowns and a relaxation parameter, for instance
 
@@ -449,7 +461,7 @@ The associated code is [`SaintVenant2D`](@ref WaterWaves1D.SaintVenant2D) (see a
 
 ## Mass, momentum, energy
 
-Solutions to the water waves equations preserve along time (among other integrals of motion listed by [Benjamin and Olver](https://doi.org/10.1017/S0022112082003292))
+Solutions to the water waves equations preserve along time (among other integrals of motion listed by [BenjaminOlver1982](@citet))
 - the excess of mass,
 ```math
 \int η(t,x)\, {\rm d}x\ ;
@@ -490,12 +502,29 @@ finite spectral decomposition and the infinite Fourier decomposition can often b
 When using the finite spectral decomposition, the action of [Fourier multipliers](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)), and in particular spatial differentiation, is performed *exactly*
 (that is up to machine precision rounding errors) through corresponding multiplication on the discrete coefficients ``a_k``, and only nonlinear contributions require some attention. The simplest way to approximately compute products (or any pointwise operations in the space variable) is by performing
 pointwise operations on values at collocation points which are obtained from the discrete coefficients using discrete inverse Fourier transform. For the sake of discussion, consider
+
 ```math
  u^2(x_j,t) ≈ \big(\sum_{k=-N/2}^{N/2-1} a_k(t) e^{{\rm i} \tfrac{π}{L}k x_j}\big)^2
  = \sum_{m=-N/2}^{N/2-1}\sum_{n=-N/2}^{N/2-1} a_m a_n e^{{\rm i} \tfrac{π}{L}(m+n) x_j}.
 ```
+
 One infers
+
 ```math
 u^2(x_j,t) ≈ \sum_{k=-N/2}^{N/2-1} b_k(t) e^{{\rm i} \tfrac{π}{L}k x_j}, \qquad b_k = \sum_{m+n\in \{k-N,k,k+N\}}a_m a_n.
 ```
-In the above formula for ``b_k``, some of the summands are spurious effects from aliasing, which sometimes contribute to numerical instabilities. In order to suppress such terms the so-called *dealiasing* consists in adding a sufficient number of modes with coefficients set to zero (in practice one often uses ideal low-pass filters, that is set to zero extreme modes, so as to always work with vectors with a fixed given length). The so-called [Orszag](https://doi.org/10.1175/1520-0469(1971)028<1074:oteoai>2.0.co;2)'s `3/2` rule states that, in the presence of quadratic nonlinearities, padding `3/2` modes (or zero-ing `1/3` modes) is sufficient to discard all spurious aliasing contributions, and provides in particular a [Galerkin](https://en.wikipedia.org/wiki/Galerkin_method) approximation since the error is orthogonal to all expansion functions.
+
+In the above formula for ``b_k``, some of the summands are spurious
+effects from aliasing, which sometimes contribute to numerical
+instabilities. In order to suppress such terms the so-called
+*dealiasing* consists in adding a sufficient number of modes with
+coefficients set to zero (in practice one often uses ideal low-pass
+filters, that is set to zero extreme modes, so as to always work
+with vectors with a fixed given length). The so-called
+[Orszag1971](@citet)'s `3/2` rule states that, in the presence of
+quadratic nonlinearities, padding `3/2` modes (or zero-ing `1/3`
+modes) is sufficient to discard all spurious aliasing contributions,
+and provides in particular a
+[Galerkin](https://en.wikipedia.org/wiki/Galerkin_method) approximation
+since the error is orthogonal to all expansion functions.
+

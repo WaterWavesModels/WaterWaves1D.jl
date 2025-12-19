@@ -1,7 +1,7 @@
 export interpolate,solution,mass,momentum,energy,massdiff,momentumdiff,energydiff
 
 """
-    interpolate(mesh,vector;n=2^3)
+$(TYPEDSIGNATURES)
 
 Interpolate a vector `vector` of values on a uniform collocation grid defined by `mesh`.
 
@@ -24,7 +24,7 @@ function interpolate(mesh::Mesh,vector;n=2^3::Int)
 end
 
 """
-    interpolate(mesh,vector,x;fast)
+$(TYPEDSIGNATURES) 
 
 Interpolate a vector `vector` of values on a uniform collocation grid defined by `mesh`, on collocation points given by `x`.
 
@@ -67,7 +67,8 @@ end
 
 
 """
-    solution(pb::Problem;T,x,interpolation)
+
+$(TYPEDSIGNATURES)
 
 Give the solution of a solved initial-value problem at a given time `T`.
 
@@ -125,24 +126,23 @@ function solution(p::Problem; T=nothing, x=nothing, interpolation = false, raw =
 end
 
 """
-    mass(pb::Problem;T)
+$(TYPEDSIGNATURES)
 
 Compute the excess of mass of a solved initial-value problem `pb` at a given time `T`.
 
 Keyword argument `T` is optional, the last computed time is used by default.
 
 """
-function mass(p::Problem; T=nothing)
+function mass(p::Problem; T=nothing) :: Float64
 	η,v,x = solution(p;T=T)
-	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
-		@error("The excess of mass cannot be computed because the solution is defined on a non-regularly spaced mesh.")
-	else
-		return sum(η)*(x[2]-x[1])
-	end
+	
+    @assert (x[2:end].-x[2]≈x[1:end-1].-x[1]) "The excess of mass cannot be computed because the solution is defined on a non-regularly spaced mesh."
+	
+	return sum(η)*(x[2]-x[1])
 end
 
 """
-    momentum(pb::Problem;T)
+$(TYPEDSIGNATURES)
 
 Compute the horizontal impulse of a solved initial-value problem `pb` at a given time `T`.
 
@@ -159,7 +159,7 @@ function momentum(p::Problem; T=nothing)
 end
 
 """
-    energy(pb::Problem;T)
+$(TYPEDSIGNATURES)
 
 Compute the excess of mass of a solved initial-value problem `pb` at a given time `T`.
 
@@ -180,7 +180,7 @@ function energy(p::Problem; T=nothing)
 end
 
 """
-    massdiff(pb::Problem;T,rel)
+$(TYPEDSIGNATURES)
 
 Compute the difference of excess of mass of a solved initial-value problem `pb` between given time `T` and initial time.
 
@@ -200,7 +200,7 @@ function massdiff(p::Problem; T=nothing,rel=false)
 end
 
 """
-    momentumdiff(pb::Problem;T,rel)
+$(TYPEDSIGNATURES)
 
 Compute the difference of horizontal impulse of a solved initial-value problem `pb` between given time `T` and initial time.
 
@@ -220,7 +220,7 @@ function momentumdiff(p::Problem; T=nothing,rel=false)
 end
 
 """
-    energydiff(pb::Problem;T,rel)
+$(TYPEDSIGNATURES)
 
 Compute the difference of energy of a solved initial-value problem `pb` between given time `T` and initial time.
 

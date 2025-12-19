@@ -1,7 +1,7 @@
 export SaintVenant2D, SaintVenant2D_fast
 
 """
-    SaintVenant2D(param;kwargs)
+    SaintVenant2D(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 Saint-Venant (or shallow water) model.
@@ -168,7 +168,7 @@ end
 """
 	SaintVenant2D_fast(param;kwargs)
 
-Same as `SaintVenant2D`, but faster.
+Same as [`SaintVenant2D`](@ref), but faster.
 
 If the optional argument `large_data` is set to `true` (default is `false`), 
 then the standard `fft` and `ifft` functions (instead of plans) are used.
