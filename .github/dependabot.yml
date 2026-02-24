@@ -4,4 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
-    open-pull-requests-limit: 99
+  - package-ecosystem: "julia" # Specifies the Julia package manager
+    directory: "/" # Location of the Project.toml and Manifest.toml files
+    schedule:
+      interval: "monthly" # How often to check for updates
