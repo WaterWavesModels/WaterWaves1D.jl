@@ -14,13 +14,13 @@ include("init.jl")
 include("solver.jl")
 include("models.jl")
 include("problem.jl")
-include("examples.jl")
-
 
 # tools
 include("loadsave.jl")
 include("tools.jl")
 include("recipes.jl")
+include("examples.jl")
+
 
 # initial data, models, solvers
 include("initialdata/Random.jl")

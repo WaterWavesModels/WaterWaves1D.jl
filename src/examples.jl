@@ -1,4 +1,5 @@
-export examples_dir, get_examples, default_example, convergence_test, data_dir
+export examples_dir, get_examples, default_example
+
 """
     examples_dir()
 
