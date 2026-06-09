@@ -1,4 +1,5 @@
-using WaterWaves1D
+export plot_sol,plot_diff,anim
+using WaterWaves1D,Plots
 
 ##########################################################################################
 ### Comparison of the water waves equations and quadratic WW2 model on a heap of water ### 
@@ -106,3 +107,4 @@ function anim()
     end
     return animation
 end
+nothing
