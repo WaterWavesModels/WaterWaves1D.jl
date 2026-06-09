@@ -1,14 +1,21 @@
 # # Compute the solitary wave of the Whitham equation with prescribed velocity
 export PlotSolitaryWaveKdV,PlotSolitaryWaveWhitham
 using WaterWaves1D,FFTW,Plots;
+@info("Construct solitary wave solutions of the Whitham equation
+Use  `PlotSolitaryWaveWhitham` (or `PlotSolitaryWaveKdV`).")
+
 
 #---- KdV
 """
-	PlotSolitaryWaveKdV()
+	PlotSolitaryWaveKdV( c )
 
-A proof of concept: numerically compute the solitary wave of the KdV equation with prescribed velocity `c=5`
-(augmenting progressively the velocity to generate initial guesses for the iterative scheme)
-and then computes the difference with the exact solution.
+A proof of concept: numerically compute the solitary wave of the KdV equation with prescribed velocity `c`
+in an iterative way (for large values of `c`), augmenting progressively the velocity to generate initial guesses of an iterative scheme,
+and then computes the difference with the exact solution given by the analytic formula.
+
+The argument `c` should be greater than `1` (`c=5` by default).
+
+Return the error between the computed and exact solutions (in ℓ^∞ norm at collocation points).
 """
 function PlotSolitaryWaveKdV(c = 5)
 	param = ( μ  = 1,
@@ -39,10 +46,22 @@ function PlotSolitaryWaveKdV(c = 5)
 		u₁ .= tu₂
 		end
 
-		for cs = range(2.8; step = 0.1, stop = c)
-			solve!(u₀,u₁,u₂,cs,0.1)
-		end
+		if c<=1 
+	 		@error("The velocity should be greater than `1`")
+ 		elseif c<2.8
+			param = ( μ  = 1,
+ 				ϵ  = 1,
+         		N  = 2^10,
+            	L  = 10/sqrt(c-1) )
+ 			mesh = Mesh(param)
+			u₂, = SolitaryWaveWhitham( merge(param,(c=c,)); iterative = false, KdV = true)
 
+		else
+			length=Int(floor((c-2.8)/0.1))+1
+			for cs = range(2.8,c; length = length)
+				solve!(u₀,u₁,u₂,cs,(c-2.8)/(length-1))
+			end
+		end
 		ucomp = u₂
 		uexact = sol(mesh.x,c-1)
 		error = maximum(abs.(ucomp-uexact))
@@ -73,11 +92,14 @@ function PlotSolitaryWaveKdV(c = 5)
 
 #----
 """
-	`PlotSolitaryWaveWhitham(c)`
+	`PlotSolitaryWaveWhitham( c )`
 
-Compute the solitary wave of the Whitham equation with prescribed velocity.
+Compute the solitary wave of the Whitham equation with prescribed velocity `c`
+in an iterative way (for large values of `c`), augmenting progressively the velocity to generate initial guesses of an iterative scheme.
 
-`c` is the velocity, and should be more between `1` and `1.2290408`.
+The argument `c` should be between `1` and `1.2290408` (`c=5` by default).
+
+Return the difference between the computed Whitham and KdV solutions (in ℓ^∞ norm at collocation points).
 """
 function PlotSolitaryWaveWhitham(c=1.1)
  	function solKdV(x,α)
@@ -127,8 +149,9 @@ function PlotSolitaryWaveWhitham(c=1.1)
 		u₂, = SolitaryWaveWhitham( merge(param,(c=1.12,)); iterative = false)
 
 		if c < 1.22
-			for cs = range(1.13; step = 0.01, stop = c)
-				solve2!(u₀,u₁,u₂,cs,0.01)
+			length=Int(floor((c-1.13)/0.01))+1
+			for cs = range(1.13; length=length, stop = c)
+				solve2!(u₀,u₁,u₂,cs,(c-1.13)/(length-1))
 			end
 		else
 			for cs = range(1.13; step = 0.01, stop = 1.22)
@@ -138,7 +161,7 @@ function PlotSolitaryWaveWhitham(c=1.1)
 
 			solve2!(u₀,u₁,u₂,1.221,0.01,1e-4)
 
-			if c < 1.229
+			if c <= 1.229
 				for cs = range(1.221+3e-4; step = 1e-4, stop = c)
 					solve2!(u₀,u₁,u₂,cs,1e-4)
 				end
@@ -176,5 +199,7 @@ function PlotSolitaryWaveWhitham(c=1.1)
   		title="frequency",
   		label="Whitham")
 
+	display(plt)
   	return 	maximum(abs.(u-solKdV(mesh.x,c-1)))
 end
+nothing
