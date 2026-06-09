@@ -203,7 +203,7 @@ This procedure is carried out by the function [`solution`](@ref WaterWaves1D.sol
 η,v,x = solution(problem)
 ```
 
-Using `(η,v,x)` one can compute other quantities such as the [mass, momentum, energy](background.md#Mass,-momentum,-energy); for instance for the purpose of testing how well these quantities are numerically perserved (when the quantities are first integrals of the considered model). Built-in functions [`mass`](@ref WaterWaves1D.mass), [`momentum`](@ref WaterWaves1D.momentum), [`energy`](@ref WaterWaves1D.energy) (and [`mass_diff`](@ref WaterWaves1D.mass_diff), [`momentum_diff`](@ref WaterWaves1D.momentumdiff), [`energy_diff`](@ref WaterWaves1D.energy_diff)) compute such quantities (or their variation).
+Using `(η,v,x)` one can compute other quantities such as the [mass, momentum, energy](background.md#Mass,-momentum,-energy); for instance for the purpose of testing how well these quantities are numerically perserved (when the quantities are first integrals of the considered model). Built-in functions [`mass`](@ref WaterWaves1D.mass), [`momentum`](@ref WaterWaves1D.momentum), [`energy`](@ref WaterWaves1D.energy) (and [`mass_diff`](@ref WaterWaves1D.mass_diff), [`momentum_diff`](@ref WaterWaves1D.momentum_diff), [`energy_diff`](@ref WaterWaves1D.energy_diff)) compute such quantities (or their variation).
 
 ## plot your data
 
