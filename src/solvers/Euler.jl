@@ -37,10 +37,6 @@ struct Euler <: TimeSolver
         U=model.mapto(Init(x->0*x,x->0*x))
         Euler( U; realdata=realdata)
     end
-    function RK4( model :: AbstractModel; realdata=nothing )
-        U=model.mapto(Init(x->0*x,x->0*x))
-        RK4( U; realdata=realdata)
-    end
     function Euler( param::NamedTuple, systemsize=2::Int; realdata=nothing )
         Euler( [Array{Complex{Float64}}(undef,param.N) for _ in 1:systemsize]  ; realdata=realdata)
     end
