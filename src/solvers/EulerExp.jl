@@ -1,10 +1,10 @@
 export EulerExp, EulerExp_naive
 export step!
 
-"""
+@doc raw"""
     EulerExp(arguments;realdata)
 
-Explicit Exponential Euler solver.
+Exponential Euler solver.
 
 Construct an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
 
@@ -16,6 +16,19 @@ Arguments can be either
 The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
 By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
 
+
+The function
+    `step!(solver :: EulerExp, model :: AbstractModel , U, δt)``
+
+performs the integration step of the exponential Euler solver applied to solutions to the equation ``u'=D u + g(u)``.
+
+It replaces the argument ``U≈u(tₙ)`` with the next element of the recursive scheme approximating ``u(tₙ+δt)`` through the formula
+
+```math
+u(tₙ+δt)≈e^{δt D} u(tₙ) + δt \frac{e^{δt D} - 1}{δt D} g( u(tₙ) )
+```
+
+The matrix `D` should be *diagonal* and the vector of its diagonal values provided together with the nonlinear function `g` by `model`. 
 """
 struct EulerExp <: TimeSolver
 
@@ -47,19 +60,7 @@ struct EulerExp <: TimeSolver
     end
 end
 
-@doc raw"""
-    step!(solver :: EulerExp, model :: AbstractModel , U, dt)
 
-Integration step of the exponential Euler solver applied to solutions to the equation `u'=A u + g(u)`.
-
-Replaces the argument `U≈u(tₙ)` with the next element of the recursive scheme approximating `u(tₙ+dt)` through the formula
-
-```math
-u(tₙ+dt)≈e^{-dt D} u(tₙ) + dt \frac{e^{-dt A} - 1}{-dt A} g( u(tₙ) )
-```
-
-The matrix `D` should be *diagonal* and the vector of its diagonal values provided together with the nonlinear function `g` by `model`. 
-"""
 function step!(solver :: EulerExp,
                 model :: AbstractModel,
                 U  ,
@@ -77,9 +78,9 @@ end
 """
     EulerExp_naive()
 
-Runge-Kutta fourth order solver.
+Exponential Euler solver.
 
-A naive version of `Euler`, without argument since no pre-allocation is performed.
+A naive version of `EulerExp`, without argument since no pre-allocation is performed.
 
 """
 struct EulerExp_naive <: TimeSolver
@@ -92,11 +93,6 @@ struct EulerExp_naive <: TimeSolver
     end
 end
 
-"""
-    step!(solver :: EulerExp_naive, model :: AbstractModel , U, dt)
-
-A naive version of `step!(solver :: EulerExp, model :: AbstractModel , U, dt)` that does not make use of pre-allocation.
-"""
 function step!(solver  :: EulerExp_naive,
                model :: AbstractModel ,
                U  ,
