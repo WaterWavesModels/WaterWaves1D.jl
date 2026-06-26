@@ -33,7 +33,7 @@ The key ingredients of the numerical strategy are the Fourier spectral approach 
 
 # Statement of need
 
-The propagation of waves at the surface of water under the action of gravitational forces (herein referred to as *water waves*) is arguably the physical phenomenon for which the most models have been proposed and are currently in use [@Lannes; @MM4WW]. This is partly due to the variety of *regimes* describing physical situations —such as shallow water, small-slope, long waves, wave packets— that can be considered and drive the modelling procedure. Even within the same physical regime, different approaches —Boussinesq–Rayleigh expansions, variational methods, spectral methods to name a few— yield different models, and *a posteriori* adjustments such as the BBM trick or the Nwogu approach further expand the range of available models in the literature.
+The propagation of waves at the surface of water under the action of gravitational forces (herein referred to as *water waves*) is arguably the physical phenomenon for which the most models have been proposed and are currently in use [@Lannes; @MM4WW]. This is partly due to the variety of *regimes* describing physical situations —such as shallow water, small-slope, long waves, wave packets— that can be considered and drive the modelling procedure. Even within the same physical regime, different approaches —Boussinesq–Rayleigh expansions, variational methods, spectral methods to name a few— yield different models, and *a posteriori* adjustments such as the BBM trick or the Nwogu approach further expand the range of models proposed in the literature.
 Yet all these models are built from the same "master equations", and in principle can easily be compared.
 The Julia package `WaterWaves1D.jl` provides a unified groundwork for the study and comparison of models.
 
@@ -111,21 +111,29 @@ Standard unidirectional models such as the Korteweg–de Vries, Benjamin–Bona�
 
 The numerical strategy that is employed to approximate solutions of the implemented models is fairly standard, as attention was mostly given on the unifying approach.
 
-A common feature of all the models is that they involve combinations of pointwise operations in physical space, and Fourier multipliers (that is multiplication in Fourier space). In our periodic framework, this calls for the use of Fourier spectral methods [@Trefethen00]. In most cases the (optional) application of dealiasing and/or Krasny filters is offered to the user.
+`WaterWaves1D.jl` is designed to use the method of lines, that is the full space-time discretization is decomposed into (i) spatial semidiscretization and (ii) numerical integration of the resulting ODE system. As such a problem is defined by the spatial semidiscretization associated with the system of partial differential equations, the initial data and the time integration scheme.
+
+A common feature of all the implemented models is that they involve combinations of pointwise operations in physical space, and Fourier multipliers (that is multiplication in Fourier space). In our periodic framework, this calls for the use of Fourier spectral methods [@Trefethen00] for spatial semidiscretization. In most cases the (optional) application of dealiasing and/or Krasny filters is offered to the user.
 
 Some models involve solving a discretized elliptic problem, that is a linear equation system. In that case we implemented as an addition to standard solvers the Krylov subspace iterative technique GMRES with suitable preconditioners.
 
-The architecture of the package allows in principle for any explicit solver for time integration. Implemented solvers include the standard Euler and fourth order explicit Runge-Kutta schemes.
+The architecture of the package allows in principle any solver for time integration provided that the semi-discretized model supplies the necessary operators. By construction, all implemented models can be equipped with any Runge–Kutta methods, and the standard explicit Euler and fourth order Runge-Kutta schemes are provided. Additionnally, as a proof-of-concept, the symplectic Euler [@HairerLubichWanner03] and the exponential Euler [@HochbruckOstermann10] schemes are implemented for a selection of models.
+
+In the same spirit, while the name of the package clearly indicates a disposition towards unidimensional waves, this is by no means an absolute restriction of the package architecture and the two-dimensional shallow-water system has been implemented.
 
 # Features
 
 The package provides users with built-in analysis tools, such as the evaluation of conserved quantities (mass, momentum, energy) for monitoring the accuracy of the discrete approximation.
 
-Built-in visualization tools by means of plot recipes building upon the standard package `Plots.jl` provide easy access to illustrations and preliminary investigation. In particular the users have immediate access to the computed solutions at given time either at computed collocation points or on any specified grids through interpolation, as well as Fourier mode coefficients.  
+Built-in visualization tools by means of plot recipes building upon the standard package `Plots.jl` provide easy access to illustrations and preliminary investigation. In particular the users have immediate access to the computed solutions at given time either at computed collocation points or on any specified grids through interpolation, as well as Fourier mode coefficients.
+
+The package implements analytic formula for traveling waves of the Serre–Green–Naghdi equations, and numerically constructed solutions of the Whitham, Whitham–Boussinesq and Whitham–Green–Naghdi equations.
+
+The package offers a tool for saving (raw) data to a local file, which can be loaded later for future analyses.
 
 # Softwares environment
 
-Amultitude of softwares for water wave or ocean dynamics have been developed for different needs over many years, and we cannot aim at exhaustiveness in the following description. We focus below on recent (a few years old) Julia packages in the vicinity of our package, emphasizing scope differences. The main specificity of the `WaterWaves1D.jl` is the desire to to offer a common framework for different models in view of facilitating their comparison.
+A multitude of softwares for water wave or ocean dynamics have been developed for different needs over many years, and we cannot aim at exhaustiveness in the following description. We focus below on recent (a few years old) Julia packages in the vicinity of our package, emphasizing scope differences. The main specificity of the `WaterWaves1D.jl` is the desire to to offer a common framework for different models in view of facilitating their comparison.
 
 In that respect the most closely related package is arguably     `DispersiveShallowWater.jl` [@LampertWittensteinRanocha25]
 which implements structure-preserving numerical methods for dispersive shallow water models, including  unidirectional models such as the Korteweg–de Vries and
@@ -139,6 +147,129 @@ Building on the numerical simulation framework for general conservation laws `Tr
 `GeophysicalFlows.jl` [@ConstantinouWagnerSiegelmanEtAl21] is a package for geophysical fluid dynamics (2D periodic incompressible Navier-Stokes equation and quasi-geostrophic equations) that leverages the pseudo-spectral solver modules of the package `FourierFlows.jl` [@ConstantinouWagnerPaloczyEtAl25]. In Waterwaves1D.jl we have avoided using modules of `FourierFlows.jl` and built analogous ones in order to avoid dependencies.
 
 We finally mention the package  `Oceananigans.jl` [@RamadhanWagnerHillEtAl20] that implements finite volume algorithms optimized for high-resolution simulations on GPUs for geophysical models adapted to large-scale ocean dynamics.
+
+# Examples
+
+## Models comparison
+
+In this example we shall observe the disintegration of a heap of water using the water-waves system as well as a second-order small-steepness model. 
+
+### Set up the initial-value problem
+
+First we define physical parameters of our problem. Variables are non-dimensionalized as previously described.
+
+```julia
+using WaterWaves1D
+
+param = (
+    # Physical parameters.
+    μ  = 1,     # shallow-water dimensionless parameter
+    ε  = 1/4,   # nonlinearity dimensionless parameter
+    # Numerical parameters
+    N  = 2^10,  # number of collocation points
+    L  = 10,    # half-length of the numerical tank (-L,L)
+    T  = 5,     # final time of computation
+    dt = 0.01,  # timestep
+                )
+```
+
+Now we define initial data (the "heap of water"). The function `Init` may take either functions, or vectors (values at collocation points) as arguments.
+
+```julia
+z(x) = exp.(-abs.(x).^4) # surface deformation
+v(x) = zero(x)           # zero initial velocity
+init = Init(z,v)         # generate the initial data with correct type
+```
+
+Then we build the different models `WaterWaves` and `WWn` to compare:
+
+```julia
+WW_model  = WaterWaves(param) # The water waves system
+WW2_model = WWn(param; n = 2, dealias = 1, δ = 1/10) # The quadratic model (WW2)
+```
+
+Finally we set up initial-value problems. Optionally, one may specify a time solver to `Problem` (see the next example), by default the standard explicit fourth order Runge Kutta method is used.
+
+```julia
+WW_problem  = Problem(WW_model,  init, param)
+WW2_problem = Problem(WW2_model, init, param)
+```
+
+### Solve the initial-value problem
+
+```julia
+for problem in [WW_problem WW2_problem] solve!(problem) end
+```
+
+### Generate graphics
+```julia
+using Plots
+plot([WW_problem, WW2_problem], legend = :bottomright)
+```
+
+![Water waves system and the quadratic model](figure1.png){ width=80% }
+
+## Solvers comparison
+
+In this example we compare the results of different numerical solvers on the same problem. 
+
+### Set up the initial-value problem
+
+We define physical parameters of our problem.
+
+```julia
+using WaterWaves1D
+
+param = ( 
+      # Physical parameters.
+      μ = 1/4,
+			ε = 0.1,
+      # Numerical parameters
+      N  = 2^8, 	# number of collocation points
+      L  = π,	# size of the mesh (-L,L)
+      T  = 50,		# final time of computation
+      dt = 0.001, # timestep
+			ns = 50,   	# to save memory, data are stored every ns step
+				);
+```  
+
+We set initial data (the "heap of water").
+
+```julia
+z(x) = exp.(-abs.(x).^4) # surface deformation
+v(x) = zero(x)           # zero initial velocity
+init = Init(z,v)         # generate the initial data with correct type
+```
+
+We build the model `WaterWaves`.
+
+```julia
+WW_model=WaterWaves(param)
+```
+
+
+Finally we set up initial-value problems with different time solvers. 
+
+```julia
+RK4_problem  = Problem(WW_model,  init, param, solver = RK4(WW_model), label = "Runge-Kutta 4")
+Euler_problem = Problem(WW_model, init, param, solver = Euler(WW_model), label = "Explicit Euler")
+Symplectic_Euler =  EulerSymp(WW_model,Niter=5,implicit=1)
+Symplectic_problem = Problem(WW_model, init, param, solver = Symplectic_Euler, label = "Symplectic Euler")
+```
+
+### Solve the initial-value problem
+
+```julia
+for problem in [RK4_problem, Euler_problem, Symplectic_problem] solve!(problem) end
+```
+
+### Generate graphics
+```julia
+using Plots
+plot([RK4_problem, Euler_problem, Symplectic_problem])
+```
+
+![Water waves system and the quadratic model](figure2.png){ width=80% }
 
 
 # References
