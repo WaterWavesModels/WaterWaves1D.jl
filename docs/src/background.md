@@ -27,7 +27,7 @@ assuming constant atmospheric pressure at the free surface and
 free slip boundary condition at the flat bottom,
 the equations in dimensionless variables read as follows
 (following notations in [Lannes2013](@citet),
-[Duchene2022](@citet)).
+[Duchene2021](@citet)).
 
 ```math
   \left\{\begin{array}{l}
@@ -56,7 +56,7 @@ In the above formula,
 * ``ν`` is a scaling parameter: in shallow water situations one typically sets ``ν=1`` while in deep water situations it is wise to set ``ν=1/\sqrt{μ}``. In the latter case, ``ϵ\sqrt{μ}`` being the *steepness* of the wave plays an important role. Especially, taking formally the limit ``μ→∞`` one obtains the infinite-depth situation where the wave steepness is the only remaining parameter.
 
 While the above formulation (due to [Zakharov1968](@citet)
-and [Craig1993](@citet)) is
+and [CraigSulem1993](@citet)) is
 very elegant, it is not directly suitable for efficient numerical
 simulations, due to the costly time-dependent elliptic problem
 involved in the Dirichlet-to-Neumann operator, ``G^μ``.  In our
@@ -67,7 +67,7 @@ space).  This allows, by means of the [Fast Fourier
 Transform](https://en.wikipedia.org/wiki/Fast_Fourier_transform)
 (FFT) and its inverse (IFFT), to provide a very efficient strategy
 for the numerical simulation of the water waves system. This strategy
-has been described for instance in [Dyachenko1996](@citet) and [Choi1999](@citet).
+has been described for instance in [DyachenkoKuznetsovSpectorEtAl1996](@citet) and [ChoiCamassa1999](@citet).
 
 The resulting code is [`WaterWaves`](@ref WaterWaves1D.WaterWaves).
 
@@ -90,11 +90,11 @@ to the water waves system for small values of the shallowness
 parameter, ``μ≪1`` (in this case, ``ν=1``).
 
 Many of these models are derived and discussed in
-[Duchene2022](@citet).
+[Duchene2021](@citet).
 
 #### The Saint-Venant system
 
-The [Saint-Venant](https://en.wikipedia.org/wiki/Shallow_water_equations#One-dimensional_Saint-Venant_equations) system
+The [Saint-Venant1871](@citet) system
 is one of the oldest model for the propagation of water waves. It reads
 ```math
   \left\{\begin{array}{l}
@@ -109,9 +109,9 @@ The associated code is [`SaintVenant`](@ref WaterWaves1D.SaintVenant) (see also 
 
 #### The Boussinesq systems
 
-The ``abcd``-[Boussinesq](https://en.wikipedia.org/wiki/Boussinesq_approximation_(water_waves)) systems
-refers to the full class of equations described by
-[Bona2002](@citet)
+The ``abcd``-Boussinesq systems
+refers to the full class of equations described in
+[BonaChenSaut2002](@citet):
 
 ```math
   \left\{\begin{array}{l}
@@ -122,7 +122,7 @@ refers to the full class of equations described by
 where ``a,b,c,d`` can be freely chosen as long as they satisfy ``a+b+c+d=1/3``.
 
 The associated code [`Boussinesq`](@ref WaterWaves1D.Boussinesq)
-is restricted to the so-called Hamiltonian case, ``b=d``, and ``c=0``.
+is restricted to the so-called Hamiltonian case, ``d=b``, and ``c=0``.
 
 Indeed, in that case, one may genuinely interpret ``v=u-d∂_x^2u`` as an approximation to ``∂_xψ``, the derivative of the trace of the velocity potential at the surface, and write the system as evolution equations for the variables ``(η,v)``:
 ```math
@@ -147,14 +147,14 @@ Specifically, we consider systems of the form
   \end{array}\right.
 ```
 with ``F_1^μ=\frac{\tanh(\sqrtμ D)}{\sqrtμ D}``, and ``F_2^μ=(F_1^μ)^α`` (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
-The case ``α = 1`` has been introduced by [Dinvay2019](@citet), more general situations have been studied by [Emerald2021](@citet).
+The case ``α = 1`` has been introduced by [DinvayDutykhKalisch2019](@citet), more general situations have been studied by [Emerald2021](@citet).
 
 
 The associated code is [`WhithamBoussinesq`](@ref WaterWaves1D.WhithamBoussinesq).
 
 #### The Green-Naghdi system
 
-The (Serre-)Green-Naghdi system ([Serre1953](@citet), [Su1969](@citet), [Green1976](@citet))
+The (Serre-)Green-Naghdi system ([Serre1953](@citet), [SuGardner1969](@citet), [GreenNaghdi1976](@citet))
 is sometimes called "fully nonlinear Boussinesq system"
 and is expected to provide a better approximation when the parameter ``ϵ`` is large.
 
@@ -175,7 +175,7 @@ The associated code is [`SerreGreenNaghdi`](@ref WaterWaves1D.SerreGreenNaghdi).
 #### The square-root depth system
 
 The "√D" system
-proposed by [Cotter2010](@citet)
+proposed by [CotterHolmPercival2010](@citet)
 can be written as
 ```math
   \left\{\begin{array}{l}
@@ -193,7 +193,7 @@ The associated code is [`SquareRootDepth`](@ref WaterWaves1D.SquareRootDepth).
 #### The "non-hydrostatic" system
 
 The "non-hydrostatic" system
-proposed by [Bristeau2015](@citet)
+proposed by [BristeauMangeneySainte-MarieEtAl2015](@citet)
 can be written as
 ```math
   \left\{\begin{array}{l}
@@ -211,7 +211,7 @@ The associated code is [`NonHydrostatic`](@ref WaterWaves1D.NonHydrostatic).
 #### The Whitham-Green-Naghdi system
 
 The Whitham-Green-Naghdi system
-proposed by [Duchene2015](@citet).
+proposed by [DucheneIsrawiTalhouk2015](@citet).
 can be viewed as a modified Green-Naghdi system in view of
 fully recovering the [dispersive properties](https://en.wikipedia.org/wiki/Dispersion_(water_waves)) of the water waves system. In other words, in the linear framework, that is setting ``ϵ=0``, the model coincides with the linearized water waves system.
 
@@ -223,9 +223,9 @@ fully recovering the [dispersive properties](https://en.wikipedia.org/wiki/Dispe
 ```
  where ``h=1 + ϵ η`` is the depth, ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface, and ``u`` the layer-averaged horizontal velocity obtained by solving the elliptic problem
 ```math
-hu -\tfrac{μ}{3}F_0^μ∂_x( h^3 F_0^μ∂_xu) = hv.
+hu -\tfrac{μ}{3}F_0^μ∂_x( h^3 F_0^μ∂_xu) = hv,
 ```
-with ``F_0^μ=\sqrt{3((F_1^μ)^{-1}(D) - 1)}/D`` where ``F_1^μ=\frac{\tanh(\sqrtμ D)}{\sqrtμ D}``
+where ``F_0^μ=\sqrt{3((F_1^μ)^{-1}(D) - 1)}/D`` and ``F_1^μ=\frac{\tanh(\sqrtμ D)}{\sqrtμ D}``
 (here we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wiki/Multiplier_(Fourier_analysis)) of pointwise multiplying by the function ``F`` in the Fourier space).
 
 The associated code is [`WhithamBoussinesq`](@ref WaterWaves1D.WhithamBoussinesq).
@@ -233,7 +233,7 @@ The associated code is [`WhithamBoussinesq`](@ref WaterWaves1D.WhithamBoussinesq
 #### The Isobe-Kakinuma systems
 
 The Isobe-Kakinuma model is a hierarchy of systems proposed by
-[Isobe1994](@citet),
+[Isobe1994](@citet) and studied in [Kakinuma2001](@citet),
 depending on the rank ``N`` and the parameters ``(p_0,p_1,⋯,p_N)``
 
 ```math
@@ -305,9 +305,9 @@ The associated code is [`Airy`](@ref WaterWaves1D.Airy).
 
 #### The spectral systems
 
-[Dommermuth1987](@citet),
-[West1987](@citet), and
-[Craig1993](@citet) have proposed
+[DommermuthYue1987](@citet),
+[WestBruecknerJandaEtAl1987](@citet), and
+[CraigSulem1993](@citet) have proposed
 a hierarchy of systems based on a "spectral" expansion, which can be interpreted
 through the Taylor expansion of the Dirichlet-to-Neumann, ``G^μ[ϵη]ψ``, with respect
 to the surface deformation variable:
@@ -326,7 +326,7 @@ where we denote ``v=∂_xψ`` the derivative of the trace of the velocity potent
 
 Higher order systems can be constructed using recursive formula.
 Explicit expressions up to quintic nonlinearities are given in
-[Choi1995](@citet).
+[Choi2019](@citet).
 
 The associated code is [`WWn`](@ref WaterWaves1D.WWn).
 
@@ -336,9 +336,9 @@ The associated code is [`WWn`](@ref WaterWaves1D.WWn).
 #### The rectified spectral systems
 
 It turns out the spectral models above suffer from spurious instabilities; see
-[AmbroseBonaNicholls2013](@citet).
+[AmbroseBonaNicholls2014](@citet).
 
-[DucheneMelinand2022](@citet) proposed a "rectified" quadratic model:
+[DucheneMelinand2024](@citet) proposed a "rectified" quadratic model:
 ```math
   \left\{\begin{array}{l}
   ∂_tη-\tfrac{1}{\sqrtμ ν} T^μv  + \tfrac{ϵ}{ν} ∂_x\big((J^δη) v +  T^μ((J^δη) T^μ v)\big) =0,\\[1ex]
@@ -369,7 +369,7 @@ The associated codes are [`Matsuno`](@ref WaterWaves1D.Matsuno), and [`Matsuno_f
 
 
 In view of ensuring the stability of the equations,
-[DucheneMelinand2022](@citet)
+[DucheneMelinand2024](@citet)
 proposed a modified Matsuno system:
 ```math
   \left\{\begin{array}{l}
@@ -382,8 +382,8 @@ The associated codes is [`modifiedMatsuno`](@ref WaterWaves1D.modifiedMatsuno).
 
 #### The Akers-Nicholls system
 
-The model introduced in [AkersNicholls2009](@citet)
-(see also [ChengGranero2019](@citet))
+The model introduced in [AkersNicholls2010](@citet)
+(see also [ChengGranero-BelinchonShkollerEtAl2019](@citet))
 can be written as
 ```math
   \left\{\begin{array}{l}
@@ -418,7 +418,7 @@ A full dispersion model was proposed by [Whitham1967](@citet)
 ```
 where ``M^μ=\big(\tfrac{\tanh(\sqrtμ D)}{\sqrtμ D}\big)^{1/2}``.
 
-While these models have been designed to approximate *unidirectional* (left-going or right-going) waves, they can also be used as building blocks to approximate general water waves; see [HoangNguyen2022](@citet).
+While these models have been designed to approximate *unidirectional* waves (right-going or left-going after sign-modifications), they can also be used as building blocks to approximate general water waves; see [Lannes2013](@citet) and [Emerald2021b](@citet).
 
 The associated codes are [`KdV`](@ref WaterWaves1D.KdV), [`BBM`](@ref WaterWaves1D.BBM) and [`Whitham`](@ref WaterWaves1D.Whitham) respectively.
 
@@ -446,7 +446,8 @@ The associated code is [`relaxedGreenNaghdi`](@ref WaterWaves1D.relaxedGreenNagh
 
 Despite its name, our package is not strictly restricted to one-dimensional evolution equations, although the full water waves equations with two horizontal dimensions is largely outside its scope.
 
-As a demonstration we implemented the two-dimensional [Saint-Venant](https://en.wikipedia.org/wiki/Shallow_water_equations#One-dimensional_Saint-Venant_equations) which reads
+As a demonstration we implemented the two-dimensional [Saint-Venant1871](@citet) system
+which reads
 ```math
   \left\{\begin{array}{l}
   ∂_tη+\nabla\cdot((1+ϵη)\bm{v})=0,\\[1ex]
@@ -476,7 +477,10 @@ Solutions to the water waves equations preserve along time (among other integral
 ```
 Such is also the case for solutions to all models cited above using as velocity variable ``v=∂_xψ`` (with analogous formula).
 
-The numerical discretization of these preserved quantities, coded in [`mass`](@ref WaterWaves1D.mass), [`momentum`](@ref WaterWaves1D.momentum), [`energy`](@ref WaterWaves1D.energy) (and [`massdiff`](@ref WaterWaves1D.massdiff), [`momentumdiff`](@ref WaterWaves1D.momentumdiff), [`energydiff`](@ref WaterWaves1D.energydiff)) provide valuable insights at the precision of a computed numerical solution.
+The numerical discretization of these preserved quantities, coded in [`mass`](@ref WaterWaves1D.mass), [`momentum`](@ref WaterWaves1D.momentum), [`energy`](@ref WaterWaves1D.energy) (and [`mass_diff`](@ref WaterWaves1D.mass_diff), [`momentum_diff`](@ref WaterWaves1D.momentum_diff), [`energy_diff`](@ref WaterWaves1D.energy_diff)  for the difference between initial and final time) provide valuable insights at the precision of a computed numerical solution.
+
+
+
 
 ## Pseudospectral methods
 
