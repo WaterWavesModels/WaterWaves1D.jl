@@ -251,10 +251,12 @@ WW_model=WaterWaves(param)
 Finally we set up initial-value problems with different time solvers. 
 
 ```julia
-RK4_problem  = Problem(WW_model,  init, param, solver = RK4(WW_model), label = "Runge-Kutta 4")
-Euler_problem = Problem(WW_model, init, param, solver = Euler(WW_model), label = "Explicit Euler")
-Symplectic_Euler =  EulerSymp(WW_model,Niter=5,implicit=1)
-Symplectic_problem = Problem(WW_model, init, param, solver = Symplectic_Euler, label = "Symplectic Euler")
+RK4_problem  = Problem(WW_model,  init, param, 
+    solver = RK4(WW_model), label = "Runge-Kutta 4")
+Euler_problem = Problem(WW_model, init, param, 
+    solver = Euler(WW_model), label = "Explicit Euler")
+Symplectic_problem = Problem(WW_model, init, param, 
+    solver = EulerSymp(WW_model,Niter=5,implicit=1), label = "Symplectic Euler")
 ```
 
 ### Solve the initial-value problem
