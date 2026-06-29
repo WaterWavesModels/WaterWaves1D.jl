@@ -1,10 +1,17 @@
 export SaintVenant,SaintVenant_fast
 
-"""
+@doc raw"""
     SaintVenant(param; kwargs...)
 
-Define an object of type `AbstractModel` in view of solving the initial-value problem for
-Saint-Venant (or shallow water) model.
+Define an object of type `AbstractModel` in view of solving the initial-value problem for the
+[Saint-Venant1871](@citet) (or shallow water) model
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+∂_x((1+ϵη)v)=0,\\[1ex]
+  ∂_tv+∂_xη+ϵv∂_xv=0.
+  \end{array}\right.
+```
+where ``η`` is the surface deformation and ``v`` the horizontal velocity (essentially constant along the vertical variable).
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -15,7 +22,7 @@ Saint-Venant (or shallow water) model.
 - `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `ktol`: tolerance of the low-pass Krasny filter (default is `0`, i.e. no filtering);
 - `dealias`: no dealisasing if set to `0` or `false` (default), otherwise `1/(3*dealias)` modes are set to `0` (corresponding to standard 2/3 Orszag rule if `dealias` is set to `1` or `true`);
-- `smooth`: A smooth low-pass filter (whose scaling is defined by ) if set to `0` or `false` (default), otherwise only `2/(3*dealias)*(1-smooth/2)` modes are kept untouched;
+- `smooth`: A sharp low-pass filter (whose scaling is defined by `dealias`) if set to `0` or `false` is applied, otherwise only `2/(3*dealias)*(1-smooth/2)` modes are kept untouched;
 - `label`: a label for future references (default is `"Saint-Venant"`);
 
 # Return values
@@ -26,6 +33,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
     - `η` is the values of surface deformation at collocation points `x`;
     - `v` is the layer-averaged velocity (or the derivative of the trace of the velocity potential) at `x`.
 
+See also [`SaintVenant_fast`](@ref).
 """
 mutable struct SaintVenant <: AbstractModel
 

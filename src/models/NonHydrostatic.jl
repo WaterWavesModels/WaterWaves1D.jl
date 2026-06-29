@@ -1,10 +1,20 @@
 export NonHydrostatic
 
-"""
+@doc raw"""
     NonHydrostatic(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the "Non-hydrostatic" model proposed by [Bristeau, Mangeney, Sainte-Marie and Seguin](@cite Bristeau2015)
+the "non-hydrostatic" model proposed by [Bristeau, Mangeney, Sainte-Marie and Seguin](@cite BristeauMangeneySainte-MarieEtAl2015):
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+∂_x\big( h u\big)=0,\\[1ex]
+  ∂_tv+∂_x\big(η+\tfrac{ϵ}{2}v^2+\tfrac{μϵ}{2} ( w∂_x^2(hu) + ∂_x^2( hu w ) + ϵ (∂_xη)(∂_xw)u )\big) =0,
+  \end{array}\right.
+```
+where ``h=1 + ϵ η`` is the depth, ``η`` the surface deformation, ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface, ``w=-(h ∂ₓu)/2`` and ``u`` is obtained by solving the elliptic problem
+```math
+ hu -\tfrac{μ}{4}∂_x( h^3 ∂_xu) = hv.
+```
 
 # Argument
 `param` is of type `NamedTuple` and must contain

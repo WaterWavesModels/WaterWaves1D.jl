@@ -1,10 +1,17 @@
 export SaintVenant2D, SaintVenant2D_fast
 
-"""
+@doc raw"""
     SaintVenant2D(param; kwargs...)
 
-Define an object of type `AbstractModel` in view of solving the initial-value problem for
-Saint-Venant (or shallow water) model.
+Define an object of type `AbstractModel` in view of solving the initial-value problem for the
+[Saint-Venant1871](@citet) (or shallow water) model
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+\nabla\cdot((1+ϵη)\bm{v})=0,\\[1ex]
+  ∂_tv+\nabla η+ϵ(\bm{v}\cdot\nabla)\bm{v}=0,
+  \end{array}\right.
+```
+where ``η`` is the surface deformation and ``v`` the horizontal velocity (essentially constant along the vertical variable).
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -25,6 +32,8 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 3. a function `SaintVenant2D.mapfro` which from such data matrix returns the Tuple of real vectors `(η,vx,vy,x,y)`, where
     - `η` is the values of surface deformation at collocation points `(x,y)`;
     - `vx,vy` are the velocity fields at collocation points `(x,y)`.
+
+See also [`SaintVenant2D_fast`](@ref).
 
 """
 mutable struct SaintVenant2D <: AbstractModel

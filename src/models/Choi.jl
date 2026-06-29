@@ -1,10 +1,18 @@
 export Choi
 
-"""
+@doc raw"""
     Choi(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-(an asymptotically equivalent variant of) the model proposed by [Choi](@cite Choi2022).
+(an asymptotically equivalent variant of) the model proposed by [Choi](@cite Choi2022):
+```math
+  \left\{\begin{array}{l}
+∂_tη+∂_x\left(\sum_{m=0}^M  h^{2m+1}\frac{(-μ∂_x^2)^mv }{(2m+1)!}\right) =0,\\[1ex]
+\big(	1-\sum_{m=1}^M μ∂_x( h^{2m}∂_x\frac{(-μ∂_x^2)^{m-1}}{(2m)!})\big)∂_tv +∂_xη  \\[1ex] 
+		\qquad +∂_x\left(\frac12\sum_{m=0}^M h^{2m}\left(\sum_{j=0}^m \frac{(-μ∂_x^2)^j v}{(2j)!}  \frac{(-μ∂_x^2)^{m-j} v}{(2m-2j)!}-μ\sum_{j=0}^{m-1} \frac{∂_x(-μ∂_x^2)^j v}{(2j+1)!} \frac{∂_x(-μ∂_x^2)^{m-j-1} v}{(2m-2j-1)!} \right)\right),
+  \end{array}\right.
+```
+where ``M`` is the rank of the system, ``h=1 + ϵ η`` , ``η`` the surface deformation and ``v=∂_xϕᵦ`` is the derivative of the trace of the velocity potential at the bottom.
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -12,7 +20,7 @@ Define an object of type `AbstractModel` in view of solving the initial-value pr
 - numerical parameters to construct the mesh of collocation points, if `mesh` is not provided as a keyword argument.
 
 ## Optional keyword arguments
-- `M∈{0,1,2}`: the order of the model. `M=2` by default;
+- `M∈{0,1,2}`: the rank of the system. `M=2` by default;
 - `reg`: applies a regularization operator. `reg=false` by default.
 - `mesh`: the mesh of collocation points. By default, `mesh = Mesh(param)`;
 - `iterative`: solve the elliptic problem through GMRES if `true`, LU decomposition if `false` (default is `true`);

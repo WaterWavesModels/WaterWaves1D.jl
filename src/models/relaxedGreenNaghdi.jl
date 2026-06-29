@@ -1,12 +1,25 @@
 export relaxedGreenNaghdi
 
-"""
+@doc raw"""
     relaxedGreenNaghdi(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
 a relaxed Green-Naghdi model proposed by [N. Favrie and S. Gavrilyuk](@cite FavrieGavrilyuk2017) 
 or [C. Escalante, M. Dumbser and M. Castro](@cite EscalanteDumbserCastro2019) 
 and [G. Richard](@cite Richard2021).
+
+In the latter works the model reads
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+∂_x (hu)=0,\\[1ex]
+  h(∂_tu+ϵu∂_x u+∂_x η)+aμ ∂_x (hp)=0,\\[1ex]
+  h(∂_tp +ϵu∂_x p)+a(2w+h∂_xu)=0,\\[1ex]
+	h(∂_tw+uϵ∂_x w) = a\tfrac{3}{2}p.
+  \end{array}\right.
+```
+where ``h=1 + ϵ η`` is the water depth, ``η`` the surface deformation, ``u`` the horizontal velocity and ``p`` and ``w`` are expected to approximate the layer-veraged pressure and vertical velocity when ``a\gg1``.
+Notice the system has four evolution equations, in particular initial data for the augmented variables ``p`` and ``w`` must be suitably chosen. 
+
 
 # Argument
 `param` is of type `NamedTuple` and must contain

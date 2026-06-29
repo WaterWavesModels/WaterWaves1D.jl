@@ -1,10 +1,30 @@
 export IsobeKakinuma
 
-"""
+@doc raw"""
     IsobeKakinuma(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the Isobe-Kakinuma model proposed by [Isobe](@cite Isobe1994).
+the Isobe-Kakinuma model proposed by [Isobe1994](@citet) and studied in [Kakinuma2001](@citet):
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+∂_x\left( \sum_{j=0}^N\tfrac{h^{p_j+1}}{p_j+1}∂_xϕ_j \right)=0,\\[1ex]
+  ∂_tv+∂_x\left( η
+  +ϵ \left( \sum_{i=0}^Np_ih^{p_i-1}ϕ_i \right)∂_x\left( \sum_{j=0}^N\tfrac{h^{p_j+1}}{p_j+1}∂_xϕ_j \right)
+  +\tfrac{ϵ}{2}\left( \sum_{j=0}^Nh^{p_j}∂_xϕ_j\right)^2
+  +\tfrac{ϵ}{2μ} \left( \sum_{j=0}^Np_jh^{p_j-1}ϕ_j\right)^2 \right) =0,
+  \end{array}\right.
+```
+where ``h=1 + ϵ η`` is the water depth, , ``η`` the surface deformation, ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface, and ``(ϕ₀,ϕ₁,⋯,ϕ_N)`` are obtained by solving the elliptic problem
+```math
+  \left\{\begin{array}{l}
+\sum_{j=0}^Nh^{p_j}ϕ_j =ψ,\\[1ex]
+-h^{p_i} ∂_x\left(\sum_{j=0}^N\tfrac{h^{p_j+1}}{p_j+1}∂_xϕ_j \right)
++ ∂_x\left(\sum_{j=0}^N\tfrac{h^{p_i+p_j+1}}{p_i+p_j+1}∂_xϕ_j \right)
+-\tfrac{1}{μ} \sum_{j=0}^N \tfrac{p_ip_j}{p_i+p_j+1}ϕ_j=0 \quad (\forall i∈\{1,⋯,N\}).
+  \end{array}\right.
+```
+Above, the rank of the model is set to ``N=1`` and the parameters are ``(p_0,p_1)=(0,2)``.
+
 
 # Argument
 `param` is of type `NamedTuple` (or a collection `NamedTuple`s) of and must contain
