@@ -67,7 +67,7 @@ Our code implements both type of models in the same framework, focusing on the o
 
 ## Serre–Green–Naghdi-type models
 
-The Serre–Green–Naghdi equations can be interpreted as fully nonlinear versions of Boussinesq models, where only high-order dispersive contributions are discarded. 
+The Serre–Green–Naghdi equations [@Serre53; @GreenNaghdi76] is a fully nonlinear versions of Boussinesq models, where only high-order dispersive contributions are discarded. 
 
 This improvement comes with a high-price as a differential elliptic problem reminiscent of the Dirichlet-to-Neumann operator needs to be solved at each timestep. In order to lower the numerical cost, the package offers the use of the Krylov subspace iterative technique GMRES with a suitable preconditioner, as described in @DucheneKlein22.
 
