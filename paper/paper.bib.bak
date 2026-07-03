@@ -12,11 +12,11 @@
   fjournal = {Physics Letters A},
 }
 
-@Unpublished{MM4WW,
-  author = {Duch{\^e}ne, Vincent},
-  title  = {{Many Models for Water Waves}},
-  note   = {Open Math Notes, \href{https://www.ams.org/open-math-notes/omn-view-listing?listingId=111309}{OMN:202109.111309}},
-  year   = {2021},
+@Misc{MM4WW,
+  author       = {Duch{\^e}ne, Vincent},
+  title        = {{Many Models for Water Waves}},
+  howpublished = {Open Math Notes, \href{https://www.ams.org/open-math-notes/omn-view-listing?listingId=111309}{OMN:202109.111309}},
+  year         = {2021},
 }
 
 @Article{AmbroseCamassaMarzuolaEtAl22,
@@ -34,22 +34,6 @@
   mrnumber   = {4450141},
   mrreviewer = {A.\ F.\ Ghaleb},
   url        = {https://doi.org/10.1007/s10444-022-09957-z},
-}
-
-@Article{BonaSmith76,
-  author     = {Bona, Jerry L. and Smith, Ronald},
-  title      = {A model for the two-way propagation of water waves in a channel},
-  journal    = {Math. Proc. Cambridge Philos. Soc.},
-  year       = {1976},
-  volume     = {79},
-  number     = {1},
-  pages      = {167--182},
-  issn       = {0305-0041},
-  fjournal   = {Mathematical Proceedings of the Cambridge Philosophical Society},
-  groups     = {Oceano},
-  mrclass    = {76.35},
-  mrnumber   = {0395457},
-  mrreviewer = {W. F. Ames},
 }
 
 @Article{BonaChenSaut02,
@@ -168,23 +152,7 @@
   address   = {Providence, RI},
   isbn      = {978-0-8218-9470-5},
   note      = {Mathematical analysis and asymptotics},
-  myref     = {mathscinet},
   pages     = {xx+321},
-}
-
-@Article{Matsuno15,
-  author   = {Matsuno, Yoshimasa},
-  title    = {Hamiltonian formulation of the extended {G}reen-{N}aghdi equations},
-  journal  = {Phys. D},
-  year     = {2015},
-  volume   = {301/302},
-  pages    = {1--7},
-  issn     = {0167-2789},
-  doi      = {10.1016/j.physd.2015.03.001} # PANIST,
-  fjournal = {Physica D. Nonlinear Phenomena},
-  mrclass  = {35Q35 (76B15 83C35)},
-  mrnumber = {3343808},
-  url      = {https://doi.org/10.1016/j.physd.2015.03.001#PANIST#},
 }
 
 @Article{Isobe94,
@@ -207,20 +175,6 @@
   publisher = {WIT Press},
   doi       = {10.2495/CE010201},
   url       = {https://doi.org/10.2495/CE010201},
-}
-
-@Article{DucheneIguchi21,
-  author   = {Duchêne, Vincent and Iguchi, Tatsuo},
-  title    = {A {H}amiltonian structure of the {I}sobe-{K}akinuma model for water waves},
-  journal  = {Water Waves},
-  year     = {2021},
-  volume   = {3},
-  number   = {1},
-  pages    = {193--211},
-  issn     = {2523-367X},
-  doi      = {10.1007/s42286-020-00025-x},
-  fjournal = {Water Waves. An Interdisciplinary Journal},
-  url      = {https://doi.org/10.1007/s42286-020-00025-x},
 }
 
 @Article{DommermuthYue87,
@@ -255,7 +209,6 @@
   pages    = {73--83},
   issn     = {0021-9991},
   coden    = {JCTPAH},
-  comment  = {L'introduction de la formulation de Craig-Sulem, avec operateurs de D2N},
   doi      = {10.1006/jcph.1993.1164},
   fjournal = {Journal of Computational Physics},
   mrclass  = {76M25 (76B15 86-08 86A05)},
@@ -406,17 +359,6 @@
   mrnumber = {3944703},
 }
 
-@Article{Nwogu93,
-  author    = {Nwogu, Okey},
-  title     = {Alternative form of Boussinesq equations for nearshore wave propagation},
-  journal   = {Journal of waterway, port, coastal, and ocean engineering},
-  year      = {1993},
-  volume    = {119},
-  number    = {6},
-  pages     = {618--638},
-  publisher = {American Society of Civil Engineers},
-}
-
 @Article{Zakharov68,
   author    = {Zakharov, V. E.},
   title     = {Stability of periodic waves of finite amplitude on the surface of a deep fluid},
@@ -425,12 +367,10 @@
   volume    = {9},
   pages     = {190--194},
   issn      = {0021-8944},
-  comment   = {Le papier qui a introduit la methode de l'operateur Dirichlet-Neumann. Pas lu, encore.},
   doi       = {10.1007/BF00913182},
   fjournal  = {Journal of Applied Mechanics and Technical Physics},
   issue     = {2},
   keywords  = {water-wave},
-  myref     = {oui},
   publisher = {Springer New York},
 }
 
@@ -498,13 +438,85 @@
   volume    = {78},
   number    = {02},
   pages     = {237--246},
-  comment   = {Le papier qui introduit le syst{\`e}me de Green-Naghdi, pour les water-wave. Pas lu.},
   doi       = {10.1017/s0022112076002425},
-  file      = {GreenNaghdi76.pdf:GreenNaghdi76.pdf:PDF},
   fjournal  = {Journal of Fluid Mechanics},
-  groups    = {Oceano},
-  myref     = {oui},
   publisher = {Cambridge Univ Press},
+}
+
+@Misc{DucheneNavaro,
+  author       = {Duchêne, Vincent and Navaro, Pierre},
+  title        = {Documentation of {WaterWaves1D.jl (version v0.2.1)}},
+  howpublished = {Zenodo},
+  year         = {2025},
+  url          = {https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/},
+}
+
+@Article{Saint-Venant1871,
+  author   = {de Saint-Venant, Barr{\'e}},
+  title    = {Th{\'e}orie du mouvement non-permanent des eaux, avec application aux crues des rivi{\`e}res et {\`a} l'introduction des mar{\'e}es dans leur lit},
+  journal  = {C.R. Acad. Sci. Paris},
+  year     = {1871},
+  volume   = {73},
+  pages    = {147--154},
+  fjournal = {Comptes Rendus des séances de l'Académie des Sciences},
+  options  = {useprefix=false},
+  sortkey  = {Saint-Venant, Barr{\'e} de},
+}
+
+@Article{Matsuno92,
+  author   = {Matsuno, Y.},
+  title    = {Nonlinear evolutions of surface gravity waves on fluid of finite depth},
+  journal  = {Phys. Rev. Lett.},
+  year     = {1992},
+  volume   = {69},
+  number   = {4},
+  pages    = {609--611},
+  issn     = {0031-9007},
+  coden    = {PRLTAO},
+  doi      = {10.1103/PhysRevLett.69.609},
+  fjournal = {Physical Review Letters},
+  mrclass  = {76B15},
+  mrnumber = {1174715 (93d:76008)},
+  url      = {http://dx.doi.org/10.1103/PhysRevLett.69.609},
+}
+
+@Article{AkersNicholls10,
+  author   = {Akers, Benjamin and Nicholls, David P.},
+  title    = {Traveling waves in deep water with gravity and surface tension},
+  journal  = {SIAM J. Appl. Math.},
+  year     = {2010},
+  volume   = {70},
+  number   = {7},
+  pages    = {2373--2389},
+  issn     = {0036-1399},
+  doi      = {10.1137/090771351},
+  fjournal = {SIAM Journal on Applied Mathematics},
+  mrclass  = {76B15 (35C07)},
+  mrnumber = {2678043},
+  url      = {https://doi.org/10.1137/090771351},
+}
+
+@Article{DebusscheMeminMoneyron25,
+  author    = {Debussche, Arnaud and M\'{e}min, Etienne and Moneyron, Antoine},
+  title     = {Derivation of stochastic models for coastal waves},
+  year      = {2025},
+  volume    = {13},
+  pages     = {183--221},
+  booktitle = {Stochastic transport in upper ocean dynamics {III}},
+  isbn      = {978-3-031-70659-2; 978-3-031-70660-8},
+  mrclass   = {76M35 (76U60)},
+  mrnumber  = {5075713},
+  publisher = {Springer, Cham},
+  series    = {Math. Planet Earth},
+}
+
+@Article{DucheneMarstrander26,
+  author  = {Vincent Duchêne and Johanna Ulvedal Marstrander},
+  title   = {The {F}ourier spectral approach to the spatial discretization of quasilinear hyperbolic systems},
+  journal = {IMA Journal of Numerical Analysis},
+  year    = {2026},
+  doi     = {10.1093/imanum/draf135},
+  url     = {https://doi.org/10.1093/imanum/draf135},
 }
 
 @Comment{jabref-meta: databaseType:bibtex;}
