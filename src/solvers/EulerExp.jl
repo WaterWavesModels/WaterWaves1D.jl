@@ -73,8 +73,8 @@ function step!(solver :: EulerExp,
     model.g!( solver.U1 )
     [d .= md for (d,md) in zip(solver.D,model.D)]
     [d .*= dt for d in solver.D]
-    [u .*=exp.(d) for (d,u) in zip(model.D,U)]
-    [u1.*=solver.φ.(d) for (d,u1) in zip(model.D,solver.U1)]
+    [u .*=exp.(d) for (d,u) in zip(solver.D,U)]
+    [u1.*=solver.φ.(d) for (d,u1) in zip(solver.D,solver.U1)]
     [u1.*= dt for u1 in solver.U1]
     [u .+= u1 for (u,u1) in zip(U,solver.U1)]
 
