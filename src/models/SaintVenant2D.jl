@@ -45,14 +45,14 @@ mutable struct SaintVenant2D <: AbstractModel
     info::String
 
     function SaintVenant2D(
-        param::NamedTuple;
-        mesh = Mesh(param),
-        dealias = 0,
-        ktol = 0,
-        smooth = false,
-        hamiltonian = false,
-        label = "Saint-Venant",
-    )
+            param::NamedTuple;
+            mesh = Mesh(param),
+            dealias = 0,
+            ktol = 0,
+            smooth = false,
+            hamiltonian = false,
+            label = "Saint-Venant",
+        )
 
         # Set up
         ϵ = param.ϵ
@@ -104,8 +104,8 @@ mutable struct SaintVenant2D <: AbstractModel
                 Πx = max.(0, min.(1, 2 / smooth * (1 .- abs.(kx) / K))) .^ 2
                 Πy = max.(0, min.(1, 2 / smooth * (1 .- abs.(ky') / K))) .^ 2
             end
-            #P   = min.(( abs.(mesh.k) .<= K).*( (-abs.(mesh.k) .+ K)*dealias/mesh.dk ),1)	
-            #P  =min.(( abs.(mesh.k) .<= K).*( (-abs.(mesh.k) .+ K)*dealias/mesh.dk .+1/2 ),1)	
+            #P   = min.(( abs.(mesh.k) .<= K).*( (-abs.(mesh.k) .+ K)*dealias/mesh.dk ),1)
+            #P  =min.(( abs.(mesh.k) .<= K).*( (-abs.(mesh.k) .+ K)*dealias/mesh.dk .+1/2 ),1)
         end
 
         η = zeros(Float64, (nx, ny))
@@ -140,8 +140,9 @@ mutable struct SaintVenant2D <: AbstractModel
                     ϵ * Πx .* Πy .* fft(vx .* ifft(∂x .* fftvy) + vy .* ifft(∂y .* fftvy))
             end
             for u in U
-                u[abs.(u).<ktol] .= 0
+                u[abs.(u) .< ktol] .= 0
             end
+            return
         end
 
         # Build raw data from physical data.
@@ -155,7 +156,7 @@ mutable struct SaintVenant2D <: AbstractModel
             ]
 
             for u in U
-                u[abs.(u).<ktol] .= 0
+                u[abs.(u) .< ktol] .= 0
             end
             return U
         end
@@ -167,10 +168,10 @@ mutable struct SaintVenant2D <: AbstractModel
         # - `vy` is the horizontal velocity field;
         # - `(x,y)` is the matrix of collocation points
         function mapfro(U)
-            real(ifft(U[1])), real(ifft(U[2])), real(ifft(U[3])), x, y
+            return real(ifft(U[1])), real(ifft(U[2])), real(ifft(U[3])), x, y
         end
 
-        new(label, f!, mapto, mapfro, info)
+        return new(label, f!, mapto, mapfro, info)
     end
 end
 
@@ -192,15 +193,15 @@ mutable struct SaintVenant2D_fast <: AbstractModel
     info::String
 
     function SaintVenant2D_fast(
-        param::NamedTuple;
-        mesh = Mesh(param),
-        dealias = 0,
-        ktol = 0,
-        smooth = false,
-        hamiltonian = false,
-        large_data = false,
-        label = "Saint-Venant",
-    )
+            param::NamedTuple;
+            mesh = Mesh(param),
+            dealias = 0,
+            ktol = 0,
+            smooth = false,
+            hamiltonian = false,
+            large_data = false,
+            label = "Saint-Venant",
+        )
 
         # Set up
         ϵ = param.ϵ
@@ -276,17 +277,17 @@ mutable struct SaintVenant2D_fast <: AbstractModel
         ∂x = -1im * kx
 
         FFTW.set_num_threads(4)
-        Px = plan_fft(η, 1)#, flags=FFTW.PATIENT)    
+        Px = plan_fft(η, 1) #, flags=FFTW.PATIENT)
         #Py = plan_fft(fᵗ, 1, flags=FFTW.PATIENT)
-        Py = plan_fft(η, 2)#, flags=FFTW.PATIENT)    
-        iPx = plan_ifft(η, 1)#, flags=FFTW.PATIENT)    
+        Py = plan_fft(η, 2) #, flags=FFTW.PATIENT)
+        iPx = plan_ifft(η, 1) #, flags=FFTW.PATIENT)
         #Py = plan_ifft(fᵗ, 1, flags=FFTW.PATIENT)
-        iPy = plan_ifft(η, 2)#, flags=FFTW.PATIENT)    
+        iPy = plan_ifft(η, 2) #, flags=FFTW.PATIENT)
 
 
         function my_ifft!(f, f̂, cache; large_data = large_data)
 
-            if large_data
+            return if large_data
                 f .= ifft(f̂)
             else
                 mul!(cache, iPx, f̂)
@@ -297,7 +298,7 @@ mutable struct SaintVenant2D_fast <: AbstractModel
             end
         end
         function my_fft!(f̂, f, cache; large_data = large_data)
-            if large_data
+            return if large_data
                 f̂ .= fft(f)
             else
                 mul!(cache, Px, f)
@@ -393,7 +394,7 @@ mutable struct SaintVenant2D_fast <: AbstractModel
             fftvy .*= ∂y
 
             fftvx .+= fftvy
-            U[1] .= fftvx
+            return U[1] .= fftvx
 
         end
 
@@ -410,7 +411,7 @@ mutable struct SaintVenant2D_fast <: AbstractModel
             ]
 
             for u in U
-                u[abs.(u).<ktol] .= 0
+                u[abs.(u) .< ktol] .= 0
             end
             return U
         end
@@ -422,10 +423,10 @@ mutable struct SaintVenant2D_fast <: AbstractModel
         # - `vy` is the horizontal velocity field;
         # - `(x,y)` is the matrix of collocation points
         function mapfro(U)
-            real(ifft(U[1])), real(ifft(U[2])), real(ifft(U[3])), x, y
+            return real(ifft(U[1])), real(ifft(U[2])), real(ifft(U[3])), x, y
         end
 
 
-        new(label, f!, mapto, mapfro, info)
+        return new(label, f!, mapto, mapfro, info)
     end
 end

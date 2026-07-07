@@ -8,31 +8,31 @@ export dump, load_data, load_data!, load_init
 Save `data` to the file with name `file_name` (and extension ".h5").
 
 """
-function dump( h5file :: String, data :: Data )
-    l=length(data.U)
-    n=length(first(data.U))
-    N=length(first(data.U)[1])
-    h5open(joinpath(h5file * ".h5"), "cw") do file  #"w" for write ("r" for read) 
-        write(file,  "/data/size", N) 
-        write(file,  "/data/num", n) 
-        write(file, "/data/length", l )
+function dump(h5file::String, data::Data)
+    l = length(data.U)
+    n = length(first(data.U))
+    N = length(first(data.U)[1])
+    return h5open(joinpath(h5file * ".h5"), "cw") do file  #"w" for write ("r" for read)
+        write(file, "/data/size", N)
+        write(file, "/data/num", n)
+        write(file, "/data/length", l)
 
-        for i in 1:l 
+        for i in 1:l
             for j in 1:n
-                write(file, "/data/U$i$j", data.U[i][j] )
+                write(file, "/data/U$i$j", data.U[i][j])
             end
         end
     end
 
 end
- 
+
 """
     load_data(file_name :: String)
 
 Load data from the file with name `file_name` (and extension ".h5").
 
 """
-function load_data( h5file :: String )
+function load_data(h5file::String)
 
     nsteps = h5read(h5file * ".h5", "/data/length")
     np = h5read(h5file * ".h5", "/data/size")
@@ -42,10 +42,10 @@ function load_data( h5file :: String )
 
     data = Data(v)
 
-    @assert length( data ) == 1
+    @assert length(data) == 1
     @assert np == length(first(data.U)[1])
     @assert nv == length(first(data.U))
-     
+
     data.U[1] .= [h5read(h5file * ".h5", "/data/U1$j") for j in 1:nv]
     for i in 2:nsteps
         push!(data.U, [h5read(h5file * ".h5", "/data/U$i$j") for j in 1:nv])
@@ -61,8 +61,8 @@ end
 Save the data of `problem` to the file with name `file_name` (and extension ".h5").
 
 """
-function dump( h5file :: String, pb :: Problem) 
-    dump( h5file, pb.data )
+function dump(h5file::String, pb::Problem)
+    return dump(h5file, pb.data)
 end
 
 """
@@ -71,9 +71,9 @@ end
 Fills `problem` with raw data extracted from the file with name `file_name` (and extension ".h5").
 
 """
-function load_data!( h5file :: String, pb::Problem )
-    data = load_data( h5file )
-    pb.data = data
+function load_data!(h5file::String, pb::Problem)
+    data = load_data(h5file)
+    return pb.data = data
 end
 
 """
@@ -82,12 +82,12 @@ end
 Save the values of the initial data `init` at collocation points `x` to the file with name `file_name` (and extension ".h5").
 
 """
-function dump( h5file :: String, x::Vector, init::InitialData) 
-    h5open(joinpath(h5file * ".h5"), "cw") do file  #"w" for write ("r" for read) 
+function dump(h5file::String, x::Vector, init::InitialData)
+    return h5open(joinpath(h5file * ".h5"), "cw") do file  #"w" for write ("r" for read)
 
-        write(file, "/init/x", x )
-        write(file, "/init/η", init.η(x) )
-        write(file, "/init/v", init.v(x) )
+        write(file, "/init/x", x)
+        write(file, "/init/η", init.η(x))
+        write(file, "/init/v", init.v(x))
         write(file, "/init/label", init.label)
 
     end
@@ -104,13 +104,13 @@ Keyword argument `fast` is optional (default is `false`), and corresponds the th
 Return an object of type `InitialData`.
 
 """
-function load_init( h5file :: String ; fast = false) 
+function load_init(h5file::String; fast = false)
 
-    x = h5read(joinpath( h5file * ".h5"), "/init/x")
-    η = h5read(joinpath( h5file * ".h5"), "/init/η")
-    v = h5read(joinpath( h5file * ".h5"), "/init/v")
+    x = h5read(joinpath(h5file * ".h5"), "/init/x")
+    η = h5read(joinpath(h5file * ".h5"), "/init/η")
+    v = h5read(joinpath(h5file * ".h5"), "/init/v")
     label = h5read(joinpath(h5file * ".h5"), "/init/label")
 
 
-    return Init(x,η,v ; fast = fast, label = label)
+    return Init(x, η, v; fast = fast, label = label)
 end

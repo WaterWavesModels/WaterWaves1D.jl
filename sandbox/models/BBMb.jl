@@ -30,81 +30,84 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct BBMb <: AbstractModel
 
-	label   :: String
-	f!		:: Function
-	mapto	:: Function
-	mapfro	:: Function
-	info 	:: String
+    label::String
+    f!::Function
+    mapto::Function
+    mapfro::Function
+    info::String
 
-    function BBMb(param::NamedTuple;
-								mesh = Mesh(param),
-								dealias = 0,
-								ktol	= 0,
-								label 	= nothing
-								)
+    function BBMb(
+            param::NamedTuple;
+            mesh = Mesh(param),
+            dealias = 0,
+            ktol = 0,
+            label = nothing
+        )
 
-		# Set up
-		δ 	= param.δ
-		if isnothing(label) label = "BBMb" end
-		
-		# Print information
-		info = "$label model.\n"
-		info *= "├─Shallowness parameter δ=$δ.\n"
-		if dealias == 0
-			info *= "└─No dealiasing. "
-		else
-			info *= "└─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
-		end
-		if ktol == 0
-			info *= "No Krasny filter. "
-		else
-			info *= "Krasny filter with tolerance $ktol."
-		end
-		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
+        # Set up
+        δ = param.δ
+        if isnothing(label)
+            label = "BBMb"
+        end
 
-		# Pre-allocate data
-		x 	= mesh.x
-		k = mesh.k
-		∂ₓ	=  1im * k
-		F 	= ∂ₓ./(1 .+ abs.(δ * k).^2)
-		
-		if dealias == 0
-			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
-		else
-			K = (mesh.kmax-mesh.kmin)/(2+dealias)
-			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
-		end
-		u = zeros(Float64, mesh.N)
-		fftu = zeros(Complex{Float64}, mesh.N)
+        # Print information
+        info = "$label model.\n"
+        info *= "├─Shallowness parameter δ=$δ.\n"
+        if dealias == 0
+            info *= "└─No dealiasing. "
+        else
+            info *= "└─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
+        end
+        if ktol == 0
+            info *= "No Krasny filter. "
+        else
+            info *= "Krasny filter with tolerance $ktol."
+        end
+        info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
-		# Evolution equations are ∂t U = f(U)
-		function f!(U)
+        # Pre-allocate data
+        x = mesh.x
+        k = mesh.k
+        ∂ₓ = 1im * k
+        F = ∂ₓ ./ (1 .+ abs.(δ * k) .^ 2)
 
-		    fftu .= U;u.=real.(ifft(fftu))
+        if dealias == 0
+            Π⅔ = ones(size(k)) # no dealiasing (Π⅔=Id)
+        else
+            K = (mesh.kmax - mesh.kmin) / (2 + dealias)
+            Π⅔ = abs.(k) .<= K # Dealiasing low-pass filter
+        end
+        u = zeros(Float64, mesh.N)
+        fftu = zeros(Complex{Float64}, mesh.N)
 
-		   	U .= -F.*(fftu+1/2*Π⅔.*fft(u.^2))
-			
-			U[ abs.(u).< ktol ].=0
+        # Evolution equations are ∂t U = f(U)
+        function f!(U)
 
-		end
+            fftu .= U;u .= real.(ifft(fftu))
 
-		# Build raw data from physical data.
-		# Discrete Fourier transform of the suitable variables 
-		# with, possibly, dealiasing and Krasny filter.
-		function mapto(data::InitialData)
-			U = fft(data.v(x)) 
-			U[ abs.(U).< ktol ].=0 
-			return U
-		end
+            U .= -F .* (fftu + 1 / 2 * Π⅔ .* fft(u .^ 2))
 
-		# Reconstruct physical variables from raw data
-		# Return `(u,x)`, where
-		# - `u` is the solution;
-		# - `x` is the vector of collocation points
-		function mapfro(U)
-			real(ifft(U)),real(ifft(U)),mesh.x
-		end
+            return U[abs.(u) .< ktol] .= 0
 
-        new(label, f!, mapto, mapfro, info )
+        end
+
+        # Build raw data from physical data.
+        # Discrete Fourier transform of the suitable variables
+        # with, possibly, dealiasing and Krasny filter.
+        function mapto(data::InitialData)
+            U = fft(data.v(x))
+            U[abs.(U) .< ktol] .= 0
+            return U
+        end
+
+        # Reconstruct physical variables from raw data
+        # Return `(u,x)`, where
+        # - `u` is the solution;
+        # - `x` is the vector of collocation points
+        function mapfro(U)
+            return real(ifft(U)), real(ifft(U)), mesh.x
+        end
+
+        return new(label, f!, mapto, mapfro, info)
     end
 end
