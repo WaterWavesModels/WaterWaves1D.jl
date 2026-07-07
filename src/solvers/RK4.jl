@@ -67,38 +67,36 @@ struct RK4 <: TimeSolver
     end
 end
 
-function step!(
-        s::RK4,
-        m::AbstractModel,
-        U,
-        dt
-    )
+function step!(s  :: RK4,
+    m :: AbstractModel,
+    U  ,
+    dt )
 
-    [u1 .= u for (u1, u) in zip(s.U1, U)]
+    [u1 .= u for (u1,u) in zip(s.U1,U)]
 
-    m.f!(s.U1)
+    m.f!( s.U1 ) 
 
-    [du .= u1 for (du, u1) in zip(s.dU, s.U1)]
+    [du .= u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    [u1 .= u .+ dt / 2 .* u1 for (u1, u) in zip(s.U1, U)]
+    [u1 .= u .+ dt/2 .* u1 for (u1,u) in zip(s.U1,U)]
 
-    m.f!(s.U1)
+    m.f!( s.U1 )
 
-    [du .+= 2 .* u1 for (du, u1) in zip(s.dU, s.U1)]
+    [du .+= 2 .* u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    [u1 .= u .+ dt / 2 .* u1 for (u1, u) in zip(s.U1, U)]
+    [u1 .= u .+ dt/2 .* u1 for (u1,u) in zip(s.U1,U)]
 
-    m.f!(s.U1)
+    m.f!( s.U1 )
 
-    [du .+= 2 .* u1 for (du, u1) in zip(s.dU, s.U1)]
+    [du .+= 2 .* u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    [u1 .= u .+ dt .* u1 for (u1, u) in zip(s.U1, U)]
+    [u1 .= u .+ dt .* u1 for (u1,u) in zip(s.U1,U)]
 
-    m.f!(s.U1)
+    m.f!( s.U1 )
 
-    [du .+= u1 for (du, u1) in zip(s.dU, s.U1)]
+    [du .+= u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    return [u .+= dt / 6 .* du for (u, du) in zip(U, s.dU)]
+    [u .+= dt/6 .* du for (u,du) in zip(U,s.dU)]
 
 end
 
