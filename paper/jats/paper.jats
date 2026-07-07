@@ -1,0 +1,996 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Publishing DTD v1.2 20190208//EN"
+                  "JATS-publishing1.dtd">
+<article xmlns:mml="http://www.w3.org/1998/Math/MathML" xmlns:xlink="http://www.w3.org/1999/xlink" dtd-version="1.2" article-type="other">
+<front>
+<journal-meta>
+<journal-id></journal-id>
+<journal-title-group>
+<journal-title>Journal of Open Source Software</journal-title>
+<abbrev-journal-title>JOSS</abbrev-journal-title>
+</journal-title-group>
+<issn publication-format="electronic">2475-9066</issn>
+<publisher>
+<publisher-name>Open Journals</publisher-name>
+</publisher>
+</journal-meta>
+<article-meta>
+<article-id pub-id-type="publisher-id">0</article-id>
+<article-id pub-id-type="doi">N/A</article-id>
+<title-group>
+<article-title>WaterWaves1D.jl: A Julia framework to numerically study
+the propagation of unidimensional surface gravity waves</article-title>
+</title-group>
+<contrib-group>
+<contrib contrib-type="author" equal-contrib="yes">
+<contrib-id contrib-id-type="orcid">https://orcid.org/0000-0002-8349-1284</contrib-id>
+<name>
+<surname>Duchêne</surname>
+<given-names>Vincent</given-names>
+</name>
+<xref ref-type="aff" rid="aff-1"/>
+</contrib>
+<contrib contrib-type="author" equal-contrib="yes">
+<contrib-id contrib-id-type="orcid">https://orcid.org/0000-0002-7372-3221</contrib-id>
+<name>
+<surname>Navaro</surname>
+<given-names>Pierre</given-names>
+</name>
+<xref ref-type="aff" rid="aff-1"/>
+</contrib>
+<aff id="aff-1">
+<institution-wrap>
+<institution>Univ Rennes, CNRS, IRMAR - UMR 6625, France.</institution>
+</institution-wrap>
+</aff>
+</contrib-group>
+<pub-date date-type="pub" publication-format="electronic" iso-8601-date="2026-07-03">
+<day>3</day>
+<month>7</month>
+<year>2026</year>
+</pub-date>
+<volume>¿VOL?</volume>
+<issue>¿ISSUE?</issue>
+<fpage>¿PAGE?</fpage>
+<permissions>
+<copyright-statement>Authors of papers retain copyright and release the
+work under a Creative Commons Attribution 4.0 International License (CC
+BY 4.0)</copyright-statement>
+<copyright-year>1970</copyright-year>
+<copyright-holder>The article authors</copyright-holder>
+<license license-type="open-access" xlink:href="https://creativecommons.org/licenses/by/4.0/">
+<license-p>Authors of papers retain copyright and release the work under
+a Creative Commons Attribution 4.0 International License (CC BY
+4.0)</license-p>
+</license>
+</permissions>
+<kwd-group kwd-group-type="author">
+<kwd>Julia</kwd>
+<kwd>water waves</kwd>
+</kwd-group>
+</article-meta>
+</front>
+<body>
+<sec id="summary">
+  <title>Summary</title>
+  <p><monospace>WaterWaves1D.jl</monospace> is a software that aims at
+  facilitating the study and comparison of models for the propagation of
+  water waves in an idealised framework. Several models are already
+  implemented, including the so-called water waves system as well as
+  many standard or more advanced simplified models.</p>
+  <p><monospace>WaterWaves1D.jl</monospace> leverages the Julia
+  programming language
+  (<xref alt="Bezanson et al., 2017" rid="ref-BezansonEdelmanKarpinskiEtAl17" ref-type="bibr">Bezanson
+  et al., 2017</xref>) capabilities to offer highly efficient codes with
+  a friendly user interface. The architecture of the package has been
+  designed to ease the inclusion of new models or numerical schemes. The
+  package provides useful features for the monitoring and comparison of
+  different models or numerical strategies on a common ground, as well
+  as pleasant illustration options.</p>
+</sec>
+<sec id="statement-of-need">
+  <title>Statement of need</title>
+  <p>The propagation of waves at the surface of water under the action
+  of gravitational forces (herein referred to as <bold>water
+  waves</bold>) is arguably the physical phenomenon for which the most
+  models have been proposed and are currently in use
+  (<xref alt="Duchêne, 2021" rid="ref-MM4WW" ref-type="bibr">Duchêne,
+  2021</xref>;
+  <xref alt="Lannes, 2013" rid="ref-Lannes" ref-type="bibr">Lannes,
+  2013</xref>). This is partly due to the variety of regimes describing
+  physical situations —such as shallow water, small-slope, long waves,
+  wave packets— that can be considered and drive the modelling
+  procedure. Even within the same physical regime, different approaches
+  —Boussinesq–Rayleigh expansions, variational methods, spectral methods
+  to name a few— yield different models, and <italic>a
+  posteriori</italic> adjustments such as the BBM trick or the Nwogu
+  approach further expand the range of models proposed in the
+  literature. Yet all these models are built from the same “master
+  equations”, and in principle can easily be compared. Contrarily to
+  softwares that typically focus on a single model or a handful of
+  variations as well as a dedicated numerical strategy, the Julia
+  package <monospace>WaterWaves1D.jl</monospace> provides a unified
+  groundwork for the study and comparison of models.</p>
+</sec>
+<sec id="software-design">
+  <title>Software design</title>
+  <p><monospace>WaterWaves1D.jl</monospace> provides the architecture to
+  solve initial-value problems for PDEs through the method of lines: the
+  full space-time discretization is decomposed into (i) spatial
+  semidiscretization; and (ii) numerical integration of the resulting
+  ODE system. Within this framework a numerical problem is defined by
+  the spatial semidiscretization associated with the system of partial
+  differential equations at stake, the initial data and the time
+  integration scheme. In addition, functions mapping back and forth
+  physical quantities to the objects that are numerically computed allow
+  for the comparison and illustration of the numerical results.</p>
+  <p>A common feature of all the implemented models is that they involve
+  combinations of pointwise operations in physical space, and Fourier
+  multipliers (that is multiplication in Fourier space). In a periodic
+  framework —which can approximate the full real-line framework if the
+  period is sufficiently large— this calls for the use of Fourier
+  spectral methods
+  (<xref alt="Trefethen, 2000" rid="ref-Trefethen00" ref-type="bibr">Trefethen,
+  2000</xref>) for spatial semidiscretization. Indeed, the Fast Fourier
+  Transform (FFT) algorithm (and its inverse) allows to convert very
+  efficiently a sequence of values at collocation points to a
+  representation in the frequency domain (and back) and benefits from
+  the spectral (or exponential) convergence property on smooth
+  functions. Yet this is not a restriction of the architecture of the
+  package, and other methods for spatial discretization can be used.</p>
+  <p>The architecture of the package allows in principle any solver for
+  time integration provided that the semi-discretized model supplies the
+  necessary operators. All implemented models can be equipped with any
+  explicit Runge–Kutta methods, and the standard explicit Euler and
+  fourth order Runge-Kutta schemes are provided. Additionnally, as a
+  proof-of-concept, the symplectic Euler
+  (<xref alt="Hairer et al., 2003" rid="ref-HairerLubichWanner03" ref-type="bibr">Hairer
+  et al., 2003</xref>) and the exponential Euler
+  (<xref alt="Hochbruck &amp; Ostermann, 2010" rid="ref-HochbruckOstermann10" ref-type="bibr">Hochbruck
+  &amp; Ostermann, 2010</xref>) schemes are implemented for a selection
+  of models.</p>
+  <p>In the same spirit, while the name of the package clearly indicates
+  a disposition towards unidimensional waves, this is by no means an
+  absolute restriction of the package architecture and the
+  two-dimensional shallow-water system has been implemented.</p>
+</sec>
+<sec id="features">
+  <title>Features</title>
+  <p>The package provides users with built-in analysis tools, such as
+  the evaluation of conserved quantities (mass, momentum, energy) for
+  monitoring the accuracy of the discrete approximation.</p>
+  <p>Visualization tools built on plot recipes of the standard package
+  <monospace>Plots.jl</monospace> provide easy access to illustrations
+  and preliminary investigation. In particular, users have immediate
+  access to the computed solutions at given time either at computed
+  collocation points or interpolated on any specified grids, as well as
+  coefficients in the frequency domain.</p>
+  <p>The package implements offers convenient tools to construct initial
+  data; for instance analytic formula for (periodic or solitary)
+  traveling waves of the Serre–Green–Naghdi equations and numerically
+  constructed solutions of the Whitham, Whitham–Boussinesq and
+  Whitham–Green–Naghdi equations, or random periodic initial with
+  prescribed regularity and wavelength.</p>
+  <p>The package offers a tool for saving (raw) data to a local file,
+  which can be loaded later for future analyses.</p>
+</sec>
+<sec id="some-implemented-models">
+  <title>Some implemented models</title>
+  <p>We name some key models implemented in
+  <monospace>WaterWaves1D.jl</monospace>, while we refer to the package
+  documentation
+  (<xref alt="Duchêne &amp; Navaro, 2025" rid="ref-DucheneNavaro" ref-type="bibr">Duchêne
+  &amp; Navaro, 2025</xref>) for a complete list together with explicit
+  display of the equations.</p>
+  <sec id="the-water-waves-equations">
+    <title>The water-waves equations</title>
+    <p>One of the key models is the <bold>water-waves</bold> equations
+    (that is the incompressible Euler equations with a free surface,
+    assuming irrotational flows). This is the “master equations” from
+    which all other models are derived. We use the approach of Dyachenko
+    et al.
+    (<xref alt="1996" rid="ref-DyachenkoKuznetsovSpectorEtAl96" ref-type="bibr">1996</xref>)
+    that allows to rewrite the system using only nonlinear pointwise
+    operations or Fourier multipliers. Documented drawbacks of the
+    strategy (see <italic>e.g.</italic> Ambrose et al.
+    (<xref alt="2022" rid="ref-AmbroseCamassaMarzuolaEtAl22" ref-type="bibr">2022</xref>))
+    are that the physical quantities are by design computed on a
+    non-uniform grid of collocation points, and that the method suffers
+    from anti-resolution for steep waves. Concerning the first issue, we
+    implement interpolation tools for comparison with other models that
+    are solved on uniform grids.</p>
+  </sec>
+  <sec id="shallow-water-models">
+    <title>Shallow-water models</title>
+    <p>Shallow-water models are derived from the assumption of a small
+    layer depth with respect to the typical horizontal wavelength of the
+    flow. In addition to the standard <bold>shallow-water</bold> system
+    (<xref alt="Saint-Venant, 1871" rid="ref-Saint-Venant1871" ref-type="bibr">Saint-Venant,
+    1871</xref>), the package proposes among others a family of
+    <bold>Boussinesq</bold> systems
+    (<xref alt="Bona et al., 2002" rid="ref-BonaChenSaut02" ref-type="bibr">Bona
+    et al., 2002</xref>) as well as fully dispersive
+    <bold>Boussinesq–Whitham</bold> models
+    (<xref alt="Dinvay et al., 2019" rid="ref-DinvayDutykhKalisch19" ref-type="bibr">Dinvay
+    et al., 2019</xref>), the <bold>Serre–Green–Naghdi equations</bold>
+    (<xref alt="Green &amp; Naghdi, 1976" rid="ref-GreenNaghdi76" ref-type="bibr">Green
+    &amp; Naghdi, 1976</xref>;
+    <xref alt="Serre, 1953" rid="ref-Serre53" ref-type="bibr">Serre,
+    1953</xref>) (and a fully dispersive analogue), and the
+    <bold>Isobe–Kakinuma</bold> model
+    (<xref alt="Isobe, 1994" rid="ref-Isobe94" ref-type="bibr">Isobe,
+    1994</xref>;
+    <xref alt="Kakinuma, 2001" rid="ref-Kakinuma01" ref-type="bibr">Kakinuma,
+    2001</xref>).</p>
+    <p>The package provides also provides an educated implementation of
+    a strategy for efficiently solving the Serre–Green–Naghdi equations
+    based on the reformulation of the equations as hyperbolic equations
+    with a constraint and suitable approximation through
+    constraint-relaxation, as proposed by several authors
+    (<xref alt="Escalante et al., 2019" rid="ref-EscalanteDumbserCastro19" ref-type="bibr">Escalante
+    et al., 2019</xref>;
+    <xref alt="Favrie &amp; Gavrilyuk, 2017" rid="ref-FavrieGavrilyuk17" ref-type="bibr">Favrie
+    &amp; Gavrilyuk, 2017</xref>;
+    <xref alt="Guermond et al., 2019" rid="ref-GuermondPopovTovarEtAl19" ref-type="bibr">Guermond
+    et al., 2019</xref>).</p>
+  </sec>
+  <sec id="small-steepness-models">
+    <title>Small-steepness models</title>
+    <p>Small-steepness models buikd on the assumption that the amplitude
+    of the wave is small with respect to its horizontal wavelength. They
+    also apply to deep-water or even infinite-layer configurations.
+    Small-steepness models include the <bold>Matsuno</bold>
+    (<xref alt="Matsuno, 1992" rid="ref-Matsuno92" ref-type="bibr">Matsuno,
+    1992</xref>) and <bold>Akers-Nicholls</bold>
+    (<xref alt="Akers &amp; Nicholls, 2010" rid="ref-AkersNicholls10" ref-type="bibr">Akers
+    &amp; Nicholls, 2010</xref>) systems, as well as the
+    <bold>high-order spectral</bold> model hierarchy (implemented up to
+    quartic nonlinearity) proposed in
+    (<xref alt="Craig &amp; Sulem, 1993" rid="ref-CraigSulem93" ref-type="bibr">Craig
+    &amp; Sulem, 1993</xref>;
+    <xref alt="Dommermuth &amp; Yue, 1987" rid="ref-DommermuthYue87" ref-type="bibr">Dommermuth
+    &amp; Yue, 1987</xref>;
+    <xref alt="West et al., 1987" rid="ref-WestBruecknerJandaEtAl87" ref-type="bibr">West
+    et al., 1987</xref>). It has been observed that high-order spectral
+    systems suffers from spurious high-frequency amplification, and the
+    code implements a regularization proposed in Duchêne &amp; Melinand
+    (<xref alt="2024" rid="ref-DucheneMelinand24" ref-type="bibr">2024</xref>).</p>
+  </sec>
+  <sec id="unidirectional-models">
+    <title>Unidirectional models</title>
+    <p>Standard unidirectional models such as the Korteweg–de Vries,
+    Benjamin–Bona–Mahony and Whitham equations are typically derived
+    assuming unidirectional propagation. They can however be used as
+    building blocks for the propagation of general (unidimensional)
+    waves through the superposition of two counterpropagating waves,
+    assuming that initial data are sufficiently localized
+    (<xref alt="Emerald, 2021" rid="ref-Emerald21" ref-type="bibr">Emerald,
+    2021</xref>;
+    <xref alt="Lannes, 2013" rid="ref-Lannes" ref-type="bibr">Lannes,
+    2013</xref>). This is the</p>
+  </sec>
+</sec>
+<sec id="state-of-the-field">
+  <title>State of the field</title>
+  <p>A multitude of softwares for water wave or ocean dynamics have been
+  developed over many years, and we cannot aim at exhaustiveness in the
+  following description. We focus below on recent (a few years old)
+  related Julia packages, emphasizing scope differences. The main
+  specificity of <monospace>WaterWaves1D.jl</monospace> with respect to
+  existing alternatives is the desire to offer a common framework for
+  different models in view of facilitating their comparison.</p>
+  <p>In that respect the most closely related package is arguably
+  <monospace>DispersiveShallowWater.jl</monospace>
+  (<xref alt="Lampert et al., 2025" rid="ref-LampertWittensteinRanocha25" ref-type="bibr">Lampert
+  et al., 2025</xref>) which implements structure-preserving numerical
+  methods for dispersive shallow water models, including unidirectional
+  models such as the Korteweg–de Vries and the Benjamin–Bona–Mahony
+  equations, as well as Boussinesq systems, the Serre–Green–Naghdi
+  equations and its augmented “hyperbolized” system. Note that the
+  implemented numerical methods include the Fourier spectral method but
+  that for the purpose of structure preserving, Fast Fourier transform
+  is avoided and as a consequence the Fourier spectral method is less
+  competitive compared with other methods involving sparse matrices.</p>
+  <p>Building on the numerical simulation framework for general
+  conservation laws <monospace>Trixi.jl</monospace>
+  (<xref alt="Schlottke-Lakemper et al., 2025" rid="ref-Schlottke-LakemperGassnerRanochaEtAl25" ref-type="bibr">Schlottke-Lakemper
+  et al., 2025</xref>), <monospace>TrixiShallowWater.jl</monospace>
+  (<xref alt="Winters et al., 2025" rid="ref-WintersErsingRanochaEtAl25" ref-type="bibr">Winters
+  et al., 2025</xref>) provides a discontinuous Galerkin discretization
+  of shallow water equations, including wetting and drying capabilities,
+  sediment transport and variable densities through multilayer
+  equations. While the standard shallow water equations with flat bottom
+  is implemented in <monospace>WaterWaves1D.jl</monospace>, its primary
+  interest lies in dispersive equations.</p>
+  <p><monospace>SpectralWaves.jl</monospace>
+  (<xref alt="Paprota, 2025" rid="ref-Paprota25" ref-type="bibr">Paprota,
+  2025</xref>) implements a model for the propagation of water waves
+  over topography that has the same structure as the Isobe–Kakinuma
+  model yet constructed through an expansion akin to high-order spectral
+  models, using the Fourier spectral method.</p>
+  <p><monospace>GeophysicalFlows.jl</monospace>
+  (<xref alt="Constantinou et al., 2021" rid="ref-ConstantinouWagnerSiegelmanEtAl21" ref-type="bibr">Constantinou
+  et al., 2021</xref>) is a package for geophysical fluid dynamics (2D
+  periodic incompressible Navier-Stokes equation and quasi-geostrophic
+  equations) that leverages the pseudo-spectral solver modules of the
+  package <monospace>FourierFlows.jl</monospace>
+  (<xref alt="Constantinou et al., 2025" rid="ref-ConstantinouWagnerPaloczyEtAl25" ref-type="bibr">Constantinou
+  et al., 2025</xref>). In Waterwaves1D.jl we have avoided using modules
+  of <monospace>FourierFlows.jl</monospace> and rather built analogous
+  ones in order not to restrict exclusively to pseudo-spectral
+  methods.</p>
+  <p>We finally mention the package
+  <monospace>Oceananigans.jl</monospace>
+  (<xref alt="Ramadhan et al., 2020" rid="ref-RamadhanWagnerHillEtAl20" ref-type="bibr">Ramadhan
+  et al., 2020</xref>) that implements finite volume algorithms
+  optimized for high-resolution simulations on GPUs for geophysical
+  models adapted to large-scale ocean dynamics.</p>
+</sec>
+<sec id="research-impact-statement">
+  <title>Research impact statement</title>
+  <p>Features of <monospace>WaterWaves1D.jl</monospace> were explicitly
+  used for different needs in the following works</p>
+  <list list-type="bullet">
+    <list-item>
+      <p>In Duchêne
+      (<xref alt="2021" rid="ref-MM4WW" ref-type="bibr">2021</xref>) the
+      different aspects of the package and of the models are discussed,
+      and (static or dynamic) illustrations are provided using the
+      package;</p>
+    </list-item>
+    <list-item>
+      <p>In Duchêne &amp; Klein
+      (<xref alt="2022" rid="ref-DucheneKlein22" ref-type="bibr">2022</xref>)
+      the numerical strategy is used to investigate numerically open
+      questions such as the stability of traveling waves, and possible
+      finite-time singularities;</p>
+    </list-item>
+    <list-item>
+      <p>Duchêne &amp; Melinand
+      (<xref alt="2024" rid="ref-DucheneMelinand24" ref-type="bibr">2024</xref>)
+      uses the package to investigate a mechanism of high-frequency
+      amplification and a proposed numerical remedy, validating the
+      theoretical results obtained therein;</p>
+    </list-item>
+    <list-item>
+      <p>In Duchêne &amp; Marstrander
+      (<xref alt="2026" rid="ref-DucheneMarstrander26" ref-type="bibr">2026</xref>)
+      the Fourier spectral method applied to hyperbolic systems
+      including the shallow-water system is studied. The package allows
+      to validate some of the theoretical results, and to investigate
+      open problems.</p>
+    </list-item>
+    <list-item>
+      <p>In Debussche et al.
+      (<xref alt="2025" rid="ref-DebusscheMeminMoneyron25" ref-type="bibr">2025</xref>),
+      Debussche, Mémin, and Moneyron leverage some of the models of the
+      package to a stochastic framework.</p>
+    </list-item>
+  </list>
+</sec>
+<sec id="ai-usage-disclosure">
+  <title>AI usage disclosure</title>
+  <p>No generative AI tools were used in the development of this
+  software and its documentation, or the writing of this manuscript, or
+  the preparation of supporting materials.</p>
+</sec>
+</body>
+<back>
+<ref-list>
+  <title></title>
+  <ref id="ref-DyachenkoKuznetsovSpectorEtAl96">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Dyachenko</surname><given-names>Alexander I</given-names></name>
+        <name><surname>Kuznetsov</surname><given-names>Evgenii A</given-names></name>
+        <name><surname>Spector</surname><given-names>MD</given-names></name>
+        <name><surname>Zakharov</surname><given-names>Vladimir E</given-names></name>
+      </person-group>
+      <article-title>Analytical description of the free surface dynamics of an ideal fluid (canonical formalism and conformal mapping)</article-title>
+      <source>Phys. Lett. A</source>
+      <year iso-8601-date="1996">1996</year>
+      <volume>221</volume>
+      <issue>1-2</issue>
+      <pub-id pub-id-type="doi">10.1016/0375-9601(96)00417-3</pub-id>
+      <fpage>73</fpage>
+      <lpage>79</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-MM4WW">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>Duchêne</surname><given-names>Vincent</given-names></name>
+      </person-group>
+      <article-title>Many Models for Water Waves</article-title>
+      <publisher-name>Open Math Notes, OMN:202109.111309</publisher-name>
+      <year iso-8601-date="2021">2021</year>
+    </element-citation>
+  </ref>
+  <ref id="ref-AmbroseCamassaMarzuolaEtAl22">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Ambrose</surname><given-names>David M.</given-names></name>
+        <name><surname>Camassa</surname><given-names>Roberto</given-names></name>
+        <name><surname>Marzuola</surname><given-names>Jeremy L.</given-names></name>
+        <name><surname>McLaughlin</surname><given-names>Richard M.</given-names></name>
+        <name><surname>Robinson</surname><given-names>Quentin</given-names></name>
+        <name><surname>Wilkening</surname><given-names>Jon</given-names></name>
+      </person-group>
+      <article-title>Numerical algorithms for water waves with background flow over obstacles and topography</article-title>
+      <source>Adv. Comput. Math.</source>
+      <year iso-8601-date="2022">2022</year>
+      <volume>48</volume>
+      <issue>4</issue>
+      <issn>1019-7168</issn>
+      <uri>https://doi.org/10.1007/s10444-022-09957-z</uri>
+      <pub-id pub-id-type="doi">10.1007/s10444-022-09957-z</pub-id>
+      <fpage>Paper No. 46, 62</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-BonaChenSaut02">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Bona</surname><given-names>Jerry L.</given-names></name>
+        <name><surname>Chen</surname><given-names>M.</given-names></name>
+        <name><surname>Saut</surname><given-names>Jean-Claude</given-names></name>
+      </person-group>
+      <article-title>Boussinesq equations and other systems for small-amplitude long waves in nonlinear dispersive media. I. Derivation and linear theory</article-title>
+      <source>J. Nonlinear Sci.</source>
+      <year iso-8601-date="2002">2002</year>
+      <volume>12</volume>
+      <issue>4</issue>
+      <issn>0938-8974</issn>
+      <pub-id pub-id-type="doi">10.1007/s00332-002-0466-4</pub-id>
+      <fpage>283</fpage>
+      <lpage>318</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-Trefethen00">
+    <element-citation publication-type="book">
+      <person-group person-group-type="author">
+        <name><surname>Trefethen</surname><given-names>Lloyd N.</given-names></name>
+      </person-group>
+      <source>Spectral methods in MATLAB</source>
+      <publisher-name>Society for Industrial; Applied Mathematics (SIAM)</publisher-name>
+      <publisher-loc>Philadelphia, PA</publisher-loc>
+      <year iso-8601-date="2000">2000</year>
+      <volume>10</volume>
+      <isbn>0-89871-465-6</isbn>
+      <fpage>xviii+165</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-DucheneKlein22">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Duchêne</surname><given-names>Vincent</given-names></name>
+        <name><surname>Klein</surname><given-names>Christian</given-names></name>
+      </person-group>
+      <article-title>Numerical study of the Serre-Green-Naghdi equations and a fully dispersive counterpart</article-title>
+      <source>Discrete Contin. Dyn. Syst. Ser. B</source>
+      <year iso-8601-date="2022">2022</year>
+      <volume>27</volume>
+      <issue>10</issue>
+      <issn>1531-3492</issn>
+      <uri>https://doi.org/10.3934/dcdsb.2021300</uri>
+      <pub-id pub-id-type="doi">10.3934/dcdsb.2021300</pub-id>
+      <fpage>5905</fpage>
+      <lpage>5933</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-FavrieGavrilyuk17">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Favrie</surname><given-names>N.</given-names></name>
+        <name><surname>Gavrilyuk</surname><given-names>S.</given-names></name>
+      </person-group>
+      <article-title>A rapid numerical method for solving Serre-Green-Naghdi equations describing long free surface gravity waves</article-title>
+      <source>Nonlinearity</source>
+      <year iso-8601-date="2017">2017</year>
+      <volume>30</volume>
+      <issue>7</issue>
+      <issn>0951-7715</issn>
+      <pub-id pub-id-type="doi">10.1088/1361-6544/aa712d</pub-id>
+      <fpage>2718</fpage>
+      <lpage>2736</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-EscalanteDumbserCastro19">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Escalante</surname><given-names>C.</given-names></name>
+        <name><surname>Dumbser</surname><given-names>M.</given-names></name>
+        <name><surname>Castro</surname><given-names>M. J.</given-names></name>
+      </person-group>
+      <article-title>An efficient hyperbolic relaxation system for dispersive non-hydrostatic water waves and its solution with high order discontinuous Galerkin schemes</article-title>
+      <source>J. Comput. Phys.</source>
+      <year iso-8601-date="2019">2019</year>
+      <volume>394</volume>
+      <issn>0021-9991</issn>
+      <uri>https://doi.org/10.1016/j.jcp.2019.05.035</uri>
+      <pub-id pub-id-type="doi">10.1016/j.jcp.2019.05.035</pub-id>
+      <fpage>385</fpage>
+      <lpage>416</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-GuermondPopovTovarEtAl19">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Guermond</surname><given-names>Jean-Luc</given-names></name>
+        <name><surname>Popov</surname><given-names>Bojan</given-names></name>
+        <name><surname>Tovar</surname><given-names>Eric</given-names></name>
+        <name><surname>Kees</surname><given-names>Chris</given-names></name>
+      </person-group>
+      <article-title>Robust explicit relaxation technique for solving the Green-Naghdi equations</article-title>
+      <source>J. Comput. Phys.</source>
+      <year iso-8601-date="2019">2019</year>
+      <volume>399</volume>
+      <issn>0021-9991</issn>
+      <uri>https://doi.org/10.1016/j.jcp.2019.108917</uri>
+      <pub-id pub-id-type="doi">10.1016/j.jcp.2019.108917</pub-id>
+      <fpage>108917, 17</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-Lannes">
+    <element-citation publication-type="book">
+      <person-group person-group-type="author">
+        <name><surname>Lannes</surname><given-names>David</given-names></name>
+      </person-group>
+      <source>The water waves problem</source>
+      <publisher-name>American Mathematical Society</publisher-name>
+      <publisher-loc>Providence, RI</publisher-loc>
+      <year iso-8601-date="2013">2013</year>
+      <volume>188</volume>
+      <isbn>978-0-8218-9470-5</isbn>
+      <fpage>xx+321</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-Isobe94">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Isobe</surname><given-names>Masahiko</given-names></name>
+      </person-group>
+      <article-title>A proposal on a nonlinear gentle slope wave equation</article-title>
+      <source>Proc. Coast. Eng. Jpn. Soc. Civ. Eng.</source>
+      <year iso-8601-date="1994">1994</year>
+      <volume>41</volume>
+      <fpage>1</fpage>
+      <lpage>5</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-Kakinuma01">
+    <element-citation publication-type="paper-conference">
+      <person-group person-group-type="author">
+        <name><surname>Kakinuma</surname><given-names>Taro</given-names></name>
+      </person-group>
+      <article-title>A set of fully nonlinear equations for surface and internal gravity waves</article-title>
+      <source>Coastal engineering v: Computer modelling of seas and coastal regions</source>
+      <publisher-name>WIT Press</publisher-name>
+      <year iso-8601-date="2001">2001</year>
+      <uri>https://doi.org/10.2495/CE010201</uri>
+      <pub-id pub-id-type="doi">10.2495/CE010201</pub-id>
+      <fpage>225</fpage>
+      <lpage>234</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-DommermuthYue87">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Dommermuth</surname><given-names>Douglas G</given-names></name>
+        <name><surname>Yue</surname><given-names>Dick KP</given-names></name>
+      </person-group>
+      <article-title>A high-order spectral method for the study of nonlinear gravity waves</article-title>
+      <source>J. Fluid Mech.</source>
+      <year iso-8601-date="1987">1987</year>
+      <volume>184</volume>
+      <pub-id pub-id-type="doi">10.1017/s002211208700288x</pub-id>
+      <fpage>267</fpage>
+      <lpage>288</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-WestBruecknerJandaEtAl87">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>West</surname><given-names>Bruce J.</given-names></name>
+        <name><surname>Brueckner</surname><given-names>Keith A.</given-names></name>
+        <name><surname>Janda</surname><given-names>Ralph S.</given-names></name>
+        <name><surname>Milder</surname><given-names>D. Michael</given-names></name>
+        <name><surname>Milton</surname><given-names>Robert L.</given-names></name>
+      </person-group>
+      <article-title>A new numerical method for surface hydrodynamics</article-title>
+      <source>J. Geophys. Res.</source>
+      <year iso-8601-date="1987">1987</year>
+      <volume>92</volume>
+      <pub-id pub-id-type="doi">10.1029/jc092ic11p11803</pub-id>
+      <fpage>11803</fpage>
+      <lpage>11824</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-CraigSulem93">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Craig</surname><given-names>W.</given-names></name>
+        <name><surname>Sulem</surname><given-names>C.</given-names></name>
+      </person-group>
+      <article-title>Numerical simulation of gravity waves</article-title>
+      <source>J. Comput. Phys.</source>
+      <year iso-8601-date="1993">1993</year>
+      <volume>108</volume>
+      <issue>1</issue>
+      <issn>0021-9991</issn>
+      <pub-id pub-id-type="doi">10.1006/jcph.1993.1164</pub-id>
+      <fpage>73</fpage>
+      <lpage>83</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-DucheneMelinand24">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Duchêne</surname><given-names>Vincent</given-names></name>
+        <name><surname>Melinand</surname><given-names>Benjamin</given-names></name>
+      </person-group>
+      <article-title>Rectification of a deep water model for surface gravity waves</article-title>
+      <source>Pure Appl. Anal.</source>
+      <year iso-8601-date="2024">2024</year>
+      <volume>6</volume>
+      <issue>1</issue>
+      <issn>2578-5885</issn>
+      <uri>https://doi.org/10.2140/paa.2024.6.73</uri>
+      <pub-id pub-id-type="doi">10.2140/paa.2024.6.73</pub-id>
+      <fpage>73</fpage>
+      <lpage>128</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-Emerald21">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Emerald</surname><given-names>Louis</given-names></name>
+      </person-group>
+      <article-title>Rigorous derivation of the Whitham equations from the water waves equations in the shallow water regime</article-title>
+      <source>Nonlinearity</source>
+      <year iso-8601-date="2021">2021</year>
+      <volume>34</volume>
+      <issue>11</issue>
+      <issn>0951-7715</issn>
+      <uri>https://doi.org/10.1088/1361-6544/ac24df</uri>
+      <pub-id pub-id-type="doi">10.1088/1361-6544/ac24df</pub-id>
+      <fpage>7470</fpage>
+      <lpage>7509</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-LampertWittensteinRanocha25">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Lampert</surname><given-names>Joshua</given-names></name>
+        <name><surname>Wittenstein</surname><given-names>Collin</given-names></name>
+        <name><surname>Ranocha</surname><given-names>Hendrik</given-names></name>
+      </person-group>
+      <article-title>DispersiveShallowWater.jl: A julia library of structure-preserving numerical methods for dispersive wave equations</article-title>
+      <source>Journal of Open Source Software</source>
+      <publisher-name>The Open Journal</publisher-name>
+      <year iso-8601-date="2025">2025</year>
+      <volume>10</volume>
+      <issue>116</issue>
+      <uri>https://doi.org/10.21105/joss.09361</uri>
+      <pub-id pub-id-type="doi">10.21105/joss.09361</pub-id>
+      <fpage>9361</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-Schlottke-LakemperGassnerRanochaEtAl25">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>Schlottke-Lakemper</surname><given-names>Michael</given-names></name>
+        <name><surname>Gassner</surname><given-names>Gregor J</given-names></name>
+        <name><surname>Ranocha</surname><given-names>Hendrik</given-names></name>
+        <name><surname>Winters</surname><given-names>Andrew R</given-names></name>
+        <name><surname>Chan</surname><given-names>Jesse</given-names></name>
+        <name><surname>Rueda-Ramírez</surname><given-names>Andrés</given-names></name>
+      </person-group>
+      <article-title>Trixi.jl: Adaptive high-order numerical simulations of hyperbolic PDEs in Julia</article-title>
+      <publisher-name>https://github.com/trixi-framework/Trixi.jl</publisher-name>
+      <year iso-8601-date="2025">2025</year>
+      <pub-id pub-id-type="doi">10.5281/zenodo.3996439</pub-id>
+    </element-citation>
+  </ref>
+  <ref id="ref-WintersErsingRanochaEtAl25">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>Winters</surname><given-names>Andrew R</given-names></name>
+        <name><surname>Ersing</surname><given-names>Patrick</given-names></name>
+        <name><surname>Ranocha</surname><given-names>Hendrik</given-names></name>
+        <name><surname>Schlottke-Lakemper</surname><given-names>Michael</given-names></name>
+      </person-group>
+      <article-title>TrixiShallowWater.jl: Shallow water simulations with Trixi.jl</article-title>
+      <publisher-name>https://github.com/trixi-framework/TrixiShallowWater.jl</publisher-name>
+      <year iso-8601-date="2025">2025</year>
+      <pub-id pub-id-type="doi">10.5281/zenodo.15206520</pub-id>
+    </element-citation>
+  </ref>
+  <ref id="ref-ConstantinouWagnerSiegelmanEtAl21">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Constantinou</surname><given-names>Navid C.</given-names></name>
+        <name><surname>Wagner</surname><given-names>Gregory LeClaire</given-names></name>
+        <name><surname>Siegelman</surname><given-names>Lia</given-names></name>
+        <name><surname>Pearson</surname><given-names>Brodie C.</given-names></name>
+        <name><surname>Palóczy</surname><given-names>André</given-names></name>
+      </person-group>
+      <article-title>GeophysicalFlows.jl: Solvers for geophysical fluid dynamics problems in periodic domains on CPUs &amp; GPUs</article-title>
+      <source>Journal of Open Source Software</source>
+      <publisher-name>The Open Journal</publisher-name>
+      <year iso-8601-date="2021">2021</year>
+      <volume>6</volume>
+      <issue>60</issue>
+      <uri>https://doi.org/10.21105/joss.03053</uri>
+      <pub-id pub-id-type="doi">10.21105/joss.03053</pub-id>
+      <fpage>3053</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-ConstantinouWagnerPaloczyEtAl25">
+    <element-citation publication-type="software">
+      <person-group person-group-type="author">
+        <name><surname>Constantinou</surname><given-names>Navid C.</given-names></name>
+        <name><surname>Wagner</surname><given-names>Gregory L.</given-names></name>
+        <name><surname>Palóczy</surname><given-names>André</given-names></name>
+        <name><surname>HO</surname><given-names>Ka Wai</given-names></name>
+        <name><surname>Bisits</surname><given-names>Josef</given-names></name>
+        <name><surname>TagBot</surname><given-names>Julia</given-names></name>
+        <name><surname>Piibeleht</surname><given-names>Morten</given-names></name>
+        <name><surname>Besard</surname><given-names>Tim</given-names></name>
+        <name><surname>Robertson</surname><given-names>Connor</given-names></name>
+        <name><surname>Parfenyev</surname><given-names>Vladimir</given-names></name>
+      </person-group>
+      <article-title>FourierFlows/FourierFlows.jl: v0.10.7</article-title>
+      <publisher-name>Zenodo</publisher-name>
+      <year iso-8601-date="2025-10">2025</year><month>10</month>
+      <uri>https://doi.org/10.5281/zenodo.17281674</uri>
+      <pub-id pub-id-type="doi">10.5281/zenodo.17281674</pub-id>
+    </element-citation>
+  </ref>
+  <ref id="ref-Paprota25">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Paprota</surname><given-names>Maciej</given-names></name>
+      </person-group>
+      <article-title>A fully spectral framework for nonlinear water waves propagating over topography</article-title>
+      <source>Coastal Engineering</source>
+      <year iso-8601-date="2025">2025</year>
+      <volume>200</volume>
+      <issn>0378-3839</issn>
+      <uri>https://www.sciencedirect.com/science/article/pii/S037838392500064X</uri>
+      <pub-id pub-id-type="doi">https://doi.org/10.1016/j.coastaleng.2025.104759</pub-id>
+      <fpage>104759</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-RamadhanWagnerHillEtAl20">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Ramadhan</surname><given-names>Ali</given-names></name>
+        <name><surname>Wagner</surname><given-names>Gregory LeClaire</given-names></name>
+        <name><surname>Hill</surname><given-names>Chris</given-names></name>
+        <name><surname>Campin</surname><given-names>Jean-Michel</given-names></name>
+        <name><surname>Churavy</surname><given-names>Valentin</given-names></name>
+        <name><surname>Besard</surname><given-names>Tim</given-names></name>
+        <name><surname>Souza</surname><given-names>Andre</given-names></name>
+        <name><surname>Edelman</surname><given-names>Alan</given-names></name>
+        <name><surname>Ferrari</surname><given-names>Raffaele</given-names></name>
+        <name><surname>Marshall</surname><given-names>John</given-names></name>
+      </person-group>
+      <article-title>Oceananigans.jl: Fast and friendly geophysical fluid dynamics on GPUs</article-title>
+      <source>Journal of Open Source Software</source>
+      <publisher-name>The Open Journal</publisher-name>
+      <year iso-8601-date="2020">2020</year>
+      <volume>5</volume>
+      <issue>53</issue>
+      <uri>https://doi.org/10.21105/joss.02018</uri>
+      <pub-id pub-id-type="doi">10.21105/joss.02018</pub-id>
+      <fpage>2018</fpage>
+      <lpage></lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-BezansonEdelmanKarpinskiEtAl17">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Bezanson</surname><given-names>Jeff</given-names></name>
+        <name><surname>Edelman</surname><given-names>Alan</given-names></name>
+        <name><surname>Karpinski</surname><given-names>Stefan</given-names></name>
+        <name><surname>Shah</surname><given-names>Viral B.</given-names></name>
+      </person-group>
+      <article-title>Julia: A fresh approach to numerical computing</article-title>
+      <source>SIAM Review</source>
+      <year iso-8601-date="2017">2017</year>
+      <volume>59</volume>
+      <issue>1</issue>
+      <uri> 
+          
+              https://doi.org/10.1137/141000671
+          
+          
+
+      </uri>
+      <pub-id pub-id-type="doi">10.1137/141000671</pub-id>
+      <fpage>65</fpage>
+      <lpage>98</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-DinvayDutykhKalisch19">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Dinvay</surname><given-names>Evgueni</given-names></name>
+        <name><surname>Dutykh</surname><given-names>Denys</given-names></name>
+        <name><surname>Kalisch</surname><given-names>Henrik</given-names></name>
+      </person-group>
+      <article-title>A comparative study of bi-directional Whitham systems</article-title>
+      <source>Appl. Numer. Math.</source>
+      <year iso-8601-date="2019">2019</year>
+      <volume>141</volume>
+      <issn>0168-9274</issn>
+      <pub-id pub-id-type="doi">10.1016/j.apnum.2018.09.016</pub-id>
+      <fpage>248</fpage>
+      <lpage>262</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-HairerLubichWanner03">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Hairer</surname><given-names>Ernst</given-names></name>
+        <name><surname>Lubich</surname><given-names>Christian</given-names></name>
+        <name><surname>Wanner</surname><given-names>Gerhard</given-names></name>
+      </person-group>
+      <article-title>Geometric numerical integration illustrated by the Störmer-Verlet method</article-title>
+      <source>Acta Numer.</source>
+      <year iso-8601-date="2003">2003</year>
+      <volume>12</volume>
+      <issn>0962-4929</issn>
+      <uri>https://doi.org/10.1017/S0962492902000144</uri>
+      <pub-id pub-id-type="doi">10.1017/S0962492902000144</pub-id>
+      <fpage>399</fpage>
+      <lpage>450</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-HochbruckOstermann10">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Hochbruck</surname><given-names>Marlis</given-names></name>
+        <name><surname>Ostermann</surname><given-names>Alexander</given-names></name>
+      </person-group>
+      <article-title>Exponential integrators</article-title>
+      <source>Acta Numer.</source>
+      <year iso-8601-date="2010">2010</year>
+      <volume>19</volume>
+      <issn>0962-4929</issn>
+      <uri>https://doi.org/10.1017/S0962492910000048</uri>
+      <pub-id pub-id-type="doi">10.1017/S0962492910000048</pub-id>
+      <fpage>209</fpage>
+      <lpage>286</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-Serre53">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Serre</surname><given-names>François</given-names></name>
+      </person-group>
+      <article-title>Contribution à l’étude des écoulements permanents et variables dans les canaux</article-title>
+      <source>La Houille Blanche</source>
+      <year iso-8601-date="1953">1953</year>
+      <issue>6</issue>
+      <pub-id pub-id-type="doi">10.1051/lhb/1953058</pub-id>
+      <fpage>830</fpage>
+      <lpage>872</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-GreenNaghdi76">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Green</surname><given-names>A. E.</given-names></name>
+        <name><surname>Naghdi</surname><given-names>P. M.</given-names></name>
+      </person-group>
+      <article-title>A derivation of equations for wave propagation in water of variable depth</article-title>
+      <source>J. Fluid Mech.</source>
+      <publisher-name>Cambridge Univ Press</publisher-name>
+      <year iso-8601-date="1976">1976</year>
+      <volume>78</volume>
+      <issue>02</issue>
+      <pub-id pub-id-type="doi">10.1017/s0022112076002425</pub-id>
+      <fpage>237</fpage>
+      <lpage>246</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-DucheneNavaro">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>Duchêne</surname><given-names>Vincent</given-names></name>
+        <name><surname>Navaro</surname><given-names>Pierre</given-names></name>
+      </person-group>
+      <article-title>Documentation of WaterWaves1D.jl (version v0.2.1)</article-title>
+      <publisher-name>Zenodo</publisher-name>
+      <year iso-8601-date="2025">2025</year>
+      <uri>https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/</uri>
+    </element-citation>
+  </ref>
+  <ref id="ref-Saint-Venant1871">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Saint-Venant</surname><given-names>Barré de</given-names></name>
+      </person-group>
+      <article-title>Théorie du mouvement non-permanent des eaux, avec application aux crues des rivières et à l’introduction des marées dans leur lit</article-title>
+      <source>C.R. Acad. Sci. Paris</source>
+      <year iso-8601-date="1871">1871</year>
+      <volume>73</volume>
+      <fpage>147</fpage>
+      <lpage>154</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-Matsuno92">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Matsuno</surname><given-names>Y.</given-names></name>
+      </person-group>
+      <article-title>Nonlinear evolutions of surface gravity waves on fluid of finite depth</article-title>
+      <source>Phys. Rev. Lett.</source>
+      <year iso-8601-date="1992">1992</year>
+      <volume>69</volume>
+      <issue>4</issue>
+      <issn>0031-9007</issn>
+      <uri>http://dx.doi.org/10.1103/PhysRevLett.69.609</uri>
+      <pub-id pub-id-type="doi">10.1103/PhysRevLett.69.609</pub-id>
+      <fpage>609</fpage>
+      <lpage>611</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-AkersNicholls10">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Akers</surname><given-names>Benjamin</given-names></name>
+        <name><surname>Nicholls</surname><given-names>David P.</given-names></name>
+      </person-group>
+      <article-title>Traveling waves in deep water with gravity and surface tension</article-title>
+      <source>SIAM J. Appl. Math.</source>
+      <year iso-8601-date="2010">2010</year>
+      <volume>70</volume>
+      <issue>7</issue>
+      <issn>0036-1399</issn>
+      <uri>https://doi.org/10.1137/090771351</uri>
+      <pub-id pub-id-type="doi">10.1137/090771351</pub-id>
+      <fpage>2373</fpage>
+      <lpage>2389</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-DebusscheMeminMoneyron25">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Debussche</surname><given-names>Arnaud</given-names></name>
+        <name><surname>Mémin</surname><given-names>Etienne</given-names></name>
+        <name><surname>Moneyron</surname><given-names>Antoine</given-names></name>
+      </person-group>
+      <article-title>Derivation of stochastic models for coastal waves</article-title>
+      <publisher-name>Springer, Cham</publisher-name>
+      <year iso-8601-date="2025">2025</year>
+      <volume>13</volume>
+      <isbn>978-3-031-70660-8</isbn>
+      <fpage>183</fpage>
+      <lpage>221</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-DucheneMarstrander26">
+    <element-citation publication-type="article-journal">
+      <person-group person-group-type="author">
+        <name><surname>Duchêne</surname><given-names>Vincent</given-names></name>
+        <name><surname>Marstrander</surname><given-names>Johanna Ulvedal</given-names></name>
+      </person-group>
+      <article-title>The Fourier spectral approach to the spatial discretization of quasilinear hyperbolic systems</article-title>
+      <source>IMA Journal of Numerical Analysis</source>
+      <year iso-8601-date="2026">2026</year>
+      <uri>https://doi.org/10.1093/imanum/draf135</uri>
+      <pub-id pub-id-type="doi">10.1093/imanum/draf135</pub-id>
+    </element-citation>
+  </ref>
+</ref-list>
+</back>
+</article>
