@@ -30,88 +30,91 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct Burgers <: AbstractModel
 
-	label   :: String
-	f!		:: Function
-	mapto	:: Function
-	mapfro	:: Function
-	info    :: String
+    label::String
+    f!::Function
+    mapto::Function
+    mapfro::Function
+    info::String
 
-    function Burgers(param::NamedTuple; 
-								mesh = Mesh(param),
-								str	= true,
-								dealias = 0,
-								ktol	= 0,
-								label	= nothing
-								)
-		# Set up
-		ϵ	= param.ϵ
+    function Burgers(
+            param::NamedTuple;
+            mesh = Mesh(param),
+            str = true,
+            dealias = 0,
+            ktol = 0,
+            label = nothing
+        )
+        # Set up
+        ϵ = param.ϵ
 
-		if isnothing(label)
-				label = "Burgers"
-		end
-
-
-		# Print information
-		info = "$label model.\n"
-		info *= "├─nonlinarity parameter ϵ=$ϵ.\n"
-
-		if dealias == 0
-			info *= "├─No dealiasing. "
-		else
-			info *= "├─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
-		end
-		if ktol == 0
-			info *= "No Krasny filter. "
-		else
-			info *= "Krasny filter with tolerance $ktol."
-		end
-		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
-
-		# Pre-allocate useful data
-		k = mesh.k
-		x = mesh.x
-
-		∂ₓ	=  1im * k
-
-		if dealias == 0
-			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
-			Π 	= ones(size(k)) # no dealiasing (Π⅔=Id)
-
-		else
-			K = (mesh.kmax-mesh.kmin)/3/dealias
-            Π⅔ 	= abs.(k) .<= K		
-			#Π  	= min.(( abs.(k) .<= K).*( (-abs.(k) .+ K)*dealias/dk ),1)	
-			Π 	= abs.(k) .<= K # Dealiasing low-pass filter
+        if isnothing(label)
+            label = "Burgers"
         end
-		u = zeros(Complex{Float64}, mesh.N)
 
 
-		# Evolution equations are ∂t U = f(U)
-			function f!(U)
-				U .= -ϵ/2 * Π.*∂ₓ.*fft( ifft( U ).^2 )
-				U[ abs.(U).< ktol].=0
-			end
+        # Print information
+        info = "$label model.\n"
+        info *= "├─nonlinarity parameter ϵ=$ϵ.\n"
 
-		# Build raw data from physical data.
-		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
-		function mapto(data::InitialData)
-			u .= fft(data.v(x)) 
-			for u in U u[ abs.(u).< ktol ].=0 end
-			U = reshape(Π⅔.*u,length(u),1)
-			return U
-		end
+        if dealias == 0
+            info *= "├─No dealiasing. "
+        else
+            info *= "├─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
+        end
+        if ktol == 0
+            info *= "No Krasny filter. "
+        else
+            info *= "Krasny filter with tolerance $ktol."
+        end
+        info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
-		# Reconstruct physical variables from raw data
-		# Return `(u,x)`, where
-		# - `u` is the values of the real part of solutions at collocation points `x`;
-		# - `x` is the vector of collocation points
-		function mapfro(U)
-			u .= ifft(U)
+        # Pre-allocate useful data
+        k = mesh.k
+        x = mesh.x
 
-			return real(u),real(u),mesh.x 
-		end
+        ∂ₓ = 1im * k
 
-        new(label, f!, mapto, mapfro, info )
+        if dealias == 0
+            Π⅔ = ones(size(k)) # no dealiasing (Π⅔=Id)
+            Π = ones(size(k)) # no dealiasing (Π⅔=Id)
+
+        else
+            K = (mesh.kmax - mesh.kmin) / 3 / dealias
+            Π⅔ = abs.(k) .<= K
+            #Π  	= min.(( abs.(k) .<= K).*( (-abs.(k) .+ K)*dealias/dk ),1)
+            Π = abs.(k) .<= K # Dealiasing low-pass filter
+        end
+        u = zeros(Complex{Float64}, mesh.N)
+
+
+        # Evolution equations are ∂t U = f(U)
+        function f!(U)
+            U .= -ϵ / 2 * Π .* ∂ₓ .* fft(ifft(U) .^ 2)
+            return U[abs.(U) .< ktol] .= 0
+        end
+
+        # Build raw data from physical data.
+        # Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
+        function mapto(data::InitialData)
+            u .= fft(data.v(x))
+            for u in U
+                u[abs.(u) .< ktol] .= 0
+            end
+            U = reshape(Π⅔ .* u, length(u), 1)
+            return U
+        end
+
+        # Reconstruct physical variables from raw data
+        # Return `(u,x)`, where
+        # - `u` is the values of the real part of solutions at collocation points `x`;
+        # - `x` is the vector of collocation points
+        function mapfro(U)
+            u .= ifft(U)
+
+            return real(u), real(u), mesh.x
+        end
+
+        return new(label, f!, mapto, mapfro, info)
     end
 
 

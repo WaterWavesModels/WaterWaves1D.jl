@@ -11,65 +11,66 @@ function run_models()
 
     reset_timer!()
     #---- parameters
-    param = ( μ  = .1,
-    			ϵ  = 1,
-            	N  = 2^11, 	# number of collocation points
-                L  = 10,	# size of the mesh (-L,L)
-                T  = 5,		# final time of computation
-                dt = 0.001, # timestep
-    				);
+    param = (
+        μ = 0.1,
+        ϵ = 1,
+        N = 2^11,     # number of collocation points
+        L = 10,    # size of the mesh (-L,L)
+        T = 5,        # final time of computation
+        dt = 0.001, # timestep
+    )
     #---- initial data
-    g(x) = exp.(-abs.(x).^4);
-    z(x) = 0*exp.(-x.^2);
-    init = Init(g,z);
+    g(x) = exp.(-abs.(x) .^ 4)
+    z(x) = 0 * exp.(-x .^ 2)
+    init = Init(g, z)
 
     #---- models to compare
-    models=AbstractModel[]
-    push!(models,WaterWaves(param))
-    push!(models,PseudoSpectral(param;order=2,dealias=1,lowpass=1/100))
-    push!(models,PseudoSpectral(param;order=3,dealias=1,lowpass=1/100))
+    models = AbstractModel[]
+    push!(models, WaterWaves(param))
+    push!(models, PseudoSpectral(param; order = 2, dealias = 1, lowpass = 1 / 100))
+    push!(models, PseudoSpectral(param; order = 3, dealias = 1, lowpass = 1 / 100))
 
     #---- Initialize
     function Problems(models)
-    	problems = Problem[]
-    	for model in models
-    		push!(problems, Problem(model, init, param) )
-    	end
-    	return problems
+        problems = Problem[]
+        for model in models
+            push!(problems, Problem(model, init, param))
+        end
+        return problems
     end
 
     #---- Method 1
     @timeit "Method 1 with threads" begin
-        problems=Problems(models)
+        problems = Problems(models)
         solve!(problems)
-        p1=(last(problems[1].data.U), last(problems[2].data.U) ,last(problems[3].data.U))
+        p1 = (last(problems[1].data.U), last(problems[2].data.U), last(problems[3].data.U))
     end
 
     #---- Method 2
     @timeit "Method 2 with threads" begin
-        problems=Problems(models)
+        problems = Problems(models)
         @sync for problem in problems
-        	@spawn solve!( problem )
+            @spawn solve!(problem)
         end
-        p2=(last(problems[1].data.U), last(problems[2].data.U) ,last(problems[3].data.U))
+        p2 = (last(problems[1].data.U), last(problems[2].data.U), last(problems[3].data.U))
     end
 
     #---- Method 3
     @timeit "Consecutive solving" begin
-        problems=Problems(models)
+        problems = Problems(models)
         for problem in problems
-        	solve!( problem )
+            solve!(problem)
         end
-        p3=(last(problems[1].data.U), last(problems[2].data.U) ,last(problems[3].data.U))
+        p3 = (last(problems[1].data.U), last(problems[2].data.U), last(problems[3].data.U))
     end
 
     #---- Tests
     @testset "Final" begin
-    	@test p1==p2
-    	@test p2==p3
+        @test p1 == p2
+        @test p2 == p3
     end
 
-    print_timer()
+    return print_timer()
 
 end
 

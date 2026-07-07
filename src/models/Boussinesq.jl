@@ -45,25 +45,28 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct Boussinesq <: AbstractModel
 
-	label 	:: String
-	f!		:: Function
-	mapto	:: Function
-	mapfro	:: Function
-	info	:: String
+    label::String
+    f!::Function
+    mapto::Function
+    mapfro::Function
+    info::String
 
-    function Boussinesq(param::NamedTuple;
-						mesh = Mesh(param),
-						a=-1//3,b=1//3,
-						dealias=0,ktol=0,
-						label="Boussinesq"
-						)
+    function Boussinesq(
+            param::NamedTuple;
+            mesh = Mesh(param),
+            a = -1 // 3, b = 1 // 3,
+            dealias = 0, ktol = 0,
+            label = "Boussinesq"
+        )
 
-		m=WhithamBoussinesq(param;Boussinesq=true,
-							mesh=mesh,
-							a=a,b=b,
-							dealias=dealias,ktol=ktol,
-							label=label)
+        m = WhithamBoussinesq(
+            param; Boussinesq = true,
+            mesh = mesh,
+            a = a, b = b,
+            dealias = dealias, ktol = ktol,
+            label = label
+        )
 
-		new(m.label, m.f!, m.mapto, m.mapfro, m.info)
+        return new(m.label, m.f!, m.mapto, m.mapfro, m.info)
     end
 end

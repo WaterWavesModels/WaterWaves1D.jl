@@ -5,7 +5,6 @@ using WaterWaves1D, FFTW;
 # using Plots; gr();
 
 
-
 """
     |(x,u,j,p)
 
@@ -13,21 +12,21 @@ using WaterWaves1D, FFTW;
 Compute the `L^p` norm of the j-th space-derivative of the function 
 whose values at collocation points `x` are `u`.
 """
-function |(x,u,j,p)
+function |(x, u, j, p)
 
     if j == 0
         ∂ₓ = one.(x)
-        dx = (maximum(x)-minimum(x))/(length(x)-1)
+        dx = (maximum(x) - minimum(x)) / (length(x) - 1)
     else
-        mesh=Mesh(x)
-        ∂ₓ=1im*mesh.k
+        mesh = Mesh(x)
+        ∂ₓ = 1im * mesh.k
         dx = mesh.dx
     end
 
-    if p == Inf
-        maximum(abs.(ifft( ∂ₓ.^j .* fft(u) )))
+    return if p == Inf
+        maximum(abs.(ifft(∂ₓ .^ j .* fft(u))))
     else
-        (sum( abs.(ifft( ∂ₓ.^j .* fft(u) )).^p )*dx/2π).^(1/p)
+        (sum(abs.(ifft(∂ₓ .^ j .* fft(u))) .^ p) * dx / 2π) .^ (1 / p)
     end
 end
 
@@ -42,38 +41,38 @@ Return the `W^{k,p}` norm of the m-th time-derivative of the function `u` at tim
 - `dot` (default = `false`): returns the homogeneous Sobolev norm.
 - `δ` (default = `1`): returns the scaled Sobolev norm with prefactors associated with `u(δ⋅)`.
 """
-function norm(pb;T=Inf::AbstractFloat,k=0,p=Inf,m=0,δ=1,dot=false)
-    T=min(max(T,0),pb.times.ts[end])
-	index = findfirst(pb.times.ts.>=T)
+function norm(pb; T = Inf::AbstractFloat, k = 0, p = Inf, m = 0, δ = 1, dot = false)
+    T = min(max(T, 0), pb.times.ts[end])
+    index = findfirst(pb.times.ts .>= T)
     if dot == false
-        Js=0:k
+        Js = 0:k
     else
-        Js=k
-    end 
-    N=0
+        Js = k
+    end
+    N = 0
     if m == 0
         U = copy(pb.data.U[index])
-        (η,v,u,q,w,x) = pb.model.mapfrofull(U)
+        (η, v, u, q, w, x) = pb.model.mapfrofull(U)
         for j in Js
-            N += δ^j*( |(x,η,j,p) + |(x,u,j,p) )
+            N += δ^j * (|(x, η, j, p) + |(x, u, j, p))
         end
-    elseif m == 1 
+    elseif m == 1
         U = copy(pb.data.U[index])
         pb.model.f!(U)
-        (dtη,~,dtu,dtq,dtw,x) = pb.model.mapfrofull(U)
-        for j in Js[1:end-1]
-            N += δ^j*( |(x,dtη,j,p) + |(x,dtu,j,p) )
+        (dtη, ~, dtu, dtq, dtw, x) = pb.model.mapfrofull(U)
+        for j in Js[1:(end - 1)]
+            N += δ^j * (|(x, dtη, j, p) + |(x, dtu, j, p))
         end
-    elseif m == 2 
+    elseif m == 2
         U = copy(pb.data.U[index])
         pb.model.f!(U)
-        (dtη,~,dtu,dtq,dtw,x) = pb.model.mapfrofull(U)
-        Um = copy(pb.data.U[index-1])
+        (dtη, ~, dtu, dtq, dtw, x) = pb.model.mapfrofull(U)
+        Um = copy(pb.data.U[index - 1])
         pb.model.f!(Um)
-        (dtηm,~,dtum,dtqm,dtwm,~) = pb.model.mapfrofull(Um)
-        (d2tη,d2tu,d2tq,d2tw)=(dtη-dtηm,dtu-dtum,dtq-dtqm,dtw-dtwm)./pb.times.dt
-        for j in Js[1:end-2]
-            N += δ^j*( |(x,d2tη,j,p) + |(x,d2tu,j,p) )
+        (dtηm, ~, dtum, dtqm, dtwm, ~) = pb.model.mapfrofull(Um)
+        (d2tη, d2tu, d2tq, d2tw) = (dtη - dtηm, dtu - dtum, dtq - dtqm, dtw - dtwm) ./ pb.times.dt
+        for j in Js[1:(end - 2)]
+            N += δ^j * (|(x, d2tη, j, p) + |(x, d2tu, j, p))
         end
     end
     return N
@@ -90,20 +89,20 @@ Return the `W^{k,p}` norm of the difference at time `t=T``
 - `dot` (default = `false`): returns the homogeneous Sobolev norm.
 - `δ` (default = `1`): returns the scaled Sobolev norm with prefactors associated with `u(δ⋅)`.
 """
-function norm(pb1,pb2;T=Inf::AbstractFloat,k=0,p=Inf,m=0,δ=1,dot=false)
-    η1,v1,x1,t1 = solution(pb1,T=T)
-    η2, = solution(pb2,T=t1,x=x1)
-    η0,v0,x, = solution(pb2,T=0)
+function norm(pb1, pb2; T = Inf::AbstractFloat, k = 0, p = Inf, m = 0, δ = 1, dot = false)
+    η1, v1, x1, t1 = solution(pb1, T = T)
+    η2, = solution(pb2, T = t1, x = x1)
+    η0, v0, x, = solution(pb2, T = 0)
 
     if dot == false
-        Js=0:k
+        Js = 0:k
     else
-        Js=k
-    end 
-    N=0
+        Js = k
+    end
+    N = 0
 
     for j in Js
-        N += δ^j*|(x,η1-η2,j,p) 
+        N += δ^j * |(x, η1 - η2, j, p)
     end
     return N
 end
@@ -121,7 +120,7 @@ If 'scenario == 2', then the norms are computed for several values of 'δ'.
 Optional keyword arguments are 'p' (default = 2), 'k' (default = 3), and 
 'WP' the preparation of the initial data (default = 1).
 """
-function Compute(scenario;WP=1,p=2,k=3)
+function Compute(scenario; WP = 1, p = 2, k = 3)
 
     #---- parameters
     param = (
@@ -130,28 +129,28 @@ function Compute(scenario;WP=1,p=2,k=3)
         L = π, # size of the mesh (-L,L)
         T = 1, # final time of computation
         dt = 0.0001,  # timestep
-        );
+    )
 
     #---- initial data
-    ζ0(x) = zero(x);
-    u0(x) = -sin.(x);
-    init = Init(ζ0, u0);
+    ζ0(x) = zero(x)
+    u0(x) = -sin.(x)
+    init = Init(ζ0, u0)
     # ζ0 et u0 sont des fonctions.
     # Init les mets sous une forme utilisable par le programme
 
-    pLCT=Problem[]
+    pLCT = Problem[]
 
     #pWW= Problem( WaterWaves(param; dealias = 1) , init, param)
     #pGN= Problem( WhithamGreenNaghdi(param; SGN=true, dealias = 1) , init, param)
     #solve!([pWW pGN])
     if scenario == 1
-        
+
         as = [20 40 60 80 100 120 140 160 180 200]
         @info("different values of a: $as.\nδ = 0.1")
 
         for a in as
-            para=merge( param,( μ = 0.01, a=a ) )
-            push!(pLCT , Problem(relaxedGreenNaghdi(para;FG=false, id = WP-1, dealias = 1),init,para) )
+            para = merge(param, (μ = 0.01, a = a))
+            push!(pLCT, Problem(relaxedGreenNaghdi(para; FG = false, id = WP - 1, dealias = 1), init, para))
         end
 
         solve!(pLCT)
@@ -164,20 +163,20 @@ function Compute(scenario;WP=1,p=2,k=3)
         @info("different values of δ²: $mus.\na=100")
 
         for mu in mus
-            para=merge( param,( μ = mu , a = 100) )
-            push!(pLCT , Problem(relaxedGreenNaghdi(para;FG=false, id = WP-1, dealias = 1),init,para) )
+            para = merge(param, (μ = mu, a = 100))
+            push!(pLCT, Problem(relaxedGreenNaghdi(para; FG = false, id = WP - 1, dealias = 1), init, para))
         end
 
         solve!(pLCT)
 
     end
 
-    N = zeros( length(pLCT) , 3 )
-    j=0
+    N = zeros(length(pLCT), 3)
+    j = 0
     for pb in pLCT
-        j+=1
+        j += 1
         for m in [0 1 2]
-            N[j,m+1]=norm(pb,p=p,k=k,m=m)
+            N[j, m + 1] = norm(pb, p = p, k = k, m = m)
         end
     end
     return N
@@ -195,7 +194,7 @@ If 'scenario == 2', then the norms are computed for several values of 'δ'.
 Optional keyword arguments are 'p' (default = Inf), 'k' (default = 0), and 
 'WP' the preparation of the initial data (default = 1).
 """
-function Compare(scenario;WP=1,p=Inf,k=0)
+function Compare(scenario; WP = 1, p = Inf, k = 0)
 
     #---- parameters
     param = (
@@ -204,43 +203,43 @@ function Compare(scenario;WP=1,p=Inf,k=0)
         L = π, # size of the mesh (-L,L)
         T = 0.5, # final time of computation
         dt = 0.001,  # timestep
-        );
+    )
 
     #---- initial data
-    ζ0(x) = zero(x);
-    u0(x) = -sin.(x);
-    init = Init(ζ0, u0);
+    ζ0(x) = zero(x)
+    u0(x) = -sin.(x)
+    init = Init(ζ0, u0)
     # ζ0 et u0 sont des fonctions.
     # Init les mets sous une forme utilisable par le programme
 
-    
+
     if scenario == 1
-        
+
         as = [20 40 60 80 100 120 140 160 180 200]
         @info("different values of a: $as.\nδ = 0.1")
-        
-        para = merge( param,( μ = 0.01,  ) )
-        pWW = Problem( WaterWaves(para; dealias = 1) , init, para) 
-        pGN = Problem( WhithamGreenNaghdi(para; SGN=true, dealias = 1) , init, para) 
-        pSV = Problem( SaintVenant(para; dealias = 1) , init, para) 
 
-        solve!(pWW);solve!(pGN);solve!(pSV);
-        
-        pLCT=Problem[]
+        para = merge(param, (μ = 0.01,))
+        pWW = Problem(WaterWaves(para; dealias = 1), init, para)
+        pGN = Problem(WhithamGreenNaghdi(para; SGN = true, dealias = 1), init, para)
+        pSV = Problem(SaintVenant(para; dealias = 1), init, para)
+
+        solve!(pWW);solve!(pGN);solve!(pSV)
+
+        pLCT = Problem[]
         for a in as
-            para=merge( param,( dt = 0.0001, μ = 0.01, a=a ) )
-            push!(pLCT , Problem(relaxedGreenNaghdi(para;FG=false, id = WP-1, dealias = 1),init,para) )
+            para = merge(param, (dt = 0.0001, μ = 0.01, a = a))
+            push!(pLCT, Problem(relaxedGreenNaghdi(para; FG = false, id = WP - 1, dealias = 1), init, para))
         end
         solve!(pLCT)
 
-        N = zeros( length(pLCT), 4 )
+        N = zeros(length(pLCT), 4)
         for j in eachindex(pLCT)
-            N[j,1]=norm(pWW,pSV,p=p,k=k)
-            N[j,2]=norm(pWW,pLCT[j],p=p,k=k)
-            N[j,3]=norm(pWW,pGN,p=p,k=k)
-            N[j,4]=norm(pGN,pLCT[j],p=p,k=k)
+            N[j, 1] = norm(pWW, pSV, p = p, k = k)
+            N[j, 2] = norm(pWW, pLCT[j], p = p, k = k)
+            N[j, 3] = norm(pWW, pGN, p = p, k = k)
+            N[j, 4] = norm(pGN, pLCT[j], p = p, k = k)
         end
-        
+
 
     end
 
@@ -250,18 +249,18 @@ function Compare(scenario;WP=1,p=Inf,k=0)
         @info("different values of δ²: $mus.\na=100")
 
 
-        pWW=Problem[]
-        pSV=Problem[]
-        pGN=Problem[]
-        pLCT=Problem[]
+        pWW = Problem[]
+        pSV = Problem[]
+        pGN = Problem[]
+        pLCT = Problem[]
 
         for mu in mus
-            para=merge( param,( dt = 0.0001, μ = mu , a = 100) )
-            push!(pLCT , Problem(relaxedGreenNaghdi(para;FG=false, id = WP-1, dealias = 1),init,para) )
-            para=merge( param,( dt = 0.001, μ = mu , a = 100) )
-            push!(pWW ,  Problem( WaterWaves(para; dealias = 1) , init, para) )
-            push!(pGN ,  Problem( WhithamGreenNaghdi(para; SGN=true, dealias = 1) , init, para) )
-            push!(pSV ,  Problem( SaintVenant(para; dealias = 1) , init, para) )
+            para = merge(param, (dt = 0.0001, μ = mu, a = 100))
+            push!(pLCT, Problem(relaxedGreenNaghdi(para; FG = false, id = WP - 1, dealias = 1), init, para))
+            para = merge(param, (dt = 0.001, μ = mu, a = 100))
+            push!(pWW, Problem(WaterWaves(para; dealias = 1), init, para))
+            push!(pGN, Problem(WhithamGreenNaghdi(para; SGN = true, dealias = 1), init, para))
+            push!(pSV, Problem(SaintVenant(para; dealias = 1), init, para))
 
         end
 
@@ -271,12 +270,12 @@ function Compare(scenario;WP=1,p=Inf,k=0)
         solve!(pSV)
 
 
-        N = zeros( length(pLCT), 4 )
+        N = zeros(length(pLCT), 4)
         for j in eachindex(pLCT)
-            N[j,1]=norm(pWW[j],pSV[j],p=p,k=k)
-            N[j,2]=norm(pWW[j],pLCT[j],p=p,k=k)
-            N[j,3]=norm(pWW[j],pGN[j],p=p,k=k)
-            N[j,4]=norm(pGN[j],pLCT[j],p=p,k=k)
+            N[j, 1] = norm(pWW[j], pSV[j], p = p, k = k)
+            N[j, 2] = norm(pWW[j], pLCT[j], p = p, k = k)
+            N[j, 3] = norm(pWW[j], pGN[j], p = p, k = k)
+            N[j, 4] = norm(pGN[j], pLCT[j], p = p, k = k)
         end
 
     end
@@ -285,11 +284,8 @@ function Compare(scenario;WP=1,p=Inf,k=0)
 end
 
 
-
-
-scatter(mus,NWP3,xaxis=:log10,yaxis=:log10,label=["WW vs SV" "WW vs LCT" "WW vs GN" "LCT vs GN"],legend=:bottomright,title="WP3, a = 100",xlabel="mu",ylabel="difference (elevation, in \$L^\\infty\$)")
-plot!(mus,mus.^2,label="μ²",color=:3)
-
+scatter(mus, NWP3, xaxis = :log10, yaxis = :log10, label = ["WW vs SV" "WW vs LCT" "WW vs GN" "LCT vs GN"], legend = :bottomright, title = "WP3, a = 100", xlabel = "mu", ylabel = "difference (elevation, in \$L^\\infty\$)")
+plot!(mus, mus .^ 2, label = "μ²", color = :3)
 
 
 # plt=plot([pWW pGN pLCT],var=[:surface,:velocity])
@@ -298,7 +294,6 @@ plot!(mus,mus.^2,label="μ²",color=:3)
 #     plt=plot([pWW,pGN,pLCT],var=[:surface,:velocity],T=time,legend=:topright,xlims=(0,3),ylims=(-1,2));
 #     #plot!(plt,[pFG3b,pGN],var=[:differences],T=time,legend=:bottomleft,xlims=(0,10),ylims=(-1e-5,1e-5));
 # end
-
 
 
 # pFGb = Problem(relaxedGreenNaghdi(p1;FG=false, id = 1, dealias = 1),init,p1,solver=RK4_naive(),label="a=20")  # dealias = 1 pour dealiasing
@@ -323,8 +318,8 @@ plot!(mus,mus.^2,label="μ²",color=:3)
 #for model in models
 #    push!(problems, Problem(model, init, param;solver=s))
 #end
-# problems = [pWW pGN pFG1a pFG2a pFG3a pFG1b pFG2b pFG3b pFG1c pFG2c pFG3c] 
-#problems = [pWW pGN pFGa pFGb pFGc] 
+# problems = [pWW pGN pFG1a pFG2a pFG3a pFG1b pFG2b pFG3b pFG1c pFG2c pFG3c]
+#problems = [pWW pGN pFGa pFGb pFGc]
 
 #---- computation
 # for problem in problems
@@ -375,7 +370,6 @@ plot!(mus,mus.^2,label="μ²",color=:3)
 # plot!(problems[[2;5]],var=[:differences],T=2)
 
 
-
 # @gif for time in LinRange(0,2,101)
 #     plt=plot([pFG3a,pGN],var=[:differences],T=time,legend=:bottomleft,xlims=(0,10),ylims=(-1e-5,1e-5));
 #     plot!(plt,[pFG3b,pGN],var=[:differences],T=time,legend=:bottomleft,xlims=(0,10),ylims=(-1e-5,1e-5));
@@ -386,7 +380,6 @@ plot!(mus,mus.^2,label="μ²",color=:3)
 # # Faire la derivee en temps
 
 
-
 # function norm(p;T=Inf::AbstractFloat,a,μ,s=0)
 #     T=min(max(T,0),p.times.ts[end])
 # 	index = findfirst(p.times.ts.>=T)
@@ -394,7 +387,7 @@ plot!(mus,mus.^2,label="μ²",color=:3)
 # 	mesh=Mesh(x)
 #     ∂ₓ=1im*mesh.k
 #     |(x)=maximum(abs.(x))
-    
+
 #     if s==0
 #         return |(η),|(u),|(p),|(w)
 #     else
@@ -426,9 +419,9 @@ plot!(mus,mus.^2,label="μ²",color=:3)
 # 	mesh=Mesh(x)
 #     ∂ₓ=1im*mesh.k
 #     |(x)=maximum(abs.(x))
-    
+
 #     return |(η1-η2),|(u1-u2)
-    
+
 # end
 
 # function norms(p1,p2;T=nothing,a,μ,rel=false)

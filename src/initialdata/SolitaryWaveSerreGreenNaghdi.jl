@@ -20,33 +20,33 @@ and mesh size `L` and number of collocation points `N`;
 
 """
 function SolitaryWaveSerreGreenNaghdi(
-                param :: NamedTuple;
-                x₀ = 0 :: Real
-                        )
+        param::NamedTuple;
+        x₀ = 0::Real
+    )
 
 
-        c = param.c
-        ϵ = param.ϵ
-        μ = param.μ
-		if abs(c)<1
-			@error("The velocity must be greater than 1 (in absolute value).")
-		end
+    c = param.c
+    ϵ = param.ϵ
+    μ = param.μ
+    if abs(c) < 1
+        @error("The velocity must be greater than 1 (in absolute value).")
+    end
 
 
-        mesh = Mesh(param)
+    mesh = Mesh(param)
 
-        η = (c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*(mesh.x.-x₀)).^2
+    η = (c^2 - 1) / ϵ * sech.(sqrt(3 * (c^2 - 1) / (c^2) / μ) / 2 * (mesh.x .- x₀)) .^ 2
 
-        h = 1 .+ ϵ*η
-        u = c*η./h
+    h = 1 .+ ϵ * η
+    u = c * η ./ h
 
-		k = mesh.k
-        Dx       =  1im * k
+    k = mesh.k
+    Dx = 1im * k
 
-        DxF(v) = real.(ifft(Dx .* fft(v)))
-		v = u - μ/3 ./h .* (DxF(h.^3 .*DxF(u)))
+    DxF(v) = real.(ifft(Dx .* fft(v)))
+    v = u - μ / 3 ./ h .* (DxF(h .^ 3 .* DxF(u)))
 
-        return (η,u,v,mesh)
+    return (η, u, v, mesh)
 
 end
 
@@ -63,28 +63,28 @@ Build the initial data with velocity `c`, center `x₀`, dimensionless parameter
 """
 struct SolitarySGN <: InitialData
 
-	η
-	v
-	label :: String
-	info  :: String
+    η
+    v
+    label::String
+    info::String
 
-	function SolitarySGN(param::NamedTuple; x₀=0::Real)
-		(η,u,v,mesh)=SolitaryWaveSerreGreenNaghdi(param; x₀)
-		init = Init(mesh,η,v)
-		label = "Green-Naghdi solitary wave"
-		info = "Solitary travelling wave for the Serre-Green-Naghdi model.\n\
-		├─velocity c = $(param.c)\n\
-		└─maximum h₀ = $((param.c^2-1)/param.ϵ) (from rest state)."
+    function SolitarySGN(param::NamedTuple; x₀ = 0::Real)
+        (η, u, v, mesh) = SolitaryWaveSerreGreenNaghdi(param; x₀)
+        init = Init(mesh, η, v)
+        label = "Green-Naghdi solitary wave"
+        info = "Solitary travelling wave for the Serre-Green-Naghdi model.\n\
+        ├─velocity c = $(param.c)\n\
+        └─maximum h₀ = $((param.c^2 - 1) / param.ϵ) (from rest state)."
 
-		new( init.η,init.v,label,info  )
-	end
+        return new(init.η, init.v, label, info)
+    end
 
-	function SolitarySGN(c::Real; ϵ=1::Real,μ=1::Real,x₀=0::Real,N=2^12::Int)
-		L=200/sqrt(3*(c^2-1)/(c^2)/μ)/2
-		xmin,xmax = x₀-L,x₀+L;
-		param=(ϵ=ϵ,μ=μ,c=c,L=L,xmin=xmin,xmax=xmax,N=N)
-		sol=SolitarySGN(param;x₀=x₀)
-		new( sol.η,sol.v,sol.label,sol.info  )
-	end
+    function SolitarySGN(c::Real; ϵ = 1::Real, μ = 1::Real, x₀ = 0::Real, N = 2^12::Int)
+        L = 200 / sqrt(3 * (c^2 - 1) / (c^2) / μ) / 2
+        xmin, xmax = x₀ - L, x₀ + L
+        param = (ϵ = ϵ, μ = μ, c = c, L = L, xmin = xmin, xmax = xmax, N = N)
+        sol = SolitarySGN(param; x₀ = x₀)
+        return new(sol.η, sol.v, sol.label, sol.info)
+    end
 
 end

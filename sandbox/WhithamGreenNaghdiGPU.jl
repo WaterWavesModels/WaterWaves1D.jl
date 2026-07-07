@@ -1,5 +1,5 @@
 export WhithamGreenNaghdiGPU
-using CUDAdrv, CuArrays, CuArrays.CUFFT,LinearAlgebra
+using CUDAdrv, CuArrays, CuArrays.CUFFT, LinearAlgebra
 
 """
     WhithamGreenNaghdiGPU(param;kwargs)
@@ -9,36 +9,38 @@ using CUDAdrv, CuArrays, CuArrays.CUFFT,LinearAlgebra
 """
 struct WhithamGreenNaghdiGPU <: AbstractModel
 
-    label   :: String
-	f!		:: Function
-	mapto	:: Function
-	mapfro	:: Function
-	mapfrofull	:: Function
-	param	:: NamedTuple
-	kwargs  :: NamedTuple
+    label::String
+    f!::Function
+    mapto::Function
+    mapfro::Function
+    mapfrofull::Function
+    param::NamedTuple
+    kwargs::NamedTuple
 
     function WhithamGreenNaghdiGPU(
-        param::NamedTuple;
-        SGN = false,
-        ktol = 0,
-        dealias = 0,
-		verbose = true
-    )
+            param::NamedTuple;
+            SGN = false,
+            ktol = 0,
+            dealias = 0,
+            verbose = true
+        )
 
         @show CUDAdrv.name(CuDevice(0))
 
-		if SGN == true
-			label = string("Serre-Green-Naghdi")
-		else
-			label = string("Whitham-Green-Naghdi")
-		end
-		if verbose @info string("model ",label) end
+        if SGN == true
+            label = string("Serre-Green-Naghdi")
+        else
+            label = string("Whitham-Green-Naghdi")
+        end
+        if verbose
+            @info string("model ", label)
+        end
 
-		kwargs = (SGN=SGN,dealias=dealias,ktol=ktol,verbose=verbose)
-		μ 	= param.μ
-		ϵ 	= param.ϵ
-		mesh = Mesh(param)
-		param = ( ϵ = ϵ, μ = μ, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N )
+        kwargs = (SGN = SGN, dealias = dealias, ktol = ktol, verbose = verbose)
+        μ = param.μ
+        ϵ = param.ϵ
+        mesh = Mesh(param)
+        param = (ϵ = ϵ, μ = μ, xmin = mesh.xmin, xmax = mesh.xmax, N = mesh.N)
 
         k = mesh.k
         x = mesh.x
@@ -56,13 +58,17 @@ struct WhithamGreenNaghdiGPU <: AbstractModel
 
         K = mesh.kmax * (1 - dealias / (2 + dealias))
         Π⅔ = abs.(mesh.k) .<= K # Dealiasing low-pass filter
-		if dealias == 0
-			if verbose @info "no dealiasing" end
-			Π⅔ 	= ones(size(mesh.k))
-		elseif verbose
-			@info string("dealiasing : spectral scheme for power ", dealias + 1," nonlinearity ")
-		end
-        if verbose @info "LU decomposition" end
+        if dealias == 0
+            if verbose
+                @info "no dealiasing"
+            end
+            Π⅔ = ones(size(mesh.k))
+        elseif verbose
+            @info string("dealiasing : spectral scheme for power ", dealias + 1, " nonlinearity ")
+        end
+        if verbose
+            @info "LU decomposition"
+        end
 
         FFT = exp.(-1im * k * (x .- x₀)')
         IFFT = exp.(1im * k * (x .- x₀)') / length(x)
@@ -71,7 +77,7 @@ struct WhithamGreenNaghdiGPU <: AbstractModel
         Id = Diagonal(ones(size(x)))
 
 
-        function f!( U::Array{ComplexF64,2} )
+        function f!(U::Array{ComplexF64, 2})
 
             d_fftη = CuArray(U[:, 1])
             d_fftu = CuArray(U[:, 2])
@@ -143,29 +149,29 @@ struct WhithamGreenNaghdiGPU <: AbstractModel
             U[:, 1] .= Array(d_fftη)
             U[:, 2] .= Array(d_fftv)
 
-        	U[abs.(U) .< ktol] .= 0.0
+            return U[abs.(U) .< ktol] .= 0.0
 
         end
 
         function mapto(data::InitialData)
 
             U = [Π⅔ .* fft(data.η(x)) Π⅔ .* fft(data.v(x))]
-            U[abs.(U).<ktol] .= 0
+            U[abs.(U) .< ktol] .= 0
             return U
 
         end
 
         function mapfro(U)
-            real(ifft(U[:, 1])), real(ifft(U[:, 2]))
+            return real(ifft(U[:, 1])), real(ifft(U[:, 2]))
         end
 
         function mapfrofull(U)
             fftη = U[:, 1]
             h = 1 .+ ϵ * ifft(fftη)
             L = Id - 1 / 3 * FFT * Diagonal(1 ./ h) * M₀ * Diagonal(h .^ 3) * IFFTF₀
-            real(ifft(U[:, 1])), real(ifft(U[:, 2])), real(ifft(L \ U[:, 2]))
+            return real(ifft(U[:, 1])), real(ifft(U[:, 2])), real(ifft(L \ U[:, 2]))
         end
 
-        new( label, f!, mapto, mapfro, mapfrofull, param, kwargs )
+        return new(label, f!, mapto, mapfro, mapfrofull, param, kwargs)
     end
 end

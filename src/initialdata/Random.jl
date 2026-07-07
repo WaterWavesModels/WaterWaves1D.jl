@@ -15,26 +15,26 @@ and in any case normalized to have maximum absolute value 1.
 
 
 """
-function random( x;L=1,s=Inf,λ=Inf,a=1 )
+function random(x; L = 1, s = Inf, λ = Inf, a = 1)
 
 
-    k = Mesh( x ).k
+    k = Mesh(x).k
     if s == Inf
-        w = 10 .^(-abs.(k*L/(2*π)))
+        w = 10 .^ (-abs.(k * L / (2 * π)))
     else
-        w = 1 ./( 1 .+ 9*abs.(k*L/(2*π)).^(s+1/2) )
+        w = 1 ./ (1 .+ 9 * abs.(k * L / (2 * π)) .^ (s + 1 / 2))
     end
     if λ == Inf
-        φ = zero(x).+1
+        φ = zero(x) .+ 1
     else
-        φ = exp.(-abs.((x/λ).^2))
+        φ = exp.(-abs.((x / λ) .^ 2))
     end
 
-    θ = 2*π*rand(Float64,length(x))
-    r = rand(Float64,length(x))
-    Fourier = r.*exp.(-1im.*θ).*w
-    Physic = real.(ifft(Fourier)).*φ
-    return Physic./(maximum(Physic)-minimum(Physic))*a
+    θ = 2 * π * rand(Float64, length(x))
+    r = rand(Float64, length(x))
+    Fourier = r .* exp.(-1im .* θ) .* w
+    Physic = real.(ifft(Fourier)) .* φ
+    return Physic ./ (maximum(Physic) - minimum(Physic)) * a
 end
 
 """
@@ -56,16 +56,20 @@ struct Random <: InitialData
 
     η
     v
-    label :: String
-    info  :: String
+    label::String
+    info::String
 
-    function Random(param;L=1,s=Inf,λ=Inf,a=(1,1))
-        mesh=Mesh(param);x=mesh.x;
-        η = random( x; L=L,s=s,λ=λ,a=a[1] )
-        v = random( x; L=L,s=s,λ=λ,a=a[2] )
-        init=Init(x,η,v)
-        if s == Inf s="∞" end
-        if λ == Inf λ="∞" end
+    function Random(param; L = 1, s = Inf, λ = Inf, a = (1, 1))
+        mesh = Mesh(param);x = mesh.x
+        η = random(x; L = L, s = s, λ = λ, a = a[1])
+        v = random(x; L = L, s = s, λ = λ, a = a[2])
+        init = Init(x, η, v)
+        if s == Inf
+            s = "∞"
+        end
+        if λ == Inf
+            λ = "∞"
+        end
         label = "randomly generated"
         info = "Randomly generated initial data with \n\
         ├───typical wavelength: L = $L,\n\
@@ -73,7 +77,7 @@ struct Random <: InitialData
         ├─spatial localization: λ = $λ,\n\
         ├────surface amplitude: $(a[1]),\n\
         └───velocity amplitude: $(a[2])."
-    	new( init.η,init.v,label,info )
+        return new(init.η, init.v, label, info)
 
     end
 
