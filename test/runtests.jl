@@ -13,3 +13,4 @@ include("./testtools.jl")
 
 include("./test_examples.jl")
 include("./test_notebooks.jl")
+include("./test_aqua.jl")
