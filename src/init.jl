@@ -7,14 +7,15 @@ through `Problem( model :: AbstractModel, initial :: InitialData, param :: Named
 abstract type InitialData end
 
 show(io::IO, i::InitialData) =
-    try print(io,i.info)
-    catch
-        print(io,"Initial data: $(i.label)")
-    end
+try
+    print(io, i.info)
+catch
+    print(io, "Initial data: $(i.label)")
+end
 
 function Base.:(==)(i1::InitialData, i2::InitialData)
-    x=rand(2)
-    i1.η(x) == i2.η(x) && i1.v(x) == i2.v(x) && i1.label == i2.label
+    x = rand(2)
+    return i1.η(x) == i2.η(x) && i1.v(x) == i2.v(x) && i1.label == i2.label
 end
 
 export Init
@@ -39,24 +40,24 @@ is not provided, then it is set to the `"user-defined"`.
 """
 struct Init <: InitialData
 
-    η :: Any
-    v :: Any
-    label :: String
+    η::Any
+    v::Any
+    label::String
 
-    function Init(η , v;  label = "user-defined")
-        new( x->η(x) , x->v(x), label )
+    function Init(η, v; label = "user-defined")
+        return new(x -> η(x), x -> v(x), label)
     end
 
-    function Init( mesh :: Mesh, η , v ; fast = false,  label = "user-defined")
-        new( x->interpolate(mesh,η,x;fast=fast) , x->interpolate(mesh,v,x;fast=fast), label )
+    function Init(mesh::Mesh, η, v; fast = false, label = "user-defined")
+        return new(x -> interpolate(mesh, η, x; fast = fast), x -> interpolate(mesh, v, x; fast = fast), label)
     end
 
-    function Init( x :: Array, η , v ; fast = false, label = "user-defined")
-        if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
+    function Init(x::Array, η, v; fast = false, label = "user-defined")
+        if !(x[2:end] .- x[2] ≈ x[1:(end - 1)] .- x[1])
             @error("Collocation points must be equally spaced.")
         end
-        mesh=Mesh(x)
-        Init(mesh, η , v ; fast = fast, label = label)
+        mesh = Mesh(x)
+        return Init(mesh, η, v; fast = fast, label = label)
     end
 
 end
@@ -83,13 +84,13 @@ is not provided, then it is set to the `"user-defined"`.
 """
 struct Init2D <: InitialData
 
-    η :: Any
-    vx :: Any
-    vy :: Any
-    label :: String
+    η::Any
+    vx::Any
+    vy::Any
+    label::String
 
-    function Init2D( η , vx , vy ;  label = "user-defined")
-        new( (x,y)->η(x,y), (x,y)->vx(x,y), (x,y)->vy(x,y), label )
+    function Init2D(η, vx, vy; label = "user-defined")
+        return new((x, y) -> η(x, y), (x, y) -> vx(x, y), (x, y) -> vy(x, y), label)
     end
 
     # function Init( mesh :: Mesh, η , vx, vy ; fast = false,  label = "user-defined")

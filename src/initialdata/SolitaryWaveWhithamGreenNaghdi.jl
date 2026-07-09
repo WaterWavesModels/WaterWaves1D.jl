@@ -33,257 +33,282 @@ and mesh size `L` and number of collocation points `N`;
 
 """
 function SolitaryWaveWhithamGreenNaghdi(
-                param :: NamedTuple;
-                guess = zeros(0) :: Vector{Float64},
-                x₀ = 0 :: Real,
-                SGN = false :: Bool,
-                method = 2 :: Int,
-                iterative = false :: Bool,
-                verbose = false :: Bool,
-                max_iter = 20 :: Int,
-                tol = 1e-10 :: Real,
-                ktol = 0 :: Real,
-                gtol = 1e-10 :: Real,
-                dealias = 0 :: Int,
-                q=1 :: Real,
-                α=0 :: Real
-                        )
+        param::NamedTuple;
+        guess = zeros(0)::Vector{Float64},
+        x₀ = 0::Real,
+        SGN = false::Bool,
+        method = 2::Int,
+        iterative = false::Bool,
+        verbose = false::Bool,
+        max_iter = 20::Int,
+        tol = 1.0e-10::Real,
+        ktol = 0::Real,
+        gtol = 1.0e-10::Real,
+        dealias = 0::Int,
+        q = 1::Real,
+        α = 0::Real
+    )
 
 
-        c = param.c
-        ϵ = param.ϵ
-        μ = param.μ
-        if abs(c)<1
-                @error("The velocity must be greater than 1 (in absolute value).")
-        end
+    c = param.c
+    ϵ = param.ϵ
+    μ = param.μ
+    if abs(c) < 1
+        @error("The velocity must be greater than 1 (in absolute value).")
+    end
 
 
-        mesh = Mesh(param)
+    mesh = Mesh(param)
 
-        if guess == zeros(0)
-                # Using the exact formula for the SGN solitary wave as initial guess (if not provided)
-                guess = (c^2-1)/ϵ*sech.(sqrt(3*(c^2-1)/(c^2)/μ)/2*(mesh.x.-x₀)).^2
-        end
+    if guess == zeros(0)
+        # Using the exact formula for the SGN solitary wave as initial guess (if not provided)
+        guess = (c^2 - 1) / ϵ * sech.(sqrt(3 * (c^2 - 1) / (c^2) / μ) / 2 * (mesh.x .- x₀)) .^ 2
+    end
 
-        k = mesh.k
+    k = mesh.k
 
-        Dx       =  1im * k
-        if SGN == true
-                F₀ = √μ*Dx #./ (1 .+ μ/3 * k.^2 ).^(1/4)
-        else
-                F₁ 	= tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k))
-                F₁[1] 	= 1
-                F₀       = 1im * sqrt.(3*(1 ./F₁ .- 1)).*sign.(k)
-        end
+    Dx = 1im * k
+    if SGN == true
+        F₀ = √μ * Dx #./ (1 .+ μ/3 * k.^2 ).^(1/4)
+    else
+        F₁ = tanh.(sqrt(μ) * abs.(k)) ./ (sqrt(μ) * abs.(k))
+        F₁[1] = 1
+        F₀ = 1im * sqrt.(3 * (1 ./ F₁ .- 1)) .* sign.(k)
+    end
 
-        if dealias == 0
-                Π = ones(size(k)) # no dealiasing (Π=Id)
-        else
-                K = (mesh.kmax-mesh.kmin)/(2+dealias)
-                Π = abs.(k) .<= K # Dealiasing low-pass filter
-        end
+    if dealias == 0
+        Π = ones(size(k)) # no dealiasing (Π=Id)
+    else
+        K = (mesh.kmax - mesh.kmin) / (2 + dealias)
+        Π = abs.(k) .<= K # Dealiasing low-pass filter
+    end
 
-        krasny(k) = (abs.(k).> ktol ).*k
-        krasny!(k) = k[abs.(k).< ktol ].=0
+    krasny(k) = (abs.(k) .> ktol) .* k
+    krasny!(k) = k[abs.(k) .< ktol] .= 0
 
-        function filter( v :: Vector{Float64} )
-                real.(ifft(krasny(Π.*fft(v))))
-        end
-        function filter( v :: Vector{Complex{Float64}} )
-                ifft(krasny(Π.*fft(v)))
-        end
-        function F( v , hv, Fv, F2v )
-                if method == 1
-                        return -1/3 ./ hv.^2 .* F2v .+
-                                ϵ/2 .* (hv.*Fv).^2 .+
-                                v./hv .- 1/(c^2) .*v .- ϵ/2 .* (v./hv).^2
-                elseif method == 2
-                        return -c/3 ./ hv.^2 .* F2v .+
-                                ϵ/2 .* Fv.^2 .+
-                                c*v .- 1/c .*v.*hv .- ϵ/2 .* v.^2
-                elseif method == 3
-                        return -1/3 ./ hv.^2 .* F2v .+
-                                ϵ/2 .* Fv.^2 .+
-                                v .- 1/(c^2) .*v.*hv .- ϵ/2 .* v.^2
-                elseif method == 4
-                        return (-1/3 .* F2v .+
-                                ϵ/2 .*  hv.^4 .* Fv.^2 .+
-                                hv.^2 .* (v .- ϵ/2 .* v.^2) .-
-                                1/(c^2) .* hv.^3 .* v)/c^4
-                end
-        end
-
-
-        function Fabs( v , hv, Fv, F2v )
-                if method == 1
-                        return abs.(1/3 ./ hv.^2 .* F2v) .+
-                                abs.(ϵ/2 .* (hv.*Fv).^2 ) .+
-                                abs.(v./hv) .- 1/(c^2) .*abs.(v) .+ ϵ/2 .* abs.((v./hv).^2)
-                elseif method == 2
-                        return abs.(c/3 ./ (hv.^2).* F2v) .+
-                                abs.(ϵ/2 .* Fv.^2) .+
-                                abs.(c*v) .+ abs.(1/c .*v.*hv) .+ abs.(ϵ/2 .* v.^2)
-                elseif method == 3
-                        return abs.(1/3 ./ (hv.^2).* F2v) .+
-                                abs.(ϵ/2 .* Fv.^2) .+
-                                abs.(v) .+ abs.(1/(c^2) .*v.*hv) .+ abs.(ϵ/2 .* v.^2)
-                elseif method == 4
-                        return (abs.(-1/3 .* F2v) .+
-                                abs.(ϵ/2 .*  hv.^4 .* Fv.^2) .+
-                                abs.( hv.^2 .*v) .+ abs.( ϵ/2 .* hv.^2 .* v.^2) .+
-                                1/(c^2) .* abs.(hv.^3 .* v))/c^4
-                end
-        end
-        if iterative == false
-                x = mesh.x
-                x₀ = mesh.x[1]
-                FFT = exp.(-1im*k*(x.-x₀)');
-                IFFT = exp.(1im*k*(x.-x₀)')/length(x);
-                #Id = Diagonal(ones(size(x)));
-                M₀ = IFFT * Diagonal( F₀ )* FFT
-                M(v) = Diagonal( v )
-                function JacF( v , hv, Fv , F2v, Dv, dxv )
-                        if method == 1
-                                return Symmetric(real.(
-                                        -1/3 *M(1 ./ hv.^2)* M₀ * M(hv.^3)* ( M₀ * M( 1 ./ hv.^2 ) .+ 3* ϵ * M( Fv ./hv ) )
-                                        .+ ϵ * M( hv.^2 .* Fv ) * M₀ * M( 1 ./ hv.^2 )
-                                        .+ M( Dv ) .+ α*dxv*dxv' ))
-                        elseif method == 2
-                                return real.(
-                                        -1/3 *M(1 ./ hv.^2 )* M₀ * M(hv.^3)* (c*M₀ .+ 3*ϵ * M( Fv ))
-                                        .+ ϵ * M( hv .* Fv ) * M₀
-                                        #.+ M(1 ./hv) .+ 2*ϵ/3 * M(F2v ./ hv) .+ ϵ^2 * M(hv .* Fv.^2) .- M((hv/c).^2)
-                                        .+ M( Dv ) .+ α*M( hv.^2 )*dxv*dxv' *M(1 ./ hv.^2 ) )
-                        elseif method == 3
-                                return real.(
-                                        -1/3 *M(1 ./ hv.^2 )* M₀ * M(hv.^3)* (M₀ .+ 3*ϵ * M( Fv ))
-                                        .+ ϵ * M( hv .* Fv ) * M₀
-                                        #.+ M(1 ./hv) .+ 2*ϵ/3 * M(F2v ./ hv) .+ ϵ^2 * M(hv .* Fv.^2) .- M((hv/c).^2)
-                                        .+ M( Dv ) .+ α*M( hv.^2 )*dxv*dxv' *M(1 ./ hv.^2 ) )
-                        elseif method == 4
-                                return Symmetric(real.(
-                                ( M₀ * M(hv.^3 ) * ( -1/6*M₀ .- ϵ * M( hv .* Fv ) ) .+
-                                 ( -1/6*M₀ .+ ϵ * M( hv .* Fv ) ) * M( hv.^3  ) * M₀ .+
-                                 M(hv.^2)*M( Dv ))/c^4 .+ α*dxv*dxv'
-                                ))
-                        end
-                end
-        else
-                Four(v) = (ifft(F₀.*fft(v)))
-                function JacFfast( v , hv, Fv , F2v, Dv, dxv )
-                        function dF(φ)
-                                if method == 1
-                                 return fft( -1/3 ./ hv.^2 .* Four( hv.^3 .*
-                                                ( Four( ifft(φ) ./ hv.^2 ) .+ 3* ϵ * ifft(φ) .* Fv ./hv )  )
-                                        .+ ϵ .* hv.^2 .* Fv .* Four( ifft(φ) ./ hv.^2 )
-                                         .+ ifft(φ) .* Dv .+ α*dot(dxv,ifft(φ))*dxv )
-                                 elseif method == 2
-                                  return fft( -1/3 ./ hv.^2 .* Four( hv.^3 .* ( c*Four( ifft(φ) ) .+ 3*ϵ*Fv.*ifft(φ) ))
-                                          .+ ϵ .* hv .* Fv .* Four( ifft(φ) )
-                                          .+ ifft(φ) .* Dv .+ α*dot(dxv, ifft(φ) ./ hv.^2)*hv.^2 .*dxv )
-                                  elseif method == 3
-                                   return fft( -1/3 ./ hv.^2 .* Four( hv.^3 .* ( Four( ifft(φ) ) .+ 3*ϵ*Fv.*ifft(φ) ))
-                                           .+ ϵ .* hv .* Fv .* Four( ifft(φ) )
-                                           .+ ifft(φ) .* Dv .+ α*dot(dxv, ifft(φ) ./ hv.^2)*hv.^2 .*dxv )
-                                elseif method == 4
-                                 return fft(( -1/3  .* Four( hv.^3 .* ( Four( ifft(φ) ) .+ 3*ϵ*Fv.*hv.*ifft(φ) ))
-                                        .+ ϵ .* hv.^4 .* Fv .* Four( ifft(φ) )
-                                        .+ ifft(φ) .* hv.^2 .* Dv)/c^4 .+ α*dot(dxv,ifft(φ))*dxv)
-                                end
-                         end
-                if method == 1 || method == 4
-                        return LinearMap(dF, length(v); issymmetric=true, ismutating=false)
-                else
-                        return LinearMap(dF, length(v); issymmetric=false, ismutating=false)
-                end
-                end
-
-        end
-#------ Iteration scheme
-
-        # initial guess for iteration
+    function filter(v::Vector{Float64})
+        return real.(ifft(krasny(Π .* fft(v))))
+    end
+    function filter(v::Vector{Complex{Float64}})
+        return ifft(krasny(Π .* fft(v)))
+    end
+    function F(v, hv, Fv, F2v)
         if method == 1
-                u = filter(guess)
+            return -1 / 3 ./ hv .^ 2 .* F2v .+
+                ϵ / 2 .* (hv .* Fv) .^ 2 .+
+                v ./ hv .- 1 / (c^2) .* v .- ϵ / 2 .* (v ./ hv) .^ 2
         elseif method == 2
-                u = c*filter(guess./(1 .+ ϵ*guess))
-        elseif method == 3 || method == 4
-                u = filter(guess./(1 .+ ϵ*guess))
+            return -c / 3 ./ hv .^ 2 .* F2v .+
+                ϵ / 2 .* Fv .^ 2 .+
+                c * v .- 1 / c .* v .* hv .- ϵ / 2 .* v .^ 2
+        elseif method == 3
+            return -1 / 3 ./ hv .^ 2 .* F2v .+
+                ϵ / 2 .* Fv .^ 2 .+
+                v .- 1 / (c^2) .* v .* hv .- ϵ / 2 .* v .^ 2
+        elseif method == 4
+            return (
+                -1 / 3 .* F2v .+
+                    ϵ / 2 .* hv .^ 4 .* Fv .^ 2 .+
+                    hv .^ 2 .* (v .- ϵ / 2 .* v .^ 2) .-
+                    1 / (c^2) .* hv .^ 3 .* v
+            ) / c^4
         end
+    end
 
-        du,fu,dxu,hu,Fu,F2u,Du = (similar(u),).*ones(7)
 
-        for i in range(0, stop=max_iter)
-                dxu .= real.(ifft(Dx.*fft(u)))
-                dxu ./= norm(dxu,2)
-                if method == 1
-                        hu .= 1 .+ϵ*u
-                        Fu .= real.(ifft(F₀.*fft(u./hu)))
-                        F2u .= real.(ifft(F₀.*fft( hu.^3 .* Fu ) ))
-                        Du .= 1 ./ hu.^3 .+ 2*ϵ/3 ./ hu.^3 .* F2u .+ ϵ^2 * hu.* Fu.^2 .- 1/c^2
-                elseif method == 2
-                        hu .= c ./(c .- ϵ*u)
-                        Fu .= hu.* real.(ifft(F₀.*fft(u)))
-                        F2u .= real.(ifft(F₀.*fft(hu.^2 .* Fu ) ))
-                        Du .= c ./hu .+ 2*ϵ/3 * F2u ./ hu .+ ϵ^2/c * hu .* Fu.^2 .- (hu.^2)/c
-                elseif method == 3
-                        hu .= 1 ./(1 .- ϵ*u)
-                        Fu .= hu.* real.(ifft(F₀.*fft(u)))
-                        F2u .= real.(ifft(F₀.*fft(hu.^2 .* Fu ) ))
-                        Du .= 1 ./hu .+ 2*ϵ/3 * F2u ./ hu .+ ϵ^2 * hu .* Fu.^2 .- (hu/c).^2
-                elseif method == 4
-                        hu .= 1 ./(1 .- ϵ*u)
-                        Fu .= real.(ifft(F₀.*fft(u)))
-                        F2u .= real.(ifft(F₀.*fft(hu.^3 .* Fu ) ))
-                        Du .=  1 ./ hu .+ 2*ϵ^2 * hu.^3 .* Fu.^2  .+ 2*ϵ.* hu .*(u.- ϵ/2* u.^2).-(hu .+ 3*ϵ* u.* hu.^2 )./(c^2)
-                end
-                fu .= F(u,hu,Fu,F2u)
-
-                relerr = norm(fu,Inf)/norm(Fabs(u,hu,Fu,F2u),Inf)
-                abserr = norm(fu,Inf)
-    		if relerr < tol
-    			@info string("Converged : relative error ",relerr," in ",i," steps\n")
-    			break
-    		elseif verbose == true
-                        print(string("absolute error at step ",i,": ",abserr,"\n"))
-                        print(string("relative error at step ",i,": ",relerr,"\n"))
-
-    		end
-                if i == max_iter
-                        @warn string("The algorithm did not converge after ",i," steps: final relative error is ",relerr,"\n")
-                        break
-                end
-
-                if iterative == false
-                        du .=  JacF(u,hu,Fu,F2u,Du,dxu)  \ fu
-                else
-                        x = mesh.x
-                        x₀ = mesh.x[1]
-                        FFT = exp.(-1im*k*(x.-x₀)');
-                        IFFT = exp.(1im*k*(x.-x₀)')/length(x);
-                        F₁ 	= tanh.(sqrt(μ)*abs.(k))./(sqrt(μ)*abs.(k))
-                        F₁[1] 	= 1
-                        F₁ = 1 ./ (1 .+ μ*k.^2   )
-                        #F₁ = ones(length(k))
-                        Precond = Diagonal( 1 ./ F₁  )
-                        du .=  real.(ifft(gmres( JacFfast(Complex.(u),hu,Fu,F2u,Du,dxu) , fft(fu) ; Pl = Precond, reltol = gtol, verbose=verbose )))
-                end
-    		u .-= q*filter(du)
-        end
-
+    function Fabs(v, hv, Fv, F2v)
         if method == 1
-                η = u
-        elseif method ==2
-                η = u./(c .- ϵ*u)
-        elseif method ==3 || method == 4
-                η = u./(1 .- ϵ*u)
+            return abs.(1 / 3 ./ hv .^ 2 .* F2v) .+
+                abs.(ϵ / 2 .* (hv .* Fv) .^ 2) .+
+                abs.(v ./ hv) .- 1 / (c^2) .* abs.(v) .+ ϵ / 2 .* abs.((v ./ hv) .^ 2)
+        elseif method == 2
+            return abs.(c / 3 ./ (hv .^ 2) .* F2v) .+
+                abs.(ϵ / 2 .* Fv .^ 2) .+
+                abs.(c * v) .+ abs.(1 / c .* v .* hv) .+ abs.(ϵ / 2 .* v .^ 2)
+        elseif method == 3
+            return abs.(1 / 3 ./ (hv .^ 2) .* F2v) .+
+                abs.(ϵ / 2 .* Fv .^ 2) .+
+                abs.(v) .+ abs.(1 / (c^2) .* v .* hv) .+ abs.(ϵ / 2 .* v .^ 2)
+        elseif method == 4
+            return (
+                abs.(-1 / 3 .* F2v) .+
+                    abs.(ϵ / 2 .* hv .^ 4 .* Fv .^ 2) .+
+                    abs.(hv .^ 2 .* v) .+ abs.(ϵ / 2 .* hv .^ 2 .* v .^ 2) .+
+                    1 / (c^2) .* abs.(hv .^ 3 .* v)
+            ) / c^4
+        end
+    end
+    if iterative == false
+        x = mesh.x
+        x₀ = mesh.x[1]
+        FFT = exp.(-1im * k * (x .- x₀)')
+        IFFT = exp.(1im * k * (x .- x₀)') / length(x)
+        #Id = Diagonal(ones(size(x)));
+        M₀ = IFFT * Diagonal(F₀) * FFT
+        M(v) = Diagonal(v)
+        function JacF(v, hv, Fv, F2v, Dv, dxv)
+            if method == 1
+                return Symmetric(
+                    real.(
+                        -1 / 3 * M(1 ./ hv .^ 2) * M₀ * M(hv .^ 3) * (M₀ * M(1 ./ hv .^ 2) .+ 3 * ϵ * M(Fv ./ hv))
+                            .+ ϵ * M(hv .^ 2 .* Fv) * M₀ * M(1 ./ hv .^ 2)
+                            .+ M(Dv) .+ α * dxv * dxv'
+                    )
+                )
+            elseif method == 2
+                return real.(
+                    -1 / 3 * M(1 ./ hv .^ 2) * M₀ * M(hv .^ 3) * (c * M₀ .+ 3 * ϵ * M(Fv))
+                        .+ ϵ * M(hv .* Fv) * M₀
+                        #.+ M(1 ./hv) .+ 2*ϵ/3 * M(F2v ./ hv) .+ ϵ^2 * M(hv .* Fv.^2) .- M((hv/c).^2)
+                        .+ M(Dv) .+ α * M(hv .^ 2) * dxv * dxv' * M(1 ./ hv .^ 2)
+                )
+            elseif method == 3
+                return real.(
+                    -1 / 3 * M(1 ./ hv .^ 2) * M₀ * M(hv .^ 3) * (M₀ .+ 3 * ϵ * M(Fv))
+                        .+ ϵ * M(hv .* Fv) * M₀
+                        #.+ M(1 ./hv) .+ 2*ϵ/3 * M(F2v ./ hv) .+ ϵ^2 * M(hv .* Fv.^2) .- M((hv/c).^2)
+                        .+ M(Dv) .+ α * M(hv .^ 2) * dxv * dxv' * M(1 ./ hv .^ 2)
+                )
+            elseif method == 4
+                return Symmetric(
+                    real.(
+                        (
+                            M₀ * M(hv .^ 3) * (-1 / 6 * M₀ .- ϵ * M(hv .* Fv)) .+
+                                (-1 / 6 * M₀ .+ ϵ * M(hv .* Fv)) * M(hv .^ 3) * M₀ .+
+                                M(hv .^ 2) * M(Dv)
+                        ) / c^4 .+ α * dxv * dxv'
+                    )
+                )
+            end
+        end
+    else
+        Four(v) = (ifft(F₀ .* fft(v)))
+        function JacFfast(v, hv, Fv, F2v, Dv, dxv)
+            function dF(φ)
+                if method == 1
+                    return fft(
+                        -1 / 3 ./ hv .^ 2 .* Four(
+                            hv .^ 3 .*
+                                (Four(ifft(φ) ./ hv .^ 2) .+ 3 * ϵ * ifft(φ) .* Fv ./ hv)
+                        )
+                            .+ ϵ .* hv .^ 2 .* Fv .* Four(ifft(φ) ./ hv .^ 2)
+                            .+ ifft(φ) .* Dv .+ α * dot(dxv, ifft(φ)) * dxv
+                    )
+                elseif method == 2
+                    return fft(
+                        -1 / 3 ./ hv .^ 2 .* Four(hv .^ 3 .* (c * Four(ifft(φ)) .+ 3 * ϵ * Fv .* ifft(φ)))
+                            .+ ϵ .* hv .* Fv .* Four(ifft(φ))
+                            .+ ifft(φ) .* Dv .+ α * dot(dxv, ifft(φ) ./ hv .^ 2) * hv .^ 2 .* dxv
+                    )
+                elseif method == 3
+                    return fft(
+                        -1 / 3 ./ hv .^ 2 .* Four(hv .^ 3 .* (Four(ifft(φ)) .+ 3 * ϵ * Fv .* ifft(φ)))
+                            .+ ϵ .* hv .* Fv .* Four(ifft(φ))
+                            .+ ifft(φ) .* Dv .+ α * dot(dxv, ifft(φ) ./ hv .^ 2) * hv .^ 2 .* dxv
+                    )
+                elseif method == 4
+                    return fft(
+                        (
+                            -1 / 3 .* Four(hv .^ 3 .* (Four(ifft(φ)) .+ 3 * ϵ * Fv .* hv .* ifft(φ)))
+                                .+ ϵ .* hv .^ 4 .* Fv .* Four(ifft(φ))
+                                .+ ifft(φ) .* hv .^ 2 .* Dv
+                        ) / c^4 .+ α * dot(dxv, ifft(φ)) * dxv
+                    )
+                end
+            end
+            if method == 1 || method == 4
+                return LinearMap(dF, length(v); issymmetric = true, ismutating = false)
+            else
+                return LinearMap(dF, length(v); issymmetric = false, ismutating = false)
+            end
         end
 
-        h = 1 .+ ϵ*η
-        u = c*η./h
-        DxF(v) = real.(ifft(F₀ .* fft(v)))
-	v = u - 1/3 ./h .* (DxF(h.^3 .*DxF(u)))
+    end
+    #------ Iteration scheme
 
-        return (η,u,v,mesh)
+    # initial guess for iteration
+    if method == 1
+        u = filter(guess)
+    elseif method == 2
+        u = c * filter(guess ./ (1 .+ ϵ * guess))
+    elseif method == 3 || method == 4
+        u = filter(guess ./ (1 .+ ϵ * guess))
+    end
+
+    du, fu, dxu, hu, Fu, F2u, Du = (similar(u),) .* ones(7)
+
+    for i in range(0, stop = max_iter)
+        dxu .= real.(ifft(Dx .* fft(u)))
+        dxu ./= norm(dxu, 2)
+        if method == 1
+            hu .= 1 .+ ϵ * u
+            Fu .= real.(ifft(F₀ .* fft(u ./ hu)))
+            F2u .= real.(ifft(F₀ .* fft(hu .^ 3 .* Fu)))
+            Du .= 1 ./ hu .^ 3 .+ 2 * ϵ / 3 ./ hu .^ 3 .* F2u .+ ϵ^2 * hu .* Fu .^ 2 .- 1 / c^2
+        elseif method == 2
+            hu .= c ./ (c .- ϵ * u)
+            Fu .= hu .* real.(ifft(F₀ .* fft(u)))
+            F2u .= real.(ifft(F₀ .* fft(hu .^ 2 .* Fu)))
+            Du .= c ./ hu .+ 2 * ϵ / 3 * F2u ./ hu .+ ϵ^2 / c * hu .* Fu .^ 2 .- (hu .^ 2) / c
+        elseif method == 3
+            hu .= 1 ./ (1 .- ϵ * u)
+            Fu .= hu .* real.(ifft(F₀ .* fft(u)))
+            F2u .= real.(ifft(F₀ .* fft(hu .^ 2 .* Fu)))
+            Du .= 1 ./ hu .+ 2 * ϵ / 3 * F2u ./ hu .+ ϵ^2 * hu .* Fu .^ 2 .- (hu / c) .^ 2
+        elseif method == 4
+            hu .= 1 ./ (1 .- ϵ * u)
+            Fu .= real.(ifft(F₀ .* fft(u)))
+            F2u .= real.(ifft(F₀ .* fft(hu .^ 3 .* Fu)))
+            Du .= 1 ./ hu .+ 2 * ϵ^2 * hu .^ 3 .* Fu .^ 2 .+ 2 * ϵ .* hu .* (u .- ϵ / 2 * u .^ 2) .- (hu .+ 3 * ϵ * u .* hu .^ 2) ./ (c^2)
+        end
+        fu .= F(u, hu, Fu, F2u)
+
+        relerr = norm(fu, Inf) / norm(Fabs(u, hu, Fu, F2u), Inf)
+        abserr = norm(fu, Inf)
+        if relerr < tol
+            @info string("Converged : relative error ", relerr, " in ", i, " steps\n")
+            break
+        elseif verbose == true
+            print(string("absolute error at step ", i, ": ", abserr, "\n"))
+            print(string("relative error at step ", i, ": ", relerr, "\n"))
+
+        end
+        if i == max_iter
+            @warn string("The algorithm did not converge after ", i, " steps: final relative error is ", relerr, "\n")
+            break
+        end
+
+        if iterative == false
+            du .= JacF(u, hu, Fu, F2u, Du, dxu) \ fu
+        else
+            x = mesh.x
+            x₀ = mesh.x[1]
+            FFT = exp.(-1im * k * (x .- x₀)')
+            IFFT = exp.(1im * k * (x .- x₀)') / length(x)
+            F₁ = tanh.(sqrt(μ) * abs.(k)) ./ (sqrt(μ) * abs.(k))
+            F₁[1] = 1
+            F₁ = 1 ./ (1 .+ μ * k .^ 2)
+            #F₁ = ones(length(k))
+            Precond = Diagonal(1 ./ F₁)
+            du .= real.(ifft(gmres(JacFfast(Complex.(u), hu, Fu, F2u, Du, dxu), fft(fu); Pl = Precond, reltol = gtol, verbose = verbose)))
+        end
+        u .-= q * filter(du)
+    end
+
+    if method == 1
+        η = u
+    elseif method == 2
+        η = u ./ (c .- ϵ * u)
+    elseif method == 3 || method == 4
+        η = u ./ (1 .- ϵ * u)
+    end
+
+    h = 1 .+ ϵ * η
+    u = c * η ./ h
+    DxF(v) = real.(ifft(F₀ .* fft(v)))
+    v = u - 1 / 3 ./ h .* (DxF(h .^ 3 .* DxF(u)))
+
+    return (η, u, v, mesh)
 
 end
 
@@ -300,67 +325,73 @@ and `kwargs` the other (optional) keyword arguments as above.
 """
 struct SolitaryWGN <: InitialData
 
-	η
-	v
-	label :: String
-	info  :: String
+    η
+    v
+    label::String
+    info::String
 
-	function SolitaryWGN(param::NamedTuple;
-                                guess = zeros(0) :: Vector{Float64},
-                                x₀ = 0 :: Real,
-                                SGN = false :: Bool,
-                                method = 2 :: Int,
-                                iterative = false :: Bool,
-                                verbose = false :: Bool,
-                                max_iter = 20 :: Int,
-                                tol = 1e-10 :: Real,
-                                ktol = 0 :: Real,
-                                gtol = 1e-10 :: Real,
-                                dealias = 0 :: Int,
-                                q=1 :: Real,
-                                α=0 :: Real)
-		(η,u,v,mesh)=SolitaryWaveWhithamGreenNaghdi(param;
-                                guess=guess,x₀=x₀,SGN=SGN,method=method,
-                                iterative=iterative,verbose=verbose,max_iter=max_iter,
-                                tol=tol,ktol=ktol,gtol=gtol,dealias=dealias,q=q,α=α)
-		init = Init(mesh,η,v)
-                if SGN == true
-        	    model = "Serre-Green-Naghdi"
-                else
-                    model = "Whitham-Green-Naghdi"
-                end
-                label = "$model solitary wave"
-		info = "Solitary travelling wave for the $model model.\n\
-		├─velocity c = $(param.c)\n\
-		└─maximum h₀ = $(maximum(η)) (from rest state)."
+    function SolitaryWGN(
+            param::NamedTuple;
+            guess = zeros(0)::Vector{Float64},
+            x₀ = 0::Real,
+            SGN = false::Bool,
+            method = 2::Int,
+            iterative = false::Bool,
+            verbose = false::Bool,
+            max_iter = 20::Int,
+            tol = 1.0e-10::Real,
+            ktol = 0::Real,
+            gtol = 1.0e-10::Real,
+            dealias = 0::Int,
+            q = 1::Real,
+            α = 0::Real
+        )
+        (η, u, v, mesh) = SolitaryWaveWhithamGreenNaghdi(
+            param;
+            guess = guess, x₀ = x₀, SGN = SGN, method = method,
+            iterative = iterative, verbose = verbose, max_iter = max_iter,
+            tol = tol, ktol = ktol, gtol = gtol, dealias = dealias, q = q, α = α
+        )
+        init = Init(mesh, η, v)
+        if SGN == true
+            model = "Serre-Green-Naghdi"
+        else
+            model = "Whitham-Green-Naghdi"
+        end
+        label = "$model solitary wave"
+        info = "Solitary travelling wave for the $model model.\n\
+        ├─velocity c = $(param.c)\n\
+        └─maximum h₀ = $(maximum(η)) (from rest state)."
 
-		new( init.η,init.v,label,info  )
-	end
+        return new(init.η, init.v, label, info)
+    end
 
-	function SolitaryWGN(
-                        c::Real; ϵ=1::Real,μ=1::Real,N=2^12::Int,
-                        guess = zeros(0) :: Vector{Float64},
-                        x₀ = 0 :: Real,
-                        SGN = false :: Bool,
-                        method = 2 :: Int,
-                        iterative = false :: Bool,
-                        verbose = false :: Bool,
-                        max_iter = 20 :: Int,
-                        tol = 1e-10 :: Real,
-                        ktol = 0 :: Real,
-                        gtol = 1e-10 :: Real,
-                        dealias = 0 :: Int,
-                        q=1 :: Real,
-                        α=0 :: Real
-                                )
-		L=200/sqrt(3*(c^2-1)/(c^2)/μ)/2
-		xmin,xmax = x₀-L,x₀+L;
-		param=(ϵ=ϵ,μ=μ,c=c,L=L,xmin=xmin,xmax=xmax,N=N)
-		sol=SolitaryWGN(param;
-                        guess=guess,x₀=x₀,SGN=SGN,method=method,
-                        iterative=iterative,verbose=verbose,max_iter=max_iter,
-                        tol=tol,ktol=ktol,gtol=gtol,dealias=dealias,q=q,α=α)
-		new( sol.η,sol.v,sol.label,sol.info  )
-	end
+    function SolitaryWGN(
+            c::Real; ϵ = 1::Real, μ = 1::Real, N = 2^12::Int,
+            guess = zeros(0)::Vector{Float64},
+            x₀ = 0::Real,
+            SGN = false::Bool,
+            method = 2::Int,
+            iterative = false::Bool,
+            verbose = false::Bool,
+            max_iter = 20::Int,
+            tol = 1.0e-10::Real,
+            ktol = 0::Real,
+            gtol = 1.0e-10::Real,
+            dealias = 0::Int,
+            q = 1::Real,
+            α = 0::Real
+        )
+        L = 200 / sqrt(3 * (c^2 - 1) / (c^2) / μ) / 2
+        xmin, xmax = x₀ - L, x₀ + L
+        param = (ϵ = ϵ, μ = μ, c = c, L = L, xmin = xmin, xmax = xmax, N = N)
+        sol = SolitaryWGN(
+            param;
+            guess = guess, x₀ = x₀, SGN = SGN, method = method,
+            iterative = iterative, verbose = verbose, max_iter = max_iter,
+            tol = tol, ktol = ktol, gtol = gtol, dealias = dealias, q = q, α = α
+        )
+        return new(sol.η, sol.v, sol.label, sol.info)
+    end
 
 end

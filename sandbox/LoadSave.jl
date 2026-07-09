@@ -2,86 +2,86 @@ export ProblemSave, save, loadpb
 using JLD
 struct ProblemSave
 
-    param_problem :: Dict
-    model   :: Symbol
-    param_model   :: Dict
-    solver  :: Symbol
-    param_solver   :: Dict
-    data    :: Data
+    param_problem::Dict
+    model::Symbol
+    param_model::Dict
+    solver::Symbol
+    param_solver::Dict
+    data::Data
 
     function ProblemSave(param_p, model, param_m, solver, param_s, data)
-         new( param_p, model, param_m, solver, param_s, deepcopy(data))
+        return new(param_p, model, param_m, solver, param_s, deepcopy(data))
     end
 
 end
 
 import Base.convert
 
-function convert(::Type{ProblemSave}, p :: Problem )
+function convert(::Type{ProblemSave}, p::Problem)
 
-    model   = Symbol(typeof(p.model))
-    solver  = Symbol(typeof(p.solver))
+    model = Symbol(typeof(p.model))
+    solver = Symbol(typeof(p.solver))
 
     param_problem = p.param
     if :param in fieldnames(typeof(p.model))
-        param_model=p.model.param
+        param_model = p.model.param
     else
         param_model = NamedTuple()
     end
     if :kwargs in fieldnames(typeof(p.model))
-        kwargs=zip(keys(p.model.kwargs),values(p.model.kwargs))
-        param_model=merge(param_model,(kwargs=kwargs,))
+        kwargs = zip(keys(p.model.kwargs), values(p.model.kwargs))
+        param_model = merge(param_model, (kwargs = kwargs,))
     end
     if :param in fieldnames(typeof(p.solver))
-        param_solver=p.solver.param
+        param_solver = p.solver.param
     else
         param_solver = NamedTuple()
     end
     param_problem = Dict(pairs(param_problem))
-    param_model   = Dict(pairs(param_model))
-    param_solver  = Dict(pairs(param_solver))
-    data    = p.data
+    param_model = Dict(pairs(param_model))
+    param_solver = Dict(pairs(param_solver))
+    data = p.data
 
-    ProblemSave(param_problem, model, param_model, solver, param_solver, data)
+    return ProblemSave(param_problem, model, param_model, solver, param_solver, data)
 
 end
 
-function convert(::Type{Problem}, p :: ProblemSave)
+function convert(::Type{Problem}, p::ProblemSave)
 
-    param_p = (;p.param_problem...)
-    param_m = (;p.param_model...)
-    param_s = (;p.param_solver...)
+    param_p = (; p.param_problem...)
+    param_m = (; p.param_model...)
+    param_s = (; p.param_solver...)
 
     # Reconstructs the model
     model = try # try with set of parameters defined by the model
         getfield(WaterWaves1D, p.model)(param_m)
     catch m
-        if isa(m,AbstractModel) == false # if error, then use set of parameters defined by the problem
+        if isa(m, AbstractModel) == false # if error, then use set of parameters defined by the problem
             model = getfield(WaterWaves1D, p.model)(param_p)
         end
     end
     if :kwargs in fieldnames(typeof(model))
-        model = getfield(WaterWaves1D, p.model)(param_m;param_m.kwargs...)
+        model = getfield(WaterWaves1D, p.model)(param_m; param_m.kwargs...)
     end
 
     # Reconstructs the initial data
-    mesh=Mesh(param_p)
-    U=first(p.data.U)
-    initial = Init(mesh,U[1],U[2])
+    mesh = Mesh(param_p)
+    U = first(p.data.U)
+    initial = Init(mesh, U[1], U[2])
 
     # Reconstructs the solver (may not work with other user-defined solvers)
     solver = try
         getfield(WaterWaves1D, p.solver)(param_s)
     catch s
-        if isa(s,TimeSolver) == false
+        if isa(s, TimeSolver) == false
             solver = try
                 getfield(WaterWaves1D, p.solver)(model)
             catch s
-                if isa(s,TimeSolver) == false
+                if isa(s, TimeSolver) == false
                     solver = try
                         getfield(WaterWaves1D, p.solver)()
                     catch s
-                        if isa(s,TimeSolver) == false
+                        if isa(s, TimeSolver) == false
                             @warn "Cannot set up the solver. Choose RK4."
                             solver = RK4(model)
                         end
@@ -109,10 +109,10 @@ import JLD.save
 Saves the content of an object `Problem` into the file `name.jld`.
 """
 
-function save(p::Problem,name::String)
+function save(p::Problem, name::String)
 
-    filename = string(name,".jld")
-    JLD.save(filename, name, convert(ProblemSave,p))
+    filename = string(name, ".jld")
+    return JLD.save(filename, name, convert(ProblemSave, p))
 
 end
 
@@ -127,6 +127,6 @@ Loads the contents of the file `name.jld` as a problem of type `:Problem`.
 """
 function loadpb(name::String)
 
-    convert(Problem, JLD.load(string(name,".jld"), name ))
+    return convert(Problem, JLD.load(string(name, ".jld"), name))
 
 end

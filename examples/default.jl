@@ -1,46 +1,46 @@
-export plot_sol,plot_diff,anim
-using WaterWaves1D,Plots
+export plot_sol, plot_diff, anim
+using WaterWaves1D, Plots
 
 ##########################################################################################
-### Comparison of the water waves equations and quadratic WW2 model on a heap of water ### 
+### Comparison of the water waves equations and quadratic WW2 model on a heap of water ###
 ##########################################################################################
 
 #####################################################################################
 # Gather parameters of the problem.
 param = (
     # Physical parameters. Variables are non-dimensionalized as in Lannes, The water waves problem, isbn:978-0-8218-9470-5
-    μ  = 1,     # shallow-water dimensionless parameter
-    ϵ  = 1/4,   # nonlinearity dimensionless parameter
+    μ = 1,     # shallow-water dimensionless parameter
+    ϵ = 1 / 4,   # nonlinearity dimensionless parameter
     # Numerical parameters
-    N  = 2^11,  # number of collocation points
-    L  = 10,    # half-length of the numerical tank (-L,L)
-    T  = 5,     # final time of computation
+    N = 2^11,  # number of collocation points
+    L = 10,    # half-length of the numerical tank (-L,L)
+    T = 5,     # final time of computation
     dt = 0.01,  # timestep
-                );
+);
 
 #####################################################################################
 # Define initial data (here, a "heap of water").
 
-z(x) = exp.(-abs.(x).^4); # surface deformation
-v(x) = 0*exp.(-x.^2);     # zero initial velocity
-init = Init(z,v);         # generate the initial data with correct type
+z(x) = exp.(-abs.(x) .^ 4); # surface deformation
+v(x) = 0 * exp.(-x .^ 2);     # zero initial velocity
+init = Init(z, v);         # generate the initial data with correct type
 
 #####################################################################################
 # Set up initial-value problems for different models to compare.
 
 # Build models
-model_WW=WaterWaves(param,verbose=false) # The water waves system
-model_WW2=WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
+model_WW = WaterWaves(param, verbose = false) # The water waves system
+model_WW2 = WWn(param; n = 2, dealias = 1, δ = 1 / 10) # The quadratic model (WW2)
 # Build problems
-problem_WW=Problem(model_WW, init, param) ;
-problem_WW2=Problem(model_WW2, init, param) ;
+problem_WW = Problem(model_WW, init, param) ;
+problem_WW2 = Problem(model_WW2, init, param) ;
 
 #####################################################################################
 # Integrate in time the initial-value problems.
 solve!([problem_WW problem_WW2]);
 
 # Conservation of mass, momentum, energy
-Δ=[ mass_diff(problem_WW2), momentum_diff(problem_WW2), energy_diff(problem_WW2) ]
+Δ = [mass_diff(problem_WW2), momentum_diff(problem_WW2), energy_diff(problem_WW2)]
 
 @info("Problems solved. 
 Error in the conservation of mass : $(Δ[1]).
@@ -64,7 +64,7 @@ savefig(plt,"default_example.pdf")
 ```
 """
 function plot_sol()
-    plot([problem_WW, problem_WW2])
+    return plot([problem_WW, problem_WW2])
 end
 
 """
@@ -83,7 +83,7 @@ savefig(plt,"default_example_difference.pdf")
 ```
 """
 function plot_diff()
-    plot([(problem_WW, problem_WW2)],var=[:surface,:velocity])
+    return plot([(problem_WW, problem_WW2)], var = [:surface, :velocity])
 end
 
 """
@@ -102,8 +102,8 @@ gif(animation, "default_example.gif", fps=15)
 ```
 """
 function anim()
-    animation = @animate for t = LinRange(0,5,101)
-        plot([problem_WW, problem_WW2];T=t,ylims=(-0.5,1))
+    animation = @animate for t in LinRange(0, 5, 101)
+        plot([problem_WW, problem_WW2]; T = t, ylims = (-0.5, 1))
     end
     return animation
 end

@@ -32,51 +32,53 @@ The matrix `D` should be *diagonal* and the vector of its diagonal values provid
 """
 struct EulerExp <: TimeSolver
 
-    U1    :: Array
-    D     :: Array  
-    φ     :: Function
-    label :: String
+    U1::Array
+    D::Array
+    φ::Function
+    label::String
 
-    function EulerExp( U :: Array; realdata=nothing )
+    function EulerExp(U::Array; realdata = nothing)
         U1 = deepcopy(U)
         D = deepcopy(U)
-        φ(z)=(exp(z+eps())-1)/(z+eps())
-        if realdata==true
-            U1 = real.(U1);
+        φ(z) = (exp(z + eps()) - 1) / (z + eps())
+        if realdata == true
+            U1 = real.(U1)
         end
-        if realdata==false
-            U1 = complex.(U1);
+        if realdata == false
+            U1 = complex.(U1)
         end
-        new( U1, D, φ, "exponential Euler" )
+        return new(U1, D, φ, "exponential Euler")
     end
 
-    function EulerExp( model :: AbstractModel; realdata=nothing )
-        U=model.mapto(Init(x->0*x,x->0*x))
-        EulerExp( U; realdata=realdata)
+    function EulerExp(model::AbstractModel; realdata = nothing)
+        U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
+        return EulerExp(U; realdata = realdata)
     end
-    function EulerExp( param::NamedTuple, systemsize=2::Int; realdata=nothing )
-        EulerExp( [Array{Complex{Float64}}(undef,param.N) for _ in 1:systemsize]  ; realdata=realdata)
+    function EulerExp(param::NamedTuple, systemsize = 2::Int; realdata = nothing)
+        return EulerExp([Array{Complex{Float64}}(undef, param.N) for _ in 1:systemsize]; realdata = realdata)
     end
-    function EulerExp( datasize, systemsize=2::Int; realdata=nothing )
-        EulerExp( [Array{Complex{Float64}}(undef,datasize) for _ in 1:systemsize] ; realdata=realdata)
+    function EulerExp(datasize, systemsize = 2::Int; realdata = nothing)
+        return EulerExp([Array{Complex{Float64}}(undef, datasize) for _ in 1:systemsize]; realdata = realdata)
     end
 end
 
 
-function step!(solver :: EulerExp,
-                model :: AbstractModel,
-                U  ,
-                dt )
+function step!(
+        solver::EulerExp,
+        model::AbstractModel,
+        U,
+        dt
+    )
 
 
-    [u1 .= u for (u1,u) in zip(solver.U1,U)]
-    model.g!( solver.U1 )
-    [d .= md for (d,md) in zip(solver.D,model.D)]
+    [u1 .= u for (u1, u) in zip(solver.U1, U)]
+    model.g!(solver.U1)
+    [d .= md for (d, md) in zip(solver.D, model.D)]
     [d .*= dt for d in solver.D]
-    [u .*=exp.(d) for (d,u) in zip(solver.D,U)]
-    [u1.*=solver.φ.(d) for (d,u1) in zip(solver.D,solver.U1)]
-    [u1.*= dt for u1 in solver.U1]
-    [u .+= u1 for (u,u1) in zip(U,solver.U1)]
+    [u .*= exp.(d) for (d, u) in zip(solver.D, U)]
+    [u1 .*= solver.φ.(d) for (d, u1) in zip(solver.D, solver.U1)]
+    [u1 .*= dt for u1 in solver.U1]
+    return [u .+= u1 for (u, u1) in zip(U, solver.U1)]
 
 end
 
@@ -89,25 +91,27 @@ A naive version of `EulerExp`, without argument since no pre-allocation is perfo
 
 """
 struct EulerExp_naive <: TimeSolver
-    φ     :: Function
-    label :: String
+    φ::Function
+    label::String
 
-    function EulerExp_naive() 
-        φ(z)=(exp(z+eps())-1)/(z+eps())
-        new(φ, "exponential Euler (naive)") 
+    function EulerExp_naive()
+        φ(z) = (exp(z + eps()) - 1) / (z + eps())
+        return new(φ, "exponential Euler (naive)")
     end
 end
 
-function step!(solver  :: EulerExp_naive,
-               model :: AbstractModel,
-               U  ,
-               dt )
+function step!(
+        solver::EulerExp_naive,
+        model::AbstractModel,
+        U,
+        dt
+    )
 
 
     U0 = deepcopy(U)
-    model.g!( U0 )
-    [u.*=exp.(dt*d) for (d,u) in zip(model.D,U)]
-    [u0.*=solver.φ.(dt*d) for (d,u0) in zip(model.D,U0)]
-    [u .+= dt * u0 for (u,u0) in zip(U,U0)]
+    model.g!(U0)
+    [u .*= exp.(dt * d) for (d, u) in zip(model.D, U)]
+    [u0 .*= solver.φ.(dt * d) for (d, u0) in zip(model.D, U0)]
+    return [u .+= dt * u0 for (u, u0) in zip(U, U0)]
 
 end
