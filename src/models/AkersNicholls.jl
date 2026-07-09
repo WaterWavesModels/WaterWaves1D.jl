@@ -141,12 +141,20 @@ mutable struct AkersNicholls_fast <: AbstractModel
     end
 end
 
-"""
+@doc raw"""
     AkersNicholls(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the quadratic deep-water model proposed by [Akers and Nicholls](@cite AkersNicholls2009)
-and [Cheng, Granero-Belinchón, Shkoller and Milewski](@cite ChengGranero2019)
+the quadratic deep-water model proposed by [AkersNicholls2010](@citet)
+and [ChengGranero-BelinchonShkollerEtAl2019](@citet)
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+∂_x m=0,\\[1ex]
+  ∂_tm-\tfrac{1}{\sqrtμ ν} T^μ\big(η+\frac{ϵ}{ν}(L^μ m)^2\big)+\frac{ϵ}{ν}\big(η∂_xη+T^μ(η ∂_x T^μ η)\big)=0,
+  \end{array}\right.
+```
+where ``η`` is the surface deformation, ``m=-\frac1{\sqrtμ ν} T^μψ  + \frac{ϵ}{ν} \big(η ∂_xψ +  T^μ(η T^μ ∂_xψ)\big)`` represents the vertically integrated horizontal momentum, and
+``T^μ=-{\rm i}\tanh(\sqrtμ D)`` and ``L^μ=\frac{ν\sqrtμ D}{\tanh(\sqrtμ D)}`` are Fourier multipliers.
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -168,6 +176,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
     - `η` is the values of surface deformation at collocation points `x`;
     - `v` is the derivative of the trace of the velocity potential at `x`.
 
+Consider also [`AkersNicholls_fast`](@ref).
 """
 mutable struct AkersNicholls <: AbstractModel
 

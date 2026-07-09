@@ -124,6 +124,47 @@ end
     @test !isapprox(pb0.data.U[end] , pb1.data.U[end] , rtol = order/4)
 end
 
+#--- tests on symplectic Euler solvers
+@testset "exponential Euler solver" begin
+    #--- model
+    model=Whitham(param)
+
+    #--- reference problem : standard RK4 solver
+    pb0 = Problem( model, init, parap )
+    solve!(pb0,verbose=false)
+
+    # build exponential Euler solver
+    pb1 = Problem( model, init, parap;
+                solver = EulerExp(model) )
+    solve!(pb1,verbose=false)
+
+    # check exponential Euler is of order ≈ ϵ*dt*T
+    order = paraT.dt*paraT.T
+    @test isapprox(pb0.data.U[end] , pb1.data.U[end] , rtol = para.ϵ*order)
+    @test !isapprox(pb0.data.U[end] , pb1.data.U[end] , rtol = para.ϵ*order/4)
+
+
+    # different ways to build exponential Euler solver
+    solvers = TimeSolver[]
+    push!(solvers, EulerExp(model.mapto(init)) )
+    push!(solvers, EulerExp(paraX) )
+    push!(solvers, EulerExp(paraX,2) )
+    push!(solvers, EulerExp(paraX.N,2) )
+    push!(solvers, EulerExp(paraX.N) )
+    push!(solvers, EulerExp(model) )
+    
+    push!(solvers, EulerExp_naive() )
+
+    # check all Euler solvers generate the same data
+    for solver in solvers
+        pb = Problem( model, init, parap;
+                    solver = solver );
+        solve!(pb,verbose=false)
+        @test pb.data.U == pb1.data.U
+    end
+
+end
+
 #--- tests on 2D systems
 
 # Initial data

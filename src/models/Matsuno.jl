@@ -172,11 +172,24 @@ mutable struct Matsuno_fast <: AbstractModel
     end
 end
 
-"""
+@doc raw"""
 	Matsuno(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the quadratic deep-water model proposed by [Matsuno](@cite Matsuno1992).
+the quadratic deep-water model proposed by [Matsuno1992](@citet):
+```math
+  \left\{\begin{array}{l}
+  ∂_tη-\tfrac{1}{\sqrtμ ν} T^μu  + \tfrac{ϵ}{ν} ∂_x(η u) +  \tfrac{ϵ}{ν} T^μ(η ∂_x T^μ u) =0,\\[1ex]
+  ∂_tu+\big(1-ϵ\sqrtμ T^μ∂_xη\big)∂_xη+\frac{ϵ}{2ν}∂_x\big( u^2\big)=0,
+  \end{array}\right.
+```
+where ``η`` is the surface deformation, ``v=∂_xψ`` is the derivative of the trace of the velocity potential at the surface,
+``u=∂_xψ-ϵ\sqrtμ(T^μ∂_xψ)(∂_xη)`` represents the horizontal velocity at the free surface, and
+```math
+T^μ=-{\rm i}\tanh(\sqrtμ D)
+```
+is the Fourier multiplier sometimes called "Tilbert transform"
+(related to the [Hilbert transform](https://en.wikipedia.org/wiki/Hilbert_transform#Relationship_with_the_Fourier_transform), the latter arising in the infinite layer configuration, ``μ=∞``).
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -198,6 +211,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
     - `η` is the values of surface deformation at collocation points `x`;
     - `v` is the derivative of the trace of the velocity potential at `x`.
 
+See also [`Matsuno_fast`](@ref).
 """
 mutable struct Matsuno <: AbstractModel
 

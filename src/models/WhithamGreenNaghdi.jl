@@ -1,10 +1,21 @@
 export WhithamGreenNaghdi
 
-"""
+@doc raw"""
     WhithamGreenNaghdi(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the fully dispersive Green-Naghdi model proposed by [Duchêne, Israwi and Talhouk](@cite Duchene2015).
+the fully dispersive Green-Naghdi model proposed in [DucheneIsrawiTalhouk2015](@citet):
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+∂_x\big( h u\big)=0,\\[1ex]
+  ∂_tv+∂_x\big(η+ϵ uv - \tfrac{ϵ}{2}u^2-\tfrac{μϵ}2 (h F_0^μ∂_xu)^2\big) =0,
+  \end{array}\right.
+```
+ where ``h=1 + ϵ η`` is the depth, ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface, and ``u`` the layer-averaged horizontal velocity is obtained by solving the elliptic problem
+```math
+hu -\tfrac{μ}{3}F_0^μ∂_x( h^3 F_0^μ∂_xu) = hv.
+```
+Above, ``F_0^μ=\sqrt{3((F_1^μ)^{-1}(D) - 1)}/D`` where ``F_1^μ=\frac{\tanh(\sqrtμ D)}{\sqrtμ D}`` denote Fourier multipliers.
 
 # Argument
 `param` is of type `NamedTuple` and must contain

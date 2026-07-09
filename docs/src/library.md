@@ -71,3 +71,10 @@ Pages   = ["tools.jl"]
 Modules = [WaterWaves1D]
 Pages   = ["loadsave.jl"]
 ```
+
+## Examples
+
+```@autodocs
+Modules = [WaterWaves1D]
+Pages   = ["examples.jl"]
+```

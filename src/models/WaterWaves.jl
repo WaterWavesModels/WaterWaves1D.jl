@@ -1,10 +1,30 @@
 export WaterWaves
 
-"""
+@doc raw"""
     WaterWaves(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the water waves system (via conformal mapping, see [Zakharov, Dyachenko and Vasilyev](@cite Zakharov2002)).
+the water waves system (via conformal mapping, see [DyachenkoKuznetsovSpectorEtAl1996](@citet) or [ChoiCamassa1999](@citet)).
+
+Specifically we solve
+```math
+  \left\{\begin{array}{l}
+  ∂_tη-\tfrac{1}{μν} G^μ[ϵη]ψ=0,\\[1ex]
+  ∂_tψ+η+\frac{ϵ}{2ν}(∂_xψ)^2-\tfrac{ϵμ}{2ν}\frac{(\frac{1}{μ} G^μ[ϵη]ψ+ϵ(∂_xη)(∂_xψ))^2}{1+μϵ²(∂_xη)^2}=0,
+  \end{array}\right.
+```
+where, by definition,
+```math
+G^μ[ϵη]ψ=\big(∂_z\Phi-μϵ(∂_xη)(∂_xΦ)\big)\big\vert_{z=ϵη}
+```
+with ``Φ`` being the unique solution to the elliptic boundary value problem
+```math
+\left\{\begin{array}{ll}
+μ ∂_x^2 Φ + ∂_z^2 Φ=0& \text{ in } \{(x,z)\ : \  -1<z<ϵη(x)\} , \\
+ Φ= ψ & \text{ on } \{(x,z)\ : \  z=ϵη(x)\} ,\\
+∂_z Φ=0 & \text{ on } \{(x,z)\ : \  z=-1\} .
+\end{array}\right.
+```
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -29,6 +49,7 @@ the water waves system (via conformal mapping, see [Zakharov, Dyachenko and Vasi
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
 1. a function `WaterWaves.f!` to be called in the explicit time-integration solver (also `WaterWaves.f1!` and `WaterWaves.f2!` for the symplectic Euler solver);
+Additionnally, two functions `WaterWaves.f1!` and `WaterWaves.f2!` for symplectic solvers;
 2. a function `WaterWaves.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `WaterWaves.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
   - `x` is a vector of collocation points (non-regularly spaced);

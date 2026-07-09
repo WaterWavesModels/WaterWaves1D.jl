@@ -37,7 +37,7 @@ end
     include("../examples/SolitaryWaveWhithamBoussinesq.jl")
 
     b=IntegrateSolitaryWaveWhithamBoussinesq(N=2^6,dt=0.01/1.05)
-    @test 9.9e-11 < b < 10e-11
+    @test 8.9e-12 < b < 9e-12
 
     a=PlotSolitaryWaveWhithamBoussinesq(;c=1.1,α=1,L=20,N=2^9,μ=0.1,ϵ=0.1)
     @test 0.0316 < a < 0.0317
@@ -45,7 +45,7 @@ end
 end
 
 @testset "Example: Spectral Stability Green Naghdi" begin
-    include("../examples/SpectralStabilityGreenNaghdi.jl")
+    include("../examples/StudySpectralStabilityGreenNaghdi.jl")
     param = ell(0.3,0.005,0.75)
     σ,param,η,u,v,mesh=figspecCW(param;P=1,N=2^4)
 

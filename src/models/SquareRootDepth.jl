@@ -1,10 +1,20 @@
 export SquareRootDepth
 
-"""
+@doc raw"""
     SquareRootDepth(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the "√D" model proposed by [Cotter, Holm and Percival](@cite Cotter2010)
+the "√D" model proposed in [CotterHolmPercival2010](@citet):
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+∂_x\big( h u\big)=0,\\[1ex]
+  ∂_tv+∂_x\big(η+\tfrac{ϵ}{2}v^2+\tfrac{μϵ}{6h^2} (∂_x(hu))^2\big) =0,
+  \end{array}\right.
+```
+where ``h=1 + ϵ η`` is the depth, , ``η`` the surface deformation, ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface, and ``u`` is obtained by solving the elliptic problem
+```math
+ u -\tfrac{μ}{3}∂_x( h^{-1} ∂_x(hu)) = v.
+```
 
 # Argument
 `param` is of type `NamedTuple` and must contain

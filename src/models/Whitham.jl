@@ -1,10 +1,22 @@
 export Whitham
 
-"""
+@doc raw"""
     Whitham(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-two uncoupled Whitham equations, following [Emerald](@cite HoangNguyen2022).
+two uncoupled [Whitham](@cite Whitham1967) equations:
+```math
+∂_t u_\pm  \mp  M^μ ∂_x u_\pm \mp \frac{3ϵ}{4} ∂_x (u_\pm^2)=0,
+```
+where 
+```math
+M^μ=\big(\tfrac{\tanh(\sqrtμ D)}{\sqrtμ D}\big)^{1/2}
+```
+is a Fourier multiplier and
+``u_\pm`` are right- and left-going waves, combined to produce the physical solutions.
+
+
+See [Emerald](@cite Emerald2021b) for formulas and a full justification.
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -24,6 +36,7 @@ two uncoupled Whitham equations, following [Emerald](@cite HoangNguyen2022).
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
 1. a function `Whitham.f!` to be called in explicit time-integration solvers;
+Additionnally, a vector `Whitham.D` and a function `Whitham.f!` for exponential solvers;
 2. a function `Whitham.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed.
 3. a function `Whitham.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
   - `η` is the values of surface deformation at collocation points `x`;
@@ -34,6 +47,8 @@ mutable struct Whitham <: AbstractModel
 
 	label   :: String
 	f!		:: Function
+	D		:: AbstractArray
+	g!		:: Function
 	mapto	:: Function
 	mapfro	:: Function
 	info 	:: String
@@ -118,6 +133,23 @@ mutable struct Whitham <: AbstractModel
 			for u in U u[ abs.(u).< ktol ].=0 end
 
 		end
+		
+		# Evolution equations rewritten as ∂t U = Diag(D) U + g(U)
+		D = [-∂ₓ.*F₁, ∂ₓ.*F₁]
+		
+		function g!(U)
+
+		    ffts .= U[2]
+			s .= real(ifft(ffts))
+			fftr .= U[1]
+		   	r .= real(ifft(fftr))
+
+		   	U[1] .= -3*ϵ/4*Π⅔.*∂ₓ.*F₂.*fft(r.^2)
+		   	U[2] .=  3*ϵ/4*Π⅔.*∂ₓ.*F₂.*fft(s.^2)
+			for u in U u[ abs.(u).< ktol ].=0 end
+
+		end
+
 
 		# Build raw data from physical data.
 		# Discrete Fourier transform of the suitable variables 
@@ -149,6 +181,6 @@ mutable struct Whitham <: AbstractModel
 			real(ifft(newr+news)),real(ifft((newr-news)./F₁)),mesh.x
 		end
 
-        new(label, f!, mapto, mapfro, info )
+        new(label, f!, D, g!, mapto, mapfro, info )
     end
 end

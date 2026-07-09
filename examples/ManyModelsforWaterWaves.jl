@@ -6,7 +6,9 @@
 # #
 export Integrate,Figures
 using WaterWaves1D,Plots,LinearAlgebra;
-#using JLD #(uncomment if using @save)
+@info("Compare solutions to the water waves system with predictions of the Serre-Green-Naghdi, Whitham-Green-Naghdi and Isobe-Kakinuma models.
+Use `Integrate(scenario;kwargs)` or `Figures()`")
+
 
 #----
 """
@@ -16,7 +18,8 @@ Integrate in time the water waves system as well as
 the Serre-Green-Naghdi, Whitham-Green-Naghdi and Isobe-Kakinuma models
 with an initial datum depending on the argument (`scenario`).
 If `scenario==1`, the initial datum is a heap of water with zero velocity.
-If `scenario==2`, the initial datum is generates at first order a right-going wave.
+If `scenario==2`, the initial datum generates at first order a right-going wave.
+If `scenario==3`, the initial datum is random.
 
 
 Other arguments are optional:
@@ -35,7 +38,7 @@ Other arguments are optional:
 
 Return `(Diff,problems,plt)` where `Diff` is a measure of the errors, `problems` contains all the information and `plt` is a plot of the final time solution.
 """
-function Integrate(scenario;μ=.1,ϵ=.1,p=2,N=2^10,L=15,T=10,dt=0.001,dealias=0,iterate=true,precond=true,method=1,maxiter=100,name=nothing)
+function Integrate(scenario;μ=.1,ϵ=.1,p=2,N=2^9,L=15,T=10,dt=0.001,dealias=0,iterate=true,precond=true,method=1,maxiter=100,name=nothing)
 	#---- preparation
 
 	if !isnothing(name) ns=floor(Int,max(1,T/dt/100)) else ns=1 end
@@ -52,13 +55,17 @@ function Integrate(scenario;μ=.1,ϵ=.1,p=2,N=2^10,L=15,T=10,dt=0.001,dealias=0,
 	mesh=Mesh(param)
 	k=mesh.k
 
-	η = exp.(-abs.(mesh.x ).^p)
 	if scenario == 1
+		η = exp.(-abs.(mesh.x ).^p)
 		v = 0*η
 	elseif scenario == 2
+		η = exp.(-abs.(mesh.x ).^p)
 		v = 2/ϵ*(sqrt.(1 .+ ϵ*η) .- 1)
+	elseif scenario == 3
+		η = random( mesh.x ; L=2 )
+        v = random( mesh.x ; L=2 )
 	else
-		@error("the argument must be 1 or 2")
+		@error("the argument must be 1, 2 or 3")
 	end
 	init     = Init(mesh,η,v)
 
@@ -99,8 +106,6 @@ function Integrate(scenario;μ=.1,ϵ=.1,p=2,N=2^10,L=15,T=10,dt=0.001,dealias=0,
 
 
 	if !isnothing(name)
-		#save(problem,name);
-		#@save(name,xww,ηww,ηSGN,ηWGN,ηIK2,scenario,μ,ϵ,p,N,L,T,dt,dealias,iterate,precond,name)
 
 		if scenario == 1
 			xlims=(0,last(xww))
@@ -158,7 +163,6 @@ function Figures()
 			@info string("Save plots and animation with the name ",name)
 			Diff,=Integrate(1;p=3,μ=mu,ϵ=eps,N=2^10,T=10,L=15,dt=0.001,dealias=0,maxiter=100,name=name);
 			DiffSGN[i,j]=Diff[1];DiffWGN[i,j]=Diff[2];DiffIK2[i,j]=Diff[3];
-			#@save("MM4WW",DiffSGN,DiffWGN,DiffIK2)
 		end
 	end
 end

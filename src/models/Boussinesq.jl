@@ -1,11 +1,26 @@
 export Boussinesq
 
-"""
+@doc raw"""
     Boussinesq(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-`abcd`-Boussinesq models (with `b=d` and `c=0`).
-See [Bona, Chen, and Saut](@cite Bona2002)
+`abcd`-Boussinesq models proposed in [BonaChenSaut2002](@citet):
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+∂_x((1+ϵη)u)+a∂_x^3u-b∂_x^2∂_tη=0,\\[1ex]
+  ∂_tu+∂_xη+ϵu∂_xu+c∂_x^3η-d∂_x^2∂_tu=0,
+  \end{array}\right.
+```
+where ``a,b,c,d`` can be freely chosen as long as they satisfy ``a+b+c+d=1/3``.
+
+The function is restricted to the so-called Hamiltonian case: ``d=b``, and ``c=0``.
+Indeed, in that case, one may genuinely interpret ``v=u-d∂_x^2u`` as an approximation to ``∂_xψ``, the derivative of the trace of the velocity potential at the surface, and write the system as evolution equations for the variables ``(η,v)``:
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+∂_x((1+a∂_x^2)(1-b∂_x^2)^{-2}v + ϵ(1-b∂_x^2)^{-1} (η (1-b∂_x^2)^{-1}v))=0,\\[1ex]
+  ∂_tv+∂_xη+\tfrac{ϵ}{2}∂_x(((1-b∂_x^2)^{-1}v)^2) =0.
+  \end{array}\right.
+```
 
 # Argument
 `param` is of type `NamedTuple` and must contain

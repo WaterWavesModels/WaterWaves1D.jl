@@ -1,4 +1,4 @@
-export interpolate,solution,mass,momentum,energy,massdiff,momentumdiff,energydiff
+export interpolate,solution,mass,momentum,energy,mass_diff,momentum_diff,energy_diff
 
 """
 $(TYPEDSIGNATURES)
@@ -67,7 +67,6 @@ end
 
 
 """
-
 $(TYPEDSIGNATURES)
 
 Give the solution of a solved initial-value problem at a given time `T`.
@@ -189,7 +188,7 @@ Keyword argument `T` is optional, the last computed time is used by default.
 If keyword argument `rel=true` (default is false), then compute the relative difference (with initial value as reference).
 
 """
-function massdiff(p::Problem; T=nothing,rel=false)
+function mass_diff(p::Problem; T=nothing,rel=false)
 	η,v,x = solution(p;T=T)
 	η0,v0,x0 = solution(p;T=0)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
@@ -209,7 +208,7 @@ Keyword argument `T` is optional, the last computed time is used by default.
 If keyword argument `rel=true` (default is false), then compute the relative difference (with initial value as reference).
 
 """
-function momentumdiff(p::Problem; T=nothing,rel=false)
+function momentum_diff(p::Problem; T=nothing,rel=false)
 	η,v,x = solution(p;T=T)
 	η0,v0,x0 = solution(p;T=0)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])
@@ -229,7 +228,7 @@ Keyword argument `T` is optional, the last computed time is used by default.
 If keyword argument `rel=true` (default is false), then compute the relative difference (with initial value as reference).
 
 """
-function energydiff(p::Problem; T=nothing, rel=false)
+function energy_diff(p::Problem; T=nothing, rel=false)
 	η,v,x = solution(p;T=T)
 	η0,v0,x0 = solution(p;T=0)
 	if !(x[2:end].-x[2]≈x[1:end-1].-x[1])

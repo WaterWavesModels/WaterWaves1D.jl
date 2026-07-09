@@ -5,6 +5,9 @@
 # #
 export PlotSolitaryWaveWhithamBoussinesq,IntegrateSolitaryWaveWhithamBoussinesq
 using WaterWaves1D,FFTW,Plots;
+@info("Construct solitary wave solutions of a Whitham-Boussinesq equation (use `PlotSolitaryWaveWhithamBoussinesq`).
+Integrate in time the equations starting from such initial data (use  `IntegrateSolitaryWaveWhithamBoussinesq`.
+This allows to assess the validity and precision of the numerical scheme.")
 
 #----
 """
@@ -13,13 +16,14 @@ using WaterWaves1D,FFTW,Plots;
 Construct and plot a solitary wave of the Whitham-Boussinesq equation.
 
 All keyword arguments are optional.
-- `c` the velocity of the wave,
-- `α` defines the model used,
-- `L` the half-length of the mesh,
-- `N` the number of collocation points,
-- `μ` the shallowness parameter,
-- `ϵ` the nonlinearity parameter.
+- `c`, the velocity of the wave (default `c=1.05`),
+- `α`, parameter of the Whitham-Boussinesq model (default `α=1`),
+- `L`, the half-length of the mesh (default `L=20`),
+- `N`, the number of collocation points (default `N=2^9`),
+- `μ`, the shallowness parameter (default `μ=0.1`),
+- `ϵ`, the nonlinearity parameter (default `ϵ=0.1`).
 
+Return the difference between the computed solution and the solution of the Serre-Green-Naghdi equation (in ℓ^∞ norm at collocation points).
 """
 function PlotSolitaryWaveWhithamBoussinesq(;c=1.05,α=1,L=20,N=2^9,μ=0.1,ϵ=0.1)
 	param = ( μ  = μ, ϵ = ϵ,
@@ -64,11 +68,26 @@ function PlotSolitaryWaveWhithamBoussinesq(;c=1.05,α=1,L=20,N=2^9,μ=0.1,ϵ=0.1
 end
 
 """
-	IntegrateSolitaryWaveWhithamBoussinesq()
+	IntegrateSolitaryWaveWhithamBoussinesq(;kwargs...)
 
 Integrate in time a Whitham-Boussinesq equation with a solitary wave initial data
+
+All keyword arguments are optional.
+- `c`, the velocity of the wave (default `c=1.05`),
+- `α`, parameter of the Whitham-Boussinesq model (default `α=1`),
+- `L`, the half-length of the mesh (default `L=20`),
+- `T`, the final computation time (default `T=40/1.05`),
+- `dt`, the timestep (default `T=0.001/1.05`),
+- `ns`, storing data every `ns` computation steps (default `ns=200`),
+- `anim`, builds an animation if `true` (default),
+- `N`, the number of collocation points (default `N=2^9`),
+- `μ`, the shallowness parameter (default `μ=0.1`),
+- `ϵ`, the nonlinearity parameter (default `ϵ=0.1`).
+
+Return the difference between the initial data and final data (in ℓ^∞ norm at collocation points).
 """
 function IntegrateSolitaryWaveWhithamBoussinesq(; 
+	α  = 1,
 	μ  = 1,
 	ϵ  = 1,
 	c = 1.05,
@@ -87,7 +106,6 @@ function IntegrateSolitaryWaveWhithamBoussinesq(;
             dt = dt,
 			ns = ns
 			)
-	α = 1/2 # determines the model
 
 	(η,v,mesh) = SolitaryWaveWhithamBoussinesq( param;
 										β = 1, α  = α, iterative = false, max_iter=30)

@@ -1,7 +1,7 @@
 export EulerSymp
 export step!
 
-"""
+@doc raw"""
     EulerSymp(arguments;Niter,implicit,realdata)
 
 Symplectic Euler solver.
@@ -21,6 +21,20 @@ The keyword argument `implicit` (optional, defaut value = 1) determines which eq
 The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
 By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
 
+The function
+    `step!(solver :: EulerSymp, model :: AbstractModel , U, δt)`
+
+performs the integration step of the standard Runge-Kutta 4 solver applied to solutions to the equation ``u'=f(u)``.
+
+It replaces the argument ``U≈(u₁,u₂)(tₙ)`` with the next element of the recursive scheme approximating ``(u₁,u₂)(tₙ+δt)`` through the formula
+
+```math
+ \left\{\begin{array}{l}
+u₁(tₙ+δt)≈ u₁(tₙ) + δt f₁( u₁(tₙ+δt) )\\
+u₂(tₙ+δt)≈ u₂(tₙ) + δt f₂( u₁(tₙ) )
+  \end{array}\right.
+```
+(if the first equation is solved implicitly, as defined by `implicit`).
 
 """
 struct EulerSymp <: TimeSolver

@@ -1,7 +1,7 @@
 export Euler, Euler_naive
 export step!
 
-"""
+@doc raw"""
     Euler(arguments;realdata)
 
 Explicit Euler solver.
@@ -11,10 +11,21 @@ Construct an object of type `TimeSolver` to be used in `Problem(model, initial, 
 Arguments can be either
 0. an object of type `AbstractModel`;
 1. an `Array` of size `(N,datasize)` where `N` is the number of collocation points and `datasize` the number of equations solved;
-2. `(param,datasize)` where `param is a `NamedTuple` containing a key `N`, and `datasize` a integer (optional, by default `datasize=2`).
+2. `(param,datasize)` where `param` is a `NamedTuple` containing a key `N`, and `datasize` a integer (optional, by default `datasize=2`).
 
 The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
 By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
+
+The function
+    `step!(solver :: EulerExp, model :: AbstractModel , U, δt)`
+
+performs the integration step of the explicit Euler solver applied to solutions to the equation ``u'=f(u)``.
+
+It replaces the argument ``U≈u(tₙ)`` with the next element of the recursive scheme approximating ``u(tₙ+δt)`` through the formula
+
+```math
+u(tₙ+δt)≈ u(tₙ) + δt f( u(tₙ) )
+```
 
 """
 struct Euler <: TimeSolver
@@ -37,10 +48,6 @@ struct Euler <: TimeSolver
         U=model.mapto(Init(x->0*x,x->0*x))
         Euler( U; realdata=realdata)
     end
-    function RK4( model :: AbstractModel; realdata=nothing )
-        U=model.mapto(Init(x->0*x,x->0*x))
-        RK4( U; realdata=realdata)
-    end
     function Euler( param::NamedTuple, systemsize=2::Int; realdata=nothing )
         Euler( [Array{Complex{Float64}}(undef,param.N) for _ in 1:systemsize]  ; realdata=realdata)
     end
@@ -48,6 +55,7 @@ struct Euler <: TimeSolver
         Euler( [Array{Complex{Float64}}(undef,datasize) for _ in 1:systemsize] ; realdata=realdata)
     end
 end
+
 
 function step!(solver :: Euler,
                 model :: AbstractModel,
@@ -57,15 +65,15 @@ function step!(solver :: Euler,
 
     [u1 .= u for (u1,u) in zip(solver.U1,U)]
     model.f!( solver.U1 )
-    [u .+= dt * u1 for (u,u1) in zip(U,solver.U1)]
-
+    [u1 .*= dt for u1 in solver.U1]
+    [u .+= u1 for (u,u1) in zip(U,solver.U1)]
 
 end
 
 """
     Euler_naive()
 
-Runge-Kutta fourth order solver.
+Explicit Euler solver.
 
 A naive version of `Euler`, without argument since no pre-allocation is performed.
 
@@ -76,9 +84,8 @@ struct Euler_naive <: TimeSolver
     function Euler_naive() new("Euler (naive)") end
 end
 
-
 function step!(s  :: Euler_naive,
-               model :: AbstractModel ,
+               model :: AbstractModel,
                U  ,
                dt )
 

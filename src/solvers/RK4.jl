@@ -1,7 +1,7 @@
 export RK4,RK4_naive
 export step!
 
-"""
+@doc raw"""
     RK4(arguments;realdata)
 
 Explicit Runge-Kutta fourth order solver.
@@ -17,6 +17,25 @@ Arguments can be either
 The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
 By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
 
+The function
+    `step!(solver :: RK4, model :: AbstractModel , U, δt)`
+
+performs the integration step of the standard Runge-Kutta 4 solver applied to solutions to the equation `` u'=f(u)``.
+
+It replaces the argument ``U≈u(tₙ)`` with the next element of the recursive scheme approximating ``u(tₙ+δt)`` through the formula
+
+```math
+u(tₙ+δt)≈ u(tₙ) + δt/6  * (u₁ + 2 u₂ + 2 u₃ + u₄ )
+```
+where
+```math
+ \left\{\begin{array}{l}
+u₁ = f( u(tₙ) )\\
+u₂ = f( u(tₙ) + δt/2 * f( u₁ ) )\\
+u₃ = f( u(tₙ) + δt/2 * f( u₂ ) )\\
+u₄ = f( u(tₙ) + δt * f( u₃ ) )\\
+\end{array}\right.
+```
 """
 struct RK4 <: TimeSolver
 
@@ -48,42 +67,36 @@ struct RK4 <: TimeSolver
     end
 end
 
-using RecursiveArrayTools
-
 function step!(s  :: RK4,
     m :: AbstractModel,
     U  ,
     dt )
 
-    u = VectorOfArray(U)
-    u1 = VectorOfArray(s.U1)
-    du = VectorOfArray(s.dU)
+    [u1 .= u for (u1,u) in zip(s.U1,U)]
 
-    u1 .= u 
+    m.f!( s.U1 ) 
 
-    m.f!( s.U1 )
+    [du .= u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    du .= u1 
-
-    u1 .= u .+ dt/2 .* u1 
+    [u1 .= u .+ dt/2 .* u1 for (u1,u) in zip(s.U1,U)]
 
     m.f!( s.U1 )
 
-    du .+= 2 .* u1 
+    [du .+= 2 .* u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    u1 .= u .+ dt/2 .* u1 
-
-    m.f!( s.U1 )
-
-    du .+= 2 .* u1 
-
-    u1 .= u .+ dt .* u1 
+    [u1 .= u .+ dt/2 .* u1 for (u1,u) in zip(s.U1,U)]
 
     m.f!( s.U1 )
 
-    du .+= u1 
+    [du .+= 2 .* u1 for (du,u1) in zip(s.dU,s.U1)]
 
-    u .+= dt/6 .* du 
+    [u1 .= u .+ dt .* u1 for (u1,u) in zip(s.U1,U)]
+
+    m.f!( s.U1 )
+
+    [du .+= u1 for (du,u1) in zip(s.dU,s.U1)]
+
+    [u .+= dt/6 .* du for (u,du) in zip(U,s.dU)]
 
 end
 

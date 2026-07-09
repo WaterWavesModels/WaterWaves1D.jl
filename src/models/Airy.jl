@@ -1,10 +1,21 @@
 export Airy
-
-"""
+@doc raw"""
 	Airy(param; mesh, label)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the linear ([Airy](https://en.wikipedia.org/wiki/Airy_wave_theory)) water waves equations.
+the linear ([Airy](https://en.wikipedia.org/wiki/Airy_wave_theory)) water waves equations:
+```math
+  \left\{\begin{array}{l}
+  ∂_tη-\tfrac{1}{\sqrtμ ν} T^μv =0,\\[1ex]
+  ∂_tv+∂_xη=0,
+  \end{array}\right.
+```
+where ``η`` is the surface deformation, ``v=∂_xψ`` is the derivative of the trace of the velocity potential at the surface, and
+```math
+T^μ=-{\rm i}\tanh(\sqrtμ D)
+```
+is the Fourier multiplier sometimes called "Tilbert transform"
+(related to the [Hilbert transform](https://en.wikipedia.org/wiki/Hilbert_transform#Relationship_with_the_Fourier_transform), the latter arising in the infinite layer configuration, ``μ=∞``).
 
 # Arguments
 - `param::NamedTuple` must contain

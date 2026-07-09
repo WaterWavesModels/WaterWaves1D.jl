@@ -32,28 +32,37 @@ z(x) = 0 .*(x .+1).*exp.(-x.^2);
 init = Init(g,z);
 
 #---- building problems
-WW_model=WaterWaves(param)
-
-RK4_problem  = Problem(WW_model,  init, param, solver = RK4(WW_model), label = "Runge-Kutta 4")
-Euler_problem = Problem(WW_model, init, param, solver = Euler(WW_model), label = "Explicit Euler")
-Symplectic_problem = Problem(WW_model, init, param, solver = EulerSymp(WW_model,Niter=5,implicit=1), label = "Symplectic Euler")
-#Symplectic_problem = Problem(WW_model, init, param, solver = EulerSymp(WW_model,Niter=5,implicit=2))
-
-for problem in [RK4_problem, Euler_problem, Symplectic_problem] solve!(problem) end
-
-plot([RK4_problem, Euler_problem, Symplectic_problem])
+model=BBM(param)
+solver1=Euler_naive()
+solver2=EulerExp_naive()
+solver3=EulerExp(model)
 
 
+problems = Problem[]
+push!(problems, Problem(model, init, param , label="RK4"))
+push!(problems, Problem(model, init, param, solver=solver1, label="Euler" ))
+push!(problems, Problem(model, init, param, solver=solver2, label="exponential naive" ))
+push!(problems, Problem(model, init, param, solver=solver3, label="exponential" ))
+
+
+#---- computation
+for problem in problems
+	@time solve!( problem )
+end
 #solve!(problems[3])
 #---- visualization
 #include("../src/Figures.jl")
 #using Plots
 #gr()
+
+plot(problems,T=50)
+
 (η,v,x,t)=solution(problems[1])
 (η2,v2,x2,t)=solution(problems[2])
 (η3,v3,x3,t)=solution(problems[3])
 (η4,v4,x4,t)=solution(problems[4])
 
 using Plots;gr()
-plot(x1,[η-η2])
-plot(x1,[η-η2 η-η3])
+plot(x,[η-η2])
+plot(x,[η-η3 η-η4])
+plot(x,[η4-η3])

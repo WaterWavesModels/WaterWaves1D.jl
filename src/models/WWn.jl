@@ -1,13 +1,28 @@
 export WWn
 
-"""
+@doc raw"""
     WWn(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the water waves expansion proposed by [Dommermuth and Yue](@cite Dommermuth1987),
-[West et al.](@cite West1987), [Craig and Sulem](@cite Craig1993)
-(see also the account by [Choi](@cite Choi1995))
-with the "rectification" method proposed by [Duchêne and Melinand](@cite DucheneMelinand2022).
+the water waves expansion proposed by [Dommermuth and Yue](@cite DommermuthYue1987),
+[West et al.](@cite WestBruecknerJandaEtAl1987), [Craig and Sulem](@cite CraigSulem1993)
+(see also the account by [Choi](@cite Choi2019))
+with the "rectification" method proposed by [Duchêne and Melinand](@cite DucheneMelinand2024). 
+
+In the case of the quadratic model (`n=2`) the equations read
+```math
+  \left\{\begin{array}{l}
+  ∂_tη-\tfrac{1}{\sqrtμ ν} T^μv  + \tfrac{ϵ}{ν} ∂_x\big((J^δη) v +  T^μ((J^δη) T^μ v)\big) =0,\\[1ex]
+  ∂_tv+∂_xη+\frac{ϵ}{2ν}∂_xJ^δ\big( v^2-(T^μv)^2\big)=0,
+  \end{array}\right.
+```
+where ``η`` is the surface deformation, ``v=∂_xψ`` is the derivative of the trace of the velocity potential at the surface, and
+```math
+T^μ=-{\rm i}\tanh(\sqrtμ D)
+```
+is the Fourier multiplier sometimes called "Tilbert transform"
+(related to the [Hilbert transform](https://en.wikipedia.org/wiki/Hilbert_transform#Relationship_with_the_Fourier_transform), the latter arising in the infinite layer configuration, ``μ=∞``),
+and finally ``J^δ=J_0(δD)`` is the rectification operator: typically  ``J_0(k)=\min(1,1/|k|)`` and the parameter ``δ`` can be freely chosen, but is typically of the size of ``\tfrac{ϵ}{ν}``.
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -28,6 +43,7 @@ with the "rectification" method proposed by [Duchêne and Melinand](@cite Duchen
 # Return values
 Generate necessary ingredients for solving an initial-value problem via `solve!`:
 1. a function `WWn.f!` to be called in explicit time-integration solvers (also `WWn.f1!` and `WWn.f2!` for the symplectic Euler solver);
+Additionnally, two functions `WaterWaves.f1!` and `WaterWaves.f2!` for symplectic solvers;
 2. a function `WWn.mapto` which from `(η,v)` of type `InitialData` provides the raw data matrix on which computations are to be executed;
 3. a function `WWn.mapfro` which from such data matrix returns the Tuple of real vectors `(η,v,x)`, where
   - `η` is the values of surface deformation at collocation points `x`;
@@ -194,7 +210,6 @@ mutable struct WWn <: AbstractModel
 		    fftv .= U2
 			Q .= Tμ.*fftv
 
-			# attention,  G₀=-L dans Choi
 			if n >= 2
 				η  .= ifft(Jδ.*U1)
 				v  .= ifft(U2)
@@ -225,7 +240,6 @@ mutable struct WWn <: AbstractModel
 			Q .= Tμ.*fftv
 			R .= -fftη*ν
 
-			# attention,  G₀=-L dans Choi
 			if n >= 2
 				η  .= ifft(Jδ.*U1)
 				v  .= ifft(U2)
@@ -248,8 +262,6 @@ mutable struct WWn <: AbstractModel
 			U2[ abs.(U2).< ktol ].=0
 
 		end
-
-
 
         new(label, f!, f1!, f2! , mapto, mapfro, info )
     end

@@ -118,8 +118,8 @@ for model in models
     @test isapprox(mass(pb),mass(pb;T=0),rtol=1e-10)
     @test isapprox(momentum(pb),momentum(pb;T=0),rtol=1e-10)
     @test isapprox(energy(pb),energy(pb;T=0),rtol=1e-8)
-    @test abs(massdiff(pb))<1e-10
-    @test abs(momentumdiff(pb))<1e-10
-    @test abs(energydiff(pb;rel=true))<1e-8
+    @test abs(mass_diff(pb))<1e-10
+    @test abs(momentum_diff(pb))<1e-10
+    @test abs(energy_diff(pb;rel=true))<1e-8
     end
 end

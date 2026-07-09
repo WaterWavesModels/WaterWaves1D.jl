@@ -1,10 +1,25 @@
 export modifiedMatsuno
 
-"""
+@doc raw"""
     modifiedMatsuno(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the modified Matsuno model proposed by [Duchêne and Melinand](@cite DucheneMelinand2022).
+the modified Matsuno model (compare with [`Matsuno`](@ref) for the original Matsuno model) 
+proposed by [DucheneMelinand2024](@citet):
+```math
+  \left\{\begin{array}{l}
+  ∂_tη-\tfrac{1}{\sqrtμ ν} T^μu  + \tfrac{ϵ}{ν} ∂_x(η u) +  \tfrac{ϵ}{ν} T^μ(η ∂_x T^μ u) =0,\\[1ex]
+  ∂_tu+\exp\big(-ϵ\sqrtμ T^μ∂_xη\big)∂_xη+\frac{ϵ}{2ν}∂_x\big( u^2\big)=0.
+  \end{array}\right.
+```
+where ``η`` is the surface deformation, ``v=∂_xψ`` is the derivative of the trace of the velocity potential at the surface,
+``u=∂_xψ-ϵ\sqrtμ(T^μ∂_xψ)(∂_xη)`` represents the horizontal velocity at the free surface, and
+```math
+T^μ=-{\rm i}\tanh(\sqrtμ D)
+```
+is the Fourier multiplier sometimes called "Tilbert transform"
+(related to the [Hilbert transform](https://en.wikipedia.org/wiki/Hilbert_transform#Relationship_with_the_Fourier_transform), the latter arising in the infinite layer configuration, ``μ=∞``).
+
 
 # Argument
 `param` is of type `NamedTuple` and must contain

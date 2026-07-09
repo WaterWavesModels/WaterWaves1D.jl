@@ -19,6 +19,8 @@ include("problem.jl")
 include("loadsave.jl")
 include("tools.jl")
 include("recipes.jl")
+include("examples.jl")
+
 
 # initial data, models, solvers
 include("initialdata/Random.jl")
@@ -54,7 +56,6 @@ include("models/WWn.jl")
 include("solvers/Euler.jl")
 include("solvers/EulerSymp.jl")
 include("solvers/RK4.jl")
-
-
+include("solvers/EulerExp.jl")
 
 end
