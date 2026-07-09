@@ -26,8 +26,10 @@ FFTW = "^1"
 HDF5 = "0.16, 0.17"
 IterativeSolvers = "0.9"
 LinearMaps = "3"
+Plots = "1.41.6"
 ProgressMeter = "1"
 RecipesBase = "1"
+Test = "1.11.0"
 julia = "^1.1"
 
 [extras]
