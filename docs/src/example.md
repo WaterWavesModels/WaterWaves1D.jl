@@ -2,7 +2,7 @@
 
 In this example we shall observe the disintegration of a heap of water using the water-waves system as well as a second-order small-steepness model.
 
-More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/main/examples) and [notebooks](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/main/notebooks) section.
+More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/main/examples) and [notebooks](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/main/notebooks) folders.  Examples are also available through the functions [`examples_dir`](@ref WaterWaves1D.examples_dir), [`get_examples`](@ref WaterWaves1D.get_examples) and [`default_example`](@ref WaterWaves1D.default_example).
 
 ## Set up the initial-value problem
 
@@ -35,30 +35,39 @@ init = Init(z,v);         # generate the initial data with correct type
 Then we build the different [models](library.md#Models) to compare (see [`WaterWaves`](@ref WaterWaves1D.WaterWaves) and [`WWn`](@ref WaterWaves1D.WWn)).
 
 ```@example 1
-WW_model=WaterWaves(param) # The water waves system
-WW2_model=WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
+model_WW=WaterWaves(param) # The water waves system
+model_WW2=WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
 ```
 
 Finally we set up initial-value problems. Optionally, one may specify a [time solver](library.md#Solvers) to [`Problem`](@ref WaterWaves1D.WaterWaves), by default the standard explicit fourth order Runge Kutta method is used.
 
 ```@example 1
-WW_problem=Problem(WW_model, init, param) ;
-WW2_problem=Problem(WW2_model, init, param) ;
+problem_WW=Problem(model_WW, init, param) ;
+problem_WW2=Problem(model_WW2, init, param) ;
 ```
 ## Solve the initial-value problem
 
 Solving the initial-value problems is as easy as [`solve!`](@ref WaterWaves1D.solve!).
 
 ```@example 1
-solve!([WW_problem WW2_problem];verbose=false);
+solve!([problem_WW problem_WW2];verbose=false);
 ```
+
+## Evaluate the precision of the numerical scheme
+
+The numerical discretization of preserved quantities, provided by the functions [`mass`](@ref WaterWaves1D.mass), [`momentum`](@ref WaterWaves1D.momentum), [`energy`](@ref WaterWaves1D.energy) (and [`mass_diff`](@ref WaterWaves1D.mass_diff), [`momentum_diff`](@ref WaterWaves1D.momentum_diff), [`energy_diff`](@ref WaterWaves1D.energy_diff) for the difference between initial and final time) provide valuable insights at the precision of a computed numerical solution.
+
+```@example 1
+Δ = [ mass_diff(problem_WW2), momentum_diff(problem_WW2), energy_diff(problem_WW2) ]
+```
+
 ## Generate graphics
 
 Plot solutions at final time.
 
 ```@example 1
 using Plots
-plot([WW_problem, WW2_problem])
+plot([problem_WW, problem_WW2])
 ```
 
 Generate an animation.
@@ -66,7 +75,7 @@ Generate an animation.
 
 ```@example 1
 @gif for t in LinRange(0,param.T,100)
-    plot([WW_problem, WW2_problem], T = t)
+    plot([problem_WW, problem_WW2], T = t)
     ylims!(-0.5, 1)
 end
 ```

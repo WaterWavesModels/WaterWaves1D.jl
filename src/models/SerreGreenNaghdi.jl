@@ -1,10 +1,20 @@
 export SerreGreenNaghdi
 
-"""
+@doc raw"""
     SerreGreenNaghdi(param; kwargs...)
 
 Define an object of type `AbstractModel` in view of solving the initial-value problem for
-the Serre-Green-Naghdi model ([Serre](@cite Serre1953), [Su and Gardner](@cite Su1969), [Green and Naghdi](@cite Green1976)).
+the Serre-Green-Naghdi model ([Serre1953](@citet), [SuGardner1969](@citet), [GreenNaghdi1976](@citet)):
+```math
+  \left\{\begin{array}{l}
+  ∂_tη+∂_x\big( h u\big)=0,\\[1ex]
+  ∂_tv+∂_x\big(η+ϵ uv - \tfrac{ϵ}{2}u^2-\tfrac{μϵ}2 (h∂_xu)^2\big) =0,
+  \end{array}\right.
+```
+where ``h=1 + ϵ η`` is the depth, ``η`` the surface deformation, ``v=∂_xψ`` the derivative of the trace of the velocity potential at the surface, and ``u`` the layer-averaged horizontal velocity is obtained by solving the elliptic problem
+```math
+ hu -\tfrac{μ}{3}∂_x( h^3 ∂_xu) = hv.
+```
 
 # Argument
 `param` is of type `NamedTuple` and must contain
@@ -35,37 +45,39 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct SerreGreenNaghdi <: AbstractModel
 
-	label   :: String
-	f!		:: Function
-	mapto	:: Function
-	mapfro	:: Function
-	mapfrofull	:: Function
-	info	:: String
+    label::String
+    f!::Function
+    mapto::Function
+    mapfro::Function
+    mapfrofull::Function
+    info::String
 
-    function SerreGreenNaghdi(param::NamedTuple;
-							mesh = Mesh(param),
-							dealias = 0,
-							ktol	= 0,
-							iterate	= true,
-							gtol	= 1e-14,
-							precond	= true,
-							restart	= nothing,
-							maxiter	= nothing,
-							label	= "Green-Naghdi"
-							)
+    function SerreGreenNaghdi(
+            param::NamedTuple;
+            mesh = Mesh(param),
+            dealias = 0,
+            ktol = 0,
+            iterate = true,
+            gtol = 1.0e-14,
+            precond = true,
+            restart = nothing,
+            maxiter = nothing,
+            label = "Green-Naghdi"
+        )
 
-		m=WhithamGreenNaghdi(param;SGN=true,
-							mesh=mesh,
-							dealias=dealias,
-							ktol=ktol,
-							iterate=iterate,
-							gtol=gtol,
-							precond=precond,
-							restart=restart,
-							maxiter=maxiter,
-							label=label
-							)
+        m = WhithamGreenNaghdi(
+            param; SGN = true,
+            mesh = mesh,
+            dealias = dealias,
+            ktol = ktol,
+            iterate = iterate,
+            gtol = gtol,
+            precond = precond,
+            restart = restart,
+            maxiter = maxiter,
+            label = label
+        )
 
-		new(m.label, m.f!, m.mapto, m.mapfro, m.mapfrofull, m.info )
+        return new(m.label, m.f!, m.mapto, m.mapfro, m.mapfrofull, m.info)
     end
 end

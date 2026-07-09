@@ -1,7 +1,7 @@
-export RK4,RK4_naive
+export RK4, RK4_naive
 export step!
 
-"""
+@doc raw"""
     RK4(arguments;realdata)
 
 Explicit Runge-Kutta fourth order solver.
@@ -17,73 +17,88 @@ Arguments can be either
 The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
 By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
 
+The function
+    `step!(solver :: RK4, model :: AbstractModel , U, δt)`
+
+performs the integration step of the standard Runge-Kutta 4 solver applied to solutions to the equation `` u'=f(u)``.
+
+It replaces the argument ``U≈u(tₙ)`` with the next element of the recursive scheme approximating ``u(tₙ+δt)`` through the formula
+
+```math
+u(tₙ+δt)≈ u(tₙ) + δt/6  * (u₁ + 2 u₂ + 2 u₃ + u₄ )
+```
+where
+```math
+ \left\{\begin{array}{l}
+u₁ = f( u(tₙ) )\\
+u₂ = f( u(tₙ) + δt/2 * f( u₁ ) )\\
+u₃ = f( u(tₙ) + δt/2 * f( u₂ ) )\\
+u₄ = f( u(tₙ) + δt * f( u₃ ) )\\
+\end{array}\right.
+```
 """
 struct RK4 <: TimeSolver
 
-    U1 :: Array
-    dU :: Array
-    label :: String
+    U1::Array
+    dU::Array
+    label::String
 
-    function RK4( U :: Array; realdata=nothing )
+    function RK4(U::Array; realdata = nothing)
         U1 = deepcopy(U)
         dU = deepcopy(U)
-        if realdata==true
+        if realdata == true
             U1 = real.(U1);dU = real.(dU)
         end
-        if realdata==false
+        if realdata == false
             U1 = complex.(U1);dU = complex.(dU)
         end
-        new( U1, dU, "RK4")
+        return new(U1, dU, "RK4")
     end
 
-    function RK4( model :: AbstractModel; realdata=nothing )
-        U=model.mapto(Init(x->0*x,x->0*x))
-        RK4( U; realdata=realdata)
+    function RK4(model::AbstractModel; realdata = nothing)
+        U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
+        return RK4(U; realdata = realdata)
     end
-    function RK4( param::NamedTuple, systemsize=2::Int; realdata=nothing )
-        RK4( [Array{Complex{Float64}}(undef,param.N) for _ in 1:systemsize]  ; realdata=realdata)
+    function RK4(param::NamedTuple, systemsize = 2::Int; realdata = nothing)
+        return RK4([Array{Complex{Float64}}(undef, param.N) for _ in 1:systemsize]; realdata = realdata)
     end
-    function RK4( datasize, systemsize=2::Int; realdata=nothing )
-        RK4( [Array{Complex{Float64}}(undef,datasize) for _ in 1:systemsize] ; realdata=realdata)
+    function RK4(datasize, systemsize = 2::Int; realdata = nothing)
+        return RK4([Array{Complex{Float64}}(undef, datasize) for _ in 1:systemsize]; realdata = realdata)
     end
 end
 
-using RecursiveArrayTools
+function step!(
+        s::RK4,
+        m::AbstractModel,
+        U,
+        dt
+    )
 
-function step!(s  :: RK4,
-    m :: AbstractModel,
-    U  ,
-    dt )
+    [u1 .= u for (u1, u) in zip(s.U1, U)]
 
-    u = VectorOfArray(U)
-    u1 = VectorOfArray(s.U1)
-    du = VectorOfArray(s.dU)
+    m.f!(s.U1)
 
-    u1 .= u 
+    [du .= u1 for (du, u1) in zip(s.dU, s.U1)]
 
-    m.f!( s.U1 )
+    [u1 .= u .+ dt / 2 .* u1 for (u1, u) in zip(s.U1, U)]
 
-    du .= u1 
+    m.f!(s.U1)
 
-    u1 .= u .+ dt/2 .* u1 
+    [du .+= 2 .* u1 for (du, u1) in zip(s.dU, s.U1)]
 
-    m.f!( s.U1 )
+    [u1 .= u .+ dt / 2 .* u1 for (u1, u) in zip(s.U1, U)]
 
-    du .+= 2 .* u1 
+    m.f!(s.U1)
 
-    u1 .= u .+ dt/2 .* u1 
+    [du .+= 2 .* u1 for (du, u1) in zip(s.dU, s.U1)]
 
-    m.f!( s.U1 )
+    [u1 .= u .+ dt .* u1 for (u1, u) in zip(s.U1, U)]
 
-    du .+= 2 .* u1 
+    m.f!(s.U1)
 
-    u1 .= u .+ dt .* u1 
+    [du .+= u1 for (du, u1) in zip(s.dU, s.U1)]
 
-    m.f!( s.U1 )
-
-    du .+= u1 
-
-    u .+= dt/6 .* du 
+    return [u .+= dt / 6 .* du for (u, du) in zip(U, s.dU)]
 
 end
 
@@ -97,33 +112,37 @@ A naive version of `RK4`, without argument since no pre-allocation is performed.
 """
 struct RK4_naive <: TimeSolver
 
-    label :: String
+    label::String
 
-    function RK4_naive() new("RK4 (naive)") end
+    function RK4_naive()
+        return new("RK4 (naive)")
+    end
 end
 
-function step!(s  :: RK4_naive,
-               m :: AbstractModel ,
-               U  ,
-               dt )
+function step!(
+        s::RK4_naive,
+        m::AbstractModel,
+        U,
+        dt
+    )
 
 
     U0 = deepcopy(U)
-    m.f!( U0 )
+    m.f!(U0)
     U1 = deepcopy(U0)
 
-    [u0 .= u .+ dt/2 .* u1 for (u0,u,u1) in zip(U0,U,U1)]
-    m.f!( U0 )
+    [u0 .= u .+ dt / 2 .* u1 for (u0, u, u1) in zip(U0, U, U1)]
+    m.f!(U0)
     U2 = deepcopy(U0)
 
-    [u0 .= u .+ dt/2 .* u2 for (u0,u,u2) in zip(U0,U,U2)]
-    m.f!( U0 )
+    [u0 .= u .+ dt / 2 .* u2 for (u0, u, u2) in zip(U0, U, U2)]
+    m.f!(U0)
     U3 = deepcopy(U0)
 
-    [u0 .= u .+ dt .* u3 for (u0,u,u3) in zip(U0,U,U3)]
-    m.f!( U0 )
+    [u0 .= u .+ dt .* u3 for (u0, u, u3) in zip(U0, U, U3)]
+    m.f!(U0)
     U4 = deepcopy(U0)
 
-    [u .+= dt/6 .* (u1 + 2*u2 + 2*u3 + u4 ) for (u,u1,u2,u3,u4) in zip(U,U1,U2,U3,U4)]
+    return [u .+= dt / 6 .* (u1 + 2 * u2 + 2 * u3 + u4) for (u, u1, u2, u3, u4) in zip(U, U1, U2, U3, U4)]
 
 end

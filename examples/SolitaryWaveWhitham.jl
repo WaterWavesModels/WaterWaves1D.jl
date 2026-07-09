@@ -1,180 +1,223 @@
 # # Compute the solitary wave of the Whitham equation with prescribed velocity
-export PlotSolitaryWaveKdV,PlotSolitaryWaveWhitham
-using WaterWaves1D,FFTW,Plots;
+export PlotSolitaryWaveKdV, PlotSolitaryWaveWhitham
+using WaterWaves1D, FFTW, Plots;
+@info("Construct solitary wave solutions of the Whitham equation
+Use  `PlotSolitaryWaveWhitham` (or `PlotSolitaryWaveKdV`).")
+
 
 #---- KdV
 """
-	PlotSolitaryWaveKdV()
+	PlotSolitaryWaveKdV( c )
 
-A proof of concept: numerically compute the solitary wave of the KdV equation with prescribed velocity `c=5`
-(augmenting progressively the velocity to generate initial guesses for the iterative scheme)
-and then computes the difference with the exact solution.
+A proof of concept: numerically compute the solitary wave of the KdV equation with prescribed velocity `c`
+in an iterative way (for large values of `c`), augmenting progressively the velocity to generate initial guesses of an iterative scheme,
+and then computes the difference with the exact solution given by the analytic formula.
+
+The argument `c` should be greater than `1` (`c=5` by default).
+
+Return the error between the computed and exact solutions (in ℓ^∞ norm at collocation points).
 """
 function PlotSolitaryWaveKdV(c = 5)
-	param = ( μ  = 1,
-			ϵ  = 1,
-        	N  = 2^10,
-            L  = 10,
-			)
-	mesh = Mesh(param)
+    param = (
+        μ = 1,
+        ϵ = 1,
+        N = 2^10,
+        L = 10,
+    )
+    mesh = Mesh(param)
 
-	function sol(x,α)
-		2*α*sech.(sqrt(3*2*α)/2*x).^2
-	end
+    function sol(x, α)
+        return 2 * α * sech.(sqrt(3 * 2 * α) / 2 * x) .^ 2
+    end
 
-	u₀, = SolitaryWaveWhitham( merge(param,(c=2.5,)); guess = sol(mesh.x,1.5)+.1*exp.(-(mesh.x).^2), iterative = false, KdV = true, α=1,tol = 1e-8)
-	u₁, = SolitaryWaveWhitham( merge(param,(c=2.6,)); guess = sol(mesh.x,1.6)+.1*exp.(-(mesh.x).^2), iterative = false, KdV = true, α=1,tol = 1e-8)
-	u₂, = SolitaryWaveWhitham( merge(param,(c=2.7,)); guess = sol(mesh.x,1.7)+.5*exp.(-(mesh.x).^2), iterative = false, KdV = true, α=1,tol = 1e-8)
+    u₀, = SolitaryWaveWhitham(merge(param, (c = 2.5,)); guess = sol(mesh.x, 1.5) + 0.1 * exp.(-(mesh.x) .^ 2), iterative = false, KdV = true, α = 1, tol = 1.0e-8)
+    u₁, = SolitaryWaveWhitham(merge(param, (c = 2.6,)); guess = sol(mesh.x, 1.6) + 0.1 * exp.(-(mesh.x) .^ 2), iterative = false, KdV = true, α = 1, tol = 1.0e-8)
+    u₂, = SolitaryWaveWhitham(merge(param, (c = 2.7,)); guess = sol(mesh.x, 1.7) + 0.5 * exp.(-(mesh.x) .^ 2), iterative = false, KdV = true, α = 1, tol = 1.0e-8)
 
-	# barycentric Lagrange interpolation (4.2) in https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-	function P(X,dc,u₀,u₁,u₂)
-		(u₀/(2*(X/dc+2))-u₁/(X/dc+1)+u₂/(2*X/dc))/(1/(2*(X/dc+2))-1/(X/dc+1)+1/(2*X/dc))
-	end
+    # barycentric Lagrange interpolation (4.2) in https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
+    function P(X, dc, u₀, u₁, u₂)
+        return (u₀ / (2 * (X / dc + 2)) - u₁ / (X / dc + 1) + u₂ / (2 * X / dc)) / (1 / (2 * (X / dc + 2)) - 1 / (X / dc + 1) + 1 / (2 * X / dc))
+    end
 
 
-	function solve!(u₀,u₁,u₂,c,dc)
-		tu₂ = copy(u₂)
-		u₂ .= SolitaryWaveWhitham( merge(param,(c=c,)); guess = P.(dc,dc,u₀,u₁,u₂), iterative = false, α=1, KdV = true, verbose = true, max_iter = 5, tol = 1e-10)[1]
-		u₀ .= u₁
-		u₁ .= tu₂
-		end
+    function solve!(u₀, u₁, u₂, c, dc)
+        tu₂ = copy(u₂)
+        u₂ .= SolitaryWaveWhitham(merge(param, (c = c,)); guess = P.(dc, dc, u₀, u₁, u₂), iterative = false, α = 1, KdV = true, verbose = true, max_iter = 5, tol = 1.0e-10)[1]
+        u₀ .= u₁
+        return u₁ .= tu₂
+    end
 
-		for cs = range(2.8; step = 0.1, stop = c)
-			solve!(u₀,u₁,u₂,cs,0.1)
-		end
+    if c <= 1
+        @error("The velocity should be greater than `1`")
+    elseif c < 2.8
+        param = (
+            μ = 1,
+            ϵ = 1,
+            N = 2^10,
+            L = 10 / sqrt(c - 1),
+        )
+        mesh = Mesh(param)
+        u₂, = SolitaryWaveWhitham(merge(param, (c = c,)); iterative = false, KdV = true)
 
-		ucomp = u₂
-		uexact = sol(mesh.x,c-1)
-		error = maximum(abs.(ucomp-uexact))
-		@info("Final error : $error")
-		plt = plot(layout=(2,2))
+    else
+        length = Int(floor((c - 2.8) / 0.1)) + 1
+        for cs in range(2.8, c; length = length)
+            solve!(u₀, u₁, u₂, cs, (c - 2.8) / (length - 1))
+        end
+    end
+    ucomp = u₂
+    uexact = sol(mesh.x, c - 1)
+    error = maximum(abs.(ucomp - uexact))
+    @info("Final error : $error")
+    plt = plot(layout = (2, 2))
 
-		plot!(plt[1,1], mesh.x, [ucomp uexact];
-			title=string("c=$c"),
-			label=["computed" "exact"])
+    plot!(
+        plt[1, 1], mesh.x, [ucomp uexact];
+        title = string("c=$c"),
+        label = ["computed" "exact"]
+    )
 
-		plot!(plt[2,1], fftshift(mesh.k),
-			[log10.(abs.(fftshift(fft(ucomp)))) log10.(abs.(fftshift(fft(uexact))))];
-			title="frequency",
-			label=["computed" "exact"])
+    plot!(
+        plt[2, 1], fftshift(mesh.k),
+        [log10.(abs.(fftshift(fft(ucomp)))) log10.(abs.(fftshift(fft(uexact))))];
+        title = "frequency",
+        label = ["computed" "exact"]
+    )
 
-		plot!(plt[1,2], mesh.x, ucomp-uexact;
-			title=string("c=$c"),
-			label="difference")
+    plot!(
+        plt[1, 2], mesh.x, ucomp - uexact;
+        title = string("c=$c"),
+        label = "difference"
+    )
 
-		plot!(plt[2,2], fftshift(mesh.k),
-			log10.(abs.(fftshift(fft(ucomp-uexact))));
-			title="frequency",
-			label="difference")
-			display(plt)
-		return error
-	end
+    plot!(
+        plt[2, 2], fftshift(mesh.k),
+        log10.(abs.(fftshift(fft(ucomp - uexact))));
+        title = "frequency",
+        label = "difference"
+    )
+    display(plt)
+    return error
+end
 
 
 #----
 """
-	`PlotSolitaryWaveWhitham(c)`
+	`PlotSolitaryWaveWhitham( c )`
 
-Compute the solitary wave of the Whitham equation with prescribed velocity.
+Compute the solitary wave of the Whitham equation with prescribed velocity `c`
+in an iterative way (for large values of `c`), augmenting progressively the velocity to generate initial guesses of an iterative scheme.
 
-`c` is the velocity, and should be more between `1` and `1.2290408`.
+The argument `c` should be between `1` and `1.2290408` (`c=5` by default).
+
+Return the difference between the computed Whitham and KdV solutions (in ℓ^∞ norm at collocation points).
 """
-function PlotSolitaryWaveWhitham(c=1.1)
- 	function solKdV(x,α)
-   	 	2*α*sech.(sqrt(3*2*α)/2*x).^2
- 	end
- 	if c<=1 || c>1.2290408
-	 	error("The velocity should be between `1` and `1.2290408`")
- 	elseif c<1.15
-		param = ( μ  = 1,
- 				ϵ  = 1,
-         		N  = 2^10,
-            	L  = 10/sqrt(c-1) )
- 		mesh = Mesh(param)
-		u, = SolitaryWaveWhitham( merge(param,(c=c,)); iterative = false)
+function PlotSolitaryWaveWhitham(c = 1.1)
+    function solKdV(x, α)
+        return 2 * α * sech.(sqrt(3 * 2 * α) / 2 * x) .^ 2
+    end
+    if c <= 1 || c > 1.2290408
+        error("The velocity should be between `1` and `1.2290408`")
+    elseif c < 1.15
+        param = (
+            μ = 1,
+            ϵ = 1,
+            N = 2^10,
+            L = 10 / sqrt(c - 1),
+        )
+        mesh = Mesh(param)
+        u, = SolitaryWaveWhitham(merge(param, (c = c,)); iterative = false)
 
- 	else
-		param = ( μ  = 1,
-			ϵ  = 1,
-        	N  = 2^10,
-            L  = 15,
-			)
-		mesh = Mesh(param)
+    else
+        param = (
+            μ = 1,
+            ϵ = 1,
+            N = 2^10,
+            L = 15,
+        )
+        mesh = Mesh(param)
 
-		# barycentric Lagrange inerpolation (4.2) in https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
-		function P(X,dc,u₀,u₁,u₂)
-			(u₀/(2*(X/dc+2))-u₁/(X/dc+1)+u₂/(2*X/dc))/(1/(2*(X/dc+2))-1/(X/dc+1)+1/(2*X/dc))
-		end
+        # barycentric Lagrange inerpolation (4.2) in https://people.maths.ox.ac.uk/trefethen/barycentric.pdf
+        function P(X, dc, u₀, u₁, u₂)
+            return (u₀ / (2 * (X / dc + 2)) - u₁ / (X / dc + 1) + u₂ / (2 * X / dc)) / (1 / (2 * (X / dc + 2)) - 1 / (X / dc + 1) + 1 / (2 * X / dc))
+        end
 
-		function solve2!(u₀,u₁,u₂,c,dc)
-			tu₂ = copy(u₂)
-			u₂ .= SolitaryWaveWhitham(merge(param,(c=c,)); guess = P.(dc,dc,u₀,u₁,u₂), iterative = false, verbose = true, max_iter = 5)[1]
-			u₀ .= u₁
-			u₁ .= tu₂
-		end
+        function solve2!(u₀, u₁, u₂, c, dc)
+            tu₂ = copy(u₂)
+            u₂ .= SolitaryWaveWhitham(merge(param, (c = c,)); guess = P.(dc, dc, u₀, u₁, u₂), iterative = false, verbose = true, max_iter = 5)[1]
+            u₀ .= u₁
+            return u₁ .= tu₂
+        end
 
-		function solve2!(u₀,u₁,u₂,c,old_dc,new_dc)
-			tu₀ = copy(u₀)
-			tu₁ = copy(u₁)
-			tu₂ = copy(u₂)
-			u₀ .= tu₂
-			u₁ .= SolitaryWaveWhitham( merge(param,(c=c+1*new_dc,)); guess = P.(1*new_dc,old_dc,tu₀,tu₁,tu₂), iterative = false, verbose = true)[1]
-			u₂ .= SolitaryWaveWhitham( merge(param,(c=c+2*new_dc,)); guess = P.(2*new_dc,old_dc,tu₀,tu₁,tu₂), iterative = false, verbose = true)[1]
-		end
+        function solve2!(u₀, u₁, u₂, c, old_dc, new_dc)
+            tu₀ = copy(u₀)
+            tu₁ = copy(u₁)
+            tu₂ = copy(u₂)
+            u₀ .= tu₂
+            u₁ .= SolitaryWaveWhitham(merge(param, (c = c + 1 * new_dc,)); guess = P.(1 * new_dc, old_dc, tu₀, tu₁, tu₂), iterative = false, verbose = true)[1]
+            return u₂ .= SolitaryWaveWhitham(merge(param, (c = c + 2 * new_dc,)); guess = P.(2 * new_dc, old_dc, tu₀, tu₁, tu₂), iterative = false, verbose = true)[1]
+        end
 
-		u₀, = SolitaryWaveWhitham( merge(param,(c=1.10,)); iterative = false)
-		u₁, = SolitaryWaveWhitham( merge(param,(c=1.11,)); iterative = false)
-		u₂, = SolitaryWaveWhitham( merge(param,(c=1.12,)); iterative = false)
+        u₀, = SolitaryWaveWhitham(merge(param, (c = 1.1,)); iterative = false)
+        u₁, = SolitaryWaveWhitham(merge(param, (c = 1.11,)); iterative = false)
+        u₂, = SolitaryWaveWhitham(merge(param, (c = 1.12,)); iterative = false)
 
-		if c < 1.22
-			for cs = range(1.13; step = 0.01, stop = c)
-				solve2!(u₀,u₁,u₂,cs,0.01)
-			end
-		else
-			for cs = range(1.13; step = 0.01, stop = 1.22)
-				print(string("c = ",cs,"\n"))
-				solve2!(u₀,u₁,u₂,cs,0.01)
-			end
+        if c < 1.22
+            length = Int(floor((c - 1.13) / 0.01)) + 1
+            for cs in range(1.13; length = length, stop = c)
+                solve2!(u₀, u₁, u₂, cs, (c - 1.13) / (length - 1))
+            end
+        else
+            for cs in range(1.13; step = 0.01, stop = 1.22)
+                print(string("c = ", cs, "\n"))
+                solve2!(u₀, u₁, u₂, cs, 0.01)
+            end
 
-			solve2!(u₀,u₁,u₂,1.221,0.01,1e-4)
+            solve2!(u₀, u₁, u₂, 1.221, 0.01, 1.0e-4)
 
-			if c < 1.229
-				for cs = range(1.221+3e-4; step = 1e-4, stop = c)
-					solve2!(u₀,u₁,u₂,cs,1e-4)
-				end
-			else
-				c=1.2290408
-				for cs = range(1.221+3e-4; step = 1e-4, stop = 1.229)
-					solve2!(u₀,u₁,u₂,cs,1e-4)
-				end
+            if c <= 1.229
+                for cs in range(1.221 + 3.0e-4; step = 1.0e-4, stop = c)
+                    solve2!(u₀, u₁, u₂, cs, 1.0e-4)
+                end
+            else
+                c = 1.2290408
+                for cs in range(1.221 + 3.0e-4; step = 1.0e-4, stop = 1.229)
+                    solve2!(u₀, u₁, u₂, cs, 1.0e-4)
+                end
 
-				solve2!(u₀,u₁,u₂,1.229,1e-4,1e-6)
+                solve2!(u₀, u₁, u₂, 1.229, 1.0e-4, 1.0e-6)
 
-				for cs = range(1.229+3e-6; step = 1e-6, stop = 1.22904)
-					solve2!(u₀,u₁,u₂,cs,1e-6)
-				end
+                for cs in range(1.229 + 3.0e-6; step = 1.0e-6, stop = 1.22904)
+                    solve2!(u₀, u₁, u₂, cs, 1.0e-6)
+                end
 
-				solve2!(u₀,u₁,u₂,1.22904,1e-6,1e-8)
+                solve2!(u₀, u₁, u₂, 1.22904, 1.0e-6, 1.0e-8)
 
-				for cs = range(1.22904+3e-8; step = 1e-8, stop = 1.2290407)
-					solve2!(u₀,u₁,u₂,cs,1e-8)
-				end
-				for cs = range(1.2290407+1e-8; step = 1e-8, stop = 1.2290408)
-					solve2!(u₀,u₁,u₂,cs,1e-8)
-				end
-			end
-		end
-		u = u₂
- 	end
- 	plt = plot(layout=(1,2))
- 	plot!(plt[1,1], mesh.x, [u solKdV(mesh.x,c-1)];
-  		title=string("c=",c),
-  		label=["Whitham" "KdV"])
+                for cs in range(1.22904 + 3.0e-8; step = 1.0e-8, stop = 1.2290407)
+                    solve2!(u₀, u₁, u₂, cs, 1.0e-8)
+                end
+                for cs in range(1.2290407 + 1.0e-8; step = 1.0e-8, stop = 1.2290408)
+                    solve2!(u₀, u₁, u₂, cs, 1.0e-8)
+                end
+            end
+        end
+        u = u₂
+    end
+    plt = plot(layout = (1, 2))
+    plot!(
+        plt[1, 1], mesh.x, [u solKdV(mesh.x, c - 1)];
+        title = string("c=", c),
+        label = ["Whitham" "KdV"]
+    )
 
- 	plot!(plt[1,2], fftshift(mesh.k),
-  		log10.(abs.(fftshift(fft(u))));
-  		title="frequency",
-  		label="Whitham")
+    plot!(
+        plt[1, 2], fftshift(mesh.k),
+        log10.(abs.(fftshift(fft(u))));
+        title = "frequency",
+        label = "Whitham"
+    )
 
-  	return 	maximum(abs.(u-solKdV(mesh.x,c-1)))
+    display(plt)
+    return maximum(abs.(u - solKdV(mesh.x, c - 1)))
 end
+nothing

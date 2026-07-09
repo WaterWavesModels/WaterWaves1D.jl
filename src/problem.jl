@@ -26,55 +26,59 @@ May be built, e.g., by `RK4(model)` or `RK4_naive()`.
 """
 mutable struct Problem
 
-    model   :: AbstractModel
-    initial :: InitialData
-    solver  :: TimeSolver
-    times   :: Times
-    data    :: Data
-    label   :: String
+    model::AbstractModel
+    initial::InitialData
+    solver::TimeSolver
+    times::Times
+    data::Data
+    label::String
 
-    function Problem(model   :: AbstractModel,
-        initial :: InitialData,
-        times   :: Times;
-        solver = RK4(model)  :: TimeSolver,
-        label = nothing
+    function Problem(
+            model::AbstractModel,
+            initial::InitialData,
+            times::Times;
+            solver = RK4(model)::TimeSolver,
+            label = nothing
         )
-        
-        if isnothing(label)   label = model.label end
+
+        if isnothing(label)
+            label = model.label
+        end
 
         U = model.mapto(initial)
-        data  = Data(U)
+        data = Data(U)
 
-        new(model, initial, solver, times, data, label)
+        return new(model, initial, solver, times, data, label)
 
     end
 
-    function Problem(model   :: AbstractModel,
-        initial :: InitialData,
-        param   :: NamedTuple;
-        solver = RK4(model)  :: TimeSolver,
-        label = nothing
+    function Problem(
+            model::AbstractModel,
+            initial::InitialData,
+            param::NamedTuple;
+            solver = RK4(model)::TimeSolver,
+            label = nothing
         )
 
 
-        if in(:Ns,keys(param))
-        times = Times(param; Ns = param.Ns)
-        elseif in(:ns,keys(param))
-        times = Times(param; ns = param.ns)
+        if in(:Ns, keys(param))
+            times = Times(param; Ns = param.Ns)
+        elseif in(:ns, keys(param))
+            times = Times(param; ns = param.ns)
         else
-        times = Times(param)
+            times = Times(param)
         end
 
         p = Problem(model, initial, times; solver = solver, label = label)
 
-        new(p.model, p.initial, p.solver, p.times, p.data, p.label)
+        return new(p.model, p.initial, p.solver, p.times, p.data, p.label)
 
     end
 
 end
 
 show(io::IO, p::Problem) =
-    print(io,"Initial-value problem with...\n\
+    print(io, "Initial-value problem with...\n\
     ├─Model: $(p.model.label).\n├─Initial data: $(p.initial.label).\n├─Solver: $(p.solver.label).\n\
     └─Grid of times: $(p.times.Nc) computed times on [0, $(p.times.tfin)] (timestep dt=$(p.times.dt)), \
     among which $(p.times.Ns) will be stored.")
@@ -94,16 +98,16 @@ It may be buit, e.g., by `Problem(model, initial, param)`
 Information are not printed if keyword argument `verbose = false` (default is `true`).
 
 """
-function solve!(problem :: Problem; verbose=true::Bool)
+function solve!(problem::Problem; verbose = true::Bool)
 
     ci = get(ENV, "CI", nothing) == "true"
 
     U = deepcopy(last(problem.data.U))
 
-    dt     = problem.times.dt
+    dt = problem.times.dt
     solver = problem.solver
-    model  = problem.model
-    data   = problem.data.U
+    model = problem.model
+    data = problem.data.U
 
     if verbose == true
         @info "Now solving the initial-value problem $(problem.label)\n\
@@ -113,39 +117,38 @@ function solve!(problem :: Problem; verbose=true::Bool)
 
 
     if problem.times.tc == problem.times.ts
-        pbar = Progress(problem.times.Ns-1; enabled = !ci)
-        for j in 1:problem.times.Ns-1
+        pbar = Progress(problem.times.Ns - 1; enabled = !ci)
+        for j in 1:(problem.times.Ns - 1)
             step!(solver, model, U, dt)
-            push!(data,deepcopy(U))
+            push!(data, deepcopy(U))
             next!(pbar)
         end
 
     elseif length(problem.times.ts) > 25
-        pbar = Progress(problem.times.Ns-1; enabled = !ci)
-        for j in 1:problem.times.Ns-1
+        pbar = Progress(problem.times.Ns - 1; enabled = !ci)
+        for j in 1:(problem.times.Ns - 1)
             for l in 1:problem.times.ns[j]
                 step!(solver, model, U, dt)
             end
-            push!(data,deepcopy(U))
+            push!(data, deepcopy(U))
             next!(pbar)
         end
     else
-        for j in 1:problem.times.Ns-1
-            pbar = Progress(problem.times.ns[j], desc=string("Step ",j,"/",problem.times.Ns-1,"...") ; enabled = !ci)
+        for j in 1:(problem.times.Ns - 1)
+            pbar = Progress(problem.times.ns[j], desc = string("Step ", j, "/", problem.times.Ns - 1, "..."); enabled = !ci)
             for l in 1:problem.times.ns[j]
                 step!(solver, model, U, dt)
                 next!(pbar)
             end
-            push!(data,deepcopy(U))
+            push!(data, deepcopy(U))
             println()
 
         end
     end
 
-    println()
+    return println()
 
 end
-
 
 
 using Base.Threads
@@ -159,20 +162,20 @@ The argument `problems` should be a collection (list, array...) of elements of t
 
 Information are not printed if keyword argument `verbose = false` (default is `true`).
 """
-function solve!(problems; verbose=true::Bool)
+function solve!(problems; verbose = true::Bool)
 
     ci = get(ENV, "CI", nothing) == "true"
 
     # Set up
-    U=[];nsteps=0;flag = false;
+    U = [];nsteps = 0;flag = false
     for problem in problems
         for p in problems # Check whether multi-threading is at risk, using same allocations
-            if !(p===problem) && ( p.model===problem.model || p.solver===problem.solver )
+            if !(p === problem) && (p.model === problem.model || p.solver === problem.solver)
                 flag = true
             end
         end
-        push!(U,deepcopy(last(problem.data.U)))
-        nsteps+=problem.times.Ns-1
+        push!(U, deepcopy(last(problem.data.U)))
+        nsteps += problem.times.Ns - 1
     end
     if flag
         @warn "`solve!(problems)` uses multi-threading. \
@@ -181,7 +184,7 @@ function solve!(problems; verbose=true::Bool)
         via `for problem in problems solve!(problem) end`."
     end
 
-    pg=Progress(nsteps;dt=1,enabled = !ci)
+    pg = Progress(nsteps; dt = 1, enabled = !ci)
     @threads for i in 1:length(problems)
         if verbose == true
             @info "Now solving the initial-value problem $(problems[i].label)\n\
@@ -191,18 +194,18 @@ function solve!(problems; verbose=true::Bool)
 
         if problems[i].times.tc == problems[i].times.ts
 
-            for j in 1:problems[i].times.Ns-1
+            for j in 1:(problems[i].times.Ns - 1)
                 step!(problems[i].solver, problems[i].model, U[i], problems[i].times.dt)
-                push!(problems[i].data.U,deepcopy(U[i]))
+                push!(problems[i].data.U, deepcopy(U[i]))
                 next!(pg)
             end
 
         else
-            for j in 1:problems[i].times.Ns-1
+            for j in 1:(problems[i].times.Ns - 1)
                 for l in 1:problems[i].times.ns[j]
                     step!(problems[i].solver, problems[i].model, U[i], problems[i].times.dt)
                 end
-                push!(problems[i].data.U,deepcopy(U[i]))
+                push!(problems[i].data.U, deepcopy(U[i]))
                 next!(pg)
             end
         end
@@ -212,14 +215,9 @@ function solve!(problems; verbose=true::Bool)
 
     end
 
-    println()
+    return println()
 
 end
-
-
-Base.:(≈)(x::NamedTuple{N,T}, y::NamedTuple{N2,T2}) where {N,T,N2,T2} =
-    length(N) === length(union(N,N2)) && all(k->getfield(x,k) == getfield(y,k), keys(x))
-
 
 Base.:(==)(p1::Problem, p2::Problem) =
     p1.model == p2.model &&
@@ -229,5 +227,5 @@ Base.:(==)(p1::Problem, p2::Problem) =
     p1.data == p2.data &&
     p1.label == p2.label
 
-Base.:(≈)(p1::Problem, p2::Problem ; atol::Real=0, rtol::Real= √eps()) =
-    all(isapprox.(p1.model.mapfro(p1.data.U[end]) , p2.model.mapfro(p2.data.U[end]),atol=atol,rtol=rtol))
+Base.:(≈)(p1::Problem, p2::Problem; atol::Real = 0, rtol::Real = √eps()) =
+    all(isapprox.(p1.model.mapfro(p1.data.U[end]), p2.model.mapfro(p2.data.U[end]), atol = atol, rtol = rtol))

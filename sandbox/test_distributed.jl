@@ -27,23 +27,24 @@ function run_simulation()
 
 
         #---- parameters
-        param = ( μ  = .1,
-       		  ϵ  = 1,
-                  N  = 2^11,  # number of collocation points
-                  L  = 10,    # size of the mesh (-L,L)
-                  T  = 5,     # final time of computation
-                  dt = 0.001, # timestep
-        				);
+        param = (
+            μ = 0.1,
+            ϵ = 1,
+            N = 2^11,  # number of collocation points
+            L = 10,    # size of the mesh (-L,L)
+            T = 5,     # final time of computation
+            dt = 0.001, # timestep
+        )
         #---- initial data
-        g(x) = exp.(-abs.(x).^4);
-        z(x) = 0*exp.(-x.^2);
-        init = Init(g,z);
+        g(x) = exp.(-abs.(x) .^ 4)
+        z(x) = 0 * exp.(-x .^ 2)
+        init = Init(g, z)
 
         #---- models to compare
-        models=AbstractModel[]
-        push!(models,WaterWaves(param))
-        push!(models,PseudoSpectral(param;order=2,dealias=1,lowpass=1/100))
-        push!(models,PseudoSpectral(param;order=3,dealias=1,lowpass=1/100))
+        models = AbstractModel[]
+        push!(models, WaterWaves(param))
+        push!(models, PseudoSpectral(param; order = 2, dealias = 1, lowpass = 1 / 100))
+        push!(models, PseudoSpectral(param; order = 3, dealias = 1, lowpass = 1 / 100))
 
 
         function solve_problem(model)
@@ -64,15 +65,15 @@ function run_simulation()
 
     @timeit "Distributed" begin
 
-        rc = RemoteChannel(()->Channel(3));
+        rc = RemoteChannel(() -> Channel(3))
         pids = collect(workers())
         @sync for model in models
-             @async put!(rc, (model.label,solve_problem(model)))
+            @async put!(rc, (model.label, solve_problem(model)))
         end
 
         results = (take!(rc) for _ in 1:3)
 
-        p1 = Dict( k => v for (k,v) in results)
+        p1 = Dict(k => v for (k, v) in results)
 
         @show keys(p1)
     end
@@ -81,10 +82,10 @@ function run_simulation()
     print_timer()
 
     #---- Tests
-    @testset "Final" begin
-     	@test p1["water waves"] == p2[1]
-     	@test p1["WW2"] == p2[2]
-     	@test p1["WW3"] == p2[3]
+    return @testset "Final" begin
+        @test p1["water waves"] == p2[1]
+        @test p1["WW2"] == p2[2]
+        @test p1["WW3"] == p2[3]
     end
 
 end

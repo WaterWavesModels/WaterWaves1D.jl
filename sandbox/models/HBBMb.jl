@@ -34,119 +34,125 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct HBBMb <: AbstractModel
 
-	label   :: String
-	f!		:: Function
-	mapto	:: Function
-	mapfro	:: Function
-	mapfrofull	:: Function
-	info    :: String
+    label::String
+    f!::Function
+    mapto::Function
+    mapfro::Function
+    mapfrofull::Function
+    info::String
 
-    function HBBMb(param::NamedTuple; 
-								prep = 1,
-								mesh = Mesh(param),
-								dealias	= 0,
-								ktol	= 0,
-								stable	= 1/2,
-								label	= nothing
-								)
-		# Set up
-		δ 	= param.δ
-		ϵ 	= param.ϵ
+    function HBBMb(
+            param::NamedTuple;
+            prep = 1,
+            mesh = Mesh(param),
+            dealias = 0,
+            ktol = 0,
+            stable = 1 / 2,
+            label = nothing
+        )
+        # Set up
+        δ = param.δ
+        ϵ = param.ϵ
 
-		if isnothing(label)
-				label = "hyperbolized BBM system"
-		end
+        if isnothing(label)
+            label = "hyperbolized BBM system"
+        end
 
-		# Print information
-		info = "$label model.\n"
-		info *= "├─Relaxation parameter ϵ=$ϵ.\n"
-		info *= "├─Shallowness parameter δ=$δ.\n"
-		info *= "├─Initial data prepared of order $prep.\n"
-		if dealias == 0
-			info *= "├─No dealiasing. "
-		else
-			info *= "├─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
-		end
-		if ktol == 0
-			info *= "No Krasny filter. "
-		else
-			info *= "Krasny filter with tolerance $ktol."
-		end
-		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
+        # Print information
+        info = "$label model.\n"
+        info *= "├─Relaxation parameter ϵ=$ϵ.\n"
+        info *= "├─Shallowness parameter δ=$δ.\n"
+        info *= "├─Initial data prepared of order $prep.\n"
+        if dealias == 0
+            info *= "├─No dealiasing. "
+        else
+            info *= "├─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
+        end
+        if ktol == 0
+            info *= "No Krasny filter. "
+        else
+            info *= "Krasny filter with tolerance $ktol."
+        end
+        info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
-		# Pre-allocate useful data
-		k = mesh.k
-		x 	= mesh.x
-		∂ₓ	=  1im * k
+        # Pre-allocate useful data
+        k = mesh.k
+        x = mesh.x
+        ∂ₓ = 1im * k
 
-		if dealias == 0
-			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
-		else
-			K = (mesh.kmax-mesh.kmin)/(2+dealias)
-			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
-		end
-		u = zeros(Complex{Float64}, mesh.N)
-		fftu, fftv, fftw, B = (similar(u),).*ones(4)
+        if dealias == 0
+            Π⅔ = ones(size(k)) # no dealiasing (Π⅔=Id)
+        else
+            K = (mesh.kmax - mesh.kmin) / (2 + dealias)
+            Π⅔ = abs.(k) .<= K # Dealiasing low-pass filter
+        end
+        u = zeros(Complex{Float64}, mesh.N)
+        fftu, fftv, fftw, B = (similar(u),) .* ones(4)
 
-		# Evolution equations are ∂t U = f(U)
-		function f!(U;ϵ=ϵ)
-				fftu .= U[1]; fftv .= U[2]; fftw .= U[3] ; B .= U[4] ;
-				u .= ifft(fftu)
-	
-				U[1] .= -∂ₓ.* (fftu .+ 1/2*Π⅔.*fft( u.^2 ) ) -  δ^2*fft(B.^(4*stable) .* ifft(∂ₓ.* fftv))
-				U[2] .=  (fftw .- ∂ₓ.* fftu)/ϵ^2
-				U[3] .= -fft(B.^(4*(1-stable)) .*ifft(fftv))
-				U[4] .= zero(B)
-				for u in U u[ abs.(u).< ktol ].=0 end
-		end
+        # Evolution equations are ∂t U = f(U)
+        function f!(U; ϵ = ϵ)
+            fftu .= U[1]; fftv .= U[2]; fftw .= U[3] ; B .= U[4]
+            u .= ifft(fftu)
 
-		# Build raw data from physical data.
-		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
-		function mapto(data::InitialData)
-			fftu .= fft(data.v(x))
-			
-			if prep == 0 
-				fftw .=  fft(zero(x))
-			else
-				fftw .= ∂ₓ.*fftu
-			end
+            U[1] .= -∂ₓ .* (fftu .+ 1 / 2 * Π⅔ .* fft(u .^ 2)) - δ^2 * fft(B .^ (4 * stable) .* ifft(∂ₓ .* fftv))
+            U[2] .= (fftw .- ∂ₓ .* fftu) / ϵ^2
+            U[3] .= -fft(B .^ (4 * (1 - stable)) .* ifft(fftv))
+            U[4] .= zero(B)
+            for u in U
+                u[abs.(u) .< ktol] .= 0
+            end
+            return
+        end
 
-			if prep <= 1
-				fftv .= fft(zero(x))
-			else
-				u .= ifft(fftu)
-				fftv .= (∂ₓ.^2).* (fftu .+ 1/2*Π⅔.*fft( u.^2 ))./ (1 .+ (δ*k).^2)				
-			end
-			
-			U = [Π⅔.*fftu, Π⅔.*fftv, Π⅔.*fftw, 1 .- data.η(x)]
+        # Build raw data from physical data.
+        # Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
+        function mapto(data::InitialData)
+            fftu .= fft(data.v(x))
 
-			for u in U u[ abs.(u).< ktol ].=0 end
-			return U
-		end
+            if prep == 0
+                fftw .= fft(zero(x))
+            else
+                fftw .= ∂ₓ .* fftu
+            end
 
-		# Reconstruct variables from raw data
-		# Return `(η,v,x)`, where
-		# - `u` is the surface deformation;
-		# - `v` is the derivative of the trace of the velocity potential;
-		# - `x` is the vector of collocation points
-		function mapfro(U)
-			fftu .= U[1];
-			fftv .= U[2];
-			fftw .= U[3]; 
-			B.= U[4];
-			real(ifft(fftu)),real(B),mesh.x
-		end
+            if prep <= 1
+                fftv .= fft(zero(x))
+            else
+                u .= ifft(fftu)
+                fftv .= (∂ₓ .^ 2) .* (fftu .+ 1 / 2 * Π⅔ .* fft(u .^ 2)) ./ (1 .+ (δ * k) .^ 2)
+            end
+
+            U = [Π⅔ .* fftu, Π⅔ .* fftv, Π⅔ .* fftw, 1 .- data.η(x)]
+
+            for u in U
+                u[abs.(u) .< ktol] .= 0
+            end
+            return U
+        end
+
+        # Reconstruct variables from raw data
+        # Return `(η,v,x)`, where
+        # - `u` is the surface deformation;
+        # - `v` is the derivative of the trace of the velocity potential;
+        # - `x` is the vector of collocation points
+        function mapfro(U)
+            fftu .= U[1]
+            fftv .= U[2]
+            fftw .= U[3]
+            B .= U[4]
+            return real(ifft(fftu)), real(B), mesh.x
+        end
 
         function mapfrofull(U)
-			fftu .= U[1]
-			fftv .= U[2]
-			fftw .= U[3]; 
-			B.= U[4];
+            fftu .= U[1]
+            fftv .= U[2]
+            fftw .= U[3]
+            B .= U[4]
 
-			real(ifft(fftu)),real(ifft(fftv)),real(ifft(fftw)),real(B),mesh.x
-		end
+            return real(ifft(fftu)), real(ifft(fftv)), real(ifft(fftw)), real(B), mesh.x
+        end
 
-		new(label, f!, mapto, mapfro, mapfrofull, info )
+        return new(label, f!, mapto, mapfro, mapfrofull, info)
     end
 
 

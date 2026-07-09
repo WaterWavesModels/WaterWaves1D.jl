@@ -32,91 +32,97 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct KG <: AbstractModel
 
-	label   :: String
-	f!		:: Function
-	mapto	:: Function
-	mapfro	:: Function
-	info    :: String
+    label::String
+    f!::Function
+    mapto::Function
+    mapfro::Function
+    info::String
 
-    function KG(param::NamedTuple; 
-								mesh = Mesh(param),
-								dealias	= 0,
-								ktol	= 0,
-								label	= nothing,
-								c₀ = 0
-								)
-		# Set up
-		δ 	= param.δ
-		ϵ 	= param.ϵ
+    function KG(
+            param::NamedTuple;
+            mesh = Mesh(param),
+            dealias = 0,
+            ktol = 0,
+            label = nothing,
+            c₀ = 0
+        )
+        # Set up
+        δ = param.δ
+        ϵ = param.ϵ
 
-		if isnothing(label)
-				label = "Klein-Gordon system"
-		end
-
-
-		# Print information
-		info = "$label model.\n"
-		info *= "├─Relaxation parameter ϵ=$ϵ.\n"
-		info *= "├─Shallowness parameter δ=$δ.\n"
-		if dealias == 0
-			info *= "├─No dealiasing. "
-		else
-			info *= "├─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
-		end
-		if ktol == 0
-			info *= "No Krasny filter. "
-		else
-			info *= "Krasny filter with tolerance $ktol."
-		end
-		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
-
-		# Pre-allocate useful data
-		k = mesh.k
-		x 	= mesh.x
-		∂ₓ	=  1im * k
-
-		F 	= sqrt.(1 .+ abs.(δ * k).^2)
+        if isnothing(label)
+            label = "Klein-Gordon system"
+        end
 
 
-		if dealias == 0
-			Π⅔ 	= ones(size(k)) # no dealiasing (Π⅔=Id)
-		else
-			K = (mesh.kmax-mesh.kmin)/(2+dealias)
-			Π⅔ 	= abs.(k) .<= K # Dealiasing low-pass filter
-		end
-		u = zeros(Complex{Float64}, mesh.N)
-		fftv, fftw = (similar(u),).*ones(2)
+        # Print information
+        info = "$label model.\n"
+        info *= "├─Relaxation parameter ϵ=$ϵ.\n"
+        info *= "├─Shallowness parameter δ=$δ.\n"
+        if dealias == 0
+            info *= "├─No dealiasing. "
+        else
+            info *= "├─Dealiasing with Orszag's rule adapted to power $(dealias + 1) nonlinearity. "
+        end
+        if ktol == 0
+            info *= "No Krasny filter. "
+        else
+            info *= "Krasny filter with tolerance $ktol."
+        end
+        info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
-		# Evolution equations are ∂t U = f(U)
-		function f!(U;ϵ=ϵ)
-				fftv .= U[1]; fftw .= U[2] ;
-	
-				U[1] .= -1/ϵ * F.* fftw
-				U[2] .=  1/ϵ * F.* fftv .- c₀*(δ*∂ₓ./F).^2 .* (∂ₓ.*fftw)
+        # Pre-allocate useful data
+        k = mesh.k
+        x = mesh.x
+        ∂ₓ = 1im * k
 
-				for u in U u[ abs.(u).< ktol ].=0 end
-		end
+        F = sqrt.(1 .+ abs.(δ * k) .^ 2)
 
-		# Build raw data from physical data.
-		# Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
-		function mapto(data::InitialData)
-			
-			U = [Π⅔.*fft(data.η(x)), Π⅔.*fft(data.v(x))]
 
-			for u in U u[ abs.(u).< ktol ].=0 end
-			return U
-		end
+        if dealias == 0
+            Π⅔ = ones(size(k)) # no dealiasing (Π⅔=Id)
+        else
+            K = (mesh.kmax - mesh.kmin) / (2 + dealias)
+            Π⅔ = abs.(k) .<= K # Dealiasing low-pass filter
+        end
+        u = zeros(Complex{Float64}, mesh.N)
+        fftv, fftw = (similar(u),) .* ones(2)
 
-		# Reconstruct variables from raw data
-		# Return `(η,v,x)`, where
-		# - `u` is the surface deformation;
-		# - `v` is the derivative of the trace of the velocity potential;
-		# - `x` is the vector of collocation points
-		function mapfro(U)
-			real(ifft(U[1])),real(ifft(U[2])),mesh.x
-		end
+        # Evolution equations are ∂t U = f(U)
+        function f!(U; ϵ = ϵ)
+            fftv .= U[1]; fftw .= U[2]
 
-		new(label, f!, mapto, mapfro, info )
+            U[1] .= -1 / ϵ * F .* fftw
+            U[2] .= 1 / ϵ * F .* fftv .- c₀ * (δ * ∂ₓ ./ F) .^ 2 .* (∂ₓ .* fftw)
+
+            for u in U
+                u[abs.(u) .< ktol] .= 0
+            end
+            return
+        end
+
+        # Build raw data from physical data.
+        # Discrete Fourier transform with, possibly, dealiasing and Krasny filter.
+        function mapto(data::InitialData)
+
+            U = [Π⅔ .* fft(data.η(x)), Π⅔ .* fft(data.v(x))]
+
+            for u in U
+                u[abs.(u) .< ktol] .= 0
+            end
+            return U
+        end
+
+        # Reconstruct variables from raw data
+        # Return `(η,v,x)`, where
+        # - `u` is the surface deformation;
+        # - `v` is the derivative of the trace of the velocity potential;
+        # - `x` is the vector of collocation points
+        function mapfro(U)
+            return real(ifft(U[1])), real(ifft(U[2])), mesh.x
+        end
+
+        return new(label, f!, mapto, mapfro, info)
     end
 
 

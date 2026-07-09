@@ -19,7 +19,7 @@ A_copy = copy(A)
 B_copy = copy(B)
 
 A_test = dA
-B_test = dB 
+B_test = dB
 
 right_answer = gesv!(A, B)
 
