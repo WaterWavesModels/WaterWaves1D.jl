@@ -3,7 +3,8 @@
 [![Build Status](https://github.com/WaterWavesModels/WaterWaves1D.jl/workflows/CI/badge.svg)](https://github.com/WaterWavesModels/WaterWaves1D.jl/actions)
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://waterwavesmodels.github.io/WaterWaves1D.jl/stable/)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://waterwavesmodels.github.io/WaterWaves1D.jl/dev/)
-[![DOI](https://zenodo.org/badge/154723425.svg)](https://zenodo.org/badge/latestdoi/154723425)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.17365679.svg)](https://doi.org/10.5281/zenodo.7142920)
+[![Aqua QA](https://juliatesting.github.io/Aqua.jl/dev/assets/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 
 
 ## Installation
