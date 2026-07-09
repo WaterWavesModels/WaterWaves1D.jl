@@ -216,11 +216,6 @@ function solve!(problems; verbose=true::Bool)
 
 end
 
-
-Base.:(≈)(x::NamedTuple{N,T}, y::NamedTuple{N2,T2}) where {N,T,N2,T2} =
-    length(N) === length(union(N,N2)) && all(k->getfield(x,k) == getfield(y,k), keys(x))
-
-
 Base.:(==)(p1::Problem, p2::Problem) =
     p1.model == p2.model &&
     p1.initial == p2.initial &&
