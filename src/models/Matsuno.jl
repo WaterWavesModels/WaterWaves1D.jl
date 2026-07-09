@@ -1,4 +1,4 @@
-export Matsuno_fast,Matsuno
+export Matsuno_fast, Matsuno
 
 """
 	Matsuno_fast(param; kwargs...)
@@ -7,69 +7,71 @@ Same as [`Matsuno`](@ref), but faster.
 """
 mutable struct Matsuno_fast <: AbstractModel
 
-	label   :: String
-	f!		:: Function
-	mapto	:: Function
-	mapfro	:: Function
-	info	:: String
+    label::String
+    f!::Function
+    mapto::Function
+    mapfro::Function
+    info::String
 
-    function Matsuno_fast(param::NamedTuple;
-							mesh = Mesh(param),
-							IL	    = false,
-							dealias = false,
-							label = "Matsuno" )
+    function Matsuno_fast(
+            param::NamedTuple;
+            mesh = Mesh(param),
+            IL = false,
+            dealias = false,
+            label = "Matsuno"
+        )
 
-		# Set-up
-		μ 	= param.μ
-		ϵ 	= param.ϵ
-		if !in(:ν,keys(param))
-			if μ > 1
-				ν = 1/sqrt(μ)
-				nu = "1/√μ (deep water case)"
-			else
-				ν = 1
-				nu = "1 (shallow water case)"
-			end
-		else
-			ν = param.ν
-			nu = "$ν"
-		end
-		if μ == Inf || ν==0 || IL == true # infinite layer case
-			IL = true;  # IL (=Infinite layer) is a flag to be used thereafter
-			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
-		end
+        # Set-up
+        μ = param.μ
+        ϵ = param.ϵ
+        if !in(:ν, keys(param))
+            if μ > 1
+                ν = 1 / sqrt(μ)
+                nu = "1/√μ (deep water case)"
+            else
+                ν = 1
+                nu = "1 (shallow water case)"
+            end
+        else
+            ν = param.ν
+            nu = "$ν"
+        end
+        if μ == Inf || ν == 0 || IL == true # infinite layer case
+            IL = true   # IL (=Infinite layer) is a flag to be used thereafter
+            μ = 1; ν = 1  # Then we should set μ=ν=1 in subsequent formula.
+        end
 
-		# Print information
-		info = "Matsuno model.\n"
-		if IL == true
-			info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
-		else
-			info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
-					scaling parameter ν=$nu.\n"
-		end
-		if dealias == true || dealias == 1
-			info *= "└─Dealiasing with Orszag’s 3/2 rule. "
-		else
-			info *= "└─No dealiasing. "
-		end
-		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
+        # Print information
+        info = "Matsuno model.\n"
+        if IL == true
+            info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+        else
+            info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
+                    scaling parameter ν=$nu.\n"
+        end
+        if dealias == true || dealias == 1
+            info *= "└─Dealiasing with Orszag’s 3/2 rule. "
+        else
+            info *= "└─No dealiasing. "
+        end
+        info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
-		# Pre-allocate useful data
-		x = mesh.x
-		k = mesh.k
-		if IL == true
-			Tμ 	= -1im * sign.(k)
-			G₀ 	= abs.(k)
-		else
-			Tμ 	= -1im* sign.(k) .* tanh.(sqrt(μ)*abs.(k))
-			G₀ 	= sqrt(μ)*abs.(k).*tanh.(sqrt(μ)*abs.(k))
-		end
-		∂ₓ	=  1im * sqrt(μ)* k            # Differentiation
-		if dealias == true || dealias == 1
-			Π⅔    = abs.(k) .< (mesh.kmax-mesh.kmin)/3    # Dealiasing low-pass filter
-		else
-			Π⅔    = zero(k) .+ 1     		# No dealiasing (Π⅔=Id)
-		end
+        # Pre-allocate useful data
+        x = mesh.x
+        k = mesh.k
+        if IL == true
+            Tμ = -1im * sign.(k)
+            G₀ = abs.(k)
+        else
+            Tμ = -1im * sign.(k) .* tanh.(sqrt(μ) * abs.(k))
+            G₀ = sqrt(μ) * abs.(k) .* tanh.(sqrt(μ) * abs.(k))
+        end
+        ∂ₓ = 1im * sqrt(μ) * k            # Differentiation
+        if dealias == true || dealias == 1
+            Π⅔ = abs.(k) .< (mesh.kmax - mesh.kmin) / 3    # Dealiasing low-pass filter
+        else
+            Π⅔ = zero(k) .+ 1             # No dealiasing (Π⅔=Id)
+        end
 
         ζ = zeros(Complex{Float64}, mesh.N)
         unew = zeros(Complex{Float64}, mesh.N)
@@ -79,96 +81,97 @@ mutable struct Matsuno_fast <: AbstractModel
         I₂ = zeros(Complex{Float64}, mesh.N)
         I₃ = zeros(Complex{Float64}, mesh.N)
 
-        Px  = plan_fft(ζ; flags = FFTW.MEASURE)
+        Px = plan_fft(ζ; flags = FFTW.MEASURE)
 
-		# Evolution equations are ∂t U = f(U)
-		function f!(U)
+        # Evolution equations are ∂t U = f(U)
+        function f!(U)
 
-		    for i in eachindex(ζ)
-		        ζ[i] = G₀[i] * U[1][i]
-		    end
+            for i in eachindex(ζ)
+                ζ[i] = G₀[i] * U[1][i]
+            end
 
-		    ldiv!(unew, Px, ζ )
+            ldiv!(unew, Px, ζ)
 
-		    for i in eachindex(ζ)
-		        ζ[i] = ∂ₓ[i] * U[1][i]
-		    end
+            for i in eachindex(ζ)
+                ζ[i] = ∂ₓ[i] * U[1][i]
+            end
 
-		    ldiv!(I₁, Px, ζ)
+            ldiv!(I₁, Px, ζ)
 
-		    unew  .*= I₁
+            unew .*= I₁
 
-		    mul!(I₁, Px, unew)
+            mul!(I₁, Px, unew)
 
-		    I₁  .*= ϵ .* Π⅔
-		    I₁  .-= ζ
+            I₁ .*= ϵ .* Π⅔
+            I₁ .-= ζ
 
-		    ldiv!(ζ, Px, U[1])
-		    ldiv!(unew, Px, U[2])
+            ldiv!(ζ, Px, U[1])
+            ldiv!(unew, Px, U[2])
 
-		    I₂    .= ζ .* unew
+            I₂ .= ζ .* unew
 
-		    mul!(I₃, Px, I₂)
+            mul!(I₃, Px, I₂)
 
-		    I₃    .*= ∂ₓ
+            I₃ .*= ∂ₓ
 
-		    for i in eachindex(Tμ)
-		        U[1][i]  = Tμ[i] * U[2][i]
-		        I₀[i] = G₀[i] * U[2][i]
-		    end
+            for i in eachindex(Tμ)
+                U[1][i] = Tμ[i] * U[2][i]
+                I₀[i] = G₀[i] * U[2][i]
+            end
 
-		    ldiv!(I₂, Px, I₀)
+            ldiv!(I₂, Px, I₀)
 
-		    I₂    .*= ζ
+            I₂ .*= ζ
 
-		    mul!(ζ, Px, I₂)
+            mul!(ζ, Px, I₂)
 
-		    ζ  .*= Tμ
-		    I₃    .+= ζ
-		    I₃    .*= ϵ .* Π⅔
+            ζ .*= Tμ
+            I₃ .+= ζ
+            I₃ .*= ϵ .* Π⅔
 
-		    for i in eachindex(I₃)
-		        U[1][i] -= I₃[i]
-		    end
-			U[1] ./= sqrt(μ)/ν
+            for i in eachindex(I₃)
+                U[1][i] -= I₃[i]
+            end
+            U[1] ./= sqrt(μ) / ν
 
-		    I₃    .=  unew.^2
+            I₃ .= unew .^ 2
 
-		    mul!(unew, Px, I₃)
+            mul!(unew, Px, I₃)
 
-		    unew  .*= ∂ₓ
-		    unew  .*= ϵ/2/ν .* Π⅔
-		    I₁    .-= unew
+            unew .*= ∂ₓ
+            unew .*= ϵ / 2 / ν .* Π⅔
+            I₁ .-= unew
 
-		    for i in eachindex(I₁)
-		        U[2][i] =  I₁[i]/sqrt(μ)
-		    end
+            for i in eachindex(I₁)
+                U[2][i] = I₁[i] / sqrt(μ)
+            end
 
-		end
+            return
+        end
 
-		# Build raw data from physical data.
-		function mapto(data::InitialData)
-			fftη = Π⅔ .* fft(data.η(x));
-			fftv = Π⅔ .* fft(data.v(x));
-			U = [fftη , fftv-ϵ* Π⅔ .*fft(ifft(Tμ.*fftv).*ifft(∂ₓ.*fftη) )]
-			return U
-		end
+        # Build raw data from physical data.
+        function mapto(data::InitialData)
+            fftη = Π⅔ .* fft(data.η(x))
+            fftv = Π⅔ .* fft(data.v(x))
+            U = [fftη, fftv - ϵ * Π⅔ .* fft(ifft(Tμ .* fftv) .* ifft(∂ₓ .* fftη))]
+            return U
+        end
 
-		# Reconstruct physical variables from raw data
-		# Return `(η,v,x)`, where
-		# - `η` is the surface deformation;
-		# - `v` is the derivative of the trace of the velocity potential;
-		# - `x` is the vector of collocation points
-		function mapfro(U;n=10)
-			∂ζ=ifft(∂ₓ.*U[1]);
-			I₁.=U[2];I₂.=U[2];
-			for j=1:n
-				I₂.=I₁+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*I₂))
-			end
-			real(ifft(U[1])),real(ifft(I₂)),mesh.x
-		end
+        # Reconstruct physical variables from raw data
+        # Return `(η,v,x)`, where
+        # - `η` is the surface deformation;
+        # - `v` is the derivative of the trace of the velocity potential;
+        # - `x` is the vector of collocation points
+        function mapfro(U; n = 10)
+            ∂ζ = ifft(∂ₓ .* U[1])
+            I₁ .= U[2];I₂ .= U[2]
+            for j in 1:n
+                I₂ .= I₁ + ϵ * Π⅔ .* fft(∂ζ .* ifft(Tμ .* I₂))
+            end
+            return real(ifft(U[1])), real(ifft(I₂)), mesh.x
+        end
 
-		new(label, f!, mapto, mapfro, info )
+        return new(label, f!, mapto, mapfro, info)
     end
 end
 
@@ -215,71 +218,73 @@ See also [`Matsuno_fast`](@ref).
 """
 mutable struct Matsuno <: AbstractModel
 
-	label   :: String
-	f!		:: Function
-	mapto	:: Function
-	mapfro	:: Function
-	info 	:: String
+    label::String
+    f!::Function
+    mapto::Function
+    mapfro::Function
+    info::String
 
 
-    function Matsuno(param::NamedTuple ;
-						mesh = Mesh(param),
-						IL	    = false,
-						dealias = false,
-						label = "Matsuno" )
+    function Matsuno(
+            param::NamedTuple;
+            mesh = Mesh(param),
+            IL = false,
+            dealias = false,
+            label = "Matsuno"
+        )
 
-		# Set up
-		μ 	= param.μ
-		ϵ 	= param.ϵ
-		if !in(:ν,keys(param))
-			if μ > 1
-				ν = 1/sqrt(μ)
-				nu = "1/√μ (deep water case)"
-			else
-				ν = 1
-				nu = "1 (shallow water case)"
-			end
-		else
-			ν = param.ν
-			nu = "$ν"
-		end
-		if μ == Inf || ν==0 || IL == true # infinite layer case
-			IL = true;  # IL (=Infinite layer) is a flag to be used thereafter
-			μ = 1; ν = 1; # Then we should set μ=ν=1 in subsequent formula.
-		end
+        # Set up
+        μ = param.μ
+        ϵ = param.ϵ
+        if !in(:ν, keys(param))
+            if μ > 1
+                ν = 1 / sqrt(μ)
+                nu = "1/√μ (deep water case)"
+            else
+                ν = 1
+                nu = "1 (shallow water case)"
+            end
+        else
+            ν = param.ν
+            nu = "$ν"
+        end
+        if μ == Inf || ν == 0 || IL == true # infinite layer case
+            IL = true   # IL (=Infinite layer) is a flag to be used thereafter
+            μ = 1; ν = 1  # Then we should set μ=ν=1 in subsequent formula.
+        end
 
-		# Print information
-		info = "Matsuno model.\n"
-		if IL == true
-			info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
-		else
-			info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
-					scaling parameter ν=$nu.\n"
-		end
-		if dealias == true || dealias == 1
-			info *= "└─Dealiasing with Orszag’s 3/2 rule. "
-		else
-			info *= "└─No dealiasing. "
-		end
-		info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
+        # Print information
+        info = "Matsuno model.\n"
+        if IL == true
+            info *= "├─Steepness parameter ϵ=$ϵ (infinite depth case).\n"
+        else
+            info *= "├─Shallowness parameter μ=$μ, nonlinearity parameter ϵ=$ϵ, \
+                    scaling parameter ν=$nu.\n"
+        end
+        if dealias == true || dealias == 1
+            info *= "└─Dealiasing with Orszag’s 3/2 rule. "
+        else
+            info *= "└─No dealiasing. "
+        end
+        info *= "\nDiscretized with $(mesh.N) collocation points on [$(mesh.xmin), $(mesh.xmax)]."
 
-		# Pre-allocate useful data
-		x = mesh.x
-		k = mesh.k
-		if IL == true
-			Tμ 	= -1im * sign.(k)
-			G₀ 	= abs.(k)
-		else
-			Tμ 	= -1im* sign.(k) .* tanh.(sqrt(μ)*abs.(k))
-			G₀ 	= sqrt(μ)*abs.(k).*tanh.(sqrt(μ)*abs.(k))
-		end
-		∂ₓ	=  1im * sqrt(μ)* k            # Differentiation
+        # Pre-allocate useful data
+        x = mesh.x
+        k = mesh.k
+        if IL == true
+            Tμ = -1im * sign.(k)
+            G₀ = abs.(k)
+        else
+            Tμ = -1im * sign.(k) .* tanh.(sqrt(μ) * abs.(k))
+            G₀ = sqrt(μ) * abs.(k) .* tanh.(sqrt(μ) * abs.(k))
+        end
+        ∂ₓ = 1im * sqrt(μ) * k            # Differentiation
 
-		if dealias == true || dealias == 1
-			Π⅔    = abs.(k) .< (mesh.kmax-mesh.kmin)/3 	# Dealiasing low-pass filter
-		else
-			Π⅔    = zero(k) .+ 1     		# No dealiasing (Π⅔=Id)
-		end
+        if dealias == true || dealias == 1
+            Π⅔ = abs.(k) .< (mesh.kmax - mesh.kmin) / 3     # Dealiasing low-pass filter
+        else
+            Π⅔ = zero(k) .+ 1             # No dealiasing (Π⅔=Id)
+        end
 
         ζ = zeros(Complex{Float64}, mesh.N)
         unew = zeros(Complex{Float64}, mesh.N)
@@ -288,43 +293,43 @@ mutable struct Matsuno <: AbstractModel
         I₂ = zeros(Complex{Float64}, mesh.N)
         I₃ = zeros(Complex{Float64}, mesh.N)
 
-		# Evolution equations are ∂t U = f(U)
-		function f!(U)
+        # Evolution equations are ∂t U = f(U)
+        function f!(U)
 
-		   ζ .= ifft(U[1])
-		   unew .= ifft(U[2])
-		   I₃ .= fft(ifft(∂ₓ.*U[1]).*ifft(G₀.*U[1]))
-		   I₁ .= Tμ.*U[2].-ϵ*Π⅔.*(Tμ.*fft(ζ.*ifft(G₀.*U[2])).+∂ₓ.*fft(ζ.*unew))
-		   I₂ .= -ν*(∂ₓ.*U[1])+ϵ*Π⅔.*(ν*I₃-∂ₓ.*fft(unew.^2)/2)
-		   #
-		   U[1] .= I₁/sqrt(μ)/ν
-		   U[2] .= I₂/sqrt(μ)/ν
+            ζ .= ifft(U[1])
+            unew .= ifft(U[2])
+            I₃ .= fft(ifft(∂ₓ .* U[1]) .* ifft(G₀ .* U[1]))
+            I₁ .= Tμ .* U[2] .- ϵ * Π⅔ .* (Tμ .* fft(ζ .* ifft(G₀ .* U[2])) .+ ∂ₓ .* fft(ζ .* unew))
+            I₂ .= -ν * (∂ₓ .* U[1]) + ϵ * Π⅔ .* (ν * I₃ - ∂ₓ .* fft(unew .^ 2) / 2)
+            #
+            U[1] .= I₁ / sqrt(μ) / ν
+            return U[2] .= I₂ / sqrt(μ) / ν
 
-		end
+        end
 
-		# Build raw data from physical data.
-		function mapto(data::InitialData)
-			fftη = Π⅔ .* fft(data.η(x));
-			fftv = Π⅔ .* fft(data.v(x));
-			U = [fftη, fftv-ϵ* Π⅔ .*fft(ifft(Tμ.*fftv).*ifft(∂ₓ.*fftη) )]
-			return U
-		end
+        # Build raw data from physical data.
+        function mapto(data::InitialData)
+            fftη = Π⅔ .* fft(data.η(x))
+            fftv = Π⅔ .* fft(data.v(x))
+            U = [fftη, fftv - ϵ * Π⅔ .* fft(ifft(Tμ .* fftv) .* ifft(∂ₓ .* fftη))]
+            return U
+        end
 
-		# Reconstruct physical variables from raw data
-		# Return `(η,v,x)`, where
-		# - `η` is the surface deformation;
-		# - `v` is the derivative of the trace of the velocity potential;
-		# - `x` is the vector of collocation points
-		function mapfro(U;n=10)
-			∂ζ=ifft(∂ₓ.*U[1]);
-			I₁.=U[2];I₂.=U[2];
-			for j=1:n
-				I₂.=I₁+ϵ*Π⅔ .* fft( ∂ζ .* ifft(Tμ.*I₂))
-			end
-			real(ifft(U[1])),real(ifft(I₂)),mesh.x
-		end
+        # Reconstruct physical variables from raw data
+        # Return `(η,v,x)`, where
+        # - `η` is the surface deformation;
+        # - `v` is the derivative of the trace of the velocity potential;
+        # - `x` is the vector of collocation points
+        function mapfro(U; n = 10)
+            ∂ζ = ifft(∂ₓ .* U[1])
+            I₁ .= U[2];I₂ .= U[2]
+            for j in 1:n
+                I₂ .= I₁ + ϵ * Π⅔ .* fft(∂ζ .* ifft(Tμ .* I₂))
+            end
+            return real(ifft(U[1])), real(ifft(I₂)), mesh.x
+        end
 
 
-		new(label, f!, mapto, mapfro, info )
+        return new(label, f!, mapto, mapfro, info)
     end
 end

@@ -45,37 +45,39 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 """
 mutable struct SerreGreenNaghdi <: AbstractModel
 
-	label   :: String
-	f!		:: Function
-	mapto	:: Function
-	mapfro	:: Function
-	mapfrofull	:: Function
-	info	:: String
+    label::String
+    f!::Function
+    mapto::Function
+    mapfro::Function
+    mapfrofull::Function
+    info::String
 
-    function SerreGreenNaghdi(param::NamedTuple;
-							mesh = Mesh(param),
-							dealias = 0,
-							ktol	= 0,
-							iterate	= true,
-							gtol	= 1e-14,
-							precond	= true,
-							restart	= nothing,
-							maxiter	= nothing,
-							label	= "Green-Naghdi"
-							)
+    function SerreGreenNaghdi(
+            param::NamedTuple;
+            mesh = Mesh(param),
+            dealias = 0,
+            ktol = 0,
+            iterate = true,
+            gtol = 1.0e-14,
+            precond = true,
+            restart = nothing,
+            maxiter = nothing,
+            label = "Green-Naghdi"
+        )
 
-		m=WhithamGreenNaghdi(param;SGN=true,
-							mesh=mesh,
-							dealias=dealias,
-							ktol=ktol,
-							iterate=iterate,
-							gtol=gtol,
-							precond=precond,
-							restart=restart,
-							maxiter=maxiter,
-							label=label
-							)
+        m = WhithamGreenNaghdi(
+            param; SGN = true,
+            mesh = mesh,
+            dealias = dealias,
+            ktol = ktol,
+            iterate = iterate,
+            gtol = gtol,
+            precond = precond,
+            restart = restart,
+            maxiter = maxiter,
+            label = label
+        )
 
-		new(m.label, m.f!, m.mapto, m.mapfro, m.mapfrofull, m.info )
+        return new(m.label, m.f!, m.mapto, m.mapfro, m.mapfrofull, m.info)
     end
 end

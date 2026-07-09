@@ -1,8 +1,8 @@
 module WaterWaves1D
 
 using DocStringExtensions
-using ProgressMeter,FFTW
-using LinearMaps,IterativeSolvers,LinearAlgebra
+using ProgressMeter, FFTW
+using LinearMaps, IterativeSolvers, LinearAlgebra
 using HDF5
 import Base.show
 
@@ -50,7 +50,6 @@ include("models/Whitham.jl")
 include("models/WhithamBoussinesq.jl")
 include("models/WhithamGreenNaghdi.jl")
 include("models/WWn.jl")
-
 
 
 include("solvers/Euler.jl")

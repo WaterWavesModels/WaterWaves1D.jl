@@ -13,41 +13,41 @@
 #include("../src/solvers/EulerSymp.jl")
 
 
-
 # if there is an error at this step, try commenting the lines above and commenting out the line below
 #include("../src/dependencies.jl")
 
 #---- parameters
-param = ( μ  = .25,
-			ϵ  = .1,
-        	N  = 2^8, 	# number of collocation points
-            L  = π,	# size of the mesh (-L,L)
-            T  = 50,		# final time of computation
-            dt = 0.001, # timestep
-			ns = 50,   	# data stored every ns step
-				);
+param = (
+    μ = 0.25,
+    ϵ = 0.1,
+    N = 2^8,     # number of collocation points
+    L = π,    # size of the mesh (-L,L)
+    T = 50,        # final time of computation
+    dt = 0.001, # timestep
+    ns = 50,       # data stored every ns step
+);
 #---- initial data
-g(x) = exp.(-abs.(x).^4);
-z(x) = 0 .*(x .+1).*exp.(-x.^2);
-init = Init(g,z);
+g(x) = exp.(-abs.(x) .^ 4);
+z(x) = 0 .* (x .+ 1) .* exp.(-x .^ 2);
+init = Init(g, z);
 
 #---- building problems
-model=BBM(param)
-solver1=Euler_naive()
-solver2=EulerExp_naive()
-solver3=EulerExp(model)
+model = BBM(param)
+solver1 = Euler_naive()
+solver2 = EulerExp_naive()
+solver3 = EulerExp(model)
 
 
 problems = Problem[]
-push!(problems, Problem(model, init, param , label="RK4"))
-push!(problems, Problem(model, init, param, solver=solver1, label="Euler" ))
-push!(problems, Problem(model, init, param, solver=solver2, label="exponential naive" ))
-push!(problems, Problem(model, init, param, solver=solver3, label="exponential" ))
+push!(problems, Problem(model, init, param, label = "RK4"))
+push!(problems, Problem(model, init, param, solver = solver1, label = "Euler"))
+push!(problems, Problem(model, init, param, solver = solver2, label = "exponential naive"))
+push!(problems, Problem(model, init, param, solver = solver3, label = "exponential"))
 
 
 #---- computation
 for problem in problems
-	@time solve!( problem )
+    @time solve!(problem)
 end
 #solve!(problems[3])
 #---- visualization
@@ -55,14 +55,14 @@ end
 #using Plots
 #gr()
 
-plot(problems,T=50)
+plot(problems, T = 50)
 
-(η,v,x,t)=solution(problems[1])
-(η2,v2,x2,t)=solution(problems[2])
-(η3,v3,x3,t)=solution(problems[3])
-(η4,v4,x4,t)=solution(problems[4])
+(η, v, x, t) = solution(problems[1])
+(η2, v2, x2, t) = solution(problems[2])
+(η3, v3, x3, t) = solution(problems[3])
+(η4, v4, x4, t) = solution(problems[4])
 
 using Plots;gr()
-plot(x,[η-η2])
-plot(x,[η-η3 η-η4])
-plot(x,[η4-η3])
+plot(x, [η - η2])
+plot(x, [η - η3 η - η4])
+plot(x, [η4 - η3])

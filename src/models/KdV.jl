@@ -39,28 +39,31 @@ Additionnally, a vector `Whitham.D` and a function `Whitham.f!` for exponential 
 """
 mutable struct KdV <: AbstractModel
 
-	label   :: String
-	f!		:: Function
-	D		:: AbstractArray
-	g!		:: Function
-	mapto	:: Function
-	mapfro	:: Function
-	info 	:: String
+    label::String
+    f!::Function
+    D::AbstractArray
+    g!::Function
+    mapto::Function
+    mapfro::Function
+    info::String
 
-    function KdV(param::NamedTuple;
-								improved_initial_data=true,
-								mesh = Mesh(param),
-								dealias = 0,
-								ktol	= 0,
-								label 	= nothing
-								)
+    function KdV(
+            param::NamedTuple;
+            improved_initial_data = true,
+            mesh = Mesh(param),
+            dealias = 0,
+            ktol = 0,
+            label = nothing
+        )
 
-		m=Whitham(param;KdV=true,
-							improved_initial_data=improved_initial_data,
-							mesh=mesh,
-							dealias=dealias,ktol=ktol,
-							label=label)
+        m = Whitham(
+            param; KdV = true,
+            improved_initial_data = improved_initial_data,
+            mesh = mesh,
+            dealias = dealias, ktol = ktol,
+            label = label
+        )
 
-		new(m.label, m.f!, m.D, m.g!, m.mapto, m.mapfro, m.info)
+        return new(m.label, m.f!, m.D, m.g!, m.mapto, m.mapfro, m.info)
     end
 end
