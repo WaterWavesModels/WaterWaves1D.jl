@@ -4,10 +4,10 @@ export step!
 @doc raw"""
     EulerSymp(arguments;Niter,implicit,realdata)
 
-Symplectic Euler solver.
+Symplectic Euler solver [HairerLubichWanner2003](@citet) for canonical Hamiltonian equations.
 The implicit Euler method is first used on one equation,
 then the explicit Euler method is used on the second one.
-The implicit equation is solved via Neumann iteration
+The implicit problem is solved using explicit fixed-point iterations.
 
 Construct an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
 
@@ -24,14 +24,14 @@ By default, they are either determined by the model or the type of the array in 
 The function
     `step!(solver :: EulerSymp, model :: AbstractModel , U, δt)`
 
-performs the integration step of the standard Runge-Kutta 4 solver applied to solutions to the equation ``u'=f(u)``.
+performs the integration step of the symplectic Euler solver applied to solutions to the equation ``(u₁,u₂)'=(f₁,f₂)(u₁,u₂)``.
 
 It replaces the argument ``U≈(u₁,u₂)(tₙ)`` with the next element of the recursive scheme approximating ``(u₁,u₂)(tₙ+δt)`` through the formula
 
 ```math
  \left\{\begin{array}{l}
-u₁(tₙ+δt)≈ u₁(tₙ) + δt f₁( u₁(tₙ+δt) )\\
-u₂(tₙ+δt)≈ u₂(tₙ) + δt f₂( u₁(tₙ) )
+u₁(tₙ+δt)≈ u₁(tₙ) + δt f₁( u₁(tₙ+δt), u₂(tₙ) )\\
+u₂(tₙ+δt)≈ u₂(tₙ) + δt f₂( u₁(tₙ+δt), u₂(tₙ) )
   \end{array}\right.
 ```
 (if the first equation is solved implicitly, as defined by `implicit`).

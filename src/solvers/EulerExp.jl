@@ -4,7 +4,7 @@ export step!
 @doc raw"""
     EulerExp(arguments;realdata)
 
-Exponential Euler solver.
+Exponential Euler solver [HochbruckOstermann2010](@citet).
 
 Construct an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
 
