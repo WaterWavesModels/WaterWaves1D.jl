@@ -11,6 +11,10 @@
 #
 #include("../src/solvers/Euler.jl")
 #include("../src/solvers/EulerSymp.jl")
+<<<<<<< Updated upstream
+=======
+#include("../src/solvers/StoermerVerlet.jl")
+>>>>>>> Stashed changes
 
 
 # if there is an error at this step, try commenting the lines above and commenting out the line below
@@ -33,6 +37,7 @@ init = Init(g, z);
 
 #---- building problems
 WW_model = WaterWaves(param)
+<<<<<<< Updated upstream
 
 RK4_problem = Problem(WW_model, init, param, solver = RK4(WW_model), label = "Runge-Kutta 4")
 Euler_problem = Problem(WW_model, init, param, solver = Euler(WW_model), label = "Explicit Euler")
@@ -44,6 +49,32 @@ for problem in [RK4_problem, Euler_problem, Symplectic_problem]
 end
 
 plot([RK4_problem, Euler_problem, Symplectic_problem])
+=======
+WW_model = WWn(param;n=2,dealias=1,δ=0.1)
+
+RK4_problem = Problem(WW_model, init, param, solver = RK4(WW_model), label = "Runge-Kutta 4")
+Euler_problem = Problem(WW_model, init, param, solver = Euler(WW_model), label = "Explicit Euler")
+Symplectic_problem = Problem(WW_model, init, param, solver = EulerSymp(WW_model, Niter = 5, implicit = 2), label = "Symplectic Euler")
+StoermerVerlet_problem = Problem(WW_model, init, param, solver = StoermerVerlet(WW_model, Niter = 5, implicit = 2), label = "Stoermer-Verlet")
+
+#Symplectic_problem = Problem(WW_model, init, param, solver = EulerSymp(WW_model,Niter=5,implicit=2))
+
+for problem in [RK4_problem, Euler_problem, Symplectic_problem, StoermerVerlet_problem]
+    solve!(problem)
+end
+
+using Plots
+plot([RK4_problem, Euler_problem, Symplectic_problem, StoermerVerlet_problem])
+
+plot((RK4_problem, Euler_problem))
+plot((RK4_problem, Symplectic_problem))
+plot((RK4_problem, StoermerVerlet_problem))
+
+energy_diff(RK4_problem)
+energy_diff(Euler_problem)
+energy_diff(Symplectic_problem)
+energy_diff(StoermerVerlet_problem)
+>>>>>>> Stashed changes
 
 
 #solve!(problems[3])

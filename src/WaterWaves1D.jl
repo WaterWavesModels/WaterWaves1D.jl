@@ -53,8 +53,9 @@ include("models/WWn.jl")
 
 
 include("solvers/Euler.jl")
-include("solvers/EulerSymp.jl")
 include("solvers/RK4.jl")
 include("solvers/EulerExp.jl")
+include("solvers/EulerSymp.jl")
+include("solvers/StoermerVerlet.jl")
 
 end
