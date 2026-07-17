@@ -39,7 +39,7 @@ model_WW=WaterWaves(param) # The water waves system
 model_WW2=WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
 ```
 
-Finally we set up initial-value problems. Optionally, one may specify a [time solver](library.md#Solvers) to [`Problem`](@ref WaterWaves1D.WaterWaves), by default the standard explicit fourth order Runge Kutta method is used.
+Finally we set up initial-value problems. Optionally, one may specify a [time solver](library.md#Solvers) to [`Problem`](@ref WaterWaves1D.Problem) (by default the standard explicit fourth order Runge Kutta method is used).
 
 ```@example 1
 problem_WW=Problem(model_WW, init, param) ;
