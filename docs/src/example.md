@@ -2,7 +2,7 @@
 
 In this example we shall observe the disintegration of a heap of water using the water-waves system as well as a second-order small-steepness model.
 
-More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples) and [notebooks](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples/notebooks) folders.  Examples are also available through the functions [`examples_dir`](@ref WaterWaves1D.examples_dir), [`get_examples`](@ref WaterWaves1D.get_examples) and [`default_example`](@ref WaterWaves1D.default_example).
+More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples) folder.  Examples are also available through the functions [`examples_dir`](@ref WaterWaves1D.examples_dir), [`get_examples`](@ref WaterWaves1D.get_examples) and [`default_example`](@ref WaterWaves1D.default_example).
 
 ## Set up the initial-value problem
 
@@ -35,15 +35,15 @@ init = Init(z,v);         # generate the initial data with correct type
 Then we build the different [models](library.md#Models) to compare (see [`WaterWaves`](@ref WaterWaves1D.WaterWaves) and [`WWn`](@ref WaterWaves1D.WWn)).
 
 ```@example 1
-model_WW=WaterWaves(param) # The water waves system
-model_WW2=WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
+model_WW = WaterWaves(param) # The water waves system
+model_WW2 = WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
 ```
 
 Finally we set up initial-value problems. Optionally, one may specify a [time solver](library.md#Solvers) to [`Problem`](@ref WaterWaves1D.Problem) (by default the standard explicit fourth order Runge Kutta method is used).
 
 ```@example 1
-problem_WW=Problem(model_WW, init, param) ;
-problem_WW2=Problem(model_WW2, init, param) ;
+problem_WW = Problem(model_WW, init, param)
+problem_WW2 = Problem(model_WW2, init, param)
 ```
 ## Solve the initial-value problem
 
