@@ -2,7 +2,7 @@
 
 In this example we shall observe the disintegration of a heap of water using the water-waves system as well as a second-order small-steepness model.
 
-More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples) and [notebooks](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples/notebooks) folders.  Examples are also available through the functions [`examples_dir`](@ref WaterWaves1D.examples_dir), [`get_examples`](@ref WaterWaves1D.get_examples) and [`default_example`](@ref WaterWaves1D.default_example).
+More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples) folder.  Examples are also available through the functions [`examples_dir`](@ref WaterWaves1D.examples_dir), [`get_examples`](@ref WaterWaves1D.get_examples) and [`default_example`](@ref WaterWaves1D.default_example).
 
 ## Set up the initial-value problem
 
