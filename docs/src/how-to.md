@@ -54,11 +54,7 @@ function Airy(param::NamedTuple; # param is a NamedTuple containing all necessar
 
   # Set up
   μ = param.μ
-  if !in(:ν,keys(param)) # set default ν if it is not provided
-    ν = min(1,1/√μ)
-  else
-    ν = param.ν
-  end
+  ν = get(param, :ν, min(1,1/√μ)) # set default ν if it is not provided
   # Collocation points and Fourier modes
   m = Mesh(param)
   x, k = m.x, m.k
@@ -106,7 +102,7 @@ model = Airy((μ=1,L=2π,N=2^8))
 
 ## build your initial data
 
-The simplest way to build an initial data is to use the function [`Init`](@ref WaterWaves1D.Init), which takes as argument either
+The simplest way to build an initial data is to use the type [`Init`](@ref WaterWaves1D.Init), which takes as argument either
 - a function `η` and a function `v` (in this order);
 - an array of collocation points and two vectors representing `η(x)` and `v(x)` (in this order);
 - a `mesh` (generated with [`Mesh`](@ref WaterWaves1D.Mesh)) and two vectors representing `η(mesh.x)` and `v(mesh.x)` (in this order).
@@ -114,20 +110,20 @@ The simplest way to build an initial data is to use the function [`Init`](@ref W
 Some relevant initial data (e.g. travelling waves) are built-in; see [the library section](library.md#Initial-data). You can build your own in the following lines.
 ```julia
 struct Heap <: InitialData
-	η
-	v
-	label :: String
-	info  :: String
 
-	function Heap(L)
-		η=x->exp.(-(L*x).^2)
-    v=x->zero(x)
-		init = Init(η,v)
-		label = "Heap"
-		info = "Heap of water, with length L=$L."
+    η
+    v
+    label :: String
+    info  :: String
 
-		new( init.η,init.v,label,info  )
-	end
+    function Heap(L)
+        η = x->exp.(-(L*x).^2)
+        v = x->zero(x)
+        init = Init(η,v)
+        label = "Heap"
+        info = "Heap of water, with length L=$L."
+        new( init.η,init.v,label,info  )
+    end
 end
 ```
 
@@ -151,11 +147,10 @@ struct Euler <: TimeSolver
 
     function Euler( U :: Array; realdata=nothing )
         U1 = copy(U)
-        if realdata==true
-            U1 = real.(U1);
-        end
-        if realdata==false
-            U1 = complex.(U1);
+        if realdata
+            U1 = real.(U1)
+        else
+            U1 = complex.(U1)
         end
         new( U1, "Euler" )
     end
@@ -238,7 +233,7 @@ init = SolitaryWhitham(param)
 model = Airy(param)
 problem = Problem( model, init, param )
 solve!(problem; verbose=false)
-nothing
+nothing # hide
 ```
 
 Save the initial data.
