@@ -43,7 +43,7 @@ Within this framework a numerical problem is defined by the spatial semidiscreti
 
 A common feature of all the implemented models is that they involve combinations of pointwise operations in physical space, and Fourier multipliers (that is multiplication in Fourier space). In a periodic framework —which can approximate the full real-line framework if the period is sufficiently large— this calls for the use of Fourier spectral methods [@Trefethen00] for spatial semidiscretization. Indeed, the Fast Fourier Transform (FFT) algorithm (and its inverse) allows to convert very efficiently a sequence of values at collocation points to a representation in the frequency domain (and back) and benefits from the spectral (or exponential) convergence property on smooth functions. Yet this is not a restriction of the architecture of the package, and other methods for spatial discretization can be used.
 
-The architecture of the package allows in principle any solver for time integration provided that the semi-discretized model supplies the necessary operators. All implemented models can be equipped with any explicit Runge–Kutta methods, and the standard explicit Euler and fourth order Runge-Kutta schemes are provided. Additionnally, as a proof-of-concept, the symplectic Euler [@HairerLubichWanner03] and the exponential Euler [@HochbruckOstermann10] schemes are implemented for a selection of models.
+The architecture of the package allows in principle any solver for time integration provided that the semi-discretized model supplies the necessary operators. All implemented models can be equipped with any explicit Runge–Kutta methods, and the standard explicit Euler and fourth order Runge-Kutta schemes are provided. Additionnally, as a proof-of-concept, the symplectic Euler and Störmer–Verlet [@HairerLubichWanner03] and the exponential Euler [@HochbruckOstermann10] schemes are implemented for a selection of models.
 
 In the same spirit, while the name of the package clearly indicates a disposition towards unidimensional waves, this is by no means an absolute restriction of the package architecture and the two-dimensional shallow-water system has been implemented.
 
@@ -105,7 +105,7 @@ We finally mention the package  `Oceananigans.jl` [@RamadhanWagnerHillEtAl20] th
 
 # Research impact statement
 
-Features of `WaterWaves1D.jl` were explicitly used for different needs in the following works
+Features of `WaterWaves1D.jl` were explicitly used for different needs in the following works.
 
 - In @MM4WW the different aspects of the package and of the models are discussed, and (static or dynamic) illustrations are provided using the package;
 - In @DucheneKlein22 the numerical strategy is used to investigate numerically open questions such as the stability of traveling waves, and possible finite-time singularities;
