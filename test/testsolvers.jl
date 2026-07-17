@@ -135,10 +135,72 @@ end
     # check the difference is of order ≈ dt*T
     order = paraT.dt * paraT.T
     @test isapprox(pb3.data.U[end], pb1.data.U[end], rtol = order)
-    @test !isapprox(pb0.data.U[end], pb1.data.U[end], rtol = order / 4)
+    @test !isapprox(pb3.data.U[end], pb1.data.U[end], rtol = order / 4)
 end
 
-#--- tests on symplectic Euler solvers
+#--- tests on Störmer–Verlet solvers
+@testset "Störmer–Verlet solver" begin
+    #--- model
+    model = WWn(param)
+
+    #--- reference problem : standard RK4 solver
+    pb0 = Problem(model, init, parap)
+    solve!(pb0, verbose = false)
+
+    # build Störmer–Verlet solver
+    pb1 = Problem(
+        model, init, parap;
+        solver = StoermerVerlet(model)
+    )
+    solve!(pb1, verbose = false)
+    # check Störmer–Verlet is of order ≈ (dt^2)*T
+    order = paraT.dt^2 * paraT.T
+    @test isapprox(pb0.data.U[end], pb1.data.U[end], rtol = order)
+    @test !isapprox(pb0.data.U[end], pb1.data.U[end], rtol = order / 8)
+
+
+    # different ways to build Störmer–Verlet solver
+    solvers = TimeSolver[]
+    push!(solvers, StoermerVerlet(model.mapto(init)))
+    push!(solvers, StoermerVerlet(paraX))
+
+    # check all Störmer–Verlet solvers generate the same data
+    for solver in solvers
+        pb = Problem(
+            model, init, parap;
+            solver = solver
+        )
+        solve!(pb, verbose = false)
+        @test pb.data.U == pb1.data.U
+    end
+
+    # change number of iterations in the implicit step
+    N = 5
+    pb2 = Problem(
+        model, init, parap;
+        solver = StoermerVerlet(model, Niter = N)
+    )
+    solve!(pb2, verbose = false)
+
+    # check the difference is of order ≈ (dt)^(N+1)*T
+    order = (paraT.dt)^(N + 1) * paraT.T
+    @test isapprox(pb2.data.U[end], pb1.data.U[end], rtol = order)
+
+    # change the first equations solved by implicit method
+    N = 5
+    pb3 = Problem(
+        model, init, parap;
+        solver = StoermerVerlet(model, implicit = 2)
+    )
+    solve!(pb3, verbose = false)
+
+    # check Störmer–Verlet is of order ≈ (dt^2)*T
+    order = paraT.dt^2 * paraT.T
+    @test isapprox(pb0.data.U[end], pb3.data.U[end], rtol = order)
+    @test !isapprox(pb0.data.U[end], pb3.data.U[end], rtol = order / 8)
+end
+
+#--- tests on exponential Euler solvers
 @testset "exponential Euler solver" begin
     #--- model
     model = Whitham(param)
