@@ -100,8 +100,6 @@ Information are not printed if keyword argument `verbose = false` (default is `t
 """
 function solve!(problem::Problem; verbose = true::Bool)
 
-    ci = get(ENV, "CI", nothing) == "true"
-
     U = deepcopy(last(problem.data.U))
 
     dt = problem.times.dt
@@ -109,7 +107,7 @@ function solve!(problem::Problem; verbose = true::Bool)
     model = problem.model
     data = problem.data.U
 
-    if verbose == true
+    if verbose 
         @info "Now solving the initial-value problem $(problem.label)\n\
             with timestep dt=$(problem.times.dt), final time T=$(problem.times.tfin),\n\
             and N=$(length(U[1])) collocation points."
@@ -117,7 +115,7 @@ function solve!(problem::Problem; verbose = true::Bool)
 
 
     if problem.times.tc == problem.times.ts
-        pbar = Progress(problem.times.Ns - 1; enabled = !ci)
+        pbar = Progress(problem.times.Ns - 1; enabled = !is_ci)
         for j in 1:(problem.times.Ns - 1)
             step!(solver, model, U, dt)
             push!(data, deepcopy(U))
@@ -125,7 +123,7 @@ function solve!(problem::Problem; verbose = true::Bool)
         end
 
     elseif length(problem.times.ts) > 25
-        pbar = Progress(problem.times.Ns - 1; enabled = !ci)
+        pbar = Progress(problem.times.Ns - 1; enabled = !is_ci)
         for j in 1:(problem.times.Ns - 1)
             for l in 1:problem.times.ns[j]
                 step!(solver, model, U, dt)
@@ -135,7 +133,7 @@ function solve!(problem::Problem; verbose = true::Bool)
         end
     else
         for j in 1:(problem.times.Ns - 1)
-            pbar = Progress(problem.times.ns[j], desc = string("Step ", j, "/", problem.times.Ns - 1, "..."); enabled = !ci)
+            pbar = Progress(problem.times.ns[j], desc = string("Step ", j, "/", problem.times.Ns - 1, "..."); enabled = !is_ci)
             for l in 1:problem.times.ns[j]
                 step!(solver, model, U, dt)
                 next!(pbar)
@@ -164,8 +162,6 @@ Information are not printed if keyword argument `verbose = false` (default is `t
 """
 function solve!(problems; verbose = true::Bool)
 
-    ci = get(ENV, "CI", nothing) == "true"
-
     # Set up
     U = [];nsteps = 0;flag = false
     for problem in problems
@@ -184,9 +180,9 @@ function solve!(problems; verbose = true::Bool)
         via `for problem in problems solve!(problem) end`."
     end
 
-    pg = Progress(nsteps; dt = 1, enabled = !ci)
+    pg = Progress(nsteps; dt = 1, enabled = !is_ci)
     @threads for i in 1:length(problems)
-        if verbose == true
+        if verbose
             @info "Now solving the initial-value problem $(problems[i].label)\n\
                 with timestep dt=$(problems[i].times.dt), final time T=$(problems[i].times.tfin),\n\
                 and N=$(length(problems[i].data.U[1][1])) collocation points."
@@ -209,7 +205,7 @@ function solve!(problems; verbose = true::Bool)
                 next!(pg)
             end
         end
-        if verbose == true
+        if verbose 
             @info "Done solving the problem $(problems[i].label)."
         end
 

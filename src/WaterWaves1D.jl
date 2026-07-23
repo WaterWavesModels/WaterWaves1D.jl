@@ -6,6 +6,8 @@ using LinearMaps, IterativeSolvers, LinearAlgebra
 using HDF5
 import Base.show
 
+const is_ci = haskey(ENV, "CI")
+
 # abstract types and structures
 include("mesh.jl")
 include("times.jl")
