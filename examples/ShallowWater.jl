@@ -57,8 +57,12 @@ solve!(WW);solve!(GN);solve!(NH);solve!(SRD);
 
 plot([WW, GN, SRD, NH])
 
+#-
+
 plt = plot([(WW, GN), (WW, SRD), (WW, NH)])
 display(plt)
+
+#-
 
 WWη, WWv, WWx, = solution(WW)
 GNη, = solution(GN, x = WWx);errGN = norm(WWη - GNη) / sqrt(length(x))
@@ -94,8 +98,12 @@ solve!(WW);solve!(GN);solve!(WGN);
 
 plot([WW, GN, WGN])
 
+#-
+
 plt = plot([(WW, GN), (WW, WGN)])
 display(plt)
+
+#-
 
 WWη, WWv, WWx, = solution(WW)
 GNη, = solution(GN, x = WWx);errGN = norm(WWη - GNη) / sqrt(length(x))
@@ -126,8 +134,12 @@ solve!(WW);solve!(GN);solve!(IK);
 
 plot([WW, GN, IK])
 
+#-
+
 plt = plot([(WW, GN), (WW, IK)]; fourier = false)
 display(plt)
+
+#-
 
 WWη, WWv, WWx, = solution(WW)
 GNη, = solution(GN, x = WWx);errGN = norm(WWη - GNη) / sqrt(length(x))
