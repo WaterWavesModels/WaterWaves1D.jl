@@ -19,9 +19,10 @@ examples = ["QuickStart",
 
 for example in examples
 
-    INPUT = joinpath(@__DIR__, "..", "examples", example * ".jl")
+    EXAMPLE = joinpath(@__DIR__, "..", "examples", example * ".jl")
     OUTPUT = joinpath(@__DIR__, "src", "generated")
-    Literate.markdown(INPUT, OUTPUT)
+    Literate.markdown(EXAMPLE, OUTPUT)
+    Literate.notebook(EXAMPLE, OUTPUT)
 
 end
 
