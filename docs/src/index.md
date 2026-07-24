@@ -22,7 +22,7 @@ using WaterWaves1D
 
 ## Quick start
 
-A simple example is [documented here](example.md). More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples) folders.
+A simple example is [documented here](generated/QuickStart.md). More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples) folders.
 
 
 ## Developers
