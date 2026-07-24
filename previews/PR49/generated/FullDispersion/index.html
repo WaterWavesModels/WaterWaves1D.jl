@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Comparison of the Serre-Green-Naghdi and Whitham-Green-Naghdi models · WaterWaves1D.jl</title><meta name="title" content="Comparison of the Serre-Green-Naghdi and Whitham-Green-Naghdi models · WaterWaves1D.jl"/><meta property="og:title" content="Comparison of the Serre-Green-Naghdi and Whitham-Green-Naghdi models · WaterWaves1D.jl"/><meta property="twitter:title" content="Comparison of the Serre-Green-Naghdi and Whitham-Green-Naghdi models · WaterWaves1D.jl"/><meta name="description" content="Documentation for WaterWaves1D.jl."/><meta property="og:description" content="Documentation for WaterWaves1D.jl."/><meta property="twitter:description" content="Documentation for WaterWaves1D.jl."/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../../"><img src="../../assets/logo.svg" alt="WaterWaves1D.jl logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../../">WaterWaves1D.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><a class="tocitem" href="../../background/">Background</a></li><li><a class="tocitem" href="../../problems/">Main architecture</a></li><li><a class="tocitem" href="../../how-to/">How-to...</a></li><li><span class="tocitem">Examples</span><ul><li><a class="tocitem" href="../../example/">Example</a></li><li class="is-active"><a class="tocitem" href>Comparison of the Serre-Green-Naghdi and Whitham-Green-Naghdi models</a><ul class="internal"><li><a class="tocitem" href="#Solitary-wave-comparison"><span>Solitary wave comparison</span></a></li><li><a class="tocitem" href="#SGN-and-WGN-solitary-waves-as-initial-data-for-the-water-waves-system"><span>SGN and WGN solitary waves as initial data for the water waves system</span></a></li><li><a class="tocitem" href="#Soliton-resolution"><span>Soliton resolution</span></a></li></ul></li><li><a class="tocitem" href="../HammackSegur/">Hammack-Segur</a></li><li><a class="tocitem" href="../DeepWater/">Deep-Water</a></li><li><a class="tocitem" href="../ShallowWater/">Shallow-Water</a></li></ul></li><li><a class="tocitem" href="../../plot_recipes/">Plot recipes</a></li><li><a class="tocitem" href="../../library/">Library</a></li><li><a class="tocitem" href="../../references/">References</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Examples</a></li><li class="is-active"><a href>Comparison of the Serre-Green-Naghdi and Whitham-Green-Naghdi models</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Comparison of the Serre-Green-Naghdi and Whitham-Green-Naghdi models</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/WaterWavesModels/WaterWaves1D.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/WaterWavesModels/WaterWaves1D.jl/blob/master/examples/FullDispersion.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Comparison-of-the-Serre-Green-Naghdi-and-Whitham-Green-Naghdi-models"><a class="docs-heading-anchor" href="#Comparison-of-the-Serre-Green-Naghdi-and-Whitham-Green-Naghdi-models">Comparison of the Serre-Green-Naghdi and Whitham-Green-Naghdi models</a><a id="Comparison-of-the-Serre-Green-Naghdi-and-Whitham-Green-Naghdi-models-1"></a><a class="docs-heading-anchor-permalink" href="#Comparison-of-the-Serre-Green-Naghdi-and-Whitham-Green-Naghdi-models" title="Permalink"></a></h1><p><a href="https://mybinder.org/v2/gh/WaterWavesModels/WaterWaves1D.jl/gh-pages?filepath=previews/PR49/generated/FullDispersion.ipynb"><img src="https://mybinder.org/badge_logo.svg" alt/></a> <a href="https://nbviewer.jupyter.org/github/WaterWavesModels/WaterWaves1D.jl/blob/gh-pages/previews/PR49/generated/FullDispersion.ipynb"><img src="https://img.shields.io/badge/show-nbviewer-579ACA.svg" alt/></a></p><p><em>We provide a comparative analysis of the Serre-Green-Naghdi model (SGN) with a fully dispersive counterpart, named Whitham-Green-Naghdi (WGN). A more thorough analysis, reproducing the figures in <a href="http://dx.doi.org/10.3934/dcdsb.2021300">V. Duchêne and C. Klein</a>, is available at <a href="https://github.com/WaterWavesModels/WaterWaves1D.jl/blob/master/examples/StudyWhithamGreenNaghdi.jl">examples/StudyWhithamGreenNaghdi.jl</a>.</em></p><p>Import package</p><pre><code class="language-julia hljs">using WaterWaves1D, FFTW, Plots</code></pre><h2 id="Solitary-wave-comparison"><a class="docs-heading-anchor" href="#Solitary-wave-comparison">Solitary wave comparison</a><a id="Solitary-wave-comparison-1"></a><a class="docs-heading-anchor-permalink" href="#Solitary-wave-comparison" title="Permalink"></a></h2><p>Generate solitary waves</p><p>Physical parameters. Variables are non-dimensionalized as in Lannes, The water waves problem, isbn:978-0-8218-9470-5 Numerical parameters</p><pre><code class="language-julia hljs">param = (
+    μ = 1,     # shallow-water dimensionless parameter
+    ϵ = 1,     # nonlinearity dimensionless parameter
+    c = 1.05,  # velocity of the solitary wave
+    N = 2^10,  # number of collocation points
+    L = 150,    # half-length of the numerical tank (-L,L)
+);</code></pre><p>Compute the WGN solitary wave with velocity c (type <code>?SolitaryWaveWhithamGreenNaghdi</code> for more details)</p><pre><code class="language-julia hljs">(ηWGN, uWGN, vWGN, mesh) = SolitaryWaveWhithamGreenNaghdi(param, verbose = false);</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr36"><span class="sgr1">[ Info: </span></span>Converged : relative error 2.7361480430265484e-16 in 3 steps</code></pre><p>Compute the SGN solitary wave with velocity c (there is an exact formula)</p><pre><code class="language-julia hljs">(ηSGN, uSGN, vSGN) = SolitaryWaveSerreGreenNaghdi(param);</code></pre><p>The difference beween the Serre-Green-Naghdi (SGN) and Whitham-Green-Naghdi (WGN) solitary waves is more easily seen on Fourier coefficients</p><pre><code class="language-julia hljs">plt = plot(
+    mesh.x, [ηWGN ηSGN];
+    title = &quot;solitary wave profile (surface deformation)&quot;, xlabel = &quot;x&quot;, label = [&quot;WGN&quot; &quot;SGN&quot;]
+)
+display(plt)
+plt = plot(
+    fftshift(mesh.k),
+    [abs.(fftshift(fft(ηWGN))) .+ eps() abs.(fftshift(fft(ηSGN))) .+ eps()];
+    title = &quot;Fourier modes (modulus, log scale)&quot;, label = [&quot;WGN&quot; &quot;SGN&quot;], yscale = :log10
+)
+display(plt)</code></pre><p>Validate the solitary wave through time integration</p><pre><code class="language-julia hljs">T = 2 * param.L / param.c # final time of computation
+dt = T / 10^3   # timestep
+init = Init(mesh, ηWGN, vWGN);           # use solitary wave as initial data
+model = WhithamGreenNaghdi(param)      # define the model
+pb = Problem(                          # set up the initial-value problem to be solved
+    model,
+    init,
+    merge(param, (T = T, dt = dt)),
+    solver = RK4(model)
+)
+solve!(pb)                             # solve the initial-value problem</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr36"><span class="sgr1">┌ Info: </span></span>Now solving the initial-value problem Whitham-Green-Naghdi
+<span class="sgr36"><span class="sgr1">│ </span></span>with timestep dt=0.2857142857142857, final time T=285.7142857142857,
+<span class="sgr36"><span class="sgr1">└ </span></span>and N=1024 collocation points.</code></pre><pre><code class="language-julia hljs">ηfin, = solution(pb)
+plot(
+    mesh.x, ηWGN - ηfin,
+    label = &quot;&quot;,
+    title = &quot;difference between finally computed solution\n and initially computed solution&quot;
+)</code></pre><img src="237037a1.svg" alt="Example block output"/><p>The main difference is due to the time integration (as seen when diminishing the timestep).</p><h2 id="SGN-and-WGN-solitary-waves-as-initial-data-for-the-water-waves-system"><a class="docs-heading-anchor" href="#SGN-and-WGN-solitary-waves-as-initial-data-for-the-water-waves-system">SGN and WGN solitary waves as initial data for the water waves system</a><a id="SGN-and-WGN-solitary-waves-as-initial-data-for-the-water-waves-system-1"></a><a class="docs-heading-anchor-permalink" href="#SGN-and-WGN-solitary-waves-as-initial-data-for-the-water-waves-system" title="Permalink"></a></h2><p>Solve the initial-value problems</p><pre><code class="language-julia hljs">T = 2 * param.L / param.c # final time of computation
+dt = T / 10^3   # timestep
+initWGN = Init(mesh, ηWGN, vWGN);       # WGN solitary wave as initial data
+initSGN = Init(mesh, ηSGN, vSGN);       # SGN solitary wave as initial data
+model = WaterWaves(param, dealias = 0, verbose = false) # The water waves system
+pbSGN = Problem(                         # initial-value problem with SGN initial data
+    model,
+    initSGN,
+    merge(param, (T = T, dt = dt)),
+    solver = RK4(model)
+)
+pbWGN = Problem(                         # initial-value problem with WGN initial data
+    model,
+    initWGN,
+    merge(param, (T = T, dt = dt)),
+    solver = RK4(model)
+)
+solve!(pbSGN);solve!(pbWGN);                             # solve the initial-value problems</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr36"><span class="sgr1">┌ Info: </span></span>Now solving the initial-value problem water waves
+<span class="sgr36"><span class="sgr1">│ </span></span>with timestep dt=0.2857142857142857, final time T=285.7142857142857,
+<span class="sgr36"><span class="sgr1">└ </span></span>and N=1024 collocation points.
+
+<span class="sgr36"><span class="sgr1">┌ Info: </span></span>Now solving the initial-value problem water waves
+<span class="sgr36"><span class="sgr1">│ </span></span>with timestep dt=0.2857142857142857, final time T=285.7142857142857,
+<span class="sgr36"><span class="sgr1">└ </span></span>and N=1024 collocation points.</code></pre><p>Plot solutions</p><pre><code class="language-julia hljs">ηSGNfin, vSGNfin, xSGNfin = solution(pbSGN)
+ηWGNfin, vWGNfin, xWGNfin = solution(pbWGN)
+ηSGNinit, vSGNinit, xSGNinit = solution(pbSGN, T = 0)
+ηWGNinit, vWGNinit, xWGNinit = solution(pbWGN, T = 0)
+
+plt = plot(
+    [xSGNinit xSGNfin xWGNinit xWGNfin], [ηSGNinit ηSGNfin ηWGNinit ηWGNfin],
+    color = [:1 :1 :2 :2], linestyle = [:dash :solid :dash :solid],
+    label = [&quot;initial SGN solitary wave&quot; &quot;final SGN solitary wave&quot; &quot;initial WGN solitary wave&quot; &quot;final WGN solitary wave&quot;],
+    title = &quot;surface elevation&quot;
+)
+display(plt)
+plt = plot(
+    xSGNfin, [ηSGNinit - ηSGNfin ηWGNinit - ηWGNfin],
+    label = [&quot;SGN solitary wave&quot; &quot;WGN solitary wave&quot;],
+    title = &quot;difference&quot;
+)
+display(plt)</code></pre><p>The difference (between the solution and the translated initial data) reduces as the velocity approaches 1, and the difference for the WGN solitary wave is one order of magnitude smaller than for the SGN solitary wave.</p><p>The last plot is slightly inexact: one should interpolate solutions on matching collocation points.</p><h2 id="Soliton-resolution"><a class="docs-heading-anchor" href="#Soliton-resolution">Soliton resolution</a><a id="Soliton-resolution-1"></a><a class="docs-heading-anchor-permalink" href="#Soliton-resolution" title="Permalink"></a></h2><p>Prepare the initial-value problem Physical parameters. Variables are non-dimensionalized as in Lannes, The water waves problem, isbn:978-0-8218-9470-5 Numerical parameters</p><pre><code class="language-julia hljs">param = (
+    μ = 0.01,   # shallow-water dimensionless parameter
+    ϵ = 0.5,    # nonlinearity dimensionless parameter
+    N = 2^10,   # number of collocation points
+    L = 10,     # half-length of the numerical tank (-L,L)
+    T = 10,     # final time of integration
+    dt = 0.01,   # timestep
+);</code></pre><p>Initial data (unidirectional at first order)</p><pre><code class="language-julia hljs">η(x) = exp.(-(x .+ 5) .^ 2);       # surface elevation
+v(x) = (2 * sqrt.(1 .+ param.ϵ * η(x)) .- 2) / param.ϵ;   # velocity (derivative of the trace of the velocity potential at the surface)</code></pre><p>Solve the initial-value problem</p><pre><code class="language-julia hljs">init = Init(η, v);       # Set initial data
+mWW = WaterWaves(param, dealias = 1, verbose = false) # define the water waves system
+mSGN = SerreGreenNaghdi(param, dealias = 1) # define the Green-Naghdi system
+mWGN = WhithamGreenNaghdi(param, dealias = 1) # define the (full dispersion) Whitham-Green-Naghdi system
+
+pbWW = Problem(                         # initial-value problem for the water waves system
+    mWW,
+    init,
+    param,
+    solver = RK4(mWW)
+)
+pbSGN = Problem(                         # initial-value problem for the Green-Naghdi system
+    mSGN,
+    init,
+    param,
+    solver = RK4(mSGN)
+)
+pbWGN = Problem(                         # initial-value problem for the Whitham-Green-Naghdi system
+    mWGN,
+    init,
+    param,
+    solver = RK4(mSGN)
+)
+
+solve!(pbWW); solve!(pbSGN); solve!(pbWGN);         # solve the initial-value problems</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr36"><span class="sgr1">┌ Info: </span></span>Now solving the initial-value problem water waves
+<span class="sgr36"><span class="sgr1">│ </span></span>with timestep dt=0.01, final time T=10.0,
+<span class="sgr36"><span class="sgr1">└ </span></span>and N=1024 collocation points.
+
+<span class="sgr36"><span class="sgr1">┌ Info: </span></span>Now solving the initial-value problem Green-Naghdi
+<span class="sgr36"><span class="sgr1">│ </span></span>with timestep dt=0.01, final time T=10.0,
+<span class="sgr36"><span class="sgr1">└ </span></span>and N=1024 collocation points.
+
+<span class="sgr36"><span class="sgr1">┌ Info: </span></span>Now solving the initial-value problem Whitham-Green-Naghdi
+<span class="sgr36"><span class="sgr1">│ </span></span>with timestep dt=0.01, final time T=10.0,
+<span class="sgr36"><span class="sgr1">└ </span></span>and N=1024 collocation points.</code></pre><p>Plot solutions</p><pre><code class="language-julia hljs">plt = plot([pbSGN, pbWGN, pbWW], T = 10, legend = :topleft);
+display(plt)</code></pre><pre><code class="language-julia hljs">plt = plot([(pbWW, pbSGN), (pbWW, pbWGN)], T = 10, legend = :topleft);
+display(plt)
+
+@gif for time in LinRange(0, param.T, 101)
+    plt = plot([pbSGN, pbWGN, pbWW], T = time, legend = :topleft, ylims = (-0.1, 2))
+end</code></pre><img src="3ca6a117.gif" alt="Example block output"/><p>The Whitham-Green-Naghdi model is not significantly better than the original Green-Naghdi model at predicting the large-time behavior (here, solitary wave resolution) of water waves as strong gradients are generated. The situation is better when the nonlinearity parameter, ϵ, is set to 0.25 (say).</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../example/">« Example</a><a class="docs-footer-nextpage" href="../HammackSegur/">Hammack-Segur »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Friday 24 July 2026 09:03">Friday 24 July 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
