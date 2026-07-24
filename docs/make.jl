@@ -43,7 +43,7 @@ makedocs(
         "Background" => "background.md",
         "Main architecture" => "problems.md",
         "How-to..." => "how-to.md",
-        "Examples" => ["generated/" * example * ".md" for example in examples]...],
+        "Examples" => ["generated/" * example * ".md" for example in examples],
         "Plot recipes" => "plot_recipes.md",
         "Library" => "library.md",
         "References" => "references.md",
