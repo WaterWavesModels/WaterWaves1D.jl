@@ -127,7 +127,7 @@ function SolitaryWaveWhitham(
         if relerr < tol
             @info string("Converged : relative error ", relerr, " in ", i, " steps\n")
             break
-        elseif verbose == true
+        elseif verbose 
             print(string("absolute error at step ", i, ": ", abserr, "\n"))
             print(string("relative error at step ", i, ": ", relerr, "\n"))
 
