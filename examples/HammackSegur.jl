@@ -69,11 +69,12 @@ solve!(WW2);solve!(SGN);solve!(WGN);
 # Import the data (from the [Hammack\&Segur](https://dx.doi.org/10.1017/S0022112078000208) experiment, kindly provided by [Carter](https://dx.doi.org/10.1016/j.wavemoti.2018.07.004))
 
 using DelimitedFiles
-data2a = readdlm(joinpath(pkgdir(WaterWaves1D), "examples", "notebooks", "Hammack-Segur", "Fig2aFixed.out"), '\t');
-data2b = readdlm(joinpath(pkgdir(WaterWaves1D), "examples", "notebooks", "Hammack-Segur", "Fig2bFixed.out"), '\t');
-data2c = readdlm(joinpath(pkgdir(WaterWaves1D), "examples", "notebooks", "Hammack-Segur", "Fig2cFixed.out"), '\t');
-data2d = readdlm(joinpath(pkgdir(WaterWaves1D), "examples", "notebooks", "Hammack-Segur", "Fig2dFixed.out"), '\t');
-data2e = readdlm(joinpath(pkgdir(WaterWaves1D), "examples", "notebooks", "Hammack-Segur", "Fig2eFixed.out"), '\t');
+data_dir = joinpath(pkgdir(WaterWaves1D), "examples", "data");
+data2a = readdlm(joinpath(data_dir, "Fig2aFixed.out"), '\t');
+data2b = readdlm(joinpath(data_dir, "Fig2bFixed.out"), '\t');
+data2c = readdlm(joinpath(data_dir, "Fig2cFixed.out"), '\t');
+data2d = readdlm(joinpath(data_dir, "Fig2dFixed.out"), '\t');
+data2e = readdlm(joinpath(data_dir, "Fig2eFixed.out"), '\t');
 
 """ 
     gauge(p::Problem;x,t)

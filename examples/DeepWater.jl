@@ -50,6 +50,8 @@ solve!(WW2_stable);
 using Plots
 plot(WW2_stable; var = [:surface, :fourier])
 
+#-
+
 # Second experiment with more modes
 
 param_unstable = (
