@@ -1,7 +1,7 @@
 # # Quick Start Example
 #
 #md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/generated/QuickStart.ipynb)
-#md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/generated/QuickStart    .ipynb)
+#md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/generated/QuickStart.ipynb)
 #
 # In this example we shall observe the disintegration of a heap of water using the water-waves system as well as a second-order small-steepness model.
 #
