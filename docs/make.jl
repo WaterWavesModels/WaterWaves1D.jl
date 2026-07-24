@@ -50,5 +50,6 @@ makedocs(
 
 
 deploydocs(
-    repo = "github.com/WaterWavesModels/WaterWaves1D.jl.git"
+    repo = "github.com/WaterWavesModels/WaterWaves1D.jl.git",
+    push_preview = true
 )
