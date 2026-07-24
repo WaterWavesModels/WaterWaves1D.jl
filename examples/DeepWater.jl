@@ -174,4 +174,3 @@ Matη, = solution(Matsuno_rand, x = WWx);errMat = norm(WWη - Matη) / sqrt(leng
 ANη, = solution(AkersNicholls_rand, x = WWx);errAN = norm(WWη - ANη) / sqrt(length(WWx))
 
 print("Errors (in l²). rectified WW2: $errWW2, Matsuno: $errMat, Akers&Nicholls: $errAN")
-

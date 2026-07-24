@@ -171,4 +171,3 @@ plot!(
 xlims!(20, 40)
 
 # The quadratic water waves model and Whitham-Green-Naghdi model predict are almost indistinguishable, because the *steepness* of the wave is very small.
-

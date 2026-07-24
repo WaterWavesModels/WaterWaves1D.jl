@@ -107,7 +107,7 @@ function solve!(problem::Problem; verbose = true::Bool)
     model = problem.model
     data = problem.data.U
 
-    if verbose 
+    if verbose
         @info "Now solving the initial-value problem $(problem.label)\n\
             with timestep dt=$(problem.times.dt), final time T=$(problem.times.tfin),\n\
             and N=$(length(U[1])) collocation points."
@@ -205,7 +205,7 @@ function solve!(problems; verbose = true::Bool)
                 next!(pg)
             end
         end
-        if verbose 
+        if verbose
             @info "Done solving the problem $(problems[i].label)."
         end
 

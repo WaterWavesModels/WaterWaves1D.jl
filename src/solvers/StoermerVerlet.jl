@@ -90,33 +90,33 @@ function step!(
     return if solver.implicit == 1
         for i in 1:solver.Niter
             model.f1!(solver.U1, solver.U2)
-            solver.U1 .= U[1] + dt/2 * solver.U1
+            solver.U1 .= U[1] + dt / 2 * solver.U1
         end
         U[1] .= solver.U1
         model.f2!(solver.U1, solver.U2)
-        U[2] .+= dt/2 * solver.U2
+        U[2] .+= dt / 2 * solver.U2
         for i in 1:solver.Niter
             model.f2!(solver.U1, solver.U2)
-            solver.U2 .= U[2] + dt/2 * solver.U2
+            solver.U2 .= U[2] + dt / 2 * solver.U2
         end
         U[2] .= solver.U2
         model.f1!(solver.U1, solver.U2)
-        U[1] .+= dt/2 * solver.U1
+        U[1] .+= dt / 2 * solver.U1
     elseif solver.implicit == 2
         for i in 1:solver.Niter
             model.f2!(solver.U1, solver.U2)
-            solver.U2 .= U[2] + dt/2 * solver.U2
+            solver.U2 .= U[2] + dt / 2 * solver.U2
         end
         U[2] .= solver.U2
         model.f1!(solver.U1, solver.U2)
-        U[1] .+= dt/2 * solver.U1
+        U[1] .+= dt / 2 * solver.U1
         for i in 1:solver.Niter
             model.f1!(solver.U1, solver.U2)
-            solver.U1 .= U[1] + dt/2 * solver.U1
+            solver.U1 .= U[1] + dt / 2 * solver.U1
         end
         U[1] .= solver.U1
         model.f2!(solver.U1, solver.U2)
-        U[2] .+= dt/2 * solver.U2
+        U[2] .+= dt / 2 * solver.U2
     else
         error("when defining `StoermerVerlet`, the keyword `implicit` must be either 1 or 2.")
     end

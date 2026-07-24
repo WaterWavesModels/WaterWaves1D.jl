@@ -169,4 +169,3 @@ plot(
     title = "dispersion relation"
 )
 xlims!(0, 5 / μ)
-

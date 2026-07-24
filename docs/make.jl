@@ -10,12 +10,13 @@ using Plots
 using Literate
 using WaterWaves1D
 
-examples = ["QuickStart",
-            "FullDispersion", 
-            "HammackSegur", 
-            "DeepWater",
-            "ShallowWater",
-            ]
+examples = [
+    "QuickStart",
+    "FullDispersion",
+    "HammackSegur",
+    "DeepWater",
+    "ShallowWater",
+]
 
 for example in examples
 
@@ -26,7 +27,7 @@ for example in examples
 
 end
 
-cp(joinpath(@__DIR__, "..", "examples", "Project.toml"), joinpath(@__DIR__, "src", "generated", "Project.toml"); force=true)
+cp(joinpath(@__DIR__, "..", "examples", "Project.toml"), joinpath(@__DIR__, "src", "generated", "Project.toml"); force = true)
 
 bib = CitationBibliography(joinpath(@__DIR__, "references.bib"), style = :authoryear)
 
