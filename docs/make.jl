@@ -26,6 +26,8 @@ for example in examples
 
 end
 
+cp(joinpath(@__DIR__, "..", "examples", "Project.toml"), joinpath(@__DIR__, "src", "generated", "Project.toml"); force=true)
+
 bib = CitationBibliography(joinpath(@__DIR__, "references.bib"), style = :authoryear)
 
 makedocs(
