@@ -25,7 +25,7 @@ plot(
     title = &quot;initial data&quot;,
     label = [&quot;surface deformation&quot; &quot;velocity&quot;],
     xlims = (-20, 10)
-)</code></pre><img src="bf9754ef.svg" alt="Example block output"/><p>Set up initial-value problems for different models to compare</p><pre><code class="language-julia hljs">model_WW2 = WWn(param; n = 2, dealias = 1, δ = 1 / 10) # The quadratic water waves model (WW2)
+)</code></pre><img src="cf2874cf.svg" alt="Example block output"/><p>Set up initial-value problems for different models to compare</p><pre><code class="language-julia hljs">model_WW2 = WWn(param; n = 2, dealias = 1, δ = 1 / 10) # The quadratic water waves model (WW2)
 model_SGN = SerreGreenNaghdi(param) # The Serre-Green-Naghdi model (SGN)
 model_WGN = WhithamGreenNaghdi(param) # The fully dispersive Whitham-Green-Naghdi model (WGN)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Whitham-Green-Naghdi model.
 ├─Shallowness parameter μ=1, nonlinearity parameter ϵ=1.
@@ -78,7 +78,7 @@ plot!(
     [gauge(WW2, x = 1), gauge(SGN, x = 1), gauge(WGN, x = 1)],
     label = [&quot;WW2&quot; &quot;SGN&quot; &quot;WGN&quot;]
 )
-xlims!(0, 5)</code></pre><img src="f39937b2.svg" alt="Example block output"/><p>Plot data and numerics at second gauge</p><pre><code class="language-julia hljs">plt = plot(
+xlims!(0, 5)</code></pre><img src="3641aa31.svg" alt="Example block output"/><p>Plot data and numerics at second gauge</p><pre><code class="language-julia hljs">plt = plot(
     (data2b[:, 1] .+ 50) / sqrt(g * d) * λ, data2b[:, 2] * d * 2 / 3,
     title = &quot;second gauge&quot;,
     label = &quot;experiment&quot;,
@@ -89,7 +89,7 @@ plot!(
     [gauge(WW2, x = 51), gauge(SGN, x = 51), gauge(WGN, x = 51)],
     label = [&quot;WW2&quot; &quot;SGN&quot; &quot;WGN&quot;]
 )
-xlims!(5, 17)</code></pre><img src="605255e0.svg" alt="Example block output"/><p>Plot data and numerics at third gauge</p><pre><code class="language-julia hljs">plt = plot(
+xlims!(5, 17)</code></pre><img src="333c0c74.svg" alt="Example block output"/><p>Plot data and numerics at third gauge</p><pre><code class="language-julia hljs">plt = plot(
     (data2c[:, 1] .+ 100) / sqrt(g * d) * λ, data2c[:, 2] * d * 2 / 3,
     title = &quot;third gauge&quot;,
     label = &quot;experiment&quot;,
@@ -100,7 +100,7 @@ plot!(
     [gauge(WW2, x = 101), gauge(SGN, x = 101), gauge(WGN, x = 101)],
     label = [&quot;WW2&quot; &quot;SGN&quot; &quot;WGN&quot;]
 )
-xlims!(10, 30)</code></pre><img src="65793ff4.svg" alt="Example block output"/><p>Plot data and numerics at fourth gauge</p><pre><code class="language-julia hljs">plt = plot(
+xlims!(10, 30)</code></pre><img src="0306d174.svg" alt="Example block output"/><p>Plot data and numerics at fourth gauge</p><pre><code class="language-julia hljs">plt = plot(
     (data2d[:, 1] .+ 150) / sqrt(g * d) * λ, data2d[:, 2] * d * 2 / 3,
     title = &quot;fourth gauge&quot;,
     label = &quot;experiment&quot;,
@@ -111,7 +111,7 @@ plot!(
     [gauge(WW2, x = 151), gauge(SGN, x = 151), gauge(WGN, x = 151)],
     label = [&quot;WW2&quot; &quot;SGN&quot; &quot;WGN&quot;]
 )
-xlims!(15, 35)</code></pre><img src="c604286d.svg" alt="Example block output"/><p>Plot data and numerics at fifth gauge</p><pre><code class="language-julia hljs">plt = plot(
+xlims!(15, 35)</code></pre><img src="fbc3b2dc.svg" alt="Example block output"/><p>Plot data and numerics at fifth gauge</p><pre><code class="language-julia hljs">plt = plot(
     (data2e[:, 1] .+ 200) / sqrt(g * d) * λ, data2e[:, 2] * d * 2 / 3,
     title = &quot;fifth gauge&quot;,
     label = &quot;experiment&quot;,
@@ -122,4 +122,4 @@ plot!(
     [gauge(WW2, x = 201), gauge(SGN, x = 201), gauge(WGN, x = 201)],
     label = [&quot;WW2&quot; &quot;SGN&quot; &quot;WGN&quot;]
 )
-xlims!(20, 40)</code></pre><img src="8b41e119.svg" alt="Example block output"/><p>The quadratic water waves model and Whitham-Green-Naghdi model predict are almost indistinguishable, because the <em>steepness</em> of the wave is very small.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../FullDispersion/">« Comparison of the Serre-Green-Naghdi and Whitham-Green-Naghdi models</a><a class="docs-footer-nextpage" href="../DeepWater/">Deep-Water »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Friday 24 July 2026 13:21">Friday 24 July 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+xlims!(20, 40)</code></pre><img src="6c085b35.svg" alt="Example block output"/><p>The quadratic water waves model and Whitham-Green-Naghdi model predict are almost indistinguishable, because the <em>steepness</em> of the wave is very small.</p><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../FullDispersion/">« Comparison of the Serre-Green-Naghdi and Whitham-Green-Naghdi models</a><a class="docs-footer-nextpage" href="../DeepWater/">Deep-Water »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Friday 24 July 2026 14:51">Friday 24 July 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
