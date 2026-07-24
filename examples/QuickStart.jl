@@ -31,7 +31,7 @@ z(x) = exp.(-abs.(x).^4); # surface deformation
 v(x) = zero(x);     # zero initial velocity
 init = Init(z,v);         # generate the initial data with correct type
 
-# Then we build the different [models](@ref "Models") to compare (see [`WaterWaves`](@ref WaterWaves1D.WaterWaves) and [`WWn`](@ref WaterWaves1D.WWn)).
+# Then we build the different [models](../library.md#Models) to compare (see [`WaterWaves`](@ref WaterWaves1D.WaterWaves) and [`WWn`](@ref WaterWaves1D.WWn)).
 
 model_WW = WaterWaves(param) # The water waves system
 model_WW2 = WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
