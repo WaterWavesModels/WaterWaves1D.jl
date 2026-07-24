@@ -5,7 +5,7 @@
 #
 # In this example we shall observe the disintegration of a heap of water using the water-waves system as well as a second-order small-steepness model.
 #
-# More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples) and [notebooks](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples/notebooks) folders.  Examples are also available through the functions [`examples_dir`](@ref WaterWaves1D.examples_dir), [`get_examples`](@ref WaterWaves1D.get_examples) and [`default_example`](@ref WaterWaves1D.default_example).
+# More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples) folder.  Examples are also available through the functions [`examples_dir`](@ref WaterWaves1D.examples_dir), [`get_examples`](@ref WaterWaves1D.get_examples) and [`default_example`](@ref WaterWaves1D.default_example).
 #
 # ## Set up the initial-value problem
 #
@@ -25,18 +25,18 @@ param = (
      dt = 0.01,  # timestep
                  )
 
-# Now we define [initial data solver](library.md#Initial-data) (the "heap of water"). The function [`Init`](@ref WaterWaves1D.Init) may take either functions, or vectors (values at collocation points) as arguments.
+# Now we define [initial data solver](@ref "Initial data") (the "heap of water"). The function [`Init`](@ref WaterWaves1D.Init) may take either functions, or vectors (values at collocation points) as arguments.
 
 z(x) = exp.(-abs.(x).^4); # surface deformation
 v(x) = zero(x);     # zero initial velocity
 init = Init(z,v);         # generate the initial data with correct type
 
-# Then we build the different [models](library.md#Models) to compare (see [`WaterWaves`](@ref WaterWaves1D.WaterWaves) and [`WWn`](@ref WaterWaves1D.WWn)).
+# Then we build the different [models](@ref "Models") to compare (see [`WaterWaves`](@ref WaterWaves1D.WaterWaves) and [`WWn`](@ref WaterWaves1D.WWn)).
 
 model_WW = WaterWaves(param) # The water waves system
 model_WW2 = WWn(param;n=2,dealias=1,δ=1/10) # The quadratic model (WW2)
 
-# Finally we set up initial-value problems. Optionally, one may specify a [time solver](library.md#Solvers) to [`Problem`](@ref WaterWaves1D.Problem) (by default the standard explicit fourth order Runge Kutta method is used).
+# Finally we set up initial-value problems. Optionally, one may specify a [time solver](@ref "Solvers") to [`Problem`](@ref WaterWaves1D.Problem) (by default the standard explicit fourth order Runge Kutta method is used).
 
 problem_WW = Problem(model_WW, init, param)
 problem_WW2 = Problem(model_WW2, init, param)
@@ -67,4 +67,4 @@ plot([problem_WW, problem_WW2])
     ylims!(-0.5, 1)
 end
 
-# See the [plot recipes](plot_recipes.md) for many more plotting possibilities.
+# See the [plot recipes](@ref "Plot recipes") for many more plotting possibilities.
