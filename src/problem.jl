@@ -133,7 +133,7 @@ function solve!(problem::Problem; verbose = true::Bool)
         end
     else
         for j in 1:(problem.times.Ns - 1)
-            pbar = Progress(problem.times.ns[j], desc = string("Step ", j, "/", problem.times.Ns - 1, "..."); enabled = !is_ci)
+            pbar = Progress(problem.times.ns[j]; desc = string("Step ", j, "/", problem.times.Ns - 1, "..."), enabled = !is_ci)
             for l in 1:problem.times.ns[j]
                 step!(solver, model, U, dt)
                 next!(pbar)
