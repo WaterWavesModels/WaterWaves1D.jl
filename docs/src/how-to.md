@@ -7,6 +7,9 @@ Pages = [
         ]
 ```
 
+```@meta
+CurrentModule = WaterWaves1D
+```
 
 [`WaterWaves1D.jl`](https://github.com/WaterWavesModels/WaterWaves1D.jl/) is meant to be versatile,
 and integrating new blocks to the package is easy. If you ever do so, please do not hesitate to contact the

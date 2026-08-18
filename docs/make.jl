@@ -6,6 +6,7 @@ const is_ci = haskey(ENV, "CI")
 
 using Documenter
 using DocumenterCitations
+using DocumenterCodeBlocks
 using Plots
 using Literate
 using WaterWaves1D
@@ -33,13 +34,11 @@ bib = CitationBibliography(joinpath(@__DIR__, "references.bib"), style = :author
 
 makedocs(
     modules = [WaterWaves1D],
-    plugins = [bib],
+    plugins = [bib, CodeBlocks()],
     doctest = false,
     authors = "Vincent Duchene and Pierre Navaro",
     format = Documenter.HTML(prettyurls = is_ci),
     sitename = "WaterWaves1D.jl",
-    #linkcheck = true,
-    #checkdocs = :all,
     warnonly = is_ci ? false : [:cross_references],
     pages = [
         "Home" => "index.md",
