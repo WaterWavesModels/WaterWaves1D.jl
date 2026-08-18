@@ -10,19 +10,20 @@ Several models are already implemented, including ([but not limited to](backgrou
 
 ## Installation
 
-Enter the Pkg REPL by pressing `]` from the Julia REPL.
-~~~
-(v1.11) pkg> add WaterWaves1D
-~~~
+```julia-repl
+julia> import Pkg
+
+julia> Pkg.add("WaterWaves1D")
+```
 
 Once installed, load the package with
-```@repl
+```julia
 using WaterWaves1D
 ```
 
 ## Quick start
 
-A simple example is [documented here](example.md). More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples) and [notebooks](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/notebooks) folders.
+A simple example is [documented here](generated/QuickStart.md). More advanced examples can be found in the package's [examples](https://github.com/WaterWavesModels/WaterWaves1D.jl/tree/master/examples) folders.
 
 
 ## Developers

@@ -1,6 +1,6 @@
 name = "WaterWaves1D"
 uuid = "1a68f91a-d9eb-11e8-2e16-69ad0016fc96"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Vincent Duchene <vincent.duchene@univ-rennes1.fr>", "Pierre Navaro <pierre.navaro@math.cnrs.fr>"]
 
 [workspace]
@@ -21,17 +21,17 @@ RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 [compat]
 Aqua = "0.8.16"
 DocStringExtensions = "0.9.5"
-Elliptic = "1"
+Elliptic = "^1"
 FFTW = "^1"
 HDF5 = "0.16, 0.17"
 IterativeSolvers = "0.9"
-LinearAlgebra = "1.12.0"
+LinearAlgebra = "^1"
 LinearMaps = "3"
-Plots = "1.41.6"
-Printf = "1.11.0"
-ProgressMeter = "1"
-RecipesBase = "1"
-Test = "1.11.0"
+Plots = "^1"
+Printf = "^1"
+ProgressMeter = "^1"
+RecipesBase = "^1"
+Test = "^1"
 julia = "^1.1"
 
 [extras]
