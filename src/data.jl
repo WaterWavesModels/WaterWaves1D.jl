@@ -10,31 +10,33 @@ Data structure to store the solution of an initial-value problem along time.
 - `(data.datalength,data.datasize)=size(m)`  where \
 `datalength` is the number of computed modes, and `datasize` the number of involved equations, typically 2.
 """
-mutable struct Data
+struct Data{T, N}
 
-    U::Vector{AbstractArray}
+    U::Vector{Vector{Array{T, N}}}
     datasize::Int
     datalength::Int
 
-    function Data(v::AbstractArray)
+    function Data(v::Vector{Array{T, N}}) where {T, N}
 
-        dim = length(size(v))
-        if dim == 1 # if v is a vector of data (η,vx,vy...)
-            datasize = size(v, 1)
-            datalength = size(v[1], 1)
-        elseif dim == 2 # data are columns of v
-            (datalength, datasize) = size(v)
-        elseif dim == 3 # data are in a three-dimensional array
-            datasize = size(v, 3)
-            datalength = size(v, 1)
-        end
+        datasize = size(v, 1)
+        datalength = size(v[1], 1)
         U = [copy(v)]
 
-        return new(U, datasize, datalength)
+        return new{T, N}(U, datasize, datalength)
+
+    end
+
+    function Data(v::Array{T, N}) where {T, N}
+
+        datalength, datasize = size(v)
+        U = [[v[:, j] for j in axes(v, 2)]]
+
+        return new{T, 1}(U, datasize, datalength)
 
     end
 
 end
+
 
 Base.:length(data::Data) = length(data.U)
 

@@ -57,11 +57,23 @@ end
 
 #--- test data
 @testset "Tests on data" begin
-    v1 = [1; 3; 5];v2 = [2; 4; 6]
-    M = [ v1 v2 ]
+    v1 = [1, 3, 5]
+    v2 = [2, 4, 6]
+    M = [v1, v2]  # Variables are stored in a vector of vector
     data = Data(M)
 
-    @test data.U == [[1 2 ; 3 4 ; 5 6 ]]
+    @test data.U == [[[1, 3, 5], [2, 4, 6]]]
+    @test data.datalength == length(v1)
+    @test data.datasize == 2
+
+    v1 = [1, 3, 5]
+    v2 = [2, 4, 6]
+
+    M = [v1 v2]  # Variables are stored in matrix columns
+
+    data = Data(M)
+
+    @test data.U == [[[1, 3, 5], [2, 4, 6]]]
     @test data.datalength == length(v1)
     @test data.datasize == 2
 end
