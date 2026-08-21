@@ -30,14 +30,14 @@ u(tₙ+δt)≈e^{δt D} u(tₙ) + δt \frac{e^{δt D} - 1}{δt D} g( u(tₙ) )
 
 The matrix `D` should be *diagonal* and the vector of its diagonal values provided together with the nonlinear function `g` by `model`. 
 """
-struct EulerExp <: TimeSolver
+struct EulerExp{T} <: TimeSolver
 
-    U1::Array
-    D::Array
+    U1::Vector{Vector{T}}
+    D::Vector{Vector{T}}
     φ::Function
     label::String
 
-    function EulerExp(U::Array; realdata = nothing)
+    function EulerExp(U::Vector{Vector{T}}; realdata = nothing) where T
         U1 = deepcopy(U)
         D = deepcopy(U)
         φ(z) = (exp(z + eps()) - 1) / (z + eps())
@@ -47,7 +47,7 @@ struct EulerExp <: TimeSolver
         if realdata == false
             U1 = complex.(U1)
         end
-        return new(U1, D, φ, "exponential Euler")
+        return new{T}(U1, D, φ, "exponential Euler")
     end
 
     function EulerExp(model::AbstractModel; realdata = nothing)
@@ -55,10 +55,10 @@ struct EulerExp <: TimeSolver
         return EulerExp(U; realdata = realdata)
     end
     function EulerExp(param::NamedTuple, systemsize = 2::Int; realdata = nothing)
-        return EulerExp([Array{Complex{Float64}}(undef, param.N) for _ in 1:systemsize]; realdata = realdata)
+        return EulerExp([Array{ComplexF64}(undef, param.N) for _ in 1:systemsize]; realdata = realdata)
     end
     function EulerExp(datasize, systemsize = 2::Int; realdata = nothing)
-        return EulerExp([Array{Complex{Float64}}(undef, datasize) for _ in 1:systemsize]; realdata = realdata)
+        return EulerExp([Array{ComplexF64}(undef, datasize) for _ in 1:systemsize]; realdata = realdata)
     end
 end
 
