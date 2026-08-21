@@ -43,7 +43,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
     - `u` corresponds to the layer-averaged velocity.
 
 """
-mutable struct NonHydrostatic <: AbstractModel
+struct NonHydrostatic <: AbstractModel
 
     label::String
     f!::Function

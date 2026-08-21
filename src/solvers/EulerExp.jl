@@ -2,8 +2,6 @@ export EulerExp, EulerExp_naive
 export step!
 
 @doc raw"""
-    EulerExp(arguments;realdata)
-
 Exponential Euler solver [HochbruckOstermann2010](@citet).
 
 Construct an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
@@ -13,12 +11,13 @@ Arguments can be either
 1. an `Array` of size `(N,datasize)` where `N` is the number of collocation points and `datasize` the number of equations solved;
 2. `(param,datasize)` where `param` is a `NamedTuple` containing a key `N`, and `datasize` a integer (optional, by default `datasize=2`).
 
-The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
-By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
-
+`T`: element type of the solution array (e.g. `Float64`, `ComplexF64`). `T` is set at the initialisation using the type of argument `U`.
 
 The function
-    `step!(solver :: EulerExp, model :: AbstractModel , U, δt)``
+
+```julia
+    step!(solver :: EulerExp, model :: AbstractModel , U, δt)
+```
 
 performs the integration step of the exponential Euler solver applied to solutions to the equation ``u'=D u + g(u)``.
 
@@ -37,29 +36,26 @@ struct EulerExp{T} <: TimeSolver
     φ::Function
     label::String
 
-    function EulerExp(U::Vector{Vector{T}}; realdata = nothing) where T
+    function EulerExp(U::Vector{Vector{T}}) where T
         U1 = deepcopy(U)
         D = deepcopy(U)
         φ(z) = (exp(z + eps()) - 1) / (z + eps())
-        if realdata == true
-            U1 = real.(U1)
-        end
-        if realdata == false
-            U1 = complex.(U1)
-        end
         return new{T}(U1, D, φ, "exponential Euler")
     end
 
-    function EulerExp(model::AbstractModel; realdata = nothing)
-        U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
-        return EulerExp(U; realdata = realdata)
-    end
-    function EulerExp(param::NamedTuple, systemsize = 2::Int; realdata = nothing)
-        return EulerExp([Array{ComplexF64}(undef, param.N) for _ in 1:systemsize]; realdata = realdata)
-    end
-    function EulerExp(datasize, systemsize = 2::Int; realdata = nothing)
-        return EulerExp([Array{ComplexF64}(undef, datasize) for _ in 1:systemsize]; realdata = realdata)
-    end
+end
+
+function EulerExp(model::AbstractModel)
+    U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
+    return EulerExp(U)
+end
+
+function EulerExp(param::NamedTuple, systemsize = 2::Int)
+    return EulerExp([Array{ComplexF64}(undef, param.N) for _ in 1:systemsize])
+end
+
+function EulerExp(datasize, systemsize = 2::Int)
+    return EulerExp([Array{ComplexF64}(undef, datasize) for _ in 1:systemsize])
 end
 
 

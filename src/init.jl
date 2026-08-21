@@ -52,15 +52,16 @@ struct Init <: InitialData
         return new(x -> interpolate(mesh, η, x; fast = fast), x -> interpolate(mesh, v, x; fast = fast), label)
     end
 
-    function Init(x::Array, η, v; fast = false, label = "user-defined")
-        if !(x[2:end] .- x[2] ≈ x[1:(end - 1)] .- x[1])
-            @error("Collocation points must be equally spaced.")
-        end
-        mesh = Mesh(x)
-        return Init(mesh, η, v; fast = fast, label = label)
-    end
-
 end
+
+function Init(x::Array, η, v; fast = false, label = "user-defined")
+    if !(x[2:end] .- x[2] ≈ x[1:(end - 1)] .- x[1])
+        @error("Collocation points must be equally spaced.")
+    end
+    mesh = Mesh(x)
+    return Init(mesh, η, v; fast = fast, label = label)
+end
+
 
 export Init2D
 """

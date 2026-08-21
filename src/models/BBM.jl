@@ -36,11 +36,11 @@ Additionnally, a vector `Whitham.D` and a function `Whitham.f!` for exponential 
   - `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
-mutable struct BBM <: AbstractModel
+struct BBM <: AbstractModel
 
     label::String
     f!::Function
-    D::AbstractArray
+    D::Vector{Vector{ComplexF64}}
     g!::Function
     mapto::Function
     mapfro::Function

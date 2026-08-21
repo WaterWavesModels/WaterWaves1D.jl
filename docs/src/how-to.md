@@ -29,7 +29,8 @@ where we use the notation ``F(D)`` for the [action](https://en.wikipedia.org/wik
 In a dedicated file we write
 ```julia
 export Airy
-mutable struct Airy <: AbstractModel
+
+struct Airy <: AbstractModel
   label   :: String
   f!      :: Function
   mapto   :: Function
@@ -144,25 +145,28 @@ As an example, let us review how the explicit Euler solver, [`Euler`](@ref Water
 
 In a dedicated file we write
 ```julia
-struct Euler <: TimeSolver
-    U1 :: Array
+struct Euler{T,N} <: TimeSolver
+    U1 :: Vector{Array{T,N}}
     label :: String
 
-    function Euler( U :: Array; realdata=nothing )
-        U1 = copy(U)
-        if realdata
-            U1 = real.(U1)
-        else
-            U1 = complex.(U1)
-        end
-        new( U1, "Euler" )
+    function Euler( U :: Vector{Array{T, N}} ) where {T, N}
+        U1 = deepcopy(U)
+        new{T, N}( U1, "Euler" )
     end
 end
 ```
 
-Here, `Euler.U1` is a pre-allocated vector which can be used to speed-up calculations, and `Euler-label` is the string `"Euler"`, used for future references. The optional keyword argument `realdata` allows to specify the type of data which the solver will take as arguments: either complex or real vectors. 
+Here, `Euler.U1` is a pre-allocated vector which can be used to
+speed-up calculations, and `Euler-label` is the string `"Euler"`,
+used for future references. The type of data which the solver will take is either complex or real vectors.
+
+`T` and `N` are the type parameters, `T` is the element type of the solution array (e.g. `Float64`, `ComplexF64`)
+and `N` the dimensionality of the solution array (`1` for a vector, `2` for a matrix, ...)
+
+The constructor's `where {T, N}` clause tells Julia to infer `T` and `N` from whatever array you actually pass in, and `new{T,N}(...)` builds the correctly parametrized instance.
 
 We shall now add one method to the function `step!`, performing the explicit Euler step: that is replacing a vector `U` with `U+dt*f(U)` where `f` is provided by the model at stake.
+
 ```julia
 export step!
 function step!(solver :: Euler,

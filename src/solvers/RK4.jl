@@ -2,8 +2,6 @@ export RK4, RK4_naive
 export step!
 
 @doc raw"""
-    RK4(arguments;realdata)
-
 Explicit Runge-Kutta fourth order solver.
 
 Construct an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`
@@ -14,11 +12,11 @@ Arguments can be either
 2. a `(datasize,systemsize)` where `datasize` is the size of scalar variables (typically `N` the number of collocation points) and `datasize` (optional, by default `systemsize=2`) the number of solved equations);
 3. `(param,systemsize)` where `param` is a `NamedTuple` containing a key `N` describing the number of collocation points, and `systemsize` the number of solved equations (optional, by default `systemsize=2`).
 
-The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
-By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
-
 The function
-    `step!(solver :: RK4, model :: AbstractModel , U, δt)`
+
+```julia
+step!(solver :: RK4, model :: AbstractModel , U, δt)
+```
 
 performs the integration step of the standard Runge-Kutta 4 solver applied to solutions to the equation `` u'=f(u)``.
 
@@ -43,30 +41,25 @@ struct RK4{T, N} <: TimeSolver
     dU::Vector{Array{T, N}}
     label::String
 
-    function RK4(U::Vector{Array{T, N}}; realdata = false) where {T, N}
+    function RK4(U::Vector{Array{T, N}}) where {T, N}
         U1 = deepcopy(U)
         dU = deepcopy(U)
-        if realdata
-            U1 = real.(U1)
-            dU = real.(dU)
-            return new{Float64, N}(U1, dU, "RK4")
-        else
-            U1 = complex.(U1)
-            dU = complex.(dU)
-            return new{ComplexF64, N}(U1, dU, "RK4")
-        end
+        return new{T, N}(U1, dU, "RK4")
     end
 
-    function RK4(model::AbstractModel; realdata = false)
-        U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
-        return RK4(U; realdata = realdata)
-    end
-    function RK4(param::NamedTuple, systemsize = 2::Int; realdata = false)
-        return RK4([zeros(ComplexF64, param.N) for _ in 1:systemsize]; realdata = realdata)
-    end
-    function RK4(datasize, systemsize = 2::Int; realdata = false)
-        return RK4([zeros(ComplexF64, datasize) for _ in 1:systemsize]; realdata = realdata)
-    end
+end
+
+function RK4(model::AbstractModel)
+    U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
+    return RK4(U)
+end
+
+function RK4(param::NamedTuple, systemsize = 2::Int)
+    return RK4([zeros(ComplexF64, param.N) for _ in 1:systemsize])
+end
+
+function RK4(datasize, systemsize = 2::Int)
+    return RK4([zeros(ComplexF64, datasize) for _ in 1:systemsize])
 end
 
 @inline function _predict!(U1, U, coef)

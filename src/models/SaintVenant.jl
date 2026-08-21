@@ -35,7 +35,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 
 See also [`SaintVenant_fast`](@ref).
 """
-mutable struct SaintVenant <: AbstractModel
+struct SaintVenant <: AbstractModel
 
     label::String
     f!::Function
@@ -139,7 +139,7 @@ end
 
 Same as [`SaintVenant`](@ref), but faster.
 """
-mutable struct SaintVenant_fast <: AbstractModel
+struct SaintVenant_fast <: AbstractModel
 
     label::String
     f!::Function

@@ -2,8 +2,6 @@ export StoermerVerlet
 export step!
 
 @doc raw"""
-    StoermerVerlet(arguments;Niter,implicit,realdata)
-
 Störmer–Verlet solver [HairerLubichWanner2003](@citet) for canonical Hamiltonian equations.
 Combination of the composition of the two symplectic Euler methods (with different equations solved implicitly).
 The implicit problems are solved using explicit fixed-point iterations.
@@ -17,11 +15,12 @@ Arguments can be either
 
 The keyword argument `Niter` (optional, defaut value = 10) determines the number of steps in the Neumann iteration solver of the implicit step.
 The keyword argument `implicit` (optional, defaut value = 1) determines which equation is first solved implicitly (must be `1` or `2`).
-The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
-By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
 
 The function
-    `step!(solver :: StoermerVerlet, model :: AbstractModel , U, δt)`
+
+```julia
+step!(solver :: StoermerVerlet, model :: AbstractModel , U, δt)
+```
 
 performs the integration step of the symplectic Euler solver applied to solutions to the equation ``(u₁,u₂)'=(f₁,f₂)(u₁,u₂)``.
 
@@ -38,25 +37,19 @@ u₁(tₙ+δt)≈ u₁(tₙ+δt/2) + δt/2 f₁( u₁(tₙ+δt/2), u₂(tₙ+δt
 (if the first equation is solved implicitly first, as defined by `implicit`).
 
 """
-struct StoermerVerlet <: TimeSolver
+struct StoermerVerlet{T} <: TimeSolver
 
-    U1::Array
-    U2::Array
+    U1::Vector{T}
+    U2::Vector{T}
     Niter::Int
     implicit::Int
     label::String
     info::String
 
 
-    function StoermerVerlet(U::Array; Niter = 10, implicit = 1, realdata = nothing)
+    function StoermerVerlet(U::Vector{Vector{T}}; Niter = 10, implicit = 1) where T
         U1 = deepcopy(U[1])
         U2 = deepcopy(U[2])
-        if realdata == true
-            U1 = real.(U1);U2 = real.(U2)
-        end
-        if realdata == false
-            U1 = complex.(U1);U2 = complex.(U2)
-        end
         if implicit != 1 && implicit != 2
             @warn "the keyword `implicit` must be 1 or 2. solve! will not work."
         end
@@ -64,16 +57,18 @@ struct StoermerVerlet <: TimeSolver
         the implicit Euler step (using the Neumann expansion with $Niter iterations) \
         and then equation $(3 - implicit) is solved via the explicit Euler step."
         label = "symplectic Euler"
-        return new(U1, U2, Niter, implicit, label, info)
+        return new{T}(U1, U2, Niter, implicit, label, info)
     end
 
-    function StoermerVerlet(model::AbstractModel; Niter = 10, implicit = 1, realdata = nothing)
-        U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
-        return StoermerVerlet(U; Niter = Niter, realdata = realdata, implicit = implicit)
-    end
-    function StoermerVerlet(param::NamedTuple; Niter = 10, implicit = 1, realdata = nothing)
-        return StoermerVerlet([zeros(Complex{Float64}, param.N), zeros(Complex{Float64}, param.N)]; Niter = Niter, realdata = realdata, implicit = implicit)
-    end
+end
+
+function StoermerVerlet(model::AbstractModel; Niter = 10, implicit = 1)
+    U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
+    return StoermerVerlet(U; Niter = Niter, implicit = implicit)
+end
+
+function StoermerVerlet(param::NamedTuple; Niter = 10, implicit = 1)
+    return StoermerVerlet([zeros(Complex{Float64}, param.N), zeros(Complex{Float64}, param.N)]; Niter = Niter, implicit = implicit)
 end
 
 function step!(

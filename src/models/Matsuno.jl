@@ -5,7 +5,7 @@ export Matsuno_fast, Matsuno
 
 Same as [`Matsuno`](@ref), but faster.
 """
-mutable struct Matsuno_fast <: AbstractModel
+struct Matsuno_fast <: AbstractModel
 
     label::String
     f!::Function
@@ -216,7 +216,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 
 See also [`Matsuno_fast`](@ref).
 """
-mutable struct Matsuno <: AbstractModel
+struct Matsuno <: AbstractModel
 
     label::String
     f!::Function

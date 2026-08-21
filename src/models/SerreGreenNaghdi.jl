@@ -43,7 +43,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
     - `u` corresponds to the layer-averaged velocity.
 
 """
-mutable struct SerreGreenNaghdi <: AbstractModel
+struct SerreGreenNaghdi <: AbstractModel
 
     label::String
     f!::Function

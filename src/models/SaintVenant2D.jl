@@ -36,7 +36,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 See also [`SaintVenant2D_fast`](@ref).
 
 """
-mutable struct SaintVenant2D <: AbstractModel
+struct SaintVenant2D <: AbstractModel
 
     label::String
     f!::Function
@@ -184,7 +184,7 @@ If the optional argument `large_data` is set to `true` (default is `false`),
 then the standard `fft` and `ifft` functions (instead of plans) are used.
 This may be faster, while using more allocations.
 """
-mutable struct SaintVenant2D_fast <: AbstractModel
+struct SaintVenant2D_fast <: AbstractModel
 
     label::String
     f!::Function

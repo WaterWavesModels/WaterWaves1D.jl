@@ -18,6 +18,7 @@ By default, they are either determined by the model or the type of the array in 
 
 The function
     `step!(solver :: EulerExp, model :: AbstractModel , U, δt)`
+```
 
 performs the integration step of the explicit Euler solver applied to solutions to the equation ``u'=f(u)``.
 
