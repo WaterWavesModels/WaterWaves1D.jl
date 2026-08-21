@@ -8,7 +8,7 @@
 
 # Import package
 
-using WaterWaves1D, Plots
+using WaterWaves1D, FFTW, Plots
 
 # ## Solitary wave comparison
 
