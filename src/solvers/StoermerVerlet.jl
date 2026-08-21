@@ -46,7 +46,6 @@ struct StoermerVerlet{T} <: TimeSolver
     label::String
     info::String
 
-
     function StoermerVerlet(U::Vector{Vector{T}}; Niter = 10, implicit = 1) where T
         U1 = deepcopy(U[1])
         U2 = deepcopy(U[2])
