@@ -2,7 +2,7 @@ export Euler, Euler_naive
 export step!
 
 @doc raw"""
-$(TYPEDEF)
+    struct Euler{T,N} <: TimeSolver
 
 Explicit Euler solver.
 

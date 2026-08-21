@@ -2,7 +2,7 @@ export EulerExp, EulerExp_naive
 export step!
 
 @doc raw"""
-$(TYPEDEF)
+    struct EulerExp{T} <: TimeSolver
 
 Exponential Euler solver [HochbruckOstermann2010](@citet).
 

@@ -2,7 +2,7 @@ export RK4, RK4_naive
 export step!
 
 @doc raw"""
-$(TYPEDEF)
+    struct RK4{T, N} <: TimeSolver
 
 Explicit Runge-Kutta fourth order solver.
 

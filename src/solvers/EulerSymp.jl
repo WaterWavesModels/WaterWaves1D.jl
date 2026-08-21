@@ -2,7 +2,7 @@ export EulerSymp
 export step!
 
 @doc raw"""
-$(TYPEDEF)
+    struct EulerSymp{T} <: TimeSolver
 
 Symplectic Euler solver [HairerLubichWanner2003](@citet) for canonical Hamiltonian equations.
 The implicit Euler method is first used on one equation,
