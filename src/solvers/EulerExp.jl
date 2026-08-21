@@ -2,8 +2,7 @@ export EulerExp, EulerExp_naive
 export step!
 
 @doc raw"""
-
-    EulerExp
+$(TYPEDEF)
 
 Exponential Euler solver [HochbruckOstermann2010](@citet).
 
@@ -19,7 +18,7 @@ Arguments can be either
 The function
 
 ```julia
-    step!(solver :: EulerExp, model :: AbstractModel , U, δt)
+step!(solver :: EulerExp, model :: AbstractModel , U, δt)
 ```
 
 performs the integration step of the exponential Euler solver applied to solutions to the equation ``u'=D u + g(u)``.

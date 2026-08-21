@@ -41,7 +41,12 @@ Pages   = [ "library#solvers.md" ]
 
 ```@autodocs
 Modules = [WaterWaves1D]
-Filter = t -> typeof(t) === DataType && t <: TimeSolver
+Pages =  ["solvers/Euler.jl",
+"solvers/EulerExp.jl",
+"solvers/EulerSymp.jl",
+"solvers/RK4.jl",
+"solvers/StoermerVerlet.jl"
+]
 ```
 
 ## Structures

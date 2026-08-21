@@ -2,8 +2,7 @@ export StoermerVerlet
 export step!
 
 @doc raw"""
-
-    StoermerVerlet
+$(TYPEDEF)
 
 Störmer–Verlet solver [HairerLubichWanner2003](@citet) for canonical Hamiltonian equations.
 Combination of the composition of the two symplectic Euler methods (with different equations solved implicitly).

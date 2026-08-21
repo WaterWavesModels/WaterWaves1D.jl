@@ -7,6 +7,7 @@ const is_ci = haskey(ENV, "CI")
 using Documenter
 using DocumenterCitations
 using DocumenterCodeBlocks
+using DocStringExtensions
 using Plots
 using Literate
 using WaterWaves1D

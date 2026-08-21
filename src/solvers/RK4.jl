@@ -2,8 +2,7 @@ export RK4, RK4_naive
 export step!
 
 @doc raw"""
-
-    RK4
+$(TYPEDEF)
 
 Explicit Runge-Kutta fourth order solver.
 

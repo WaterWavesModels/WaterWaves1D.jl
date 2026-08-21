@@ -2,7 +2,7 @@ export Euler, Euler_naive
 export step!
 
 @doc raw"""
-    Euler
+$(TYPEDEF)
 
 Explicit Euler solver.
 
@@ -16,7 +16,7 @@ Arguments can be either
 The function
 
 ```julia
-   step!(solver :: EulerExp, model :: AbstractModel , U, δt)
+step!(solver :: EulerExp, model :: AbstractModel , U, δt)
 ```
 
 performs the integration step of the explicit Euler solver applied to solutions to the equation ``u'=f(u)``.
@@ -39,15 +39,24 @@ struct Euler{T,N} <: TimeSolver
     end
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function Euler(model::AbstractModel)
     U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
     return Euler(U)
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function Euler(param::NamedTuple, systemsize = 2::Int)
     return Euler([Array{Complex{Float64}}(undef, param.N) for _ in 1:systemsize])
 end
 
+"""
+$(TYPEDSIGNATURES)
+"""
 function Euler(datasize, systemsize = 2::Int)
     return Euler([Array{Complex{Float64}}(undef, datasize) for _ in 1:systemsize])
 end
