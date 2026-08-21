@@ -40,7 +40,7 @@ struct Euler{T,N} <: TimeSolver
 end
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 """
 function Euler(model::AbstractModel)
     U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
@@ -48,14 +48,14 @@ function Euler(model::AbstractModel)
 end
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 """
 function Euler(param::NamedTuple, systemsize = 2::Int)
     return Euler([Array{Complex{Float64}}(undef, param.N) for _ in 1:systemsize])
 end
 
 """
-$(TYPEDSIGNATURES)
+$(SIGNATURES)
 """
 function Euler(datasize, systemsize = 2::Int)
     return Euler([Array{Complex{Float64}}(undef, datasize) for _ in 1:systemsize])
