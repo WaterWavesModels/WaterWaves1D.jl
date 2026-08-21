@@ -2,6 +2,9 @@ export EulerExp, EulerExp_naive
 export step!
 
 @doc raw"""
+
+    EulerExp
+
 Exponential Euler solver [HochbruckOstermann2010](@citet).
 
 Construct an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`

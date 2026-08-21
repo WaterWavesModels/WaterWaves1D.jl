@@ -2,6 +2,9 @@ export StoermerVerlet
 export step!
 
 @doc raw"""
+
+    StoermerVerlet
+
 Störmer–Verlet solver [HairerLubichWanner2003](@citet) for canonical Hamiltonian equations.
 Combination of the composition of the two symplectic Euler methods (with different equations solved implicitly).
 The implicit problems are solved using explicit fixed-point iterations.
@@ -52,9 +55,10 @@ struct StoermerVerlet{T} <: TimeSolver
         if implicit != 1 && implicit != 2
             @warn "the keyword `implicit` must be 1 or 2. solve! will not work."
         end
-        info = "Symplectic Euler time solver: equation $implicit is solved first via \
-        the implicit Euler step (using the Neumann expansion with $Niter iterations) \
+        info = """Symplectic Euler time solver: equation $implicit is solved first via
+        the implicit Euler step (using the Neumann expansion with $Niter iterations)
         and then equation $(3 - implicit) is solved via the explicit Euler step."
+        """
         label = "symplectic Euler"
         return new{T}(U1, U2, Niter, implicit, label, info)
     end

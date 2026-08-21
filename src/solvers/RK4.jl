@@ -2,6 +2,9 @@ export RK4, RK4_naive
 export step!
 
 @doc raw"""
+
+    RK4
+
 Explicit Runge-Kutta fourth order solver.
 
 Construct an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`

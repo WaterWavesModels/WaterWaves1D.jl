@@ -2,6 +2,8 @@ export Euler, Euler_naive
 export step!
 
 @doc raw"""
+    Euler
+
 Explicit Euler solver.
 
 Construct an object of type `TimeSolver` to be used in `Problem(model, initial, param; solver::TimeSolver)`

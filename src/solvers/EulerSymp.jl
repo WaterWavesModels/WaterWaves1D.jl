@@ -2,6 +2,9 @@ export EulerSymp
 export step!
 
 @doc raw"""
+
+    EulerSymp
+
 Symplectic Euler solver [HairerLubichWanner2003](@citet) for canonical Hamiltonian equations.
 The implicit Euler method is first used on one equation,
 then the explicit Euler method is used on the second one.
