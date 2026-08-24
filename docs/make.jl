@@ -24,7 +24,7 @@ for example in examples
 
     EXAMPLE = joinpath(@__DIR__, "..", "examples", example * ".jl")
     OUTPUT = joinpath(@__DIR__, "src", "generated")
-    Literate.markdown(EXAMPLE, OUTPUT; config = Dict(binder_root_url = "https://plmbinder.math.cnrs.fr/binder/"))
+    Literate.markdown(EXAMPLE, OUTPUT; config = Dict("binder_root_url" => "https://plmbinder.math.cnrs.fr/binder/"))
     Literate.notebook(EXAMPLE, OUTPUT, execute = false)
 
 end
