@@ -1,6 +1,6 @@
 # # Deep-Water
 #
-#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/generated/DeepWater.ipynb)
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/DeepWater.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/generated/DeepWater.ipynb)
 
 # *In this notebook, we compare several models for the propagation of surface gravity waves over an infinite fluid layer. Specifically, we consider*

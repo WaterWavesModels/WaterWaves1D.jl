@@ -20,7 +20,7 @@ examples = [
     "ShallowWater",
 ]
 
-binder_root_url = "https://plmbinder.math.cnrs.fr/binder/v2/gh/https%3A%2F%2Fplmlab.math.cnrs.fr%2Fnavaro%2FWaterWaves1D.jl/gh-pages?filepath=dev"
+binder_root_url = "https://plmbinder.math.cnrs.fr/binder/v2/git/https%3A%2F%2Fplmlab.math.cnrs.fr%2Fnavaro%2FWaterWaves1D.jl/gh-pages?filepath=dev%2Fgenerated%2F"
 
 for example in examples
 

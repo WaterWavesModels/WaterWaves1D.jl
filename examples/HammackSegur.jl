@@ -4,7 +4,7 @@
 # *This notebook provides a comparison of several models for water waves on the results of an experiment of
 # [Hammack & Segur](https://dx.doi.org/10.1017/S002211207800020) experiment, in the spirit of [Carter](https://dx.doi.org/10.1016/j.wavemoti.2018.07.004).*
 
-#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/generated/HammackSegur.ipynb)
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/HammackSegur.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/generated/HammackSegur.ipynb)
 
 # ## Initialization

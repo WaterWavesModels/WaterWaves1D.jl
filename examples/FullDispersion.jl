@@ -1,6 +1,6 @@
 # # Comparison of the Serre-Green-Naghdi and Whitham-Green-Naghdi models
 #
-#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/generated/FullDispersion.ipynb)
+#md # [![](https://mybinder.org/badge_logo.svg)](@__BINDER_ROOT_URL__/FullDispersion.ipynb)
 #md # [![](https://img.shields.io/badge/show-nbviewer-579ACA.svg)](@__NBVIEWER_ROOT_URL__/generated/FullDispersion.ipynb)
 #
 
