@@ -1,0 +1,1 @@
+julia -e 'import Pkg; Pkg.build("IJulia")'
