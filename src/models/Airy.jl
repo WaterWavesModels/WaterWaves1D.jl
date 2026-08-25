@@ -35,7 +35,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
     - `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
-mutable struct Airy <: AbstractModel
+struct Airy <: AbstractModel
 
     label::String
     f!::Function

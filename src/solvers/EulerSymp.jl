@@ -2,7 +2,7 @@ export EulerSymp
 export step!
 
 @doc raw"""
-    EulerSymp(arguments;Niter,implicit,realdata)
+    struct EulerSymp{T} <: TimeSolver
 
 Symplectic Euler solver [HairerLubichWanner2003](@citet) for canonical Hamiltonian equations.
 The implicit Euler method is first used on one equation,
@@ -18,11 +18,12 @@ Arguments can be either
 
 The keyword argument `Niter` (optional, defaut value = 10) determines the number of steps in the Neumann iteration solver of the implicit step.
 The keyword argument `implicit` (optional, defaut value = 1) determines which equation is implicit (must be `1` or `2`).
-The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
-By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
 
 The function
-    `step!(solver :: EulerSymp, model :: AbstractModel , U, δt)`
+
+```julia
+step!(solver :: EulerSymp, model :: AbstractModel , U, δt)
+```
 
 performs the integration step of the symplectic Euler solver applied to solutions to the equation ``(u₁,u₂)'=(f₁,f₂)(u₁,u₂)``.
 
@@ -37,25 +38,19 @@ u₂(tₙ+δt)≈ u₂(tₙ) + δt f₂( u₁(tₙ+δt), u₂(tₙ) )
 (if the first equation is solved implicitly, as defined by `implicit`).
 
 """
-struct EulerSymp <: TimeSolver
+struct EulerSymp{T} <: TimeSolver
 
-    U1::Array
-    U2::Array
+    U1::Vector{T}
+    U2::Vector{T}
     Niter::Int
     implicit::Int
     label::String
     info::String
 
 
-    function EulerSymp(U::Array; Niter = 10, implicit = 1, realdata = nothing)
+    function EulerSymp(U::Vector{Vector{T}}; Niter = 10, implicit = 1) where T
         U1 = deepcopy(U[1])
         U2 = deepcopy(U[2])
-        if realdata == true
-            U1 = real.(U1);U2 = real.(U2)
-        end
-        if realdata == false
-            U1 = complex.(U1);U2 = complex.(U2)
-        end
         if implicit != 1 && implicit != 2
             @warn "the keyword `implicit` must be 1 or 2. solve! will not work."
         end
@@ -63,16 +58,19 @@ struct EulerSymp <: TimeSolver
         the implicit Euler step (using the Neumann expansion with $Niter iterations) \
         and then equation $(3 - implicit) is solved via the explicit Euler step."
         label = "symplectic Euler"
-        return new(U1, U2, Niter, implicit, label, info)
+
+        return new{T}(U1, U2, Niter, implicit, label, info)
     end
 
-    function EulerSymp(model::AbstractModel; Niter = 10, implicit = 1, realdata = nothing)
-        U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
-        return EulerSymp(U; Niter = Niter, realdata = realdata, implicit = implicit)
-    end
-    function EulerSymp(param::NamedTuple; Niter = 10, implicit = 1, realdata = nothing)
-        return EulerSymp([zeros(Complex{Float64}, param.N), zeros(Complex{Float64}, param.N)]; Niter = Niter, realdata = realdata, implicit = implicit)
-    end
+end
+
+function EulerSymp(model::AbstractModel; Niter = 10, implicit = 1)
+    U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
+    return EulerSymp(U; Niter = Niter, implicit = implicit)
+end
+
+function EulerSymp(param::NamedTuple; Niter = 10, implicit = 1)
+    return EulerSymp([zeros(Complex{Float64}, param.N), zeros(Complex{Float64}, param.N)]; Niter = Niter, implicit = implicit)
 end
 
 function step!(

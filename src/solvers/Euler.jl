@@ -2,7 +2,7 @@ export Euler, Euler_naive
 export step!
 
 @doc raw"""
-    Euler(arguments;realdata)
+    struct Euler{T,N} <: TimeSolver
 
 Explicit Euler solver.
 
@@ -13,11 +13,11 @@ Arguments can be either
 1. an `Array` of size `(N,datasize)` where `N` is the number of collocation points and `datasize` the number of equations solved;
 2. `(param,datasize)` where `param` is a `NamedTuple` containing a key `N`, and `datasize` a integer (optional, by default `datasize=2`).
 
-The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
-By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
-
 The function
-    `step!(solver :: EulerExp, model :: AbstractModel , U, δt)`
+
+```julia
+step!(solver :: EulerExp, model :: AbstractModel , U, δt)
+```
 
 performs the integration step of the explicit Euler solver applied to solutions to the equation ``u'=f(u)``.
 
@@ -28,34 +28,38 @@ u(tₙ+δt)≈ u(tₙ) + δt f( u(tₙ) )
 ```
 
 """
-struct Euler <: TimeSolver
+struct Euler{T,N} <: TimeSolver
 
-    U1::Array
+    U1::Vector{Array{T,N}}
     label::String
 
-    function Euler(U::Array; realdata = nothing)
+    function Euler(U::Vector{Array{T,N}}) where {T,N}
         U1 = deepcopy(U)
-        if realdata == true
-            U1 = real.(U1)
-        end
-        if realdata == false
-            U1 = complex.(U1)
-        end
-        return new(U1, "Euler")
-    end
-
-    function Euler(model::AbstractModel; realdata = nothing)
-        U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
-        return Euler(U; realdata = realdata)
-    end
-    function Euler(param::NamedTuple, systemsize = 2::Int; realdata = nothing)
-        return Euler([Array{Complex{Float64}}(undef, param.N) for _ in 1:systemsize]; realdata = realdata)
-    end
-    function Euler(datasize, systemsize = 2::Int; realdata = nothing)
-        return Euler([Array{Complex{Float64}}(undef, datasize) for _ in 1:systemsize]; realdata = realdata)
+        return new{T,N}(U1, "Euler")
     end
 end
 
+"""
+$(SIGNATURES)
+"""
+function Euler(model::AbstractModel)
+    U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
+    return Euler(U)
+end
+
+"""
+$(SIGNATURES)
+"""
+function Euler(param::NamedTuple, systemsize = 2::Int)
+    return Euler([Array{Complex{Float64}}(undef, param.N) for _ in 1:systemsize])
+end
+
+"""
+$(SIGNATURES)
+"""
+function Euler(datasize, systemsize = 2::Int)
+    return Euler([Array{Complex{Float64}}(undef, datasize) for _ in 1:systemsize])
+end
 
 function step!(
         solver::Euler,

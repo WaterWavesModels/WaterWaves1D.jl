@@ -2,7 +2,7 @@ export RK4, RK4_naive
 export step!
 
 @doc raw"""
-    RK4(arguments;realdata)
+    struct RK4{T, N} <: TimeSolver
 
 Explicit Runge-Kutta fourth order solver.
 
@@ -14,11 +14,11 @@ Arguments can be either
 2. a `(datasize,systemsize)` where `datasize` is the size of scalar variables (typically `N` the number of collocation points) and `datasize` (optional, by default `systemsize=2`) the number of solved equations);
 3. `(param,systemsize)` where `param` is a `NamedTuple` containing a key `N` describing the number of collocation points, and `systemsize` the number of solved equations (optional, by default `systemsize=2`).
 
-The keyword argument `realdata` is optional, and determines whether pre-allocated vectors are real- or complex-valued.
-By default, they are either determined by the model or the type of the array in case `0.` and `1.`, complex-valued in case `2.`.
-
 The function
-    `step!(solver :: RK4, model :: AbstractModel , U, δt)`
+
+```julia
+step!(solver :: RK4, model :: AbstractModel , U, δt)
+```
 
 performs the integration step of the standard Runge-Kutta 4 solver applied to solutions to the equation `` u'=f(u)``.
 
@@ -37,68 +37,77 @@ u₄ = f( u(tₙ) + δt * f( u₃ ) )\\
 \end{array}\right.
 ```
 """
-struct RK4 <: TimeSolver
+struct RK4{T, N} <: TimeSolver
 
-    U1::Array
-    dU::Array
+    U1::Vector{Array{T, N}}
+    dU::Vector{Array{T, N}}
     label::String
 
-    function RK4(U::Array; realdata = nothing)
+    function RK4(U::Vector{Array{T, N}}) where {T, N}
         U1 = deepcopy(U)
         dU = deepcopy(U)
-        if realdata == true
-            U1 = real.(U1);dU = real.(dU)
-        end
-        if realdata == false
-            U1 = complex.(U1);dU = complex.(dU)
-        end
-        return new(U1, dU, "RK4")
+        return new{T, N}(U1, dU, "RK4")
     end
 
-    function RK4(model::AbstractModel; realdata = nothing)
-        U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
-        return RK4(U; realdata = realdata)
-    end
-    function RK4(param::NamedTuple, systemsize = 2::Int; realdata = nothing)
-        return RK4([Array{Complex{Float64}}(undef, param.N) for _ in 1:systemsize]; realdata = realdata)
-    end
-    function RK4(datasize, systemsize = 2::Int; realdata = nothing)
-        return RK4([Array{Complex{Float64}}(undef, datasize) for _ in 1:systemsize]; realdata = realdata)
-    end
 end
 
-function step!(
-        s::RK4,
-        m::AbstractModel,
-        U,
-        dt
-    )
+function RK4(model::AbstractModel)
+    U = model.mapto(Init(x -> 0 * x, x -> 0 * x))
+    return RK4(U)
+end
 
-    [u1 .= u for (u1, u) in zip(s.U1, U)]
+function RK4(param::NamedTuple, systemsize = 2::Int)
+    return RK4([zeros(ComplexF64, param.N) for _ in 1:systemsize])
+end
 
+function RK4(datasize, systemsize = 2::Int)
+    return RK4([zeros(ComplexF64, datasize) for _ in 1:systemsize])
+end
+
+@inline function _predict!(U1, U, coef)
+    for (u1, u) in zip(U1, U)
+        u1 .= u .+ coef .* u1
+    end
+    return
+end
+
+@inline function _accumulate!(dU, U1, coef)
+    for (du, u1) in zip(dU, U1)
+        du .+= coef .* u1
+    end
+    return
+end
+
+function step!(s::RK4, m::AbstractModel, U, dt)
+
+    for (u1, u) in zip(s.U1, U)
+        copy!(u1, u)
+    end
+
+    # k1 = f(U)
     m.f!(s.U1)
 
-    [du .= u1 for (du, u1) in zip(s.dU, s.U1)]
+    for (du, u1) in zip(s.dU, s.U1)
+        copy!(du, u1)
+    end
 
-    [u1 .= u .+ dt / 2 .* u1 for (u1, u) in zip(s.U1, U)]
-
+    # k2 = f(U + dt/2*k1)
+    _predict!(s.U1, U, dt / 2)
     m.f!(s.U1)
+    _accumulate!(s.dU, s.U1, 2)
 
-    [du .+= 2 .* u1 for (du, u1) in zip(s.dU, s.U1)]
-
-    [u1 .= u .+ dt / 2 .* u1 for (u1, u) in zip(s.U1, U)]
-
+    # k3 = f(U + dt/2*k2)
+    _predict!(s.U1, U, dt / 2)
     m.f!(s.U1)
+    _accumulate!(s.dU, s.U1, 2)
 
-    [du .+= 2 .* u1 for (du, u1) in zip(s.dU, s.U1)]
-
-    [u1 .= u .+ dt .* u1 for (u1, u) in zip(s.U1, U)]
-
+    # k4 = f(U + dt*k3)
+    _predict!(s.U1, U, dt)
     m.f!(s.U1)
+    _accumulate!(s.dU, s.U1, 1)
 
-    [du .+= u1 for (du, u1) in zip(s.dU, s.U1)]
-
-    return [u .+= dt / 6 .* du for (u, du) in zip(U, s.dU)]
+    # U += dt/6 * (k1 + 2k2 + 2k3 + k4)
+    return _accumulate!(U, s.dU, dt / 6)
 
 end
 

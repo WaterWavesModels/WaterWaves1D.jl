@@ -45,7 +45,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
   - `vᵦ` corresponds to the horizontal velocity at the bottom.
 
 """
-mutable struct Choi <: AbstractModel
+struct Choi <: AbstractModel
 
     label::String
     f!::Function

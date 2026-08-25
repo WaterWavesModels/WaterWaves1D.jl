@@ -5,7 +5,7 @@ export AkersNicholls_fast, AkersNicholls
 
 Same as [`AkersNicholls`](@ref), but faster.
 """
-mutable struct AkersNicholls_fast <: AbstractModel
+struct AkersNicholls_fast <: AbstractModel
 
     label::String
     f!::Function
@@ -180,7 +180,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
 
 Consider also [`AkersNicholls_fast`](@ref).
 """
-mutable struct AkersNicholls <: AbstractModel
+struct AkersNicholls <: AbstractModel
 
     label::String
     f!::Function

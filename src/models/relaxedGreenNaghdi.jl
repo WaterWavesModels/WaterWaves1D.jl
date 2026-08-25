@@ -53,7 +53,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
   - `w` corresponds to the relaxed (artificial) layer-averaged vertical velocity.
 
 """
-mutable struct relaxedGreenNaghdi <: AbstractModel
+struct relaxedGreenNaghdi <: AbstractModel
 
     label::String
     f!::Function

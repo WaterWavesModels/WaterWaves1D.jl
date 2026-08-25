@@ -45,7 +45,7 @@ Generate necessary ingredients for solving an initial-value problem via `solve!`
   - `u` corresponds to the layer-averaged velocity.
 
 """
-mutable struct WhithamGreenNaghdi <: AbstractModel
+struct WhithamGreenNaghdi <: AbstractModel
 
     label::String
     f!::Function

@@ -50,7 +50,7 @@ Additionnally, two functions `WaterWaves.f1!` and `WaterWaves.f2!` for symplecti
   - `v` is the derivative of the trace of the velocity potential at `x`.
 
 """
-mutable struct WWn <: AbstractModel
+struct WWn <: AbstractModel
 
     label::String
     f!::Function
