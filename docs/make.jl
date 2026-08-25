@@ -20,11 +20,13 @@ examples = [
     "ShallowWater",
 ]
 
+binder_root_url = "https://plmbinder.math.cnrs.fr/binder/v2/gh/https%3A%2F%2Fplmlab.math.cnrs.fr%2Fnavaro%2FWaterWaves1D.jl/gh-pages?filepath=dev"
+
 for example in examples
 
     EXAMPLE = joinpath(@__DIR__, "..", "examples", example * ".jl")
     OUTPUT = joinpath(@__DIR__, "src", "generated")
-    Literate.markdown(EXAMPLE, OUTPUT; config = Dict("binder_root_url" => "https://plmbinder.math.cnrs.fr/binder/v2/gh/WaterWavesModels/WaterWaves1D.jl/gh-pages?filepath=dev"))
+    Literate.markdown(EXAMPLE, OUTPUT; config = Dict("binder_root_url" => binder_root_url))
     Literate.notebook(EXAMPLE, OUTPUT, execute = false)
 
 end
