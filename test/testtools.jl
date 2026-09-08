@@ -1,3 +1,6 @@
+using Test
+import FFTW.fft
+
 @testset "Interpolate" begin
     paramX = (N = 2^8, L = 10)
     f(x) = exp.(-x .^ 2)
@@ -5,12 +8,19 @@
     mesh2, f2 = interpolate(mesh, f1; n = 2)
     @test f2 ≈ f(mesh2.x)
     @test f2[1:2:end] ≈ f1
-    x3 = [1 2.5 3]
+    x3 = [1; 2.5; 3]
     f3 = interpolate(mesh, f1, x3)
     @test f3 ≈ f(x3)
-    x4 = [1 2 3]
-    f4 = interpolate(mesh, f1, x4; fast = true)
+    x4 = [1; 2; 3]
+    f4 = interpolate(mesh, f1, x4; fast = true, reltol=1e-12)
     @test f4 ≈ f(x4)
+    y = x .+ f(x)/100
+    f5 = interpolate(y, f(y), x3; fast = true, reltol=1e-12)
+    @test f5 ≈ f(x3)
+    f6 = interpolate(y, f(y), x4; fast = false, reltol=1e-12)
+    @test f6 ≈ f(x4)
+    f7 = myifft(fft(f1) , x3, 20 ; x₀ = 0, reltol=1e-12)
+    @test real.(f7) ≈ f(x3)
 end
 
 @testset "Solution" begin
@@ -33,16 +43,6 @@ end
     @test x₁ == [x[1] 2]
     @test η[1] ≈ η₁[1]
     @test v[1] ≈ v₁[1]
-
-    η₂, v₂, x₂ = solution(pb; T = param.T, interpolation = true)
-    @test x₂[1:(2^3):end] ≈ x
-    @test η₂[1:(2^3):end] ≈ η
-    @test v₂[1:(2^3):end] ≈ v
-
-    η₃, v₃, x₃ = solution(pb; T = param.T, interpolation = 4)
-    @test x₃[1:4:end] ≈ x
-    @test η₃[1:4:end] ≈ η
-    @test v₃[1:4:end] ≈ v
 
     raw_η, raw_v, t = solution(pb; raw = true)
     @test raw_η == pb.data.U[end][1]

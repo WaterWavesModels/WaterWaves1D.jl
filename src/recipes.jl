@@ -21,25 +21,25 @@ function solution_time(problem::Problem, T)
     return time
 
 end
-function solution_surface(problem::Problem, T, x̃, interpolation, compression)
+function solution_surface(problem::Problem, T, x̃, compression)
 
-    η, v, x = solution(problem; x = x̃, T = T, interpolation = interpolation)
+    η, v, x = solution(problem; x = x̃, T = T)
     i = indices(compression, x)
     return x[i], η[i]
 
 end
 
-function solution_velocity(problem::Problem, T, x̃, interpolation, compression)
+function solution_velocity(problem::Problem, T, x̃, compression)
 
-    η, v, x = solution(problem; x = x̃, T = T, interpolation = interpolation)
+    η, v, x = solution(problem; x = x̃, T = T)
     i = indices(compression, x)
     return x[i], v[i]
 
 end
 
-function solution_fourier(problem::Problem, T, x̃, interpolation, compression)
+function solution_fourier(problem::Problem, T, x̃, compression)
 
-    η, v, x = solution(problem; x = x̃, T = T, interpolation = interpolation)
+    η, v, x = solution(problem; x = x̃, T = T)
     fftη = fft(η)
     k = fftshift(Mesh(x).k)
     y = abs.(fftshift(fftη))
@@ -48,9 +48,9 @@ function solution_fourier(problem::Problem, T, x̃, interpolation, compression)
 
 end
 
-function solution_fourier_velocity(problem::Problem, T, x̃, interpolation, compression)
+function solution_fourier_velocity(problem::Problem, T, x̃, compression)
 
-    η, v, x = solution(problem; x = x̃, T = T, interpolation = interpolation)
+    η, v, x = solution(problem; x = x̃, T = T)
     fftv = fft(v)
     k = fftshift(Mesh(x).k)
     y = abs.(fftshift(fftv))
@@ -59,21 +59,17 @@ function solution_fourier_velocity(problem::Problem, T, x̃, interpolation, comp
 
 end
 
-function difference(problems::Vector{Problem}, T, x̃, interpolation)
-    η1, v1, x1 = solution(problems[1]; x = x̃, T = T, interpolation = interpolation)
-    η2, v2, x2 = solution(problems[2]; x = x̃, T = T, interpolation = interpolation)
+function difference(problems::Vector{Problem}, T, x̃)
+    η1, v1, x1 = solution(problems[1]; x = x̃, T = T)
+    η2, v2, x2 = solution(problems[2]; x = x̃, T = T)
 
     if !(x1 ≈ x2)
 
         if Symbol(typeof(problems[2].model)) !== :WaterWaves
-            η2, v2, x2, t2 = solution(problems[2]; x = x1, T = T, interpolation = interpolation)
-
-        elseif Symbol(typeof(problems[1].model)) !== :WaterWaves
-            η1, v1, x1, t1 = solution(problems[1]; x = x2, T = T, interpolation = interpolation)
+            η2, v2, x2,  = solution(problems[2]; x = x1, T = T)
 
         else
-            @warn("The difference is computed on different collocation points.")
-            η2, v2, x2, t2 = solution(problems[2]; x = x1, T = T, interpolation = interpolation)
+            η1, v1, x1,  = solution(problems[1]; x = x2, T = T)
         end
 
     end
@@ -81,25 +77,25 @@ function difference(problems::Vector{Problem}, T, x̃, interpolation)
 
 end
 
-function difference_surface(problems::Vector{Problem}, T, x̃, interpolation, compression)
+function difference_surface(problems::Vector{Problem}, T, x̃, compression)
 
-    η1, v1, η2, v2, x = difference(problems::Vector{Problem}, T, x̃, interpolation)
+    η1, v1, η2, v2, x = difference(problems::Vector{Problem}, T, x̃)
     i = indices(compression, x)
     return x[i], η1[i] .- η2[i]
 
 end
 
-function difference_velocity(problems::Vector{Problem}, T, x̃, interpolation, compression)
+function difference_velocity(problems::Vector{Problem}, T, x̃, compression)
 
-    η1, v1, η2, v2, x = difference(problems::Vector{Problem}, T, x̃, interpolation)
+    η1, v1, η2, v2, x = difference(problems::Vector{Problem}, T, x̃)
     i = indices(compression, x)
     return x[i], v1[i] .- v2[i]
 
 end
 
-function difference_fourier(problems::Vector{Problem}, T, x̃, interpolation, compression)
+function difference_fourier(problems::Vector{Problem}, T, x̃, compression)
 
-    η1, v1, η2, v2, x = difference(problems::Vector{Problem}, T, x̃, interpolation)
+    η1, v1, η2, v2, x = difference(problems::Vector{Problem}, T, x̃)
     if (x[2:end] .- x[2] ≈ x[1:(end - 1)] .- x[1])
         k = fftshift(Mesh(x).k)
 
@@ -123,7 +119,6 @@ end
         var = :surface,
         T = nothing,
         x = nothing,
-        interpolation = false,
         compression = false
     )
 
@@ -159,7 +154,7 @@ end
                 yguide --> "η"
                 subplot := n
 
-                solution_surface(problem, T, x, interpolation, compression)
+                solution_surface(problem, T, x, compression)
             end
 
         end
@@ -175,7 +170,7 @@ end
                 yguide --> "v"
                 subplot := n
 
-                solution_velocity(problem, T, x, interpolation, compression)
+                solution_velocity(problem, T, x, compression)
 
             end
 
@@ -193,7 +188,7 @@ end
                 yscale --> :log10
                 subplot := n
 
-                solution_fourier(problem, T, x, interpolation, compression)
+                solution_fourier(problem, T, x, compression)
 
             end
 
@@ -211,7 +206,7 @@ end
                 yscale --> :log10
                 subplot := n
 
-                solution_fourier(problem, T, x, interpolation, compression)
+                solution_fourier(problem, T, x, compression)
 
             end
 
@@ -229,7 +224,7 @@ end
                 yscale --> :log10
                 subplot := n
 
-                solution_fourier_velocity(problem, T, x, interpolation, compression)
+                solution_fourier_velocity(problem, T, x, compression)
 
             end
 
@@ -244,7 +239,6 @@ end
         var = :surface,
         T = nothing,
         x = nothing,
-        interpolation = false,
         compression = false
     )
 
@@ -279,7 +273,7 @@ end
                     yguide --> "η"
                     subplot := n
 
-                    solution_surface(problem, T, x, interpolation, compression)
+                    solution_surface(problem, T, x, compression)
 
                 end
 
@@ -300,7 +294,7 @@ end
                     yguide --> "v"
                     subplot := n
 
-                    solution_velocity(problem, T, x, interpolation, compression)
+                    solution_velocity(problem, T, x, compression)
 
                 end
 
@@ -322,7 +316,7 @@ end
                     yscale --> :log10
                     subplot := n
 
-                    solution_fourier(problem, T, x, interpolation, compression)
+                    solution_fourier(problem, T, x, compression)
 
 
                 end
@@ -344,7 +338,7 @@ end
                     yscale --> :log10
                     subplot := n
 
-                    solution_fourier(problem, T, x, interpolation, compression)
+                    solution_fourier(problem, T, x, compression)
 
 
                 end
@@ -366,7 +360,7 @@ end
                     yscale --> :log10
                     subplot := n
 
-                    solution_fourier_velocity(problem, T, x, interpolation, compression)
+                    solution_fourier_velocity(problem, T, x, compression)
 
 
                 end
@@ -384,7 +378,7 @@ end
                 title --> string("Difference (surface deformation)", string_title)
                 subplot := n
 
-                difference_surface([problems[1], problems[2]], T, x, interpolation, compression)
+                difference_surface([problems[1], problems[2]], T, x, compression)
 
             end
 
@@ -400,7 +394,7 @@ end
                 title --> string("Difference (velocity)", string_title)
                 subplot := n
 
-                difference_velocity([problems[1], problems[2]], T, x, interpolation, compression)
+                difference_velocity([problems[1], problems[2]], T, x, compression)
 
             end
 
@@ -417,7 +411,7 @@ end
                 yscale --> :log10
                 subplot := n
 
-                difference_fourier([problems[1], problems[2]], T, x, interpolation, compression)
+                difference_fourier([problems[1], problems[2]], T, x, compression)
 
             end
 
@@ -435,7 +429,7 @@ end
                     title --> string("Difference (surface deformation)", string_title)
                     subplot := n
 
-                    difference_surface([problems[i], problems[j]], T, x, interpolation, compression)
+                    difference_surface([problems[i], problems[j]], T, x, compression)
 
                 end
 
@@ -456,7 +450,7 @@ end
                     title --> string("Difference (velocity)", string_title)
                     subplot := n
 
-                    difference_velocity([problems[i], problems[j]], T, x, interpolation, compression)
+                    difference_velocity([problems[i], problems[j]], T, x, compression)
 
                 end
 
@@ -478,7 +472,7 @@ end
                     yscale --> :log10
                     subplot := n
 
-                    difference_fourier([problems[i], problems[j]], T, x, interpolation, compression)
+                    difference_fourier([problems[i], problems[j]], T, x, compression)
 
                 end
 
@@ -496,7 +490,6 @@ end
         var = :difference,
         T = nothing,
         x = nothing,
-        interpolation = false,
         compression = false
     )
 
@@ -536,7 +529,7 @@ end
                     title --> string("Difference (surface deformation)", string_title)
                     subplot := n
 
-                    difference_surface([problems[1], problems[2]], T, x, interpolation, compression)
+                    difference_surface([problems[1], problems[2]], T, x, compression)
 
                 end
 
@@ -552,7 +545,7 @@ end
                     title --> string("Difference (velocity)", string_title)
                     subplot := n
 
-                    difference_velocity([problems[1], problems[2]], T, x, interpolation, compression)
+                    difference_velocity([problems[1], problems[2]], T, x, compression)
 
                 end
 
@@ -569,7 +562,7 @@ end
                     yscale --> :log10
                     subplot := n
 
-                    difference_fourier([problems[1], problems[2]], T, x, interpolation, compression)
+                    difference_fourier([problems[1], problems[2]], T, x, compression)
 
                 end
 

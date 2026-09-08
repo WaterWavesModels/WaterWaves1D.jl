@@ -673,6 +673,10 @@ end
 
 
 #--- Tests on 2D models
+para = (ϵ = 0.01, μ = 0.01)  # physical parameters
+paraX = (N = 2^6, L = 4)   # mesh with 64 collocation points on [-4,4]
+paraT = (T = 1.0e-1, dt = 1.0e-2) # timegrid with 10 instants: t=[0.0:1.0:10.0]/100
+param = merge(para, paraX)  # used to construct models
 @testset "2D models reduce to 1D models" begin
 
     # Initial data
