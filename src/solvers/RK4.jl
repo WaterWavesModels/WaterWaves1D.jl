@@ -31,9 +31,9 @@ where
 ```math
  \left\{\begin{array}{l}
 u₁ = f( u(tₙ) )\\
-u₂ = f( u(tₙ) + δt/2 * f( u₁ ) )\\
-u₃ = f( u(tₙ) + δt/2 * f( u₂ ) )\\
-u₄ = f( u(tₙ) + δt * f( u₃ ) )\\
+u₂ = f( u(tₙ) + δt/2 * u₁ )\\
+u₃ = f( u(tₙ) + δt/2 * u₂ )\\
+u₄ = f( u(tₙ) + δt * u₃ )
 \end{array}\right.
 ```
 """
@@ -88,17 +88,41 @@ function step!(
 
     [u1 .= u .+ dt / 2 .* u1 for (u1, u) in zip(s.U1, U)]
 
+<<<<<<< Updated upstream
+=======
+    # u1 = f(U)
+>>>>>>> Stashed changes
     m.f!(s.U1)
 
     [du .+= 2 .* u1 for (du, u1) in zip(s.dU, s.U1)]
 
+<<<<<<< Updated upstream
     [u1 .= u .+ dt .* u1 for (u1, u) in zip(s.U1, U)]
 
+=======
+    # u2 = f(U + dt/2*u1)
+    _predict!(s.U1, U, dt / 2)
+    m.f!(s.U1)
+    _accumulate!(s.dU, s.U1, 2)
+
+    # u3 = f(U + dt/2*u2)
+    _predict!(s.U1, U, dt / 2)
+>>>>>>> Stashed changes
     m.f!(s.U1)
 
+<<<<<<< Updated upstream
     [du .+= u1 for (du, u1) in zip(s.dU, s.U1)]
 
     return [u .+= dt / 6 .* du for (u, du) in zip(U, s.dU)]
+=======
+    # u4 = f(U + dt*u3)
+    _predict!(s.U1, U, dt)
+    m.f!(s.U1)
+    _accumulate!(s.dU, s.U1, 1)
+
+    # U += dt/6 * (u1 + 2u2 + 2u3 + u4)
+    return _accumulate!(U, s.dU, dt / 6)
+>>>>>>> Stashed changes
 
 end
 
