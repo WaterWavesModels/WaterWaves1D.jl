@@ -76,6 +76,92 @@ end
     end
 end
 
+#--- tests on RK2 solvers
+@testset "RK2 solver" begin
+    # build RK2 solver
+    pb1 = Problem(
+        model, init, parap;
+        solver = RK2(model)
+    )
+    solve!(pb1, verbose = false)
+    # check RK2 is of order ≈ dt^2*T
+    order = paraT.dt^2 * paraT.T
+    @test isapprox(pb0, pb1, rtol = order)
+    @test !isapprox(pb0, pb1, rtol = order / 10)
+
+    # build new RK2 solver
+    pb2 = Problem(
+        model, init, parap;
+        solver = RK2(model;α=1)
+    )
+    solve!(pb2, verbose = false)
+    # check difference between RK2s is of order ≈ dt^2*T
+    order = paraT.dt^3 * paraT.T
+    @test isapprox(pb2, pb1, rtol = order)
+    @test !isapprox(pb2, pb1, rtol = order / 10)
+    
+    # different ways to build RK2 solver
+    solvers = TimeSolver[]
+    push!(solvers, RK2(model.mapto(init)))
+    push!(solvers, RK2(paraX))
+    push!(solvers, RK2(paraX, 2))
+    push!(solvers, RK2(paraX.N, 2))
+    push!(solvers, RK2(paraX.N))
+    push!(solvers, RK2(model))
+    push!(solvers, RK2(model;α=1/2))
+
+
+    push!(solvers, RK2_naive())
+    push!(solvers, RK2_naive(α=1/2))
+
+
+    # check all solvers generate the same data
+    for solver in solvers
+        pb = Problem(
+            model, init, parap;
+            solver = solver
+        )
+        solve!(pb, verbose = false)
+        @test pb.data.U == pb1.data.U
+    end
+end
+
+#--- tests on explicit RK2 solvers
+@testset "explicit Euler solver" begin
+    # build explicit Euler solver
+    pb1 = Problem(
+        model, init, parap;
+        solver = Euler(model)
+    )
+    solve!(pb1, verbose = false)
+    # check explicit Euler is of order ≈ dt*T
+    order = paraT.dt * paraT.T
+    @test isapprox(pb0, pb1, rtol = order)
+    @test !isapprox(pb0, pb1, rtol = order / 4)
+
+
+    # different ways to build explicit Euler solver
+    solvers = TimeSolver[]
+    push!(solvers, Euler(model.mapto(init)))
+    push!(solvers, Euler(paraX))
+    push!(solvers, Euler(paraX, 2))
+    push!(solvers, Euler(paraX.N, 2))
+    push!(solvers, Euler(paraX.N))
+    push!(solvers, Euler(model))
+
+    push!(solvers, Euler_naive())
+
+    # check all Euler solvers generate the same data
+    for solver in solvers
+        pb = Problem(
+            model, init, parap;
+            solver = solver
+        )
+        solve!(pb, verbose = false)
+        @test pb.data.U == pb1.data.U
+    end
+end
+
 #--- tests on symplectic Euler solvers
 @testset "symplectic Euler solver" begin
     #--- model

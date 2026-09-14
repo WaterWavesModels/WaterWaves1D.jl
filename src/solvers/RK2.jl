@@ -118,7 +118,7 @@ struct RK2_naive <: TimeSolver
     label::String
     α::Float64
 
-    function RK2_naive(α=1/2)
+    function RK2_naive(;α=1/2)
         return new("RK2_naive (naive)",α)
     end
 end
