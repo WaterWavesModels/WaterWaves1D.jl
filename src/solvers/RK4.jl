@@ -31,9 +31,9 @@ where
 ```math
  \left\{\begin{array}{l}
 u₁ = f( u(tₙ) )\\
-u₂ = f( u(tₙ) + δt/2 * f( u₁ ) )\\
-u₃ = f( u(tₙ) + δt/2 * f( u₂ ) )\\
-u₄ = f( u(tₙ) + δt * f( u₃ ) )\\
+u₂ = f( u(tₙ) + δt/2  u₁ )\\
+u₃ = f( u(tₙ) + δt/2  u₂ )\\
+u₄ = f( u(tₙ) + δt  u₃ )
 \end{array}\right.
 ```
 """
@@ -84,29 +84,29 @@ function step!(s::RK4, m::AbstractModel, U, dt)
         copy!(u1, u)
     end
 
-    # k1 = f(U)
+    # u₁ = f(U)
     m.f!(s.U1)
 
     for (du, u1) in zip(s.dU, s.U1)
         copy!(du, u1)
     end
 
-    # k2 = f(U + dt/2*k1)
+    # u₂ = f(U + dt/2 u₁)
     _predict!(s.U1, U, dt / 2)
     m.f!(s.U1)
     _accumulate!(s.dU, s.U1, 2)
 
-    # k3 = f(U + dt/2*k2)
+    # u₃ = f(U + dt/2 u₂)
     _predict!(s.U1, U, dt / 2)
     m.f!(s.U1)
     _accumulate!(s.dU, s.U1, 2)
 
-    # k4 = f(U + dt*k3)
+    # u₄ = f(U + dt u₃)
     _predict!(s.U1, U, dt)
     m.f!(s.U1)
     _accumulate!(s.dU, s.U1, 1)
 
-    # U += dt/6 * (k1 + 2k2 + 2k3 + k4)
+    # U += dt/6 * (u₁ + 2 u₂ + 2 u₃ + u₄)
     return _accumulate!(U, s.dU, dt / 6)
 
 end

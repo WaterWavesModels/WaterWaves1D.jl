@@ -23,7 +23,7 @@ The function
 step!(solver :: RK2, model :: AbstractModel , U, δt)
 ```
 
-performs the integration step of the standard Runge-Kutta 4 solver applied to solutions to the equation `` u'=f(u)``.
+performs the integration step of the Runge-Kutta 2 solver applied to solutions to the equation `` u'=f(u)``.
 
 It replaces the argument ``U≈u(tₙ)`` with the next element of the recursive scheme approximating ``u(tₙ+δt)`` through the formula
 

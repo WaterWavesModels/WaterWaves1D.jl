@@ -24,7 +24,7 @@ The function
 step!(solver :: StoermerVerlet, model :: AbstractModel , U, δt)
 ```
 
-performs the integration step of the symplectic Euler solver applied to solutions to the equation ``(u₁,u₂)'=(f₁,f₂)(u₁,u₂)``.
+performs the integration step of the Störmer–Verlet solver applied to solutions to the equation ``(u₁,u₂)'=(f₁,f₂)(u₁,u₂)``.
 
 It replaces the argument ``U≈(u₁,u₂)(tₙ)`` with the next element of the recursive scheme approximating ``(u₁,u₂)(tₙ+δt)`` through the formula
 
