@@ -44,6 +44,8 @@ Modules = [WaterWaves1D]
 Pages =  ["solvers/Euler.jl",
 "solvers/EulerExp.jl",
 "solvers/EulerSymp.jl",
+"solvers/Midpoint.jl",
+"solvers/RK2.jl",
 "solvers/RK4.jl",
 "solvers/StoermerVerlet.jl"
 ]
