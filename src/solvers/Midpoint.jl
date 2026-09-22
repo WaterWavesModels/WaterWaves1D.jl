@@ -29,10 +29,10 @@ It replaces the argument ``U≈u(tₙ)`` with the next element of the recursive 
 u(tₙ+δt)≈ u(tₙ) + δt  f( (u(tₙ)+u(tₙ+δt))/2 )
 ```
 or, equivalently,
-``math
+```math
  \left\{\begin{array}{l}
-u(tₙ+δt/2)≈ u(tₙ) + δt/2 f( u(tₙ+δt/2) )\\
-u(tₙ+δt)≈ 2 u₂(tₙ+δt/2) - u(tₙ) 
+u(tₙ+δt/2)≈ u(tₙ) + δt/2 f( u(tₙ+δt/2) ) \\
+u(tₙ+δt)≈ 2 u(tₙ+δt/2) - u(tₙ) 
   \end{array}\right.
 ```
 """

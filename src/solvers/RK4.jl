@@ -25,7 +25,7 @@ performs the integration step of the standard Runge-Kutta 4 solver applied to so
 It replaces the argument ``U≈u(tₙ)`` with the next element of the recursive scheme approximating ``u(tₙ+δt)`` through the formula
 
 ```math
-u(tₙ+δt)≈ u(tₙ) + δt/6  * (u₁ + 2 u₂ + 2 u₃ + u₄ )
+u(tₙ+δt)≈ u(tₙ) + δt/6  (u₁ + 2 u₂ + 2 u₃ + u₄ )
 ```
 where
 ```math

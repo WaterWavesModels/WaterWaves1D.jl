@@ -28,13 +28,13 @@ performs the integration step of the Runge-Kutta 2 solver applied to solutions t
 It replaces the argument ``U≈u(tₙ)`` with the next element of the recursive scheme approximating ``u(tₙ+δt)`` through the formula
 
 ```math
-u(tₙ+δt)≈ u(tₙ) + δt  * ((1-1/(2α))u₁ + 1/(2α) u₂  )
+u(tₙ+δt)≈ u(tₙ) + δt   ((1-1/(2α))u₁ + 1/(2α) u₂  )
 ```
 where
 ```math
  \left\{\begin{array}{l}
 u₁ = f( u(tₙ) )\\
-u₂ = f( u(tₙ) + α*δt * u₁ )
+u₂ = f( u(tₙ) + α δt u₁ )
 \end{array}\right.
 ```
 """
