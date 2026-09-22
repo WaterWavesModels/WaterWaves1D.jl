@@ -126,32 +126,30 @@ end
     end
 end
 
-#--- tests on explicit RK2 solvers
-@testset "explicit Euler solver" begin
+#--- tests on Midpoint solver
+@testset "Midpoint solver" begin
     # build explicit Euler solver
     pb1 = Problem(
         model, init, parap;
-        solver = Euler(model)
+        solver = Midpoint(model)
     )
     solve!(pb1, verbose = false)
-    # check explicit Euler is of order ≈ dt*T
-    order = paraT.dt * paraT.T
+    # check explicit Euler is of order ≈ dt^2*T
+    order = paraT.dt^2 * paraT.T
     @test isapprox(pb0, pb1, rtol = order)
-    @test !isapprox(pb0, pb1, rtol = order / 4)
+    @test !isapprox(pb0, pb1, rtol = order / 20)
 
 
-    # different ways to build explicit Euler solver
+    # different ways to build Midpoint solver
     solvers = TimeSolver[]
-    push!(solvers, Euler(model.mapto(init)))
-    push!(solvers, Euler(paraX))
-    push!(solvers, Euler(paraX, 2))
-    push!(solvers, Euler(paraX.N, 2))
-    push!(solvers, Euler(paraX.N))
-    push!(solvers, Euler(model))
+    push!(solvers, Midpoint(model.mapto(init)))
+    push!(solvers, Midpoint(paraX))
+    push!(solvers, Midpoint(paraX, 2))
+    push!(solvers, Midpoint(paraX.N, 2))
+    push!(solvers, Midpoint(paraX.N))
+    push!(solvers, Midpoint(model))
 
-    push!(solvers, Euler_naive())
-
-    # check all Euler solvers generate the same data
+    # check all solvers generate the same data
     for solver in solvers
         pb = Problem(
             model, init, parap;
@@ -160,6 +158,19 @@ end
         solve!(pb, verbose = false)
         @test pb.data.U == pb1.data.U
     end
+
+    # change number of iterations in the implicit step
+    N = 5
+    pb2 = Problem(
+        model, init, parap;
+        solver = Midpoint(model, Niter = N)
+    )
+    solve!(pb2, verbose = false)
+
+    # check the difference is of order ≈ (dt)^(N)*T
+    order = (paraT.dt)^(N ) * paraT.T
+    @test isapprox(pb2.data.U[end], pb1.data.U[end], rtol = order)
+
 end
 
 #--- tests on symplectic Euler solvers
