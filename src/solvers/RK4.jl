@@ -64,19 +64,7 @@ function RK4(datasize, systemsize = 2::Int)
     return RK4([zeros(ComplexF64, datasize) for _ in 1:systemsize])
 end
 
-@inline function _predict!(U1, U, coef)
-    for (u1, u) in zip(U1, U)
-        u1 .= u .+ coef .* u1
-    end
-    return
-end
-
-@inline function _accumulate!(dU, U1, coef)
-    for (du, u1) in zip(dU, U1)
-        du .+= coef .* u1
-    end
-    return
-end
+# functions `_predict!(U1, U, coef)` and `_accumulate!(dU, U1, coef)` are already defined in RK2 solver
 
 function step!(s::RK4, m::AbstractModel, U, dt)
 
