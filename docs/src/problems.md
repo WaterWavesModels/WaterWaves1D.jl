@@ -6,17 +6,17 @@ CurrentModule = WaterWaves1D
 
 A central object in [`WaterWaves1D.jl`](https://github.com/WaterWavesModels/WaterWaves1D.jl/) is the [`Problem`](@ref WaterWaves1D.Problem) structure, which contains all information on a numerically discretized initial-value problem. In practice, a problem is generated as 
 ```julia
-problem = Problem( model, initial, times ; solver, label )
+problem = Problem(model, initial, times; solver, label)
 ```
  where
  - `model` is related to the (spatially discretized) equation at stake. [Built-in models](library.md#Models) are typically generated as 
 ```julia
-model = MyModel( param ; kwargs )
+model = MyModel(param; kwargs)
 ```
 where `param` is a `NamedTuple` containing relevant parameters of the model and of the spatial grid,  and `kwargs` are some optional arguments allowing some choices in the discretization (for instance [dealiasing](background.md#Pseudospectral-methods)), and a label for future references.
 - `inital` is the couple of initial data. It can be generated for instance using the function [`Init`](@ref WaterWaves1D.Init) as  
 ```julia
-initial = Init( η, v )
+initial = Init(η, v)
 ```
 where `η` and `v` are two functions (representing respectively the surface deformation and the derivative of the trace of the velocity potential at the surface). Alternatively, it can also be built from the values of these functions at equally-spaced collocation points.
 - `times` contains relevant parameters of the time integration: in particular the final time  `T` and the time-step `dt`. It can be a `NamedTuple` with these informations or generated via the function [`Times`](@ref WaterWaves1D.Times).

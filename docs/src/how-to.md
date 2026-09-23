@@ -31,12 +31,12 @@ In a dedicated file we write
 export Airy
 
 struct Airy <: AbstractModel
-  label   :: String
-  f!      :: Function
-  mapto   :: Function
-  mapfro  :: Function
+    label::String
+    f!::Function
+    mapto::Function
+    mapfro::Function
 
-  # We build our model here.
+    # We build our model here.
 
 end
 ```
@@ -52,43 +52,44 @@ Our purpose is to provide
 
 To this aim, in place of the commented line, we write
 ```julia
-function Airy(param::NamedTuple; # param is a NamedTuple containing all necessary parameters
-  label = "linear (Airy)"  # using a keyword argument allows the user to supersede the default label.
-   )
+function Airy(
+        param::NamedTuple; # param is a NamedTuple containing all necessary parameters
+        label = "linear (Airy)"  # using a keyword argument allows the user to supersede the default label.
+    )
 
-  # Set up
-  μ = param.μ
-  ν = get(param, :ν, min(1,1/√μ)) # set default ν if it is not provided
-  # Collocation points and Fourier modes
-  m = Mesh(param)
-  x, k = m.x, m.k
-  # Fourier multipliers
-  ∂ₓ	 = 1im * k            # Differentiation
-  ∂ₓF₁ = 1im * tanh.(√μ*k)/(√μ*ν)
-  # Pre-allocation
-  fftη = zeros(Complex{Float64}, m.N)
-  fftv = zeros(Complex{Float64}, m.N)
+    # Set up
+    μ = param.μ
+    ν = get(param, :ν, min(1, 1 / √μ)) # set default ν if it is not provided
+    # Collocation points and Fourier modes
+    m = Mesh(param)
+    x, k = m.x, m.k
+    # Fourier multipliers
+    ∂ₓ = 1im * k            # Differentiation
+    ∂ₓF₁ = 1im * tanh.(√μ * k) / (√μ * ν)
+    # Pre-allocation
+    fftη = zeros(Complex{Float64}, m.N)
+    fftv = zeros(Complex{Float64}, m.N)
 
-  # Evolution equations are ∂t U = f(U)
-  function f!(U)
-    fftη .= U[1]
-    fftv .= U[2]
+    # Evolution equations are ∂t U = f(U)
+    function f!(U)
+        fftη .= U[1]
+        fftv .= U[2]
 
-    U[1] .= -∂ₓF₁.*fftv
-    U[2] .= -∂ₓ.*fftη
-  end
+        U[1] .= -∂ₓF₁ .* fftv
+        return U[2] .= -∂ₓ .* fftη
+    end
 
-  # Build raw data from physical data (discrete Fourier transform)
-  function mapto(data::InitialData)
-    U = [fft(data.η(x)) fft(data.v(x))]
-  end
+    # Build raw data from physical data (discrete Fourier transform)
+    function mapto(data::InitialData)
+        return U = [fft(data.η(x)) fft(data.v(x))]
+    end
 
-  # Return physical data `(η,v,x)` from raw data
-  function mapfro(U)
-    real(ifft(U[1])),real(ifft(U[2])),x
-  end
+    # Return physical data `(η,v,x)` from raw data
+    function mapfro(U)
+        return real(ifft(U[1])), real(ifft(U[2])), x
+    end
 
-  new( label, f!, mapto, mapfro )
+    return new(label, f!, mapto, mapfro)
 end
 ```
 
@@ -101,7 +102,7 @@ The Airy model can now be built as follows
 ```julia
 using WaterWaves1D
 # include your file
-model = Airy((μ=1,L=2π,N=2^8))
+model = Airy((μ = 1, L = 2π, N = 2^8))
 ```
 
 ## build your initial data
@@ -117,16 +118,16 @@ struct Heap <: InitialData
 
     η
     v
-    label :: String
-    info  :: String
+    label::String
+    info::String
 
     function Heap(L)
-        η = x->exp.(-(L*x).^2)
-        v = x->zero(x)
-        init = Init(η,v)
+        η = x -> exp.(-(L * x) .^ 2)
+        v = x -> zero(x)
+        init = Init(η, v)
         label = "Heap"
         info = "Heap of water, with length L=$L."
-        new( init.η,init.v,label,info  )
+        return new(init.η, init.v, label, info)
     end
 end
 ```
@@ -145,13 +146,13 @@ As an example, let us review how the explicit Euler solver, [`Euler`](@ref Water
 
 In a dedicated file we write
 ```julia
-struct Euler{T,N} <: TimeSolver
-    U1 :: Vector{Array{T,N}}
-    label :: String
+struct Euler{T, N} <: TimeSolver
+    U1::Vector{Array{T, N}}
+    label::String
 
-    function Euler( U :: Vector{Array{T, N}} ) where {T, N}
+    function Euler(U::Vector{Array{T, N}}) where {T, N}
         U1 = deepcopy(U)
-        new{T, N}( U1, "Euler" )
+        return new{T, N}(U1, "Euler")
     end
 end
 ```
@@ -169,14 +170,16 @@ We shall now add one method to the function `step!`, performing the explicit Eul
 
 ```julia
 export step!
-function step!(solver :: Euler,
-                model :: AbstractModel,
-                U  ,
-                dt )
+function step!(
+        solver::Euler,
+        model::AbstractModel,
+        U,
+        dt
+    )
 
     solver.U1 .= U        # allocate U to U1
-    model.f!( solver.U1 ) # model.f!(U) replaces its argument U with f(U)
-    U .+= dt .* solver.U1 # update U
+    model.f!(solver.U1) # model.f!(U) replaces its argument U with f(U)
+    return U .+= dt .* solver.U1 # update U
 end
 ```
 
