@@ -21,7 +21,7 @@ RecipesBase = "3cdcf5f2-1ef4-517c-9805-6587b60abb01"
 
 [compat]
 Aqua = "0.8.16"
-DocStringExtensions = "0.9.5"
+DocStringExtensions = "0.9.5, 0.10"
 Elliptic = "^1"
 FFTW = "^1"
 HDF5 = "0.16, 0.17"
